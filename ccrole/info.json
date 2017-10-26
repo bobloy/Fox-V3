@@ -1,0 +1,9 @@
+{
+	"AUTHOR" : "Bobloy",
+	"INSTALL_MSG" : "Thank you for installing Custom Commands w/ Roles",
+	"NAME" : "CCRole",
+	"SHORT" : "Creates commands that adjust roles",
+	"DESCRIPTION" : "Creates custom commands to adjust roles and send custom messages",
+	"TAGS" : ["fox", "bobloy", "utilities", "tools", "roles"],
+	"HIDDEN" : false
+}

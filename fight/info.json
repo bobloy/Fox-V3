@@ -1,0 +1,9 @@
+{
+    "AUTHOR" : "Bobloy",
+    "INSTALL_MSG" : "Thank you for installing Fight. Run with [p]fight or [p]fightset",
+    "NAME" : "Fight",
+    "SHORT" : "[Incomplete] Cog to organize tournaments",
+    "DESCRIPTION" : "[Incomplete] Cog to organize tournaments within Discord",
+    "TAGS" : ["game", "fun", "fight", "tournament", "tourney", "tourny", "elimination", "bracket", "fox", "bobloy"],
+    "HIDDEN" : false
+}

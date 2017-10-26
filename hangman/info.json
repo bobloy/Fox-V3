@@ -1,0 +1,14 @@
+{
+	"AUTHOR": "Bobloy",
+	"DESCRIPTION": "Hangman Cog for Red Discord bot. Play a game of Hangman with your friends!",
+	"INSTALL_MSG": "Thank you for installing Hangman! Play with [p]hangman, edit with [p]hangset",
+	"NAME": "Hangman",
+	"SHORT": "Play a game of Hangman with your friends!",
+	"TAGS": [
+		"fox",
+		"bobloy",
+		"fun",
+		"game"
+	],
+	"HIDDEN": false
+}

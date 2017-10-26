@@ -1,0 +1,9 @@
+{
+    "AUTHOR" : "Bobloy",
+    "INSTALL_MSG" : "Thank you for installing test cog. Please uninstall this now",
+    "NAME" : "Test",
+    "SHORT" : "Test short",
+    "DESCRIPTION" : "Test description is longer",
+    "TAGS" : ["fox", "bobloy"],
+    "HIDDEN" : false
+}
