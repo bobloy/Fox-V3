@@ -28,10 +28,14 @@ class Fight:
     def save_data(self):
         """Saves the json"""
         dataIO.save_json(self.file_path, self.the_data)
-
+        
+ # ************************v3 Shit************************  
+ 
+#    def check(m):    #Check Message from author
+#            return m.author == ctx.author and m.channel == ctx.channel
 
 # ************************Fight command group start************************
-    @commands.group(pass_context=True, no_pm=True)
+    @commands.group(no_pm=True)
     async def fight(self, ctx):
         """Participate in active fights!"""
         guild = ctx.message.guild
@@ -45,7 +49,7 @@ class Fight:
             await self.bot.send_cmd_help(ctx)
             # await self.bot.say("I can do stuff!")
 
-    @fight.command(name="join", pass_context=True)
+    @fight.command(name="join")
     async def fight_join(self, ctx, user: discord.Member=None):
         """Join the active fight"""
         guild = ctx.message.guild
@@ -72,11 +76,11 @@ class Fight:
 
         await self.bot.say("User has been added to tournament")
 
-    @fight.command(name="score", pass_context=True)
+    @fight.command(name="score")
     async def fight_score(self, ctx, tID=None, score1=None, score2=None):
         """Enters score for current match, or for passed tournament ID"""
-        guild = ctx.message.guild
-        user = ctx.message.author
+        # guild = ctx.message.guild
+        # user = ctx.message.author
 
         currFight = self._getcurrentfight(guild.id)
         if not currFight:
@@ -86,27 +90,27 @@ class Fight:
         if not tID:
             tID = self._activefight(guild.id)
 
-        if not self._infight(guild.id, tID, user.id):
+        if not self._infight(guild.id, tID, author.id):
             await self.bot.say("You are not in a current tournament")
             return
 
-        mID = self._parseuser(guild.id, tID, user.id)
+        mID = self._parseuser(guild.id, tID, author.id)
         if not mID:
             await self.bot.say("You have no match to update!")
             return
 
         if currFight["RULES"]["TYPE"] == 0:  # Round-Robin
-            await self._rr_score(guild.id, tID, mID, user, score1, score2)
+            await self._rr_score(guild.id, tID, mID, author, score1, score2)
 
-    @fight.command(name="leave", pass_context=True)
+    @fight.command(name="leave")
     async def fight_leave(self, ctx, tID=None, user: discord.Member=None):
         """Forfeit your match and all future matches"""
-        guild = ctx.message.guild
+        # guild = ctx.message.guild
         if not user:
-            user = ctx.message.author
+            user = author
 
         if not tID:
-            tID = self._activefight(guildid)
+            tID = self._activefight(guild.id)
         await self.bot.say("Todo Leave")
 
 #    @fight.command(name="leaderboard", pass_context=True)
@@ -114,14 +118,14 @@ class Fight:
 #        await self.bot.say("Todo Leaderboard")
 #        """Adds clan to grab-list"""
 
-    @fight.group(name="bracket", pass_context=True)
+    @fight.group(name="bracket")
     async def fight_bracket(self, ctx, tID):
         """Shows your current match your next opponent,
             run [p]fight bracket full to see all matches"""
         await self.bot.say("Todo Bracket")
 
     @fight_bracket.command(name="full")
-    async def fight_bracket_full(self, tID):
+    async def fight_bracket_full(self, ctx, tID):
         """Shows the full bracket"""
         await self.bot.say("Todo Bracket Full")
 
@@ -132,11 +136,11 @@ class Fight:
 #            await func(self, ctx, guild, *args, **kwargs)
 #        return decorated
 
-    @commands.group(pass_context=True, no_pm=True, aliases=['setfight'])
+    @commands.group(no_pm=True, aliases=['setfight'])
     @checks.mod_or_permissions(administrator=True)
     async def fightset(self, ctx):
         """Admin command for starting or managing tournaments"""
-        guild = ctx.message.guild
+        # guild = ctx.message.guild
         
         if guild.id not in self.the_data:
             self.the_data[guild.id] = {
@@ -165,10 +169,10 @@ class Fight:
             await self.bot.send_cmd_help(ctx)
         # await self.bot.say("I can do stuff!")
 
-    @fightset.command(name="bestof", pass_context=True)
+    @fightset.command(name="bestof")
     async def fightset_bestof(self, ctx, incount, tID=None):
         """Adjust # of games played per match. Must be an odd number"""
-        guild = ctx.message.guild
+        # guild = ctx.message.guild
         if not tID and not self._activefight(guild.id):
             await self.bot.say("No active fight to adjust")
             return
@@ -198,11 +202,11 @@ class Fight:
         self.save_data()
         await self.bot.say("Tourney ID "+tID+" is now Best of "+str(num))
 
-    @fightset.command(name="bestoffinal", pass_context=True)
+    @fightset.command(name="bestoffinal")
     async def fightset_bestoffinal(self, ctx, incount, tID=None):
         """Adjust # of games played in finals. Must be an odd number
         (Does not apply to tournament types without finals, such as Round Robin)"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
         if not tID and not self._activefight(guild.id):
             await self.bot.say("No active fight to adjust")
             return
@@ -228,10 +232,10 @@ class Fight:
         self.save_data()
         await self.bot.say("Tourney ID "+tID+" is now Best of "+str(num))
 
-    @fightset.command(name="current", pass_context=True)
+    @fightset.command(name="current")
     async def fightset_current(self, ctx, tID):
         """Sets the current tournament to passed ID"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
         aFight = self._getfight(guild.id, tID)
 
         if not aFight:
@@ -243,20 +247,20 @@ class Fight:
 
         await self.bot.say("Current tournament set to "+tID)
 
-    @fightset.command(name="list", pass_context=True)
+    @fightset.command(name="list")
     async def fightset_list(self, ctx):
         """Lists all current and past fights"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
 
         for page in pagify(str(self.the_data[guild.id]["TOURNEYS"])):
             await self.bot.say(box(page))
 
         await self.bot.say("Done")
 
-    @fightset.command(name="open", pass_context=True)
+    @fightset.command(name="open")
     async def fightset_open(self, ctx):
         """Toggles the open status of current tournament"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
         if not self._activefight(guild.id):
             await self.bot.say("No active fight to adjust")
             return
@@ -268,10 +272,10 @@ class Fight:
 
         await self.bot.say("Tournament Open status is now set to: " + str(currFight["OPEN"]))
         
-    @fightset.command(name="name", pass_context=True)
+    @fightset.command(name="name")
     async def fightset_name(self, ctx, inname, tID=None):
         """Renames the tournament"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
         if not tID and not self._activefight(guild.id):
             await self.bot.say("No active fight to adjust")
             return
@@ -283,11 +287,14 @@ class Fight:
         self.save_data()
         await self.bot.say("Tourney ID "+tID+" is now called "+self._getfight(guild.id, tID)["NAME"])
         
-    @fightset.command(name="start", pass_context=True)
+    @fightset.command(name="start")
     async def fightset_start(self, ctx):
         """Starts the current tournament, must run setup first"""
-        guild = ctx.message.guild
-        author = ctx.message.author
+        def check(m):    #Check Message from author
+            return m.author == author and m.channel == channel
+            
+        #guild = ctx.message.guild
+        #author = ctx.message.author
         currFight = self._getcurrentfight(guild.id)
         tID = self._activefight(guild.id)
         
@@ -297,8 +304,12 @@ class Fight:
             
         if currFight["TYPEDATA"]:  # Empty dicionary {} resolves to False
             await self.bot.say("Looks like this tournament has already started.\nDo you want to delete all match data and restart? (yes/no)")
-            answer = await self.bot.wait_for_message(timeout=120, author=author)
-
+#            answer = await self.bot.wait_for_message(timeout=120, author=author)
+            try:
+                answer = await self.bot.wait_for('message', check=check, timeout=120)
+            except asyncio.TimeoutError:
+                await ctx.send("Cancelled due to timeout")
+                
             if not answer.content and answer.content.upper() in ["YES", "Y"]:
                 await self.bot.say("Cancelled")
                 return
@@ -309,7 +320,7 @@ class Fight:
         if currFight["RULES"]["TYPE"] == 0:  # Round-Robin
             await self._rr_start(guild.id, tID)
 
-    @fightset.command(name="setup", pass_context=True)
+    @fightset.command(name="setup")
     async def fightset_setup(self, ctx):
         """Setup a new tournament!
         Default settings are as follows
@@ -318,7 +329,7 @@ class Fight:
         Best of (final): 1
         Self Report: True
         Type: 0 (Round Robin)"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
         currServ = self.the_data[guild.id]
         tID = str(len(currServ["TOURNEYS"]))  # Can just be len without +1, tourney 0 makes len 1, tourney 1 makes len 2, etc
         currServ["CURRENT"] = tID
@@ -337,15 +348,15 @@ class Fight:
 
         await self.bot.say("Adjust settings as necessary, then open the tournament with [p]fightset toggleopen")
 
-    @fightset.command(name="stop", pass_context=True)
+    @fightset.command(name="stop")
     async def fightset_stop(self, ctx):
         """Stops current tournament"""
-        guild = ctx.message.guild
+        # guild = ctx.message.guild
         if not self._activefight(guild.id):
             await self.bot.say("No active fight to adjust")
             return
 
-        author = ctx.message.author
+        # author = ctx.message.author
         currServ = self.the_data[guild.id]
 
         await self.bot.say("Current fight ID is "+str(currServ["CURRENT"])+"\nOkay to stop? (yes/no)")
@@ -362,16 +373,16 @@ class Fight:
         await self.bot.say("Fight has been stopped")
 
 # ***************************Fightset_guild command group start**************************        
-    @fightset.group(name="guild", pass_context=True)
+    @fightset.group(name="guild")
     async def fightset_guild(self, ctx):
         """Adjust guild wide settings"""
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
     
-    @fightset_guild.command(name="selfreport", pass_context=True)
+    @fightset_guild.command(name="selfreport")
     async def fightset_guild_selfreport(self, ctx):
         """Toggles the ability to self-report scores for all tournaments"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
         
         settings = self._getsettings(guild.id)
         
@@ -381,10 +392,10 @@ class Fight:
 
         await self.bot.say("Self-Reporting ability is now set to: " + str(settings["SELFREPORT"]))
         
-    @fightset_guild.command(name="reportchnnl", pass_context=True)
+    @fightset_guild.command(name="reportchnnl")
     async def fightset_guild_reportchnnl(self, ctx, channel: discord.Channel=None):
         """Set the channel for self-reporting"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
         
         settings = self._getsettings(guild.id)
         
@@ -394,10 +405,10 @@ class Fight:
 
         await self.bot.say("Self-Reporting Channel is now set to: " + channel.mention)
         
-    @fightset_guild.command(name="announcechnnl", pass_context=True)
+    @fightset_guild.command(name="announcechnnl")
     async def fightset_guild_announcechnnl(self, ctx, channel: discord.Channel=None):
         """Set the channel for tournament announcements"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
         
         settings = self._getsettings(guild.id)
         
@@ -407,10 +418,10 @@ class Fight:
 
         await self.bot.say("Announcement Channel is now set to: " + channel.mention)
 
-    @fightset_guild.command(name="setadmin", pass_context=True)
+    @fightset_guild.command(name="setadmin")
     async def fightset_guild_setadmin(self, ctx, role: discord.Role=None):
         """Chooses the tournament-admin role. CAREFUL: This grants the ability to override self-reported scores!"""
-        guild = ctx.message.guild
+        #guild = ctx.message.guild
         
         settings = self._getsettings(guild.id)
         
