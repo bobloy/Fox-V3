@@ -476,8 +476,26 @@ class Fight:
     def _getsettings(self, guildid):
         return self.the_data[guildid]["SETTINGS"]
     
-    async def _get_message_from_id(self, channelid, messageid):
+    async def _get_message_from_id_old(self, channelid, messageid):
         return await self.bot.get_message(self._get_channel_from_id(channelid), messageid)
+        
+    async def _get_message_from_id(self, ctx: commands.Context, message_id: int)\
+            -> Union[discord.Message, None]:
+        """
+        Tries to find a message by ID in the current guild context.
+        :param ctx:
+        :param message_id:
+        :return:
+        """
+        for channel in ctx.guild.channels:
+            try:
+                return await channel.get_message(message_id)
+            except discord.NotFound:
+                pass
+            except AttributeError: # VoiceChannel object has no attribute 'get_message'
+                pass
+
+        return None
     
     def _get_message_from_id_recent(self, messageid):
         return discord.utils.get(self.bot.messages, id=messageid)
