@@ -1,12 +1,14 @@
-import discord
 import os
 import math
+
+import discord
 from discord.ext import commands
 
-from .utils.chat_formatting import pagify
-from .utils.chat_formatting import box
-from .utils.dataIO import dataIO
-from .utils import checks
+from redbot.core.utils.chat_formatting import pagify
+from recbot.core.utils.chat_formatting import box
+from .utils.dataIO import dataIO    #TODO
+from redbot.core import checks
+
 from random import randint
 
 
