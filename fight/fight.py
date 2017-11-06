@@ -494,7 +494,7 @@ class Fight:
         :param message_id:
         :return:
         """
-        for channel in ctx.guild.channels:
+        for channel in ctx.guild.text_channels:
             try:
                 return await channel.get_message(message_id)
             except discord.NotFound:
@@ -509,11 +509,12 @@ class Fight:
         return discord.utils.get(guild.channels, id=channelid)
         
     def _get_user_from_id(self, guildID, userid):
-        guild = self._get_guild_from_id(guildID)
-        return discord.utils.get(guild.members, id=userid)
+        # guild = self._get_guild_from_id(guildID)
+        # return discord.utils.get(guild.members, id=userid)
+        return self.bot.get_user(userid)
         
     def _get_guild_from_id(self, guildID):
-        return discord.utils.get(self.bot.guilds, id=guildID)
+        return self.bot.get_guild(guildID)
     
     def _getfight(self, guildID, tID):
         return self.the_data[guildID]["TOURNEYS"][tID]
