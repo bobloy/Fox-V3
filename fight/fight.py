@@ -1,12 +1,15 @@
 import os
 import math
 
+from typing import Union
+
 import discord
 from discord.ext import commands
 
 from redbot.core.utils.chat_formatting import pagify
-from recbot.core.utils.chat_formatting import box
-from .utils.dataIO import dataIO    #TODO
+from redbot.core.utils.chat_formatting import box
+from redbot.core import Config
+# from .utils.dataIO import dataIO    #TODO
 from redbot.core import checks
 
 from random import randint
@@ -23,9 +26,56 @@ class Fight:
 
     def __init__(self, bot):
         self.bot = bot
-        self.path = "data/Fox-Cogs/fight/"
-        self.file_path = "data/Fox-Cogs/fight/fight.json"
-        self.the_data = dataIO.load_json(self.file_path)
+        # self.path = "data/Fox-Cogs/fight/"
+        # self.file_path = "data/Fox-Cogs/fight/fight.json"
+        # self.the_data = dataIO.load_json(self.file_path)
+        self.config = Config.get_conf(self,identifier=49564952847684)
+        default_global = {}
+        default_guild = {
+                "CURRENT": None,
+                "TOURNEYS": {},
+                "SETTINGS": {    
+                    "SELFREPORT": True,
+                    "REPORTCHNNL": None,
+                    "ANNOUNCECHNNL": None,
+                    "ADMIN": None
+                    },  
+                "SRTRACKER": {
+                    "ROUND": None,
+                    "CHNNLS": None,
+                    },
+                "EMOJI": {
+                    "NUMS": [],
+                    "UNDO": None,
+                    "APPR": None
+                    }
+                }
+        default_tourney = {
+                "PLAYERS": [],
+                "NAME": "Tourney 0",
+                "RULES": {"BESTOF": 1, "BESTOFFINAL": 1, "TYPE": 0},
+                "TYPEDATA": {},
+                "OPEN": False,
+                "WINNER": None
+                }
+        default_match = {
+                "TEAM1": [rPlayers[TeamCnt][0]],
+                "TEAM2": [rPlayers[TeamCnt][1]],
+                "SCORE1": 0,
+                "SCORE2": 0,
+                "USERSCORE1": {
+                    "SCORE1": 0, 
+                    "SCORE2": 0
+                    },
+                "USERSCORE2": {
+                    "SCORE1": 0,
+                    "SCORE2": 0
+                    }
+                }
+        
+        self.config.register_guild(**default_guild)
+        self.config.register
+        
 
     def save_data(self):
         """Saves the json"""
@@ -404,7 +454,7 @@ class Fight:
         await ctx.send("Self-Reporting ability is now set to: " + str(settings["SELFREPORT"]))
         
     @fightset_guild.command(name="reportchnnl")
-    async def fightset_guild_reportchnnl(self, ctx, channel: discord.Channel=None):
+    async def fightset_guild_reportchnnl(self, ctx, channel: discord.TextChannel=None):
         """Set the channel for self-reporting"""
         #guild = ctx.message.guild
         
@@ -417,7 +467,7 @@ class Fight:
         await ctx.send("Self-Reporting Channel is now set to: " + channel.mention)
         
     @fightset_guild.command(name="announcechnnl")
-    async def fightset_guild_announcechnnl(self, ctx, channel: discord.Channel=None):
+    async def fightset_guild_announcechnnl(self, ctx, channel: discord.TextChannel=None):
         """Set the channel for tournament announcements"""
         #guild = ctx.message.guild
         
