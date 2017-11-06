@@ -37,10 +37,11 @@ class Fight:
 #            return m.author == ctx.author and m.channel == ctx.channel
 
 # ************************Fight command group start************************
-    @commands.group(no_pm=True)
+    @commands.group()
+    @commands.guild_only()
     async def fight(self, ctx):
         """Participate in active fights!"""
-        guild = ctx.message.guild
+        # guild = ctx.message.guild
 
         if not self._activefight(guild.id):
             await ctx.send("No tournament currently running!")
@@ -49,14 +50,14 @@ class Fight:
 
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
-            # await self.bot.say("I can do stuff!")
+            # await ctx.send("I can do stuff!")
 
     @fight.command(name="join")
     async def fight_join(self, ctx, user: discord.Member=None):
         """Join the active fight"""
-        guild = ctx.message.guild
+        # guild = ctx.message.guild
         if not user:
-            user = ctx.message.author
+            user = author
 
         currFight = self._getcurrentfight(guild.id)
         tID = self._activefight(guild.id)
@@ -117,7 +118,7 @@ class Fight:
 
 #    @fight.command(name="leaderboard", pass_context=True)
 #    async def fight_leaderboard(self, ctx, ctag, ckind="Unranked", irank=0):
-#        await self.bot.say("Todo Leaderboard")
+#        await ctx.send("Todo Leaderboard")
 #        """Adds clan to grab-list"""
 
     @fight.group(name="bracket")
@@ -138,7 +139,8 @@ class Fight:
 #            await func(self, ctx, guild, *args, **kwargs)
 #        return decorated
 
-    @commands.group(no_pm=True, aliases=['setfight'])
+    @commands.group(aliases=['setfight'])
+    @commands.guild_only()
     @checks.mod_or_permissions(administrator=True)
     async def fightset(self, ctx):
         """Admin command for starting or managing tournaments"""
@@ -169,7 +171,7 @@ class Fight:
 
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
-        # await self.bot.say("I can do stuff!")
+        # await ctx.send("I can do stuff!")
 
     @fightset.command(name="bestof")
     async def fightset_bestof(self, ctx, incount, tID=None):
@@ -460,11 +462,11 @@ class Fight:
 
     async def _embed_tourney(self, guildID, tID):
         """Prints a pretty embed of the tournament"""
-        await self.bot.say("_placeholder Todo")
+        await ctx.send("_placeholder Todo")
 
     async def _comparescores(self):
         """Checks user submitted scores for inconsistancies"""
-        await self.bot.say("_comparescores Todo")
+        await ctx.send("_comparescores Todo")
 
     def _parseuser(self, guildID, tID, userid):
         """Finds user in the tournament"""
@@ -529,13 +531,13 @@ class Fight:
        
 # **********************Single Elimination***************************
     async def _elim_setup(self, tID):
-        await self.bot.say("Elim setup todo")
+        await ctx.send("Elim setup todo")
 
     async def _elim_start(self, tID):
-        await self.bot.say("Elim start todo")
+        await ctx.send("Elim start todo")
 
     async def _elim_update(self, matchID, ):
-        await self.bot.say("Elim update todo")
+        await ctx.send("Elim update todo")
 
 # **********************Round-Robin**********************************
     def _rr_parseuser(self, guildID, tID, userid):
@@ -610,7 +612,7 @@ class Fight:
                 ).send("Round "+str(rID+1))
                 
         # else:
-            # await self.bot.say("Round "+str(rID+1))
+            # await ctx.send("Round "+str(rID+1))
         
         
         for mID in theD["SCHEDULE"][rID]:
@@ -652,7 +654,7 @@ class Fight:
             self.save_data()
                 
             
-            # await self.bot.say(team1 + " vs " + team2 + " || Match ID: " + match)
+            # await ctx.send(team1 + " vs " + team2 + " || Match ID: " + match)
 
     async def _rr_start(self, guildID, tID):
 
@@ -667,7 +669,7 @@ class Fight:
                             self._guildsettings(guildID)["REPORTCHNNL"]
                             ).send("**Tournament is Starting**")
         # else:
-            # await self.bot.say("**Tournament is Starting**")
+            # await ctx.send("**Tournament is Starting**")
         
         await self._rr_printround(guildID, tID, 0)
 
@@ -839,26 +841,3 @@ class Fight:
         emoji = obj["d"]["emoji"]["name"]
         user_id = obj["d"]["user_id"]
 
-        
-
-def check_folders():
-    if not os.path.exists("data/Fox-Cogs"):
-        print("Creating data/Fox-Cogs folder...")
-        os.makedirs("data/Fox-Cogs")
-
-    if not os.path.exists("data/Fox-Cogs/fight"):
-        print("Creating data/Fox-Cogs/fight folder...")
-        os.makedirs("data/Fox-Cogs/fight")
-
-
-def check_files():
-    if not dataIO.is_valid_json("data/Fox-Cogs/fight/fight.json"):
-        dataIO.save_json("data/Fox-Cogs/fight/fight.json", {})
-
-
-def setup(bot):
-    check_folders()
-    check_files()
-    n = Fight(bot)
-    bot.add_cog(n)
-    bot.add_listener(n._on_react, "on_reaction_add")
