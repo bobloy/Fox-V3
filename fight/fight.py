@@ -72,14 +72,12 @@ class Fight:
                     "SCORE2": 0
                     }
                 }
-        
+        self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
-        self.config.register
-        
 
-    def save_data(self):
-        """Saves the json"""
-        dataIO.save_json(self.file_path, self.the_data)
+    # def save_data(self):
+        # """Saves the json"""
+        # dataIO.save_json(self.file_path, self.the_data)
         
  # ************************v3 Shit************************  
  
