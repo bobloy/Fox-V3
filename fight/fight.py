@@ -59,8 +59,8 @@ class Fight:
                 "WINNER": None
                 }
         default_match = {
-                "TEAM1": [rPlayers[TeamCnt][0]],
-                "TEAM2": [rPlayers[TeamCnt][1]],
+                "TEAM1": [],
+                "TEAM2": [],
                 "SCORE1": 0,
                 "SCORE2": 0,
                 "USERSCORE1": {
