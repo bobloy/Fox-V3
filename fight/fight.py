@@ -194,28 +194,28 @@ class Fight:
         """Admin command for starting or managing tournaments"""
         # guild = ctx.message.guild
         
-        if guild.id not in self.the_data:
-            self.the_data[guild.id] = {
-                "CURRENT": None,
-                "TOURNEYS": {},
-                "SETTINGS": {    
-                    "SELFREPORT": True,
-                    "REPORTCHNNL": None,
-                    "ANNOUNCECHNNL": None,
-                    "ADMIN": None
-                    },  
-                "SRTRACKER": {
-                    "ROUND": None,
-                    "CHNNLS": None,
-                    },
-                "EMOJI": {
-                    "NUMS": [],
-                    "UNDO": None,
-                    "APPR": None
-                    }
-                }
+        # if guild.id not in self.the_data:
+            # self.the_data[guild.id] = {
+                # "CURRENT": None,
+                # "TOURNEYS": {},
+                # "SETTINGS": {    
+                    # "SELFREPORT": True,
+                    # "REPORTCHNNL": None,
+                    # "ANNOUNCECHNNL": None,
+                    # "ADMIN": None
+                    # },  
+                # "SRTRACKER": {
+                    # "ROUND": None,
+                    # "CHNNLS": None,
+                    # },
+                # "EMOJI": {
+                    # "NUMS": [],
+                    # "UNDO": None,
+                    # "APPR": None
+                    # }
+                # }
                 
-            self.save_data()
+            # self.save_data()
 
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
@@ -491,13 +491,15 @@ class Fight:
         await ctx.send("Tournament Admin role is now set to: " + role.mention)
 
 # **********************Private command group start*********************
-    def _guildsettings(self, guildID):
+    async def _guildsettings(self, ctx: commands.Context):
         """Returns the dictionary of guild settings"""
-        return self.the_data[guildID]["SETTINGS"]
+        # return self.the_data[guildID]["SETTINGS"]
+        return await self.config.guild(ctx.guild).settings
         
-    def _messagetracker(self, guildID):
+    await def _messagetracker(self, ctx: commands.Context):
         """Returns the dictionary of message tracking"""
-        return self.the_data[guildID]["SRTRACKER"]
+        # return self.the_data[guildID]["SRTRACKER"]
+        return self.config.guild(ctx.guild).srtracker
     
     def _activefight(self, guildID):
         """Returns id for active fight, or None if no active fight"""
