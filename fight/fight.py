@@ -653,7 +653,7 @@ class Fight:
         theD["MATCHES"] = get_schedule[1]
         theD["ROUND"] = 0
         
-        self.save_fight(theT)
+        self._save_fight(theT)
     
     async def _rr_printround(self, ctx: commands.Context, tID, rID):
 
@@ -666,8 +666,8 @@ class Fight:
                         # "Round "+str(rID+1)
                         # )
             await self._get_channel_from_id(
-                guildID, 
-                self._guildsettings(guildID)["ANNOUNCECHNNL"]
+                ctx, 
+                await self._guildsettings(ctx)["ANNOUNCECHNNL"]
                 ).send("Round "+str(rID+1))
                 
         # else:
@@ -675,8 +675,8 @@ class Fight:
         
         
         for mID in theD["SCHEDULE"][rID]:
-            team1 = self._get_team(guildID, theD["MATCHES"][mID]["TEAM1"])
-            team2 = self._get_team(guildID, theD["MATCHES"][mID]["TEAM2"])
+            team1 = self._get_team(ctx, theD["MATCHES"][mID]["TEAM1"])
+            team2 = self._get_team(ctx, theD["MATCHES"][mID]["TEAM2"])
             
             for i in range(len(team1)):
                 if team1[i]:
@@ -697,7 +697,7 @@ class Fight:
             outembed.add_field(name="Team 2", value=mention2, inline=True)
             outembed.set_footer(text="React your team's score, then your opponents score!")
             
-            if self._guildsettings(guildID)["REPORTCHNNL"]:
+            if await self._guildsettings(guildID)["REPORTCHNNL"]:
                 # message = await self.bot.send_message(
                             # self._get_channel_from_id(guildID, self._guildsettings(guildID)["REPORTCHNNL"]),
                             # embed=outembed
@@ -747,7 +747,7 @@ class Fight:
         if not t1points:
             await ctx.send("Entering scores for match ID: " + mID + "\n\n")
             await ctx.send("How many points did TEAM1 get?")
-            if self._rr_matchperms(guildID, tID, author.id, mID) == 1:
+            if await self._rr_matchperms(guildID, tID, author.id, mID) == 1:
                 await ctx.send("*HINT: You are on TEAM1*")
             # answer = await self.bot.wait_for_message(timeout=120, author=author)
             
@@ -765,7 +765,7 @@ class Fight:
 
         if not t2points:
             await ctx.send("How many points did TEAM2 get?")
-            if self._rr_matchperms(guildID, tID, author.id, mID) == 2:
+            if await self._rr_matchperms(guildID, tID, author.id, mID) == 2:
                 await ctx.send("*HINT: You are on TEAM2*")
             # answer = await self.bot.wait_for_message(timeout=120, author=author)
             try:
@@ -784,7 +784,7 @@ class Fight:
                 t2points == math.ceil(theT["RULES"]["BESTOF"]/2)):
             theD["MATCHES"][mID]["SCORE1"] = t1points
             theD["MATCHES"][mID]["SCORE2"] = t2points
-            self.save_data()
+            self._save_fight(theD["MATCHES"][mID])
         else:
             await ctx.send("Invalid scores, nothing will be updated")
             return
