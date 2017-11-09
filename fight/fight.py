@@ -496,19 +496,20 @@ class Fight:
         # return self.the_data[guildID]["SETTINGS"]
         return await self.config.guild(ctx.guild).settings
         
-    await def _messagetracker(self, ctx: commands.Context):
+    async def _messagetracker(self, ctx: commands.Context):
         """Returns the dictionary of message tracking"""
         # return self.the_data[guildID]["SRTRACKER"]
-        return self.config.guild(ctx.guild).srtracker
+        return await self.config.guild(ctx.guild).srtracker
     
-    def _activefight(self, guildID):
+    async def _activefight(self, ctx: commands.Context):
         """Returns id for active fight, or None if no active fight"""
-        return self.the_data[guildID]["CURRENT"]
+        # return self.the_data[guildID]["CURRENT"]
+        return await self.config.guild(ctx.guild).current
 
-    def _infight(self, guildID, tID, userid):
+    async def _infight(self, ctx: commands.Context, tID, userid):
         """Checks if passed member is already in the tournament"""
-
-        return userid in self.the_data[guildID]["TOURNEYS"][tID]["PLAYERS"]
+        # return userid in self.the_data[guildID]["TOURNEYS"][tID]["PLAYERS"]
+        return userid in await self.config.guild(ctx.guild).tourneys[tID]["PLAYERS"]
 
     async def _embed_tourney(self, guildID, tID):
         """Prints a pretty embed of the tournament"""
@@ -518,22 +519,24 @@ class Fight:
         """Checks user submitted scores for inconsistancies"""
         await ctx.send("_comparescores Todo")
 
-    def _parseuser(self, guildID, tID, userid):
+    async def _parseuser(self, ctx: commands.Context, tID, userid):
         """Finds user in the tournament"""
-        if self._getfight(guildID, tID)["RULES"]["TYPE"] == 0:  # RR
-            return self._rr_parseuser(guildID, tID, userid)
+        # if self._getfight(guildID, tID)["RULES"]["TYPE"] == 0:  # RR
+        if await self._getfight(ctx, tID)["RULES"]["TYPE"] == 0:
+            return await self._rr_parseuser(ctx, tID, userid)
 
         return False
         
-    def _get_team(self, guildID, teaminfo):
+    def _get_team(self, ctx: commands.Context, teaminfo):
         """Team info is a list of userid's. Returns a list of user objects"""
         outlist = []
         for player in teaminfo:
-            outlist.append(self._get_user_from_id(guildID, player))
+            outlist.append(self._get_user_from_id(ctx, player))
         return outlist
         
-    def _getsettings(self, guildID):
-        return self.the_data[guildID]["SETTINGS"]
+    async def _getsettings(self, ctx: commands.Context):
+        # return self.the_data[guildID]["SETTINGS"]
+        return await self.config.guild(ctx.guild).settings
     
     async def _get_message_from_id_old(self, channelid, messageid):
         return await self.bot.get_message(self._get_channel_from_id(channelid), messageid)
@@ -556,11 +559,12 @@ class Fight:
 
         return None
 
-    def _get_channel_from_id(self, guildID, channelid):
-        guild = self._get_guild_from_id(guildID)
-        return discord.utils.get(guild.channels, id=channelid)
+    def _get_channel_from_id(self, ctx: commands.Context, channelid):
+        # guild = self._get_guild_from_id(guildID)
+        # return discord.utils.get(guild.channels, id=channelid)
+        return discord.utils.get(ctx.guild.channels, id=channelid)
         
-    def _get_user_from_id(self, guildID, userid):
+    def _get_user_from_id(self, userid):
         # guild = self._get_guild_from_id(guildID)
         # return discord.utils.get(guild.members, id=userid)
         return self.bot.get_user(userid)
@@ -568,14 +572,19 @@ class Fight:
     def _get_guild_from_id(self, guildID):
         return self.bot.get_guild(guildID)
     
-    def _getfight(self, guildID, tID):
-        return self.the_data[guildID]["TOURNEYS"][tID]
+    async def _getfight(self, ctx: commands.Context, tID):
+        # return self.the_data[guildID]["TOURNEYS"][tID]
+        return await self.config.guild(ctx.guild).tourneys[tID]
     
-    def _getcurrentfight(self, guildID):
-        if not self._activefight(guildID):
-            return None
+    async def _getcurrentfight(self, ctx: commands.Context):
+        # if not self._activefight(guildID):
+            # return None
 
-        return self._getfight(guildID, self._activefight(guildID))
+        # return self._getfight(guildID, self._activefight(guildID))
+        isactive = await self._activefight(ctx.guild)
+        if not isactive:
+            return None
+        return await self._getfight(ctx, isactive)
 
 # *********** References to "TYPEDATA" must be done per tournament mode (Below this line) *******
        
@@ -590,21 +599,21 @@ class Fight:
         await ctx.send("Elim update todo")
 
 # **********************Round-Robin**********************************
-    def _rr_parseuser(self, guildID, tID, userid):
-        theT = self._getfight(guildID, tID)
+    async def _rr_parseuser(self, ctx: commands.Context, tID, userid):
+        theT = await self._getfight(ctx, tID)
         matches = theT["TYPEDATA"]["MATCHES"]
         schedule = theT["TYPEDATA"]["SCHEDULE"]
 
         for round in schedule:
             for mID in round:
-                teamnum = self._rr_matchperms(guildID, tID, userid, mID)
-                if teamnum and not self._rr_matchover(guildID, tID, mID):  # User is in this match, check if it's done yet
+                teamnum = await self._rr_matchperms(ctx, tID, userid, mID)
+                if teamnum and not await self._rr_matchover(ctx, tID, mID):  # User is in this match, check if it's done yet
                     return mID
     
         return False  # All matches done or not in tourney
 
-    def _rr_matchover(self, guildID, tID, mID):
-        theT = self._getfight(guildID, tID)
+    async def _rr_matchover(self, ctx: commands.Context, tID, mID):
+        theT = await self._getfight(ctx, tID)
         match = theT["TYPEDATA"]["MATCHES"][mID]
         
         if (match["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2) or 
@@ -613,18 +622,18 @@ class Fight:
             return True
         return False
 
-    def _rr_roundover(self, guildID, tID):
-        currFight = self._getfight(guildID, tID)
+    async def _rr_roundover(self, ctx: commands.Context, tID):
+        currFight = await self._getfight(ctx, tID)
         currRound = currFight["TYPEDATA"]["SCHEDULE"][currFight["TYPEDATA"]["ROUND"]]
 
         for mID in currRound:
-            if not self._rr_matchover(guildID, tID, mID):
+            if not await self._rr_matchover(ctx, tID, mID):
                 return False
         return True
 
-    def _rr_matchperms(self, guildID, tID, userid, mID):
+    async def _rr_matchperms(self, ctx: commands.Context, tID, userid, mID):
         # if self._get_user_from_id(guildID, userid) # Do an if-admin at start
-        theT = self._getfight(guildID, tID)
+        theT = await self._getfight(ctx, tID)
         if userid in theT["TYPEDATA"]["MATCHES"][mID]["TEAM1"]:           
             return 1
 
@@ -633,9 +642,9 @@ class Fight:
 
         return False
 
-    def _rr_setup(self, guildID, tID):
+    async def _rr_setup(self, ctx: commands.Context, tID):
 
-        theT = self._getfight(guildID, tID)
+        theT = await self._getfight(ctx, tID)
         theD = theT["TYPEDATA"]
         
         get_schedule = self._rr_schedule(theT["PLAYERS"])
@@ -644,14 +653,14 @@ class Fight:
         theD["MATCHES"] = get_schedule[1]
         theD["ROUND"] = 0
         
-        self.save_data()
+        self.save_fight(theT)
     
-    async def _rr_printround(self, guildID, tID, rID):
+    async def _rr_printround(self, ctx: commands.Context, tID, rID):
 
-        theT = self._getfight(guildID, tID)
+        theT = await self._getfight(ctx, tID)
         theD = theT["TYPEDATA"]
         # rID starts at 0, so print +1. Never used for computation, so doesn't matter
-        if self._guildsettings(guildID)["ANNOUNCECHNNL"]:
+        if await self._guildsettings(ctx)["ANNOUNCECHNNL"]:
             # await self.bot.send_message(
                         # self._get_channel_from_id(guildID, self._guildsettings(guildID)["ANNOUNCECHNNL"]),
                         # "Round "+str(rID+1)
