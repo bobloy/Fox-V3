@@ -32,44 +32,44 @@ class Fight:
         self.config = Config.get_conf(self,identifier=49564952847684)
         default_global = {}
         default_guild = {
-                "CURRENT": None,
-                "TOURNEYS": {},
-                "SETTINGS": {    
-                    "SELFREPORT": True,
-                    "REPORTCHNNL": None,
-                    "ANNOUNCECHNNL": None,
-                    "ADMIN": None
+                "current": None,
+                "tourneys": {},
+                "settings": {    
+                    "selfreport": True,
+                    "reportchnnl": None,
+                    "announcechnnl": None,
+                    "admin": None
                     },  
-                "SRTRACKER": {
-                    "ROUND": None,
-                    "CHNNLS": None,
+                "srtracker": {
+                    "round": None,
+                    "chnnls": None,
                     },
-                "EMOJI": {
-                    "NUMS": [],
-                    "UNDO": None,
-                    "APPR": None
+                "emoji": {
+                    "nums": [],
+                    "undo": None,
+                    "appr": None
                     }
                 }
         default_tourney = {
-                "PLAYERS": [],
-                "NAME": "Tourney 0",
-                "RULES": {"BESTOF": 1, "BESTOFFINAL": 1, "TYPE": 0},
-                "TYPEDATA": {},
-                "OPEN": False,
-                "WINNER": None
+                "players": [],
+                "name": "Tourney 0",
+                "rules": {"BESTOF": 1, "BESTOFFINAL": 1, "TYPE": 0},
+                "typedata": {},
+                "open": False,
+                "winner": None
                 }
         default_match = {
-                "TEAM1": [],
-                "TEAM2": [],
-                "SCORE1": 0,
-                "SCORE2": 0,
-                "USERSCORE1": {
-                    "SCORE1": 0, 
-                    "SCORE2": 0
+                "team1": [],
+                "team2": [],
+                "score1": 0,
+                "score2": 0,
+                "userscore1": {
+                    "score1": 0, 
+                    "score2": 0
                     },
-                "USERSCORE2": {
-                    "SCORE1": 0,
-                    "SCORE2": 0
+                "userscore2": {
+                    "score1": 0,
+                    "score2": 0
                     }
                 }
         self.config.register_global(**default_global)
