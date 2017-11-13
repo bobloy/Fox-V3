@@ -9,7 +9,6 @@ from discord.ext import commands
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.chat_formatting import box
 from redbot.core import Config
-# from .utils.dataIO import dataIO    #TODO
 from redbot.core import checks
 
 from random import randint
@@ -41,8 +40,6 @@ class Fight:
                     "admin": None
                     },  
                 "srtracker": {
-                    "round": None,
-                    "chnnls": None,
                     },
                 "emoji": {
                     "nums": [],
@@ -51,25 +48,25 @@ class Fight:
                     }
                 }
         default_tourney = {
-                "players": [],
-                "name": "Tourney 0",
-                "rules": {"BESTOF": 1, "BESTOFFINAL": 1, "TYPE": 0},
-                "typedata": {},
-                "open": False,
-                "winner": None
+                "PLAYERS": [],
+                "NAME": "Tourney 0",
+                "RULES": {"BESTOF": 1, "BESTOFFINAL": 1, "TYPE": 0},
+                "TYPEDATA": {},
+                "OPEN": False,
+                "WINNER": None
                 }
         default_match = {
-                "team1": [],
-                "team2": [],
-                "score1": 0,
-                "score2": 0,
-                "userscore1": {
-                    "score1": 0, 
-                    "score2": 0
+                "TEAM1": [],
+                "TEAM2": [],
+                "SCORE1": 0,
+                "SCORE2": 0,
+                "USERSCORE1": {
+                    "SCORE1": 0, 
+                    "SCORE2": 0
                     },
-                "userscore2": {
-                    "score1": 0,
-                    "score2": 0
+                "USERSCORE2": {
+                    "SCORE1": 0,
+                    "SCORE2": 0
                     }
                 }
         self.config.register_global(**default_global)
@@ -91,10 +88,10 @@ class Fight:
         """Participate in active fights!"""
         # guild = ctx.message.guild
 
-        if not self._activefight(guild.id):
+        if not self._activefight(ctx):
             await ctx.send("No tournament currently running!")
         else:
-            await ctx.send("Current tournament ID: " + self._activefight(guild.id))
+            await ctx.send("Current tournament ID: " + self._activefight(ctx))
 
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
@@ -107,8 +104,8 @@ class Fight:
         if not user:
             user = author
 
-        currFight = self._getcurrentfight(guild.id)
-        tID = self._activefight(guild.id)
+        currFight = self._getcurrentfight(ctx)
+        tID = self._activefight(ctx)
         if not currFight:
             await ctx.send("No tournament currently running!")
             return
@@ -117,13 +114,13 @@ class Fight:
             await ctx.send("Tournament currently not accepting new players")
             return
 
-        if self._infight(guild.id, tID, user.id):
+        if self._infight(ctx, tID, user.id):
             await ctx.send("You are already in this tournament!")
             return
 
         currFight["PLAYERS"].append(user.id)
 
-        self.save_data()
+        await self._save_fight(ctx, currFight)
 
         await ctx.send("User has been added to tournament")
 
@@ -133,25 +130,25 @@ class Fight:
         # guild = ctx.message.guild
         # user = ctx.message.author
 
-        currFight = self._getcurrentfight(guild.id)
+        currFight = self._getcurrentfight(ctx)
         if not currFight:
             await ctx.send("No tournament currently running!")
             return
 
         if not tID:
-            tID = self._activefight(guild.id)
+            tID = self._activefight(ctx)
 
-        if not self._infight(guild.id, tID, author.id):
+        if not self._infight(ctx, tID, author.id):
             await ctx.send("You are not in a current tournament")
             return
 
-        mID = self._parseuser(guild.id, tID, author.id)
+        mID = self._parseuser(ctx, tID, author.id)
         if not mID:
             await ctx.send("You have no match to update!")
             return
 
         if currFight["RULES"]["TYPE"] == 0:  # Round-Robin
-            await self._rr_score(ctx, guild.id, tID, mID, author, score1, score2)
+            await self._rr_score(ctx, tID, mID, author, score1, score2)
 
     @fight.command(name="leave")
     async def fight_leave(self, ctx, tID=None, user: discord.Member=None):
@@ -161,7 +158,7 @@ class Fight:
             user = author
 
         if not tID:
-            tID = self._activefight(guild.id)
+            tID = self._activefight(ctx)
         await ctx.send("Todo Leave")
 
 #    @fight.command(name="leaderboard", pass_context=True)
@@ -225,13 +222,15 @@ class Fight:
     async def fightset_bestof(self, ctx, incount, tID=None):
         """Adjust # of games played per match. Must be an odd number"""
         # guild = ctx.message.guild
-        if not tID and not self._activefight(guild.id):
+        if not tID and not await self._activefight(ctx):
             await ctx.send("No active fight to adjust")
             return
 
         if not tID:
-            tID = self._activefight(guild.id)
-
+            tID = await self._activefight(ctx)
+        
+        currFight = await self._getfight(ctx, tID)
+        
         try:
             num = int(incount)
         except:
@@ -250,8 +249,8 @@ class Fight:
             await ctx.send("I can't go that high! Max 17")
             return
 
-        self._getfight(guild.id, tID)["RULES"]["BESTOF"] = num
-        self.save_data()
+        currFight["RULES"]["BESTOF"] = num
+        await self._save_fight(ctx, currFight)
         await ctx.send("Tourney ID "+tID+" is now Best of "+str(num))
 
     @fightset.command(name="bestoffinal")
@@ -259,13 +258,15 @@ class Fight:
         """Adjust # of games played in finals. Must be an odd number
         (Does not apply to tournament types without finals, such as Round Robin)"""
         #guild = ctx.message.guild
-        if not tID and not self._activefight(guild.id):
+        if not tID and not await self._activefight(ctx):
             await ctx.send("No active fight to adjust")
             return
 
         if not tID:
-            tID = self._activefight(guild.id)
-
+            tID = await self._activefight(ctx)
+        
+        currFight = await self._getfight(ctx, tID)
+        
         try:
             num = int(incount)
         except:
@@ -280,22 +281,23 @@ class Fight:
             await ctx.send("Must be greater than 0, idiot")
             return
 
-        self._getfight(guild.id, tID)["RULES"]["BESTOFFINAL"] = num
-        self.save_data()
-        await ctx.send("Tourney ID "+tID+" is now Best of "+str(num))
+        currFight["RULES"]["BESTOFFINAL"] = num
+        await self._save_fight(ctx, currFight)
+        await ctx.send("Tourney ID "+tID+" is now Best of "+str(num)+" in the Finals")
 
     @fightset.command(name="current")
     async def fightset_current(self, ctx, tID):
         """Sets the current tournament to passed ID"""
         #guild = ctx.message.guild
-        aFight = self._getfight(guild.id, tID)
+        currFight = await self._getfight(guild.id, tID)
 
-        if not aFight:
+        if not currFight:
             await ctx.send("No tourney found with that ID")
             return
 
-        self.the_data[guild.id]["CURRENT"] = tID
-        self.save_data()
+        # self.the_data[guild.id]["CURRENT"] = tID
+        # self.save_data()
+        await self.config.guild(guild).current.set(tID)
 
         await ctx.send("Current tournament set to "+tID)
 
@@ -304,7 +306,7 @@ class Fight:
         """Lists all current and past fights"""
         #guild = ctx.message.guild
 
-        for page in pagify(str(self.the_data[guild.id]["TOURNEYS"])):
+        for page in pagify(str(self.config.guild(guild)["TOURNEYS"])):
             await ctx.send(box(page))
 
         await ctx.send("Done")
@@ -313,32 +315,34 @@ class Fight:
     async def fightset_open(self, ctx):
         """Toggles the open status of current tournament"""
         #guild = ctx.message.guild
-        if not self._activefight(guild.id):
+        if not await self._activefight(ctx):
             await ctx.send("No active fight to adjust")
             return
 
-        currFight = self._getcurrentfight(guild.id)
+        currFight = await self._getcurrentfight(ctx)
         currFight["OPEN"] = not currFight["OPEN"]
 
-        self.save_data()
+        await self._save_fight(ctx, currFight)
 
         await ctx.send("Tournament Open status is now set to: " + str(currFight["OPEN"]))
-        
+
     @fightset.command(name="name")
     async def fightset_name(self, ctx, inname, tID=None):
         """Renames the tournament"""
         #guild = ctx.message.guild
-        if not tID and not self._activefight(guild.id):
+        if not tID and not await self._activefight(ctx):
             await ctx.send("No active fight to adjust")
             return
         
         if not tID:
-            tID = self._activefight(guild.id)
-        
-        self._getfight(guild.id, tID)["NAME"] = inname
-        self.save_data()
-        await ctx.send("Tourney ID "+tID+" is now called "+self._getfight(guild.id, tID)["NAME"])
-        
+            tID = await self._activefight(ctx)
+            
+        currfight = await self._getfight(ctx, tID)
+
+        currFight["NAME"] = inname
+        await self._save_fight(ctx, currFight)
+        await ctx.send("Tourney ID "+tID+" is now called "+inname)
+
     @fightset.command(name="start")
     async def fightset_start(self, ctx):
         """Starts the current tournament, must run setup first"""
@@ -347,13 +351,13 @@ class Fight:
             
         #guild = ctx.message.guild
         #author = ctx.message.author
-        currFight = self._getcurrentfight(guild.id)
-        tID = self._activefight(guild.id)
-        
+        currFight = await self._getcurrentfight(ctx)
+        tID = await self._activefight(ctx)
+
         if not tID:
             await ctx.send("No current fight to start")
             return
-            
+
         if currFight["TYPEDATA"]:  # Empty dicionary {} resolves to False
             await ctx.send("Looks like this tournament has already started.\nDo you want to delete all match data and restart? (yes/no)")
 #            answer = await self.bot.wait_for_message(timeout=120, author=author)
@@ -368,10 +372,10 @@ class Fight:
                 return
         
         currFight["OPEN"] = False  # first close the tournament
-        self.save_data()                                         
+        await self._save_fight(ctx, currFight)                                         
         
         if currFight["RULES"]["TYPE"] == 0:  # Round-Robin
-            await self._rr_start(guild.id, tID)
+            await self._rr_start(ctx, tID)
 
     @fightset.command(name="setup")
     async def fightset_setup(self, ctx):
@@ -383,21 +387,16 @@ class Fight:
         Self Report: True
         Type: 0 (Round Robin)"""
         #guild = ctx.message.guild
-        currServ = self.the_data[guild.id]
-        tID = str(len(currServ["TOURNEYS"]))  # Can just be len without +1, tourney 0 makes len 1, tourney 1 makes len 2, etc
-        currServ["CURRENT"] = tID
-        currServ["TOURNEYS"][tID] = {
-                                        "PLAYERS": [],
-                                        "NAME": "Tourney "+str(tID),
-                                        "RULES": {"BESTOF": 1, "BESTOFFINAL": 1, "TYPE": 0},
-                                        "TYPEDATA": {},
-                                        "OPEN": False,
-                                        "WINNER": None
-                                        }
+        # currServ = self.the_data[guild.id]
+        tID = str(len(self.config.guild(guild).tourneys))  # Can just be len without +1, tourney 0 makes len 1, tourney 1 makes len 2, etc
+        
+        # currServ["CURRENT"] = tID
+        currFight = default_tourney
+        currFight["NAME"] = "Tourney "+str(tID)
 
-        self.save_data()
-
-        await ctx.send("Tournament has been created!\n\n" + str(currServ["TOURNEYS"][tID]))
+        await self._save_fight(ctx, currFight)
+        
+        await ctx.send("Tournament has been created!\n\n" + str(currFight))
 
         await ctx.send("Adjust settings as necessary, then open the tournament with [p]fightset toggleopen")
 
@@ -407,17 +406,17 @@ class Fight:
         def check(m):    #Check Message from author
             return m.author == author and m.channel == channel
         # guild = ctx.message.guild
-        if not self._activefight(guild.id):
+        if not await self._activefight(ctx):
             await ctx.send("No active fight to adjust")
             return
 
         # author = ctx.message.author
-        currServ = self.the_data[guild.id]
+        # currServ = self.the_data[guild.id]
 
-        await ctx.send("Current fight ID is "+str(currServ["CURRENT"])+"\nOkay to stop? (yes/no)")
+        await ctx.send("Current fight ID is "+str(self.config.guilds(guild).current)+"\nOkay to stop? (yes/no)")
 
         try:
-                answer = await self.bot.wait_for('message', check=check, timeout=120)
+            answer = await self.bot.wait_for('message', check=check, timeout=120)
         except asyncio.TimeoutError:
             await ctx.send("Cancelled due to timeout")
             return
@@ -426,9 +425,8 @@ class Fight:
             await ctx.send("Cancelled")
             return
 
-        currServ["CURRENT"] = None
+        await self.config.guilds(guild).current.set(False)
 
-        self.save_data()
         await ctx.send("Fight has been stopped")
 
 # ***************************Fightset_guild command group start**************************        
@@ -443,54 +441,65 @@ class Fight:
         """Toggles the ability to self-report scores for all tournaments"""
         #guild = ctx.message.guild
         
-        settings = self._getsettings(guild.id)
+        curflag = self.config.guilds(guild).settings.selfreport
         
-        settings["SELFREPORT"] = not settings["SELFREPORT"]
+        self.config.guilds(guild).settings.selfreport.set(not curflag)
+        # settings["SELFREPORT"] = not settings["SELFREPORT"]
 
-        self.save_data()
+        # self.save_data()
 
-        await ctx.send("Self-Reporting ability is now set to: " + str(settings["SELFREPORT"]))
+        await ctx.send("Self-Reporting ability is now set to: " + str(not curflag))
         
     @fightset_guild.command(name="reportchnnl")
-    async def fightset_guild_reportchnnl(self, ctx, channel: discord.TextChannel=None):
+    async def fightset_guild_reportchnnl(self, ctx, inchannel: discord.TextChannel=None):
         """Set the channel for self-reporting"""
         #guild = ctx.message.guild
         
-        settings = self._getsettings(guild.id)
+        # settings = self._getsettings(guild.id)
         
-        settings["REPORTCHNNL"] = channel.id
+        # settings["REPORTCHNNL"] = channel.id
+        if not inchannel:
+            inchannel = channel
+        await self.config.guilds(guild).settings.reportchnnl.set(inchannel.id)
 
-        self.save_data()
-
-        await ctx.send("Self-Reporting Channel is now set to: " + channel.mention)
+        await ctx.send("Self-Reporting Channel is now set to: " + inchannel.mention)
         
     @fightset_guild.command(name="announcechnnl")
-    async def fightset_guild_announcechnnl(self, ctx, channel: discord.TextChannel=None):
+    async def fightset_guild_announcechnnl(self, ctx, inchannel: discord.TextChannel=None):
         """Set the channel for tournament announcements"""
         #guild = ctx.message.guild
         
-        settings = self._getsettings(guild.id)
+        # settings = self._getsettings(guild.id)
         
-        settings["ANNOUNCECHNNL"] = channel.id
+        # settings["ANNOUNCECHNNL"] = channel.id
 
-        self.save_data()
+        # self.save_data()
+        if not inchannel:
+            inchannel = channel
 
-        await ctx.send("Announcement Channel is now set to: " + channel.mention)
+        await self.config.guilds(guild).settings.announcechnnl.set(inchannel.id)
+        
+        await ctx.send("Announcement Channel is now set to: " + inchannel.mention)
 
     @fightset_guild.command(name="setadmin")
     async def fightset_guild_setadmin(self, ctx, role: discord.Role=None):
         """Chooses the tournament-admin role. CAREFUL: This grants the ability to override self-reported scores!"""
         #guild = ctx.message.guild
         
-        settings = self._getsettings(guild.id)
+        # settings = self._getsettings(ctx)
         
-        settings["ADMIN"] = role.id
+        # settings["ADMIN"] = role.id
 
-        self.save_data()
-
+        # self.save_data()
+        
+        await self.config.guilds(guild).settings.admin.set(role.id)
+        
         await ctx.send("Tournament Admin role is now set to: " + role.mention)
 
 # **********************Private command group start*********************
+    async def _save_fight(self, ctx, dfight):
+        """Save a passed fight"""
+    
     async def _guildsettings(self, ctx: commands.Context):
         """Returns the dictionary of guild settings"""
         # return self.the_data[guildID]["SETTINGS"]
@@ -709,7 +718,7 @@ class Fight:
             else:
                 message = await ctx.send(embed=outembed)
             
-            self._messagetracker(guildID)[message.id] = {"TID": tID, "MID": mID, "RID": rID}
+            self._messagetracker(ctx)[message.id] = {"TID": tID, "MID": mID, "RID": rID}
             self.save_data()
                 
             
@@ -732,10 +741,10 @@ class Fight:
         
         await self._rr_printround(guildID, tID, 0)
 
-    async def _rr_score(self, ctx: commands.Context, guildID, tID, mID, author, t1points, t2points):
+    async def _rr_score(self, ctx: commands.Context, tID, mID, author, t1points, t2points):
         def check(m):    #Check Message from author
             return m.author == author and m.channel == channel
-        theT = self._getfight(guildID, tID)
+        theT = self._getfight(ctx, tID)
         theD = theT["TYPEDATA"]
         
         # if t1points and t2points:
@@ -895,7 +904,7 @@ class Fight:
         
         #if message_id not in guildID for 
         #for guildID in self.the_data:
-        #    if not self._messagetracker(guildID)
+        #    if not self._messagetracker(ctx)
         message_id = obj["d"]["message_id"]
         emoji = obj["d"]["emoji"]["name"]
         user_id = obj["d"]["user_id"]
