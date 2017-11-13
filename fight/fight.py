@@ -88,10 +88,10 @@ class Fight:
         """Participate in active fights!"""
         # guild = ctx.message.guild
 
-        if not self._activefight(ctx):
+        if not await self._activefight(ctx):
             await ctx.send("No tournament currently running!")
         else:
-            await ctx.send("Current tournament ID: " + self._activefight(ctx))
+            await ctx.send("Current tournament ID: " + await self._activefight(ctx))
 
         if ctx.invoked_subcommand is None:
             await self.bot.send_cmd_help(ctx)
@@ -104,8 +104,8 @@ class Fight:
         if not user:
             user = author
 
-        currFight = self._getcurrentfight(ctx)
-        tID = self._activefight(ctx)
+        currFight = await self._getcurrentfight(ctx)
+        tID = await self._activefight(ctx)
         if not currFight:
             await ctx.send("No tournament currently running!")
             return
@@ -114,7 +114,7 @@ class Fight:
             await ctx.send("Tournament currently not accepting new players")
             return
 
-        if self._infight(ctx, tID, user.id):
+        if await self._infight(ctx, tID, user.id):
             await ctx.send("You are already in this tournament!")
             return
 
@@ -130,19 +130,19 @@ class Fight:
         # guild = ctx.message.guild
         # user = ctx.message.author
 
-        currFight = self._getcurrentfight(ctx)
+        currFight = await self._getcurrentfight(ctx)
         if not currFight:
             await ctx.send("No tournament currently running!")
             return
 
         if not tID:
-            tID = self._activefight(ctx)
+            tID = await self._activefight(ctx)
 
-        if not self._infight(ctx, tID, author.id):
+        if not await self._infight(ctx, tID, author.id):
             await ctx.send("You are not in a current tournament")
             return
 
-        mID = self._parseuser(ctx, tID, author.id)
+        mID = await self._parseuser(ctx, tID, author.id)
         if not mID:
             await ctx.send("You have no match to update!")
             return
@@ -158,7 +158,7 @@ class Fight:
             user = author
 
         if not tID:
-            tID = self._activefight(ctx)
+            tID = await self._activefight(ctx)
         await ctx.send("Todo Leave")
 
 #    @fight.command(name="leaderboard", pass_context=True)
