@@ -173,7 +173,26 @@ class ReactRestrict:
             raise LookupError("No role found.")
 
         return role
+    
+    async def _get_message_from_channel(self, channel_id: int, message_id: int)\
+            -> Union[discord.Message, None]:
+        """
+        Tries to find a message by ID in the current guild context.
 
+        :param ctx:
+        :param message_id:
+        :return:
+        """
+        channel = self.bot.get_channel(channel_id)
+        try:
+            return await channel.get_message(message_id)
+        except discord.NotFound:
+            pass
+        except AttributeError: # VoiceChannel object has no attribute 'get_message'
+            pass
+
+        return None
+        
     async def _get_message(self, ctx: commands.Context, message_id: int)\
             -> Union[discord.Message, None]:
         """
@@ -308,11 +327,11 @@ class ReactRestrict:
         except LookupError:
             return
 
-        for apprroles in roles:
+        for apprrole in roles:
             if apprrole in member.roles:
                 return
                 
-        message = await self._get_message(ctx, message_id)
+        message = await self._get_message_from_channel(channel_id, message_id)
         await message.remove_reaction(emoji, member)
         
         # try:
