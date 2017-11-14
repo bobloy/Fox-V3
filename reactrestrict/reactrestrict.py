@@ -216,7 +216,7 @@ class ReactRestrict:
         # try:
             # ret = reaction.emoji.id
         # except AttributeError:
-            The emoji is unicode
+            # The emoji is unicode
             # ret = reaction.emoji
 
         # return ret, reaction.emoji
@@ -227,7 +227,7 @@ class ReactRestrict:
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.bot.send_cmd_help(ctx)
+            await ctx.send_help()
 
     @reactrestrict.command()
     async def add(self, ctx: commands.Context, message_id: int, *, role: discord.Role):
