@@ -306,7 +306,7 @@ class Fight:
         """Lists all current and past fights"""
         #guild = ctx.message.guild
 
-        for page in pagify(str(self.config.guild(ctx.guild)["TOURNEYS"])):
+        for page in pagify(str(self.config.guild(ctx.guild).tourneys())):
             await ctx.send(box(page))
 
         await ctx.send("Done")
@@ -388,7 +388,7 @@ class Fight:
         Type: 0 (Round Robin)"""
         #guild = ctx.message.guild
         # currServ = self.the_data[guild.id]
-        tID = str(len(await self.config.guild(ctx.guild).tourneys))  # Can just be len without +1, tourney 0 makes len 1, tourney 1 makes len 2, etc
+        tID = str(len(await self.config.guild(ctx.guild).tourneys()))  # Can just be len without +1, tourney 0 makes len 1, tourney 1 makes len 2, etc
         
         # currServ["CURRENT"] = tID
         currFight = default_tourney
@@ -413,7 +413,7 @@ class Fight:
         # author = ctx.message.author
         # currServ = self.the_data[guild.id]
 
-        await ctx.send("Current fight ID is "+str(self.config.guild(ctx.guild).current)+"\nOkay to stop? (yes/no)")
+        await ctx.send("Current fight ID is "+str(self.config.guild(ctx.guild).current())+"\nOkay to stop? (yes/no)")
 
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=120)
@@ -441,7 +441,7 @@ class Fight:
         """Toggles the ability to self-report scores for all tournaments"""
         #guild = ctx.message.guild
         
-        curflag = self.config.guild(ctx.guild).settings.selfreport
+        curflag = self.config.guild(ctx.guild).settings.selfreport()
         
         self.config.guild(ctx.guild).settings.selfreport.set(not curflag)
         # settings["SELFREPORT"] = not settings["SELFREPORT"]
@@ -499,29 +499,29 @@ class Fight:
 # **********************Private command group start*********************
     async def _save_fight(self, ctx, tID, currFight):
         """Save a passed fight"""
-        allTourney = await self.config.guild(ctx.guild).tourneys
+        allTourney = await self.config.guild(ctx.guild).tourneys()
         allTourney[tID] = currFight
         await self.config.guild(ctx.guild).tourneys.set(allTourney)
         
     async def _guildsettings(self, ctx: commands.Context):
         """Returns the dictionary of guild settings"""
         # return self.the_data[guildID]["SETTINGS"]
-        return await self.config.guild(ctx.guild).settings
+        return await self.config.guild(ctx.guild).settings()
         
     async def _messagetracker(self, ctx: commands.Context):
         """Returns the dictionary of message tracking"""
         # return self.the_data[guildID]["SRTRACKER"]
-        return await self.config.guild(ctx.guild).srtracker
+        return await self.config.guild(ctx.guild).srtracker()
     
     async def _activefight(self, ctx: commands.Context):
         """Returns id for active fight, or None if no active fight"""
         # return self.the_data[guildID]["CURRENT"]
-        return await self.config.guild(ctx.guild).current
+        return await self.config.guild(ctx.guild).current()
 
     async def _infight(self, ctx: commands.Context, tID, userid):
         """Checks if passed member is already in the tournament"""
         # return userid in self.the_data[guildID]["TOURNEYS"][tID]["PLAYERS"]
-        return userid in await self.config.guild(ctx.guild).tourneys[tID]["PLAYERS"]
+        return userid in await self.config.guild(ctx.guild).tourneys()[tID]["PLAYERS"]
 
     async def _embed_tourney(self, ctx, tID):
         """Prints a pretty embed of the tournament"""
@@ -546,9 +546,9 @@ class Fight:
             outlist.append(self._get_user_from_id(ctx, player))
         return outlist
         
-    async def _getsettings(self, ctx: commands.Context):
-        # return self.the_data[guildID]["SETTINGS"]
-        return await self.config.guild(ctx.guild).settings
+    # async def _getsettings(self, ctx: commands.Context):
+        return self.the_data[guildID]["SETTINGS"]
+        # return await self.config.guild(ctx.guild).settings()
     
     async def _get_message_from_id_old(self, channelid, messageid):
         return await self.bot.get_message(self._get_channel_from_id(channelid), messageid)
@@ -586,7 +586,7 @@ class Fight:
     
     async def _getfight(self, ctx: commands.Context, tID):
         # return self.the_data[guildID]["TOURNEYS"][tID]
-        return await self.config.guild(ctx.guild).tourneys[tID]
+        return await self.config.guild(ctx.guild).tourneys()[tID]
     
     async def _getcurrentfight(self, ctx: commands.Context):
         # if not self._activefight(guildID):
