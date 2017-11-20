@@ -937,7 +937,11 @@ class Fight:
             emoji_id = emoji.id
         else:
             emoji_id = emoji.name
-
+        
+        if emoji_id not in E_REACTS.keys():  # Not sure if this works
+            await message.remove_reaction(emoji, member)
+            return
+        
         has_reactrestrict, combos = await self.has_reactrestrict_combo(message_id)
 
         if not has_reactrestrict:
