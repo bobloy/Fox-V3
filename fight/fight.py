@@ -18,6 +18,8 @@ from random import randint
 T_TYPES = {0: "Round Robin", 1: "Single Elimination",
            2: "Double Elimination", 3: "Triple Elimination",
            4: "3 Game Guarentee", 5: "Compass Draw"}
+           
+E_REACTS = {"WIN": ✅,"LOSS": ❌, "DISPUTE": ⚠}
 
 
 class Fight:
@@ -29,7 +31,9 @@ class Fight:
         # self.file_path = "data/Fox-Cogs/fight/fight.json"
         # self.the_data = dataIO.load_json(self.file_path)
         self.config = Config.get_conf(self,identifier=49564952847684)
-        default_global = {}
+        default_global = {  
+                "srtracker": {}
+                }
         default_guild = {
                 "current": None,
                 "tourneys": {},
@@ -38,8 +42,6 @@ class Fight:
                     "reportchnnl": None,
                     "announcechnnl": None,
                     "admin": None
-                    },  
-                "srtracker": {
                     },
                 "emoji": {
                     "nums": [],
@@ -68,6 +70,12 @@ class Fight:
                     "SCORE1": 0,
                     "SCORE2": 0
                     }
+                }
+        self.default_tracker = {
+                "TID": None,
+                "MID": None,
+                "RID": None,
+                "GUILDID", None
                 }
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
@@ -146,7 +154,7 @@ class Fight:
             await ctx.send("Tournament has not started yet")
             return
         
-        mID = await self._parseuser(ctx, tID, ctx.author.id)
+        mID = await self._parseuser(ctx.guild, tID, ctx.author.id)
         if not mID:
             await ctx.send("You have no match to update!")
             return
@@ -233,7 +241,7 @@ class Fight:
         if not tID:
             tID = await self._activefight(ctx)
         
-        currFight = await self._getfight(ctx, tID)
+        currFight = await self._getfight(ctx.guild, tID)
         
         try:
             num = int(incount)
@@ -269,7 +277,7 @@ class Fight:
         if not tID:
             tID = await self._activefight(ctx)
         
-        currFight = await self._getfight(ctx, tID)
+        currFight = await self._getfight(ctx.guild, tID)
         
         try:
             num = int(incount)
@@ -293,7 +301,7 @@ class Fight:
     async def fightset_current(self, ctx, tID):
         """Sets the current tournament to passed ID"""
         #guild = ctx.message.guild
-        currFight = await self._getfight(ctx, tID)
+        currFight = await self._getfight(ctx.guild, tID)
 
         if not currFight:
             await ctx.send("No tourney found with that ID")
@@ -342,7 +350,7 @@ class Fight:
         if not tID:
             tID = await self._activefight(ctx)
             
-        currFight = await self._getfight(ctx, tID)
+        currFight = await self._getfight(ctx.guild, tID)
 
         currFight["NAME"] = inname
         await self._save_fight(ctx, tID, currFight)
@@ -508,6 +516,12 @@ class Fight:
         allTourney[tID] = currFight
         await self.config.guild(ctx.guild).tourneys.set(allTourney)
         
+     async def _save_tracker(self, ctx, messageid, matchData):
+        """Save a passed fight"""
+        allTracker = await self.config.srtracker()
+        allTracker[messageid] = matchData
+        await self.config.srtracker.set(allTracker)
+        
     async def _guildsettings(self, ctx: commands.Context):
         """Returns the dictionary of guild settings"""
         # return self.the_data[guildID]["SETTINGS"]
@@ -516,7 +530,7 @@ class Fight:
     async def _messagetracker(self, ctx: commands.Context):
         """Returns the dictionary of message tracking"""
         # return self.the_data[guildID]["SRTRACKER"]
-        return await self.config.guild(ctx.guild).srtracker()
+        return await self.config.srtracker()
     
     async def _activefight(self, ctx: commands.Context):
         """Returns id for active fight, or None if no active fight"""
@@ -536,11 +550,17 @@ class Fight:
         """Checks user submitted scores for inconsistancies"""
         await ctx.send("_comparescores Todo")
 
-    async def _parseuser(self, ctx: commands.Context, tID, userid):
+    async def _parseuser(self, guild: discord.Guild, tID, userid):
         """Finds user in the tournament"""
         # if self._getfight(guildID, tID)["RULES"]["TYPE"] == 0:  # RR
-        if (await self._getfight(ctx, tID))["RULES"]["TYPE"] == 0:
-            return await self._rr_parseuser(ctx, tID, userid)
+        
+        theT = await self._getfight(guild, tID)
+        
+        if userid not in theT["PLAYERS"]:  # Shouldn't happen, _infight check first
+            return False
+        
+        if theT["RULES"]["TYPE"] == 0:
+            return await self._rr_parseuser(guild, tID, userid)
 
         return False
         
@@ -589,9 +609,9 @@ class Fight:
     def _get_guild_from_id(self, guildID):
         return self.bot.get_guild(guildID)
     
-    async def _getfight(self, ctx: commands.Context, tID):
+    async def _getfight(self, guild: discord.Guild, tID):
         # return self.the_data[guildID]["TOURNEYS"][tID]
-        return (await self.config.guild(ctx.guild).tourneys())[tID]
+        return (await self.config.guild(guild).tourneys())[tID]
     
     async def _getcurrentfight(self, ctx: commands.Context):
         # if not self._activefight(guildID):
@@ -601,7 +621,7 @@ class Fight:
         isactive = await self._activefight(ctx)
         if not isactive:
             return None
-        return await self._getfight(ctx, isactive)
+        return await self._getfight(ctx.guild, isactive)
 
 # *********** References to "TYPEDATA" must be done per tournament mode (Below this line) *******
        
@@ -616,21 +636,21 @@ class Fight:
         await ctx.send("Elim update todo")
 
 # **********************Round-Robin**********************************
-    async def _rr_parseuser(self, ctx: commands.Context, tID, userid):
-        theT = await self._getfight(ctx, tID)
+    async def _rr_parseuser(self, guild: discord.Guild, tID, userid):
+        theT = await self._getfight(guild, tID)
         matches = theT["TYPEDATA"]["MATCHES"]
         schedule = theT["TYPEDATA"]["SCHEDULE"]
 
         for round in schedule:
             for mID in round:
-                teamnum = await self._rr_matchperms(ctx, tID, userid, mID)
-                if teamnum and not await self._rr_matchover(ctx, tID, mID):  # User is in this match, check if it's done yet
+                teamnum = await self._rr_matchperms(guild, tID, userid, mID)
+                if teamnum and not await self._rr_matchover(guild, tID, mID):  # User is in this match, check if it's done yet
                     return mID
     
         return False  # All matches done or not in tourney
 
-    async def _rr_matchover(self, ctx: commands.Context, tID, mID):
-        theT = await self._getfight(ctx, tID)
+    async def _rr_matchover(self, guild: discord.Guild, tID, mID):
+        theT = await self._getfight(guild, tID)
         match = theT["TYPEDATA"]["MATCHES"][mID]
         
         if (match["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2) or 
@@ -640,17 +660,17 @@ class Fight:
         return False
 
     async def _rr_roundover(self, ctx: commands.Context, tID):
-        currFight = await self._getfight(ctx, tID)
-        currRound = currFight["TYPEDATA"]["SCHEDULE"][currFight["TYPEDATA"]["ROUND"]]
+        theT = await self._getfight(ctx.guild, tID)
+        theR = theT["TYPEDATA"]["SCHEDULE"][theT["TYPEDATA"]["ROUND"]]
 
-        for mID in currRound:
+        for mID in theR:
             if not await self._rr_matchover(ctx, tID, mID):
                 return False
         return True
 
-    async def _rr_matchperms(self, ctx: commands.Context, tID, userid, mID):
+    async def _rr_matchperms(self, guild: discord.Guild, tID, userid, mID):
         # if self._get_user_from_id(guildID, userid) # Do an if-admin at start
-        theT = await self._getfight(ctx, tID)
+        theT = await self._getfight(guild, tID)
         if userid in theT["TYPEDATA"]["MATCHES"][mID]["TEAM1"]:           
             return 1
 
@@ -661,7 +681,7 @@ class Fight:
 
     async def _rr_setup(self, ctx: commands.Context, tID):
 
-        theT = await self._getfight(ctx, tID)
+        theT = await self._getfight(ctx.guild, tID)
         theD = theT["TYPEDATA"]
         
         get_schedule = self._rr_schedule(theT["PLAYERS"])
@@ -674,7 +694,7 @@ class Fight:
     
     async def _rr_printround(self, ctx: commands.Context, tID, rID):
 
-        theT = await self._getfight(ctx, tID)
+        theT = await self._getfight(ctx.guild, tID)
         theD = theT["TYPEDATA"]
         # rID starts at 0, so print +1. Never used for computation, so doesn't matter
         if await self.config.guild(ctx.guild).settings.announcechnnl():
@@ -712,7 +732,7 @@ class Fight:
             outembed=discord.Embed(title="Match ID: " + mID, color=0x0000bf)
             outembed.add_field(name="Team 1", value=mention1, inline=True)
             outembed.add_field(name="Team 2", value=mention2, inline=True)
-            outembed.set_footer(text="React your team's score, then your opponents score!")
+            outembed.set_footer(text=E_REACTS["WIN"]+" Report Win || "E_REACTS["LOSS"]+" Report Loss || "E_REACTS["DISPUTE"]+" Dispute Result")
             
             if await self._guildsettings(ctx)["REPORTCHNNL"]:
                 # message = await self.bot.send_message(
@@ -726,8 +746,13 @@ class Fight:
             else:
                 message = await ctx.send(embed=outembed)
             
-            self._messagetracker(ctx)[message.id] = {"TID": tID, "MID": mID, "RID": rID}
-            self.save_data()
+            # self._messagetracker(ctx)[message.id] = {"TID": tID, "MID": mID, "RID": rID}
+            trackmessage = self.default_tracker
+            trackmessage["TID"] = tID
+            trackmessage["MID"] = mID
+            trackmessage["RID"] = rID
+            trackmessage["GUILDID"] = ctx.guild.id
+            self._save_tracker(ctx, message.id, trackmessage )
                 
             
             # await ctx.send(team1 + " vs " + team2 + " || Match ID: " + match)
@@ -752,7 +777,7 @@ class Fight:
     async def _rr_score(self, ctx: commands.Context, tID, mID, t1points, t2points):
         def check(m):    #Check Message from author
             return m.author == ctx.author and m.channel == ctx.channel
-        theT = await self._getfight(ctx, tID)
+        theT = await self._getfight(ctx.guild, tID)
         theD = theT["TYPEDATA"]
         
         # if t1points and t2points:
@@ -764,7 +789,7 @@ class Fight:
         if not t1points:
             await ctx.send("Entering scores for match ID: " + mID + "\n\n")
             await ctx.send("How many points did TEAM1 get?")
-            if await self._rr_matchperms(ctx, tID, ctx.author.id, mID) == 1:
+            if await self._rr_matchperms(ctx.guild, tID, ctx.author.id, mID) == 1:
                 await ctx.send("*HINT: You are on TEAM1*")
             # answer = await self.bot.wait_for_message(timeout=120, author=author)
             
@@ -782,7 +807,7 @@ class Fight:
 
         if not t2points:
             await ctx.send("How many points did TEAM2 get?")
-            if await self._rr_matchperms(ctx, tID, ctx.author.id, mID) == 2:
+            if await self._rr_matchperms(ctx.guild, tID, ctx.author.id, mID) == 2:
                 await ctx.send("*HINT: You are on TEAM2*")
             # answer = await self.bot.wait_for_message(timeout=120, author=author)
             try:
@@ -875,48 +900,147 @@ class Fight:
 
         return outlist
         
+    #**************** Attempt 2, borrow from Squid*******
+
+    async def on_raw_reaction_add(self, emoji: discord.PartialReactionEmoji,
+                                  message_id: int, channel_id: int, user_id: int):
+        """
+        Event handler for long term reaction watching.
+        :param discord.PartialReactionEmoji emoji:
+        :param int message_id:
+        :param int channel_id:
+        :param int user_id:
+        :return:
+        """
+        tracker = await self.config.srtracker()
         
+        if message_id not in tracker:
+            return 
+        
+        tracker = tracker[message_id]
+            
+        guild = self.bot.get_guild(tracker["GUILDID"])
+        member = guild.get_member(user_id)
+        if member.bot:
+            return
+
+        if tracker["MID"] != (await self._parseuser(guild, tracker["TID"], member.id)):
+            message = guild.get_message(message_id)
+            await message.remove_reaction(emoji, member)
+            return
+
+        channel = guild.get_channel(channel_id)
+        message = channel.get_message(message_id)
+
+
+        if emoji.is_custom_emoji():
+            emoji_id = emoji.id
+        else:
+            emoji_id = emoji.name
+
+        has_reactrestrict, combos = await self.has_reactrestrict_combo(message_id)
+
+        if not has_reactrestrict:
+            return
+
+        try:
+            member = self._get_member(channel_id, user_id)
+        except LookupError:
+            return
+
+        if member.bot:
+            return
+
+        try:
+            roles = [self._get_role(member.guild, c.role_id) for c in combos]
+        except LookupError:
+            return
+
+        for apprrole in roles:
+            if apprrole in member.roles:
+                return
+                
+        message = await self._get_message_from_channel(channel_id, message_id)
+        await message.remove_reaction(emoji, member)
+
+    # async def on_raw_reaction_remove(self, emoji: discord.PartialReactionEmoji,
+                                     # message_id: int, channel_id: int, user_id: int):
+        # """
+        # Event handler for long term reaction watching.
+        # :param discord.PartialReactionEmoji emoji:
+        # :param int message_id:
+        # :param int channel_id:
+        # :param int user_id:
+        # :return:
+        # """
+        # if emoji.is_custom_emoji():
+            # emoji_id = emoji.id
+        # else:
+            # emoji_id = emoji.name
+
+        # has_reactrole, combos = await self.has_reactrole_combo(message_id, emoji_id)
+
+        # if not has_reactrole:
+            # return
+
+        # try:
+            # member = self._get_member(channel_id, user_id)
+        # except LookupError:
+            # return
+
+        # if member.bot:
+            # return
+
+        # try:
+            # roles = [self._get_role(member.guild, c.role_id) for c in combos]
+        # except LookupError:
+            # return
+
+        # try:
+            # await member.remove_roles(*roles)
+        # except discord.Forbidden:
+            # pass
     #**************** Socket attempt ********************
     
-    async def _on_react(self, reaction, user):
-        """do nothing (for now)"""
+    # async def _on_react(self, reaction, user):
+        # """do nothing (for now)"""
         
         
         
-        #        if not self.the_data["trackmessage"]:
-        #            return
-        #        
-        #        if user == self.bot.user:
-        #            return  # Don't remove bot's own reactions
-        #        message = reaction.message
-        #        emoji = reaction.emoji
-        #        
-        #        if not message.id == self.the_data["trackmessage"]:
-        #            return
-        #        
-        #        if str(emoji) in self.letters:
-        #            letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[self.letters.index(str(emoji))]
-        #            await self._guessletter(letter, message.channel)
-        #            
-        #            
-        #        if str(emoji) in self.navigate:
-        #            if str(emoji) == self.navigate[0]:
-        #                await self._reactmessage_am(message)
-        #
-        #            if str(emoji) == self.navigate[-1]:
-        #                await self._reactmessage_nz(message)
+               # # if not self.the_data["trackmessage"]:
+                   # # return
+               
+               # # if user == self.bot.user:
+                   # # return  # Don't remove bot's own reactions
+               # # message = reaction.message
+               # # emoji = reaction.emoji
+               
+               # # if not message.id == self.the_data["trackmessage"]:
+                   # # return
+               
+               # # if str(emoji) in self.letters:
+                   # # letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[self.letters.index(str(emoji))]
+                   # # await self._guessletter(letter, message.channel)
+                   
+                   
+               # # if str(emoji) in self.navigate:
+                   # # if str(emoji) == self.navigate[0]:
+                       # # await self._reactmessage_am(message)
+        
+                   # # if str(emoji) == self.navigate[-1]:
+                       # # await self._reactmessage_nz(message)
      
-    async def on_socket_response(self, obj):
-        if obj["t"] != "MESSAGE_REACTION_ADD":
-            return
+    # async def on_socket_response(self, obj):
+        # if obj["t"] != "MESSAGE_REACTION_ADD":
+            # return
         
-        if "emoji" not in obj["d"]:     # This reaction is in the messages deque, use other listener
-            return
+        # if "emoji" not in obj["d"]:     # This reaction is in the messages deque, use other listener
+            # return
         
-        #if message_id not in guildID for 
-        #for guildID in self.the_data:
-        #    if not self._messagetracker(ctx)
-        message_id = obj["d"]["message_id"]
-        emoji = obj["d"]["emoji"]["name"]
-        user_id = obj["d"]["user_id"]
+        # # if message_id not in guildID for 
+        # # for guildID in self.the_data:
+           # # if not self._messagetracker(ctx)
+        # message_id = obj["d"]["message_id"]
+        # emoji = obj["d"]["emoji"]["name"]
+        # user_id = obj["d"]["user_id"]
 
