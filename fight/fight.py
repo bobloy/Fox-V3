@@ -30,7 +30,7 @@ class Fight:
         # self.path = "data/Fox-Cogs/fight/"
         # self.file_path = "data/Fox-Cogs/fight/fight.json"
         # self.the_data = dataIO.load_json(self.file_path)
-        self.config = Config.get_conf(self,identifier=49564952847684)
+        self.config = Config.get_conf(self, identifier=49564952847684)
         default_global = {  
                 "srtracker": {}
                 }
