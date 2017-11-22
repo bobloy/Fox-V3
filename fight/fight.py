@@ -230,6 +230,12 @@ class Fight:
             await ctx.send_help()
         # await ctx.send("I can do stuff!")
 
+    @fightset.command(name="reset")
+    async def fightset_reset(self, ctx):
+        """Clears all data, be careful!"""
+        await self.config.clear_all()
+        await ctx.send("Success")
+        
     @fightset.command(name="bestof")
     async def fightset_bestof(self, ctx, incount, tID=None):
         """Adjust # of games played per match. Must be an odd number"""
