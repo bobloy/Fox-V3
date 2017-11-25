@@ -19,7 +19,7 @@ T_TYPES = {0: "Round Robin", 1: "Single Elimination",
            2: "Double Elimination", 3: "Triple Elimination",
            4: "3 Game Guarentee", 5: "Compass Draw"}
            
-E_REACTS = {"WIN": ✅,"LOSS": ❌, "DISPUTE": ⚠}
+
 
 
 class Fight:
@@ -32,7 +32,10 @@ class Fight:
         # self.the_data = dataIO.load_json(self.file_path)
         self.config = Config.get_conf(self, identifier=49564952847684)
         default_global = {  
-                "srtracker": {}
+                "srtracker": {},
+                "win": None,
+                "loss": None,
+                "dispute": None
                 }
         default_guild = {
                 "current": None,
@@ -75,7 +78,7 @@ class Fight:
                 "TID": None,
                 "MID": None,
                 "RID": None,
-                "GUILDID", None
+                "GUILDID": None
                 }
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
@@ -90,6 +93,8 @@ class Fight:
 #            return m.author == ctx.author and m.channel == ctx.channel
 
 # ************************Fight command group start************************
+
+
     @commands.group()
     @commands.guild_only()
     async def fight(self, ctx):
@@ -229,6 +234,27 @@ class Fight:
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
         # await ctx.send("I can do stuff!")
+    
+    @fightset.command(name="emoji")
+    async def fightset_emoji(self, ctx, winEmoji: discord.Emoji, lossEmoji: discord.Emoji, disputeEmoji: discord.Emoji):
+        """Set the global emojis for reactions"""
+        message = await ctx.send("Testing emojis")
+        
+        # try:
+        await ctx.send(str(winEmoji) + " | " + str(lossEmoji) + " | " + str(disputeEmoji))
+
+        await message.add_reaction(str(winEmoji))
+        await message.add_reaction(str(lossEmoji))
+        await message.add_reaction(str(disputeEmoji))
+        # except:
+            # await ctx.send("Emoji failure")
+            # return
+            
+        await self.config.win.set(str(winEmoji))
+        await self.config.loss.set(str(lossEmoji))
+        await self.config.dispute.set(str(lossEmoji))
+        
+        await ctx.send("Success")
 
     @fightset.command(name="reset")
     async def fightset_reset(self, ctx):
@@ -522,7 +548,7 @@ class Fight:
         allTourney[tID] = currFight
         await self.config.guild(ctx.guild).tourneys.set(allTourney)
         
-     async def _save_tracker(self, ctx, messageid, matchData):
+    async def _save_tracker(self, ctx, messageid, matchData):
         """Save a passed fight"""
         allTracker = await self.config.srtracker()
         allTracker[messageid] = matchData
@@ -738,7 +764,7 @@ class Fight:
             outembed=discord.Embed(title="Match ID: " + mID, color=0x0000bf)
             outembed.add_field(name="Team 1", value=mention1, inline=True)
             outembed.add_field(name="Team 2", value=mention2, inline=True)
-            outembed.set_footer(text=E_REACTS["WIN"]+" Report Win || "E_REACTS["LOSS"]+" Report Loss || "E_REACTS["DISPUTE"]+" Dispute Result")
+            outembed.set_footer(text=(await self.config.win())+" Report Win || "(await self.config.loss())+" Report Loss || "(await self.config.dispute())+" Dispute Result")
             
             if await self._guildsettings(ctx)["REPORTCHNNL"]:
                 # message = await self.bot.send_message(
