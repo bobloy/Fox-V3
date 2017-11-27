@@ -234,7 +234,7 @@ class Fight:
                 
             # self.save_data()
 
-        if ctx.invoked_subcommand is None or isinstance(ctx.invoked_subcommand, commands.Group):
+        if ctx.invoked_subcommand is None:
             await ctx.send_help()
         # await ctx.send("I can do stuff!")
     
@@ -379,7 +379,12 @@ class Fight:
             await ctx.send(box(page))
 
         await ctx.send("Done")
-
+    
+    @fightset.command(name="test")
+    async def fightset_test(self, ctx):
+        """testing"""
+        await ctx.send(str(await self.config.all_guilds()))
+        
     @fightset.command(name="open")
     async def fightset_open(self, ctx):
         """Toggles the open status of current tournament"""
@@ -395,6 +400,7 @@ class Fight:
         await self._save_fight(ctx, tID, currFight)
 
         await ctx.send("Tournament Open status is now set to: " + str(currFight["OPEN"]))
+    
 
     @fightset.command(name="name")
     async def fightset_name(self, ctx, inname, tID=None):
@@ -428,15 +434,15 @@ class Fight:
             await ctx.send("No current fight to start")
             return
 
-        if not (await self.config.win()): #Emoji not setup
+        if (await self.config.win()) is None: #Emoji not setup
             await ctx.send("Emojis have not been configured, see `[p]fightset emoji`")
             return
 
-        if not (await self.config.guild(ctx.guild).announcechnnl()): #Announcechnnl not setup
+        if (await self.config.guild(ctx.guild).announcechnnl()) is None: #Announcechnnl not setup
             await ctx.send("Announcement channel has not been configured, see `[p]fightset guild announcechnnl`")
             return
 
-        if not (await self.config.guild(ctx.guild).reportchnnl()): #Reportchnnl not setup
+        if (await self.config.guild(ctx.guild).reportchnnl()) is None: #Reportchnnl not setup
             await ctx.send("Self-Report channel has not been configured, see `[p]fightset guild reportchnnl`")
             return
 
@@ -516,32 +522,22 @@ class Fight:
     @fightset.group(name="guild")
     async def fightset_guild(self, ctx):
         """Adjust guild wide settings"""
-        if ctx.invoked_subcommand is None:
+        if ctx.invoked_subcommand is None or isinstance(ctx.invoked_subcommand, commands.Group):
             await ctx.send_help()
     
     @fightset_guild.command(name="selfreport")
     async def fightset_guild_selfreport(self, ctx):
         """Toggles the ability to self-report scores for all tournaments"""
-        #guild = ctx.message.guild
-        
         curflag = await self.config.guild(ctx.guild).settings.selfreport()
         
         await self.config.guild(ctx.guild).settings.selfreport.set(not curflag)
-        # settings["SELFREPORT"] = not settings["SELFREPORT"]
-
-        # self.save_data()
-
+        
         await ctx.send("Self-Reporting ability is now set to: " + str(not curflag))
         
     @fightset_guild.command(name="reportchnnl")
     async def fightset_guild_reportchnnl(self, ctx, channel: discord.TextChannel=None):
-        """Set the channel for self-reporting"""
-        #guild = ctx.message.guild
-        
-        # settings = self._getsettings(guild.id)
-        
-        # settings["REPORTCHNNL"] = channel.id
-        if not channel:
+        """Set the channel for self-reporting matches"""
+        if channel is None:
             channel = ctx.channel
         await self.config.guild(ctx.guild).settings.reportchnnl.set(channel.id)
 
@@ -550,7 +546,7 @@ class Fight:
     @fightset_guild.command(name="announcechnnl")
     async def fightset_guild_announcechnnl(self, ctx, channel: discord.TextChannel=None):
         """Set the channel for tournament announcements"""
-        if not channel:
+        if channel is None:
             channel = ctx.channel
 
         await self.config.guild(ctx.guild).settings.announcechnnl.set(channel.id)
@@ -560,14 +556,6 @@ class Fight:
     @fightset_guild.command(name="setadmin")
     async def fightset_guild_setadmin(self, ctx, role: discord.Role=None):
         """Chooses the tournament-admin role. CAREFUL: This grants the ability to override self-reported scores!"""
-        #guild = ctx.message.guild
-        
-        # settings = self._getsettings(ctx)
-        
-        # settings["ADMIN"] = role.id
-
-        # self.save_data()
-        
         await self.config.guild(ctx.guild).settings.admin.set(role.id)
         
         await ctx.send("Tournament Admin role is now set to: " + role.mention)
