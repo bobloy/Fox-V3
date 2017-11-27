@@ -735,14 +735,15 @@ class Fight:
 
         return None
 
-    def _get_announcechnnl(self, guild: discord.Guild):
+    async def _get_announcechnnl(self, guild: discord.Guild):
         channelid = await self.config.guild(guild).settings.announcechnnl()
         channel = self._get_channel_from_id(channelid)
         return channel
 
-    def _get_reportchnnl(self, guild: discord.Guild):
-        channel self._get_channel_from_id((await self.config.guild(guild).settings.reportchnnl()))
-        return channel 
+    async def _get_reportchnnl(self, guild: discord.Guild):
+        channelid = await self.config.guild(guild).settings.reportchnnl()
+        channel = self._get_channel_from_id(channelid)
+        return channel
     
     def _get_channel_from_id(self, channelid):
         return self.bot.get_channel(channelid)
@@ -891,7 +892,7 @@ class Fight:
     async def _rr_start(self, ctx, tID):
 
         await self._rr_setup(ctx, tID)
-        channel = self._get_announcechnnl(ctx.guild)
+        channel = await self._get_announcechnnl(ctx.guild)
         if channel:
 
             await channel.send("**Tournament is Starting**")
