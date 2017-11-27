@@ -34,8 +34,11 @@ class Fight:
         default_global = {  
                 "srtracker": {},
                 "win": None,
+                "winu": None,
                 "loss": None,
-                "dispute": None
+                "lossu": None,
+                "dispute": None,
+                "disputeu": None
                 }
         default_guild = {
                 "current": None,
@@ -236,24 +239,46 @@ class Fight:
         # await ctx.send("I can do stuff!")
     
     @fightset.command(name="emoji")
-    async def fightset_emoji(self, ctx, winEmoji: discord.Emoji, lossEmoji: discord.Emoji, disputeEmoji: discord.Emoji):
-        """Set the global emojis for reactions"""
-        message = await ctx.send("Testing emojis")
+    async def fightset_emoji(self, ctx):
+        """Set the global reaction emojis for reporting matches"""
+        message = await ctx.send("Emoji Tests")
+        message2 = await ctx.send("Secondary Emoji Tests")
         
-        # try:
-        await ctx.send(str(winEmoji) + " | " + str(lossEmoji) + " | " + str(disputeEmoji))
+        needed=["reporting a win","reporting a loss","disputing results"]
+        
+        for need in needed:
+            try:
+                emoji, actual_emoji, isUnicode = await self._wait_for_emoji(ctx, need)
+            except asyncio.TimeoutError:
+                await ctx.send("You didn't respond in time, please redo this command.")
+                return
 
-        await message.add_reaction(str(winEmoji))
-        await message.add_reaction(str(lossEmoji))
-        await message.add_reaction(str(disputeEmoji))
-        # except:
-            # await ctx.send("Emoji failure")
-            # return
+            try:
+                await message.add_reaction(actual_emoji)
+            except discord.HTTPException:
+                await ctx.send("I can't add that emoji because I'm not in the guild that"
+                               " owns it.")
+                return
             
-        await self.config.win.set(str(winEmoji))
-        await self.config.loss.set(str(lossEmoji))
-        await self.config.dispute.set(str(lossEmoji))
+            if need == "reporting a win":
+                winEmoji = emoji
+                winUnicode = isUnicode
+            if need == "reporting a loss":
+                lossEmoji = emoji
+                lossUnicode = isUnicode
+            if need == "disputing results":
+                disputeEmoji = emoji
+                disUnicode = isUnicode
+                
+        await self.config.win.set(winEmoji)
+        await self.config.winu.set(winUnicode)
+        await self.config.loss.set(lossEmoji)
+        await self.config.lossu.set(lossUnicode)
+        await self.config.dispute.set(disputeEmoji)
+        await self.config.disputeu.set(disUnicode)
         
+        await self._add_wld(message2)
+
         await ctx.send("Success")
 
     @fightset.command(name="reset")
@@ -542,6 +567,83 @@ class Fight:
         await ctx.send("Tournament Admin role is now set to: " + role.mention)
 
 # **********************Private command group start*********************
+    async def _add_wld(self, message: discord.Message):
+        """Adds assigned Win-Loss-Dispute reactions to message"""
+        
+        win = await self.config.win()
+        loss = await self.config.loss()
+        dispute = await self.config.dispute()
+        
+        if not (await self.config.winu()): #If not unicode
+            win = self.bot.get_emoji(win)
+        if not (await self.config.lossu()): 
+            loss = self.bot.get_emoji(loss)
+        if not (await self.config.disputeu()):
+            dispute = self.bot.get_emoji(dispute)
+        
+        await message.add_reaction(win)
+        await message.add_reaction(loss)
+        await message.add_reaction(dispute)
+    async def _get_win_str(self):
+        """Returns win emoji ready for str"""
+        win = await self.config.win()
+                
+        if not (await self.config.winu()): #If not unicode
+            win = str(self.bot.get_emoji(win))
+        return win
+       
+    async def _get_loss_str(self):
+        """Returns loss emoji ready for str"""
+        
+        loss = await self.config.loss()
+        
+        if not (await self.config.lossu()): 
+            loss = str(self.bot.get_emoji(loss))
+        return loss
+        
+    async def _get_dispute_str(self):
+        """Returns dispute emoji ready for str"""
+        dispute = await self.config.dispute()
+        
+        if not (await self.config.disputeu()):
+            dispute = str(self.bot.get_emoji(dispute))
+        return dispute
+        
+    async def _wait_for_emoji(self, ctx: commands.Context, messagetext):
+        """
+        Asks the user to react to this message and returns the emoji string if unicode
+        or ID if custom.
+
+        :param ctx:
+        :raises asyncio.TimeoutError:
+            If the user does not respond in time.
+        :return:
+        """
+        if messagetext:
+            message = await ctx.send("Please react to this message with the reaction you"
+                                 " would like for "+messagetext+", you have 20 seconds to"
+                                 " respond.")
+        else:
+            message = await ctx.send("Please react to this message with the reaction you"
+                                     " would like, you have 20 seconds to"
+                                     " respond.")
+
+        def _wait_check(react, user):
+            msg = react.message
+            return msg.id == message.id and user.id == ctx.author.id
+
+        reaction, _ = await ctx.bot.wait_for('reaction_add', check=_wait_check, timeout=20)
+
+        try:
+            ret = reaction.emoji.id
+            isUnicode = False
+        except AttributeError:
+            # The emoji is unicode
+            ret = reaction.emoji
+            isUnicode = True
+
+        return ret, reaction.emoji, isUnicode
+        
     async def _save_fight(self, ctx, tID, currFight):
         """Save a passed fight"""
         allTourney = await self.config.guild(ctx.guild).tourneys()
@@ -764,7 +866,7 @@ class Fight:
             outembed=discord.Embed(title="Match ID: " + mID, color=0x0000bf)
             outembed.add_field(name="Team 1", value=mention1, inline=True)
             outembed.add_field(name="Team 2", value=mention2, inline=True)
-            outembed.set_footer(text=(await self.config.win())+" Report Win || "(await self.config.loss())+" Report Loss || "(await self.config.dispute())+" Dispute Result")
+            outembed.set_footer(text=(await self._get_win_str())+" Report Win || "(await self._get_loss_str())+" Report Loss || "(await self._get_dispute_str())+" Dispute Result")
             
             if await self._guildsettings(ctx)["REPORTCHNNL"]:
                 # message = await self.bot.send_message(
@@ -778,13 +880,14 @@ class Fight:
             else:
                 message = await ctx.send(embed=outembed)
             
-            # self._messagetracker(ctx)[message.id] = {"TID": tID, "MID": mID, "RID": rID}
+            await self._add_wld(ctx, message)
+            
             trackmessage = self.default_tracker
             trackmessage["TID"] = tID
             trackmessage["MID"] = mID
             trackmessage["RID"] = rID
             trackmessage["GUILDID"] = ctx.guild.id
-            self._save_tracker(ctx, message.id, trackmessage )
+            self._save_tracker(ctx, message.id, trackmessage)
                 
             
             # await ctx.send(team1 + " vs " + team2 + " || Match ID: " + match)
@@ -950,7 +1053,7 @@ class Fight:
             return 
         
         tracker = tracker[message_id]
-            
+        
         guild = self.bot.get_guild(tracker["GUILDID"])
         member = guild.get_member(user_id)
         if member.bot:
@@ -970,113 +1073,15 @@ class Fight:
         else:
             emoji_id = emoji.name
         
-        if emoji_id not in E_REACTS.keys():  # Not sure if this works
+        wld = [(await self.config.win()), (await self.config.loss()), (await self.config.dispute())]
+        if emoji_id not in wld:  # Not sure if this works
             await message.remove_reaction(emoji, member)
             return
         
-        has_reactrestrict, combos = await self.has_reactrestrict_combo(message_id)
-
-        if not has_reactrestrict:
-            return
-
-        try:
-            member = self._get_member(channel_id, user_id)
-        except LookupError:
-            return
-
-        if member.bot:
-            return
-
-        try:
-            roles = [self._get_role(member.guild, c.role_id) for c in combos]
-        except LookupError:
-            return
-
-        for apprrole in roles:
-            if apprrole in member.roles:
-                return
-                
-        message = await self._get_message_from_channel(channel_id, message_id)
-        await message.remove_reaction(emoji, member)
-
-    # async def on_raw_reaction_remove(self, emoji: discord.PartialReactionEmoji,
-                                     # message_id: int, channel_id: int, user_id: int):
-        # """
-        # Event handler for long term reaction watching.
-        # :param discord.PartialReactionEmoji emoji:
-        # :param int message_id:
-        # :param int channel_id:
-        # :param int user_id:
-        # :return:
-        # """
-        # if emoji.is_custom_emoji():
-            # emoji_id = emoji.id
-        # else:
-            # emoji_id = emoji.name
-
-        # has_reactrole, combos = await self.has_reactrole_combo(message_id, emoji_id)
-
-        # if not has_reactrole:
-            # return
-
-        # try:
-            # member = self._get_member(channel_id, user_id)
-        # except LookupError:
-            # return
-
-        # if member.bot:
-            # return
-
-        # try:
-            # roles = [self._get_role(member.guild, c.role_id) for c in combos]
-        # except LookupError:
-            # return
-
-        # try:
-            # await member.remove_roles(*roles)
-        # except discord.Forbidden:
-            # pass
-    #**************** Socket attempt ********************
-    
-    # async def _on_react(self, reaction, user):
-        # """do nothing (for now)"""
-        
-        
-        
-               # # if not self.the_data["trackmessage"]:
-                   # # return
-               
-               # # if user == self.bot.user:
-                   # # return  # Don't remove bot's own reactions
-               # # message = reaction.message
-               # # emoji = reaction.emoji
-               
-               # # if not message.id == self.the_data["trackmessage"]:
-                   # # return
-               
-               # # if str(emoji) in self.letters:
-                   # # letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[self.letters.index(str(emoji))]
-                   # # await self._guessletter(letter, message.channel)
-                   
-                   
-               # # if str(emoji) in self.navigate:
-                   # # if str(emoji) == self.navigate[0]:
-                       # # await self._reactmessage_am(message)
-        
-                   # # if str(emoji) == self.navigate[-1]:
-                       # # await self._reactmessage_nz(message)
-     
-    # async def on_socket_response(self, obj):
-        # if obj["t"] != "MESSAGE_REACTION_ADD":
-            # return
-        
-        # if "emoji" not in obj["d"]:     # This reaction is in the messages deque, use other listener
-            # return
-        
-        # # if message_id not in guildID for 
-        # # for guildID in self.the_data:
-           # # if not self._messagetracker(ctx)
-        # message_id = obj["d"]["message_id"]
-        # emoji = obj["d"]["emoji"]["name"]
-        # user_id = obj["d"]["user_id"]
+        if emoji_id == wld[0]:
+            await self._report_win()
+        if emoji_id == wld[1]:
+            await self._report_loss()
+        if emoji_id == wld[2]:
+            await self._report_dispute()
 
