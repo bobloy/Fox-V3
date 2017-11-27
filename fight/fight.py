@@ -499,7 +499,8 @@ class Fight:
 
         await ctx.send("Fight has been stopped")
 
-# ***************************Fightset_guild command group start**************************        
+# ***************************Fightset_guild command group start**************************  
+      
     @fightset.group(name="guild")
     async def fightset_guild(self, ctx):
         """Adjust guild wide settings"""
