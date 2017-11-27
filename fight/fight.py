@@ -234,7 +234,7 @@ class Fight:
                 
             # self.save_data()
 
-        if ctx.invoked_subcommand is None:
+        if ctx.invoked_subcommand is None or isinstance(ctx.invoked_subcommand, commands.Group):
             await ctx.send_help()
         # await ctx.send("I can do stuff!")
     
@@ -428,6 +428,18 @@ class Fight:
             await ctx.send("No current fight to start")
             return
 
+        if not (await self.config.win()): #Emoji not setup
+            await ctx.send("Emojis have not been configured, see `[p]fightset emoji`")
+            return
+
+        if not (await self.config.guild(ctx.guild).announcechnnl()): #Announcechnnl not setup
+            await ctx.send("Announcement channel has not been configured, see `[p]fightset guild announcechnnl`")
+            return
+
+        if not (await self.config.guild(ctx.guild).reportchnnl()): #Reportchnnl not setup
+            await ctx.send("Self-Report channel has not been configured, see `[p]fightset guild reportchnnl`")
+            return
+
         if currFight["TYPEDATA"]:  # Empty dicionary {} resolves to False
             await ctx.send("Looks like this tournament has already started.\nDo you want to delete all match data and restart? (yes/no)")
 #            answer = await self.bot.wait_for_message(timeout=120, author=author)
@@ -538,13 +550,6 @@ class Fight:
     @fightset_guild.command(name="announcechnnl")
     async def fightset_guild_announcechnnl(self, ctx, channel: discord.TextChannel=None):
         """Set the channel for tournament announcements"""
-        #guild = ctx.message.guild
-        
-        # settings = self._getsettings(guild.id)
-        
-        # settings["ANNOUNCECHNNL"] = channel.id
-
-        # self.save_data()
         if not channel:
             channel = ctx.channel
 
@@ -710,8 +715,8 @@ class Fight:
         return self.the_data[guildID]["SETTINGS"]
         # return await self.config.guild(ctx.guild).settings()
     
-    async def _get_message_from_id_old(self, channelid, messageid):
-        return await self.bot.get_message(self._get_channel_from_id(channelid), messageid)
+    # async def _get_message_from_id_old(self, channelid, messageid):
+        # return await self.bot.get_message(self._get_channel_from_id(channelid), messageid)
         
     async def _get_message_from_id(self, ctx: commands.Context, message_id: int)\
             -> Union[discord.Message, None]:
@@ -731,11 +736,18 @@ class Fight:
 
         return None
 
-    def _get_channel_from_id(self, ctx: commands.Context, channelid):
-        # guild = self._get_guild_from_id(guildID)
-        # return discord.utils.get(guild.channels, id=channelid)
-        return discord.utils.get(ctx.guild.channels, id=channelid)
-        
+    def _get_announcechnnl(self, guild: discord.Guild):
+        channelid = await self.config.guild(guild).settings.announcechnnl()
+        channel = self._get_channel_from_id(channelid)
+        return channel
+
+    def _get_reportchnnl(self, guild: discord.Guild):
+        channel self._get_channel_from_id((await self.config.guild(guild).settings.reportchnnl()))
+        return channel 
+    
+    def _get_channel_from_id(self, channelid):
+        return self.bot.get_channel(channelid)
+    
     def _get_user_from_id(self, userid):
         # guild = self._get_guild_from_id(guildID)
         # return discord.utils.get(guild.members, id=userid)
@@ -831,20 +843,12 @@ class Fight:
 
         theT = await self._getfight(ctx.guild, tID)
         theD = theT["TYPEDATA"]
-        # rID starts at 0, so print +1. Never used for computation, so doesn't matter
-        if await self.config.guild(ctx.guild).settings.announcechnnl():
-            # await self.bot.send_message(
-                        # self._get_channel_from_id(guildID, self._guildsettings(guildID)["ANNOUNCECHNNL"]),
-                        # "Round "+str(rID+1)
-                        # )
-            await self._get_channel_from_id(
-                ctx, 
-                (await self.config.guild(ctx.guild).settings)
-                ).send("Round "+str(rID+1))
-                
-        # else:
-            # await ctx.send("Round "+str(rID+1))
         
+        channel = await self._get_announcechnnl(ctx.guild)
+        if channel: # rID starts at 0, so print +1. Never used for computation, so doesn't matter
+            await channel.send("**Round "+str(rID+1)+" is starting**")
+        
+        channel = await self._get_reportchnnl(ctx.guild)
         
         for mID in theD["SCHEDULE"][rID]:
             team1 = self._get_team(ctx, theD["MATCHES"][mID]["TEAM1"])
@@ -869,17 +873,9 @@ class Fight:
             outembed.add_field(name="Team 2", value=mention2, inline=True)
             outembed.set_footer(text=(await self._get_win_str())+" Report Win || "(await self._get_loss_str())+" Report Loss || "(await self._get_dispute_str())+" Dispute Result")
             
-            if await self._guildsettings(ctx)["REPORTCHNNL"]:
-                # message = await self.bot.send_message(
-                            # self._get_channel_from_id(guildID, self._guildsettings(guildID)["REPORTCHNNL"]),
-                            # embed=outembed
-                            # )
-                message = await self._get_channel_from_id(
-                            ctx, 
-                            self._guildsettings(ctx)["REPORTCHNNL"]
-                            ).send(embed=outembed)
-            else:
-                message = await ctx.send(embed=outembed)
+            
+            if channel:
+                message = channel.send(embed=outembed)
             
             await self._add_wld(ctx, message)
             
@@ -895,20 +891,13 @@ class Fight:
 
     async def _rr_start(self, ctx, tID):
 
-        self._rr_setup(ctx, tID)
-        if await self.config.guild(ctx.guild).settings.announcechnnl():
-            # await self.bot.send_message(
-                            # self._get_channel_from_id(guildID, self._guildsettings(guildID)["ANNOUNCECHNNL"]),
-                            # "**Tournament is Starting**"
-                            # )
-            await self._get_channel_from_id(
-                            guildID, 
-                            await self.config.guild(ctx.guild).settings.announcechnnl()
-                            ).send("**Tournament is Starting**")
-        # else:
-            # await ctx.send("**Tournament is Starting**")
+        await self._rr_setup(ctx, tID)
+        channel = self._get_announcechnnl(ctx.guild)
+        if channel:
+
+            await channel.send("**Tournament is Starting**")
         
-        await self._rr_printround(guildID, tID, 0)
+        await self._rr_printround(ctx, tID, 0)
 
     async def _rr_score(self, ctx: commands.Context, tID, mID, t1points, t2points):
         def check(m):    #Check Message from author
