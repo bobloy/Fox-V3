@@ -1,7 +1,7 @@
 import os
 import math
 
-from typing import Union
+# from typing import Union
 
 import discord
 from discord.ext import commands
@@ -712,14 +712,13 @@ class Fight:
         return outlist
         
     # async def _getsettings(self, ctx: commands.Context):
-        return self.the_data[guildID]["SETTINGS"]
+        # # return self.the_data[guildID]["SETTINGS"]
         # return await self.config.guild(ctx.guild).settings()
     
     # async def _get_message_from_id_old(self, channelid, messageid):
         # return await self.bot.get_message(self._get_channel_from_id(channelid), messageid)
         
-    async def _get_message_from_id(self, ctx: commands.Context, message_id: int)\
-            -> Union[discord.Message, None]:
+    async def _get_message_from_id(self, ctx: commands.Context, message_id: int):
         """
         Tries to find a message by ID in the current guild context.
         :param ctx:
