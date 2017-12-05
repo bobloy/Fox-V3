@@ -209,6 +209,10 @@ class ReactRestrict:
                 pass
             except AttributeError: # VoiceChannel object has no attribute 'get_message'
                 pass
+            except discordForbidden  # No access to channel, skip
+                pass
+                
+                
 
         return None
 
