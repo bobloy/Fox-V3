@@ -209,40 +209,12 @@ class ReactRestrict:
                 pass
             except AttributeError: # VoiceChannel object has no attribute 'get_message'
                 pass
-            except discordForbidden  # No access to channel, skip
+            except discord.Forbidden:  # No access to channel, skip
                 pass
                 
                 
 
         return None
-
-    # async def _wait_for_emoji(self, ctx: commands.Context):
-        # """
-        # Asks the user to react to this message and returns the emoji string if unicode
-        # or ID if custom.
-
-        # :param ctx:
-        # :raises asyncio.TimeoutError:
-            # If the user does not respond in time.
-        # :return:
-        # """
-        # message = await ctx.send("Please react to this message with the reaction you"
-                                 # " would like to add/remove, you have 20 seconds to"
-                                 # " respond.")
-
-        # def _wait_check(react, user):
-            # msg = react.message
-            # return msg.id == message.id and user.id == ctx.author.id
-
-        # reaction, _ = await ctx.bot.wait_for('reaction_add', check=_wait_check, timeout=20)
-
-        # try:
-            # ret = reaction.emoji.id
-        # except AttributeError:
-            # The emoji is unicode
-            # ret = reaction.emoji
-
-        # return ret, reaction.emoji
 
     @commands.group()
     async def reactrestrict(self, ctx: commands.Context):
