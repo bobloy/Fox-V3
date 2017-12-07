@@ -425,8 +425,6 @@ class Fight:
         def check(m):    #Check Message from author
             return m.author == ctx.author and m.channel == ctx.channel
             
-        #guild = ctx.message.guild
-        #author = ctx.message.author
         currFight = await self._getcurrentfight(ctx)
         tID = await self._activefight(ctx)
 
@@ -438,11 +436,11 @@ class Fight:
             await ctx.send("Emojis have not been configured, see `[p]fightset emoji`")
             return
 
-        if (await self.config.guild(ctx.guild).announcechnnl()) is None: #Announcechnnl not setup
+        if (await self._get_announcechnnl(ctx.guild)) is None: #Announcechnnl not setup
             await ctx.send("Announcement channel has not been configured, see `[p]fightset guild announcechnnl`")
             return
 
-        if (await self.config.guild(ctx.guild).reportchnnl()) is None: #Reportchnnl not setup
+        if (await self._get_reportchnnl(ctx.guild)) is None: #Reportchnnl not setup
             await ctx.send("Self-Report channel has not been configured, see `[p]fightset guild reportchnnl`")
             return
 
@@ -539,8 +537,10 @@ class Fight:
         """Set the channel for self-reporting matches"""
         if channel is None:
             channel = ctx.channel
-        await self.config.guild(ctx.guild).settings.reportchnnl.set(channel.id)
 
+        await self.config.guild(ctx.guild).settings.reportchnnl.set(channel.id)
+        
+        channel = (await self._get_reportchnnl(ctx.guild))
         await ctx.send("Self-Reporting Channel is now set to: " + channel.mention)
         
     @fightset_guild.command(name="announcechnnl")
@@ -551,6 +551,7 @@ class Fight:
 
         await self.config.guild(ctx.guild).settings.announcechnnl.set(channel.id)
         
+        channel = (await self._get_announcechnnl(ctx.guild))
         await ctx.send("Announcement Channel is now set to: " + channel.mention)
 
     @fightset_guild.command(name="setadmin")
@@ -695,8 +696,8 @@ class Fight:
     def _get_team(self, ctx: commands.Context, teaminfo):
         """Team info is a list of userid's. Returns a list of user objects"""
         outlist = []
-        for player in teaminfo:
-            outlist.append(self._get_user_from_id(ctx, player))
+        for playerid in teaminfo:
+            outlist.append(self._get_user_from_id(playerid))
         return outlist
         
     # async def _getsettings(self, ctx: commands.Context):
