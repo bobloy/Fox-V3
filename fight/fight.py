@@ -477,7 +477,7 @@ class Fight:
         tID = str(len(await self.config.guild(ctx.guild).tourneys()))  # Can just be len without +1, tourney 0 makes len 1, tourney 1 makes len 2, etc
         
         # currServ["CURRENT"] = tID
-        currFight = self.default_tourney
+        currFight = self.default_tourney.copy()
         currFight["NAME"] = "Tourney "+str(tID)
 
         await self._save_fight(ctx, tID, currFight)
@@ -859,8 +859,8 @@ class Fight:
             mention1 = ", ".join(team1)
             mention2 = ", ".join(team2)
             outembed=discord.Embed(title="Match ID: " + mID, color=0x0000bf)
-            outembed.add_field(name="Team 1", value=mention1, inline=True)
-            outembed.add_field(name="Team 2", value=mention2, inline=True)
+            outembed.add_field(name="Team 1", value=mention1, inline=False)
+            outembed.add_field(name="Team 2", value=mention2, inline=False)
             outembed.set_footer(text=(await self._get_win_str())+" Report Win || "+(await self._get_loss_str())+" Report Loss || "+(await self._get_dispute_str())+" Dispute Result")
             
             
@@ -869,7 +869,7 @@ class Fight:
             
             await self._add_wld(message)
             
-            trackmessage = self.default_tracker
+            trackmessage = self.default_tracker.copy()
             trackmessage["TID"] = tID
             trackmessage["MID"] = mID
             trackmessage["RID"] = rID
@@ -988,7 +988,7 @@ class Fight:
             rPlayers = list(zip(l1, l2))
             TeamCnt = 0
             for ID in matchID:
-                outID[ID] = self.default_match
+                outID[ID] = self.default_match.copy()
                 outID[ID]["TEAM1"] = [rPlayers[TeamCnt][0]]
                 outID[ID]["TEAM2"] = [rPlayers[TeamCnt][1]]
                 # outID[ID] = {
