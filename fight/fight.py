@@ -579,6 +579,7 @@ class Fight:
         await message.add_reaction(win)
         await message.add_reaction(loss)
         await message.add_reaction(dispute)
+
     async def _get_win_str(self):
         """Returns win emoji ready for str"""
         win = await self.config.win()
@@ -860,7 +861,7 @@ class Fight:
             outembed=discord.Embed(title="Match ID: " + mID, color=0x0000bf)
             outembed.add_field(name="Team 1", value=mention1, inline=True)
             outembed.add_field(name="Team 2", value=mention2, inline=True)
-            outembed.set_footer(text=(await self._get_win_str())+" Report Win || "(await self._get_loss_str())+" Report Loss || "(await self._get_dispute_str())+" Dispute Result")
+            outembed.set_footer(text=(await self._get_win_str())+" Report Win || "+(await self._get_loss_str())+" Report Loss || "+(await self._get_dispute_str())+" Dispute Result")
             
             
             if channel:
