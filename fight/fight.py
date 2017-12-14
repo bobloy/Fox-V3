@@ -867,7 +867,7 @@ class Fight:
             if channel:
                 message = channel.send(embed=outembed)
             
-            await self._add_wld(ctx, message)
+            await self._add_wld(message)
             
             trackmessage = self.default_tracker
             trackmessage["TID"] = tID
