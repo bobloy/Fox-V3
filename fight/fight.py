@@ -865,7 +865,7 @@ class Fight:
             
             
             if channel:
-                message = channel.send(embed=outembed)
+                message = await channel.send(embed=outembed)
             
             await self._add_wld(message)
             
