@@ -708,14 +708,14 @@ class Fight:
     # async def _get_message_from_id_old(self, channelid, messageid):
         # return await self.bot.get_message(self._get_channel_from_id(channelid), messageid)
         
-    async def _get_message_from_id(self, ctx: commands.Context, message_id: int):
+    async def _get_message_from_id(self, guild: discord.Guild, message_id: int):
         """
         Tries to find a message by ID in the current guild context.
         :param ctx:
         :param message_id:
         :return:
         """
-        for channel in ctx.guild.text_channels:
+        for channel in guild.text_channels:
             try:
                 return await channel.get_message(message_id)
             except discord.NotFound:
@@ -874,7 +874,7 @@ class Fight:
             trackmessage["MID"] = mID
             trackmessage["RID"] = rID
             trackmessage["GUILDID"] = ctx.guild.id
-            self._save_tracker(ctx, message.id, trackmessage)
+            await self._save_tracker(ctx, message.id, trackmessage)
                 
             
             # await ctx.send(team1 + " vs " + team2 + " || Match ID: " + match)
@@ -1032,6 +1032,10 @@ class Fight:
         if message_id not in tracker:
             return 
         
+        log_channel = self._get_channel_from_id(390927071553126402)
+        
+        await log_channel.send("Message ID: "+str(message_id)+" was just reacted to")
+        
         tracker = tracker[message_id]
         
         guild = self.bot.get_guild(tracker["GUILDID"])
@@ -1040,7 +1044,7 @@ class Fight:
             return
 
         if tracker["MID"] != (await self._parseuser(guild, tracker["TID"], member.id)):
-            message = guild.get_message(message_id)
+            message = (await self._get_message_from_id(guild, message_id))
             await message.remove_reaction(emoji, member)
             return
 
@@ -1059,9 +1063,12 @@ class Fight:
             return
         
         if emoji_id == wld[0]:
-            await self._report_win()
+            # await self._report_win()
+            await log_channel.send("Message ID: "+str(message_id)+" was reporting a win")
         if emoji_id == wld[1]:
-            await self._report_loss()
+            # await self._report_loss()
+            await log_channel.send("Message ID: "+str(message_id)+" was reporting a loss")
         if emoji_id == wld[2]:
-            await self._report_dispute()
+            # await self._report_dispute()
+            await log_channel.send("Message ID: "+str(message_id)+" was reporting a dispute")
 
