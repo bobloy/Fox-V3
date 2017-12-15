@@ -75,7 +75,9 @@ class Fight:
                 "USERSCORE2": {
                     "SCORE1": 0,
                     "SCORE2": 0
-                    }
+                    },
+                "WINNER": None,
+                
                 }
         self.default_tracker = {
                 "TID": None,
