@@ -437,11 +437,11 @@ class Fight:
             return
 
         if (await self._get_announcechnnl(ctx.guild)) is None: #Announcechnnl not setup
-            await ctx.send("Announcement channel has not been configured, see `[p]fightset guild announcechnnl`")
+            await ctx.send("Announcement channel has not been configured, see `[p]fightset guild announce`")
             return
 
         if (await self._get_reportchnnl(ctx.guild)) is None: #Reportchnnl not setup
-            await ctx.send("Self-Report channel has not been configured, see `[p]fightset guild reportchnnl`")
+            await ctx.send("Self-Report channel has not been configured, see `[p]fightset guild report`")
             return
 
         if currFight["TYPEDATA"]:  # Empty dicionary {} resolves to False
@@ -532,8 +532,8 @@ class Fight:
         
         await ctx.send("Self-Reporting ability is now set to: " + str(not curflag))
         
-    @fightset_guild.command(name="reportchnnl")
-    async def fightset_guild_reportchnnl(self, ctx, channel: discord.TextChannel=None):
+    @fightset_guild.command(name="report")
+    async def fightset_guild_report(self, ctx, channel: discord.TextChannel=None):
         """Set the channel for self-reporting matches"""
         if channel is None:
             channel = ctx.channel
@@ -543,8 +543,8 @@ class Fight:
         channel = (await self._get_reportchnnl(ctx.guild))
         await ctx.send("Self-Reporting Channel is now set to: " + channel.mention)
         
-    @fightset_guild.command(name="announcechnnl")
-    async def fightset_guild_announcechnnl(self, ctx, channel: discord.TextChannel=None):
+    @fightset_guild.command(name="announce")
+    async def fightset_guild_announce(self, ctx, channel: discord.TextChannel=None):
         """Set the channel for tournament announcements"""
         if channel is None:
             channel = ctx.channel
@@ -650,6 +650,9 @@ class Fight:
         """Save a passed fight"""
         allTracker = await self.config.srtracker()
         allTracker[messageid] = matchData
+        log_channel = self._get_channel_from_id(390927071553126402)
+        
+        await log_channel.send("Match data: "+str(matchData))
         await self.config.srtracker.set(allTracker)
         
     async def _guildsettings(self, ctx: commands.Context):
