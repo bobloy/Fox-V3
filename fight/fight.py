@@ -289,6 +289,12 @@ class Fight:
         await self.config.clear_all()
         await ctx.send("Success")
         
+    @fightset.command(name="trackreset")
+    async def fightset_trackreset(self, ctx):
+        """Clears all message trackers!"""
+        await self.config.srtracker.set({})
+        await ctx.send("Success")
+        
     @fightset.command(name="bestof")
     async def fightset_bestof(self, ctx, incount, tID=None):
         """Adjust # of games played per match. Must be an odd number"""
@@ -650,11 +656,16 @@ class Fight:
         
     async def _save_tracker(self, ctx, messageid, matchData):
         """Save a passed fight"""
-        allTracker = await self.config.srtracker()
-        allTracker[messageid] = matchData
-        log_channel = self._get_channel_from_id(390927071553126402)
+        # log_channel = self._get_channel_from_id(390927071553126402)
+        # await log_channel.send("srtracker: "+str(await self.config.srtracker()))
         
-        await log_channel.send("Match data: "+str(matchData))
+        # await log_channel.send("Match data: "+str(matchData))
+        
+        allTracker = dict(await self.config.srtracker())
+        allTracker[messageid] = matchData
+        
+        
+        # await log_channel.send("Match data: "+str(allTracker))
         await self.config.srtracker.set(allTracker)
         
     async def _guildsettings(self, ctx: commands.Context):
@@ -1039,7 +1050,7 @@ class Fight:
         
         log_channel = self._get_channel_from_id(390927071553126402)
         
-        await log_channel.send("Message ID: "+str(message_id)+" was just reacted to")
+        # await log_channel.send("Message ID: "+str(message_id)+" was just reacted to")
         
         tracker = tracker[message_id]
         
