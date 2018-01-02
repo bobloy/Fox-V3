@@ -66,18 +66,18 @@ class Fight:
         self.default_match = {
                 "TEAM1": [],
                 "TEAM2": [],
-                "SCORE1": 0,
-                "SCORE2": 0,
+                "SCORE1": None,
+                "SCORE2": None,
                 "USERSCORE1": {
-                    "SCORE1": 0, 
-                    "SCORE2": 0
+                    "SCORE1": None, 
+                    "SCORE2": None
                     },
                 "USERSCORE2": {
-                    "SCORE1": 0,
-                    "SCORE2": 0
+                    "SCORE1": None,
+                    "SCORE2": None
                     },
                 "WINNER": None,
-                
+                "DISPUTE": False
                 }
         self.default_tracker = {
                 "TID": None,
@@ -654,7 +654,7 @@ class Fight:
         allTourney[tID] = currFight
         await self.config.guild(ctx.guild).tourneys.set(allTourney)
         
-    async def _save_tracker(self, ctx, messageid, matchData):
+    async def _save_tracker(self, ctx, messageid: int, matchData):
         """Save a passed fight"""
         # log_channel = self._get_channel_from_id(390927071553126402)
         # await log_channel.send("srtracker: "+str(await self.config.srtracker()))
@@ -775,6 +775,18 @@ class Fight:
         if not isactive:
             return None
         return await self._getfight(ctx.guild, isactive)
+        
+    async def _report_win(self, guild: discord.Guild, tID, mID, member: discord.Member):
+        """Reports a win for member in match"""
+        theT = await self._getfight(guild, tID)
+        
+        if userid not in theT["PLAYERS"]:  # Shouldn't happen, _infight check first
+            return False
+        
+        if theT["RULES"]["TYPE"] == 0:
+            return await self._rr_parseuser(guild, tID, userid)
+
+        return False
 
 # *********** References to "TYPEDATA" must be done per tournament mode (Below this line) *******
        
@@ -785,7 +797,7 @@ class Fight:
     async def _elim_start(self, tID):
         await ctx.send("Elim start todo")
 
-    async def _elim_update(self, matchID, ):
+    async def _elim_update(self, matchID):
         await ctx.send("Elim update todo")
 
 # **********************Round-Robin**********************************
@@ -807,7 +819,7 @@ class Fight:
         match = theT["TYPEDATA"]["MATCHES"][mID]
         
         if (match["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2) or 
-                match["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)):
+                match["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)):
                 
             return True
         return False
@@ -1065,7 +1077,7 @@ class Fight:
             return
 
         channel = guild.get_channel(channel_id)
-        message = channel.get_message(message_id)
+        message = await channel.get_message(message_id)
 
 
         if emoji.is_custom_emoji():
@@ -1079,12 +1091,12 @@ class Fight:
             return
         
         if emoji_id == wld[0]:
-            # await self._report_win()
+            await self._report_win()
             await log_channel.send("Message ID: "+str(message_id)+" was reporting a win")
         if emoji_id == wld[1]:
-            # await self._report_loss()
+            await self._report_loss()
             await log_channel.send("Message ID: "+str(message_id)+" was reporting a loss")
         if emoji_id == wld[2]:
-            # await self._report_dispute()
+            await self._report_dispute()
             await log_channel.send("Message ID: "+str(message_id)+" was reporting a dispute")
 
