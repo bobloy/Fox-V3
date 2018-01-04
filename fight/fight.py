@@ -830,7 +830,7 @@ class Fight:
 
         # _rr_parseuser has already be run in on_raw_reaction_add, should be safe to proceed without checking again
 
-        if lWin:
+        if (lWin and teamnum==1) or (not lWin and teamnum==2):
             score1 = math.ceil(theT["RULES"]["BESTOF"]/2)
             score2 = 0
         else:
@@ -860,7 +860,19 @@ class Fight:
         theT = await self._getfight(guild, tID)
         theR = theT["TYPEDATA"]["SCHEDULE"][theT["TYPEDATA"]["ROUND"]]
         
+        for mID in theR:
+            if not await self._rr_matchover(ctx, tID, mID):
+                if (match["USERSCORE1"]["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)) != 
+                    (match["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)):
+        return True
         
+
+        await self._save_fight(ctx, tID, theT)
+        
+    async def _rr_(self, guild: discord.Guild, tID, mID):
+        """Applies scores to all non-disputed matches"""
+        theT = await self._getfight(guild, tID)
+        theR = theT["TYPEDATA"]["SCHEDULE"][theT["TYPEDATA"]["ROUND"]]
 
         await self._save_fight(ctx, tID, theT)
 
@@ -881,10 +893,11 @@ class Fight:
         theT = await self._getfight(guild, tID)
         match = theT["TYPEDATA"]["MATCHES"][mID]
         
-        if (match["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2) or 
-                match["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)):
-                
+        if (match["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)) != 
+                (match["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)):
             return True
+        
+
         return False
 
     async def _rr_roundover(self, ctx: commands.Context, tID):
@@ -1162,4 +1175,3 @@ class Fight:
         if emoji_id == wld[2]:
             await self._report_dispute()
             await log_channel.send("Message ID: "+str(message_id)+" was reporting a dispute")
-
