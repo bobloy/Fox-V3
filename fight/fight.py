@@ -197,12 +197,22 @@ class Fight:
         """Shows the full bracket"""
         await ctx.send("Todo Bracket Full")
 
+        
 # **********************Fightset command group start*********************
-#    def fightsetdec(func):
-#        async def decorated(self, ctx, *args, **kwargs):
-#            guild = ctx.message.guild
-#            await func(self, ctx, guild, *args, **kwargs)
-#        return decorated
+
+    @commands.group()
+    @commands.guild_only()
+    @checks.mod_or_permissions(administrator=True)
+    async def fadmin(self, ctx):
+        """Admin command for managing the current tournament"""
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help()
+            
+    @fadmin.command(name="score")
+    async def fadmin_score(self, ctx, mID, score1, score2):
+        """Set's the score for matchID and clears disputes"""
+        
+# **********************Fightset command group start*********************
 
     @commands.group(aliases=['setfight'])
     @commands.guild_only()
@@ -873,11 +883,10 @@ class Fight:
                     theT["TYPEDATA"]["MATCHES"][mID]["SCORE1"] = theT["TYPEDATA"]["MATCHES"][mID]["USERSCORE1"]["SCORE1"]
                     theT["TYPEDATA"]["MATCHES"][mID]["SCORE1"] = theT["TYPEDATA"]["MATCHES"][mID]["USERSCORE2"]["SCORE2"]
                     await self._save_fight(ctx, tID, theT)
-        return True
-        
+                else:
+                    await self._rr_report_dispute(guild, tID, mID)
 
-        await self._save_fight(ctx, tID, theT)
-        
+
     async def _rr_(self, guild: discord.Guild, tID, mID):
         """Applies scores to all non-disputed matches"""
         theT = await self._getfight(guild, tID)

@@ -1,9 +1,10 @@
 {
-    "AUTHOR" : "Bobloy",
-    "INSTALL_MSG" : "Thank you for installing Fight. Run with [p]fight or [p]fightset",
-    "NAME" : "Fight",
-    "SHORT" : "[Incomplete] Cog to organize tournaments",
-    "DESCRIPTION" : "[Incomplete] Cog to organize tournaments within Discord",
-    "TAGS" : ["game", "fun", "fight", "tournament", "tourney", "tourny", "elimination", "bracket", "fox", "bobloy"],
-    "HIDDEN" : false
+    "author" : ["Bobloy"],
+	"bot_version" : [3,0,0],
+    "description" : "[Incomplete] Cog to organize tournaments within Discord",
+    "hidden" : false,
+    "install_msg" : "Thank you for installing Fight. Run with [p]fight or [p]fightset",
+	"requirements" : [],
+    "short" : "[Incomplete] Cog to organize tournaments",
+    "tags" : ["game", "fun", "fight", "tournament", "tourney", "elimination", "bracket", "bobloy"]
 }
