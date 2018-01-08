@@ -661,7 +661,7 @@ class Fight:
         """Save a passed fight"""
         guild_group = self.config.guild(ctx.guild)
         async with guild_group.srtracker() as allTracker:
-            alltracker[messageid] = matchData
+            alltracker[str(messageid)] = matchData
             
         # allTracker = dict(await self.config.srtracker())
         # allTracker[messageid] = matchData
@@ -862,8 +862,17 @@ class Fight:
         
         for mID in theR:
             if not await self._rr_matchover(ctx, tID, mID):
+                match = theT["TYPEDATA"]["MATCHES"][mID]
                 if (match["USERSCORE1"]["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)) != 
-                    (match["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)):
+                    (match["USERSCORE1"]["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)) and
+                    (match["USERSCORE2"]["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)) != 
+                    (match["USERSCORE2"]["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)) and
+                    (match["USERSCORE1"]["SCORE1"] == match["USERSCORE2"]["SCORE1"]) and
+                    (match["USERSCORE1"]["SCORE2"] == match["USERSCORE2"]["SCORE2"]):
+                    
+                    theT["TYPEDATA"]["MATCHES"][mID]["SCORE1"] = theT["TYPEDATA"]["MATCHES"][mID]["USERSCORE1"]["SCORE1"]
+                    theT["TYPEDATA"]["MATCHES"][mID]["SCORE1"] = theT["TYPEDATA"]["MATCHES"][mID]["USERSCORE2"]["SCORE2"]
+                    await self._save_fight(ctx, tID, theT)
         return True
         
 
@@ -1133,14 +1142,14 @@ class Fight:
         """
         tracker = await self.config.srtracker()
         
-        if message_id not in tracker:
+        if str(message_id) not in tracker:
             return 
         
         log_channel = self._get_channel_from_id(390927071553126402)
         
         # await log_channel.send("Message ID: "+str(message_id)+" was just reacted to")
         
-        tracker = tracker[message_id]
+        tracker = tracker[str(message_id)]
         
         guild = self.bot.get_guild(tracker["GUILDID"])
         member = guild.get_member(user_id)
