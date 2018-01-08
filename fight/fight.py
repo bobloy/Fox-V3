@@ -211,6 +211,25 @@ class Fight:
     @fadmin.command(name="score")
     async def fadmin_score(self, ctx, mID, score1, score2):
         """Set's the score for matchID and clears disputes"""
+        currFight = await self._getcurrentfight(ctx)
+        tID = await self._activefight(ctx)
+        if not currFight:
+            await ctx.send("No tournament currently running!")
+            return
+
+        if not currFight["OPEN"]:
+            await ctx.send("Tournament currently not accepting new players")
+            return
+
+        if await self._infight(ctx, tID, user.id):
+            await ctx.send("You are already in this tournament!")
+            return
+
+        currFight["PLAYERS"].append(user.id)
+
+        await self._save_fight(ctx, tID, currFight)
+
+        await ctx.send("User has been added to tournament")
         
 # **********************Fightset command group start*********************
 
@@ -669,9 +688,9 @@ class Fight:
         
     async def _save_tracker(self, ctx, messageid: int, matchData):
         """Save a passed fight"""
-        guild_group = self.config.guild(ctx.guild)
-        async with guild_group.srtracker() as allTracker:
-            alltracker[str(messageid)] = matchData
+        
+        async with self.config.srtracker() as allTracker:
+            allTracker[str(messageid)] = matchData
             
         # allTracker = dict(await self.config.srtracker())
         # allTracker[messageid] = matchData
@@ -806,7 +825,7 @@ class Fight:
         if theT["RULES"]["TYPE"] == 0:
             return await self._rr_report_wl(guild, tID, mID, member, False)
 
-    async def _report_dispute(self, guild: discord.Guild, tID, mID, member: discord.Member):
+    async def _report_dispute(self, guild: discord.Guild, tID, mID):
         """Reports a win for member in match"""
         theT = await self._getfight(guild, tID)
 
@@ -814,7 +833,7 @@ class Fight:
             return False
 
         if theT["RULES"]["TYPE"] == 0:
-            return await self._rr_report_dispute(guild, tID, mID, member)
+            return await self._rr_report_dispute(guild, tID, mID)
 
         return False
 
@@ -836,7 +855,7 @@ class Fight:
         """User reports a win or loss for member in match"""
         theT = await self._getfight(guild, tID)
 
-        teamnum = await self._rr_matchperms(guild, tID user.id, mID)
+        teamnum = await self._rr_matchperms(guild, tID, user.id, mID)
 
         # _rr_parseuser has already be run in on_raw_reaction_add, should be safe to proceed without checking again
 
@@ -873,26 +892,18 @@ class Fight:
         for mID in theR:
             if not await self._rr_matchover(ctx, tID, mID):
                 match = theT["TYPEDATA"]["MATCHES"][mID]
-                if (match["USERSCORE1"]["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)) != 
+                if ((match["USERSCORE1"]["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)) != 
                     (match["USERSCORE1"]["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)) and
                     (match["USERSCORE2"]["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)) != 
                     (match["USERSCORE2"]["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)) and
                     (match["USERSCORE1"]["SCORE1"] == match["USERSCORE2"]["SCORE1"]) and
-                    (match["USERSCORE1"]["SCORE2"] == match["USERSCORE2"]["SCORE2"]):
+                    (match["USERSCORE1"]["SCORE2"] == match["USERSCORE2"]["SCORE2"])):
                     
                     theT["TYPEDATA"]["MATCHES"][mID]["SCORE1"] = theT["TYPEDATA"]["MATCHES"][mID]["USERSCORE1"]["SCORE1"]
                     theT["TYPEDATA"]["MATCHES"][mID]["SCORE1"] = theT["TYPEDATA"]["MATCHES"][mID]["USERSCORE2"]["SCORE2"]
                     await self._save_fight(ctx, tID, theT)
                 else:
                     await self._rr_report_dispute(guild, tID, mID)
-
-
-    async def _rr_(self, guild: discord.Guild, tID, mID):
-        """Applies scores to all non-disputed matches"""
-        theT = await self._getfight(guild, tID)
-        theR = theT["TYPEDATA"]["SCHEDULE"][theT["TYPEDATA"]["ROUND"]]
-
-        await self._save_fight(ctx, tID, theT)
 
     async def _rr_parseuser(self, guild: discord.Guild, tID, userid):
         theT = await self._getfight(guild, tID)
@@ -911,8 +922,8 @@ class Fight:
         theT = await self._getfight(guild, tID)
         match = theT["TYPEDATA"]["MATCHES"][mID]
         
-        if (match["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)) != 
-                (match["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2)):
+        if ((match["SCORE1"] == math.ceil(theT["RULES"]["BESTOF"]/2)) != 
+                (match["SCORE2"] == math.ceil(theT["RULES"]["BESTOF"]/2))):
             return True
         
 
@@ -1191,5 +1202,5 @@ class Fight:
             await self._report_loss()
             await log_channel.send("Message ID: "+str(message_id)+" was reporting a loss")
         if emoji_id == wld[2]:
-            await self._report_dispute()
+            await self._report_dispute(guild, tracker["TID"], tracker["MID"])
             await log_channel.send("Message ID: "+str(message_id)+" was reporting a dispute")
