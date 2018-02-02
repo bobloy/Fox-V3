@@ -1,9 +1,0 @@
-{
-    "AUTHOR" : "Bobloy",
-    "INSTALL_MSG" : "Thank you for installing fox. This is a beta program for interacting with fox.exe",
-    "NAME" : "Fox",
-    "SHORT" : "Cog to interact with Fox",
-    "DESCRIPTION" : "Cog to interact with Fox",
-    "TAGS" : ["fox", "bobloy"],
-    "HIDDEN" : false
-}

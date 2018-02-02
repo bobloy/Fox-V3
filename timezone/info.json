@@ -1,9 +1,0 @@
-{
-    "AUTHOR" : "Bobloy",
-    "INSTALL_MSG" : "Thank you for installing Timezone. Run with [p]tz or [p]tzset",
-    "NAME" : "Timezone",
-    "SHORT" : "[Incomplete] Cog to check timezones",
-    "DESCRIPTION" : "[Incomplete] Cog to compare times with other users",
-    "TAGS" : ["tool", "tools", "utilities", "utility", "time", "convert", "timezone", "fox", "bobloy"],
-    "HIDDEN" : false
-}
