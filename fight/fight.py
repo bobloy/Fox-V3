@@ -519,7 +519,7 @@ class Fight:
         
         await ctx.send("Tournament has been created!\n\n" + str(currFight))
 
-        await ctx.send("Adjust settings as necessary, then open the tournament with [p]fightset toggleopen")
+        await ctx.send("Adjust settings as necessary, then open the tournament with [p]fightset open")
 
     @fightset.command(name="stop")
     async def fightset_stop(self, ctx):
