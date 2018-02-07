@@ -1,0 +1,10 @@
+{
+    "AUTHOR" : "Bobloy",
+    "INSTALL_MSG" : "Thank you for installing! Ask a question with [p]howdoi",
+    "NAME" : "tourney",
+    "SHORT" : "Answer coding questions",
+    "DESCRIPTION" : "Answer coding questions using gleitz's howdoi code @ https://github.com/gleitz/howdoi",
+    "TAGS" : ["howdoi", "coding","bobloy"],
+    "REQUIREMENTS" : ["Pygments", "argparse", "cssselect", "lxml", "pyquery", "requests", "requests-cache", "howdoi"],
+    "HIDDEN" : false
+}
