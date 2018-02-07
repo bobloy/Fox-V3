@@ -13,9 +13,10 @@ class Howdoi:
 
     def __init__(self, bot):
         self.bot = bot
+        self.config = Config.get_conf(self, identifier=104111119100111105)
         self.query = ""
-        self.args = {
-            "query": self.query,
+        default_global = {
+            "query": "",
             "pos": 1,
             "all": False,
             "link": True,
@@ -24,6 +25,8 @@ class Howdoi:
             "clear_cache": False,
             "version": False
             }
+
+        self.config.register_global(**default_global)
 
     @commands.group(pass_context=True)
     async def howdoiset(self, ctx):
@@ -37,7 +40,7 @@ class Howdoi:
         """Adjust number of answers provided.
         Defaults to 1"""
         
-        self.args['num_answers'] = num_answers
+        await self.config.num_answers.set(num_answers)
         await self.bot.say("Number of answers provided will now be {}".format(num_answers))
     
     @howdoiset.command(pass_context=True, name="link")
@@ -45,9 +48,9 @@ class Howdoi:
         """Toggles providing in-line answers or a link
         Default On"""
         
-        self.args['link'] = not self.args['link']
+        await self.config.link.set(not (await self.config.link()))
         
-        if self.args['link']:
+        if (await self.config.link()):
             await self.bot.say("Answers will now be provided as a link")
         else:
             await self.bot.say("Answers will now be provided as the response")
@@ -58,9 +61,9 @@ class Howdoi:
         Default Off
         Only works if links are turned off"""
         
-        self.args['all'] = not self.args['all']
+        await self.config.all.set(not (await self.config.all()))
         
-        if self.args['all']:
+        if (await self.config.all()):
             await self.bot.say("Answers will now be provided in full context")
         else:
             await self.bot.say("Answers will now be provided as a code snippet")
@@ -70,11 +73,13 @@ class Howdoi:
         """Ask a coding question"""
         self.query = " ".join(question)
         
-        self.args["query"] = self.query
+        await self.config.query.set(self.query)
         
-        out = howdoi.howdoi(self.args.copy()) # .encode('utf-8', 'ignore')
+        argcopy = await self.config()
+        await self.bot.say(str(argcopy))
+        out = howdoi.howdoi(argcopy) # .encode('utf-8', 'ignore')
         
-        if self.args['link']:
+        if await self.config.link():
             await self.bot.say(out)
         else:
             await self.bot.say(box(out,"python"))
