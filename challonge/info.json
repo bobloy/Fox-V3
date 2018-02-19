@@ -1,10 +1,10 @@
 {
     "author" : ["Bobloy"],
-	"bot_version" : [3,0,0],
+    "bot_version" : [3,0,0],
     "description" : "[Incomplete] Cog to organize tournaments within Discord using Challonge",
     "hidden" : false,
     "install_msg" : "Thank you for installing the Challonge Cog.",
-	"requirements" : ["iso8601", "challonge"],
+    "requirements" : ["iso8601", "challonge"],
     "short" : "[Incomplete] Cog to organize Challonge tournaments",
     "tags" : ["game", "fun", "fight", "tournament", "tourney", "challonge", "elimination", "bracket", "bobloy"]
 }
