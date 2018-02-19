@@ -10,7 +10,7 @@ from redbot.core.bot import Red
 from chatterbot import ChatBot
 from chatterbot.trainers import ListTrainer
 
-
+from datetime import datetime,timedelta
 
 class Chatter:
     """
@@ -21,34 +21,45 @@ class Chatter:
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6710497116116101114)
         default_global = {}
-        default_guild = {}
+        default_guild = {
+            "whitelist": None,
+            "days": 1
+            }
         
-        self.chatbot = ChatBot("Chatter", trainer=ListTrainer)
+        self.chatbot = ChatBot("ChatterBot")
+        self.chatbot.set_trainer(ListTrainer)
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
     
-    async def _get_conversation(guild: discord.Guild):
+    async def _get_conversation(self, ctx, in_channel: discord.TextChannel):
         """
-        Compiles all conversation on the server this bot can get it's hands on
+        Compiles all conversation in the Guild this bot can get it's hands on
         Currently takes a stupid long time
         Returns a list of text
         """
         out = []
+        after = datetime.today() - timedelta(days=(await self.config.guild(ctx.guild).days()))
         
-        for channel in guild.textchannels: 
+
+        for channel in ctx.guild.text_channels: 
+            if in_channel:
+                channel = in_channel
+            await ctx.send("Gathering {}".format(channel.mention))
             try:
-                async for message in channel.history(limit=None, reverse=True):
+                async for message in channel.history(limit=None, reverse=True, after=after):
                     out.append(message.content)
             except discord.Forbidden:
                 pass
             except discord.HTTPException:
                 pass
-
+            
+            if in_channel:
+                break
         
         return out
         
-    async def _train(data):
+    async def _train(self, data):
         try:
             self.chatbot.train(data)
         except:
@@ -61,20 +72,52 @@ class Chatter:
         """
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
-
-    @reactrestrict.command()
-    async def train(self, ctx: commands.Context):
+    @chatter.command()
+    async def age(self, ctx: commands.Context, days: int):
+        """
+        Sets the number of days to look back
+        Will train on 1 day otherwise
+        """
+        
+        await self.config.guild(ctx.guild).days.set(days)
+        await ctx.send("Success")
+        
+    @chatter.command()
+    async def train(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """
         Trains the bot based on language in this guild
         """
         
-        conversation = await _get_conversation(ctx.guild)
+        conversation = await self._get_conversation(ctx, channel)
+        
+        await ctx.send("Gather successful! Training begins now")
         if not conversation:
             await ctx.send("Failed to gather training data")
             return
 
-        if await _train(conversation):
-            await ctx.send("Training successful")
+        if await self._train(conversation):
+            await ctx.send("Training successful!")
         else:
-            await ctx.send("Error occurred")
+            await ctx.send("Error occurred :(")
+            
+    async def on_message(self, message): 
+        """
+        Credit to https://github.com/Twentysix26/26-Cogs/blob/master/cleverbot/cleverbot.py
+        for on_message recognition of @bot
+        """
+        author = message.author
+        channel = message.channel
+
+        if message.author.id != self.bot.user.id:
+            to_strip = "@" + author.guild.me.display_name + " "
+            text = message.clean_content
+            if not text.startswith(to_strip):
+                return
+            text = text.replace(to_strip, "", 1)
+            async with channel.typing():
+                response = self.chatbot.get_response(text)
+                if response:
+                    await channel.send(response)
+                else:
+                    await channel.send(":thinking:")
 
