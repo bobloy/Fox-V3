@@ -1,0 +1,10 @@
+{
+    "author" : ["Bobloy"],
+	"bot_version" : [3,0,0],
+    "description" : "Create an offline chatbot that talks like your average member using Machine Learning",
+    "hidden" : false,
+    "install_msg" : "Thank you for installing Chatter.",
+	"requirements" : ["chatterbot"],
+    "short" : "Local Chatbot run on machine learning",
+    "tags" : ["chat", "chatbot", "cleverbot", "clever","bobloy"]
+}
