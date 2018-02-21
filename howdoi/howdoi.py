@@ -5,7 +5,7 @@ from discord.ext import commands
 from .utils.chat_formatting import pagify
 from .utils.chat_formatting import box
 
-from .howdoi_source import howdoi
+from .howdoi_source import howdoi as hdi, Answer
 
 
 class Howdoi:
@@ -75,7 +75,7 @@ class Howdoi:
         
         await self.config.query.set(self.query)
         
-        out = howdoi.howdoi(await self.config.all()) # .encode('utf-8', 'ignore')
+        out = hdi.howdoi(await self.config.all()) # .encode('utf-8', 'ignore')
         
         if await self.config.links():
             await ctx.send(out)
