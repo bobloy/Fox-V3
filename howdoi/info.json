@@ -1,0 +1,10 @@
+{
+    "author" : ["Bobloy"],
+    "bot_version" : [3,0,0],
+    "description" : "Answer coding questions using stackexchange",
+    "hidden" : false,
+    "install_msg" : "Thank you for installing Howdoi.",
+    "requirements" : ["Pygments==2.1.1", "argparse==1.4.0", "cssselect==0.9.1", "pyquery==1.4.0", "requests==2.9.1", "requests-cache==0.4.11"],
+    "short" : "Answer coding questions",
+    "tags" : ["coding", "tools", "utils", "bobloy"]
+}
