@@ -6,6 +6,7 @@ from discord.ext import commands
 
 from redbot.core import Config
 from redbot.core.bot import Red
+from redbot.core.utils.chat_formatting import escape
 
 from .source import ChatBot
 from .source.trainers import ListTrainer
@@ -122,7 +123,7 @@ class Chatter:
             async with channel.typing():
                 response = self.chatbot.get_response(text)
                 if response:
-                    await channel.send(response)
+                    await channel.send(escape(response))
                 else:
                     await channel.send(":thinking:")
 
