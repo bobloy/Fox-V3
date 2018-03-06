@@ -7,8 +7,8 @@ from discord.ext import commands
 from redbot.core import Config
 from redbot.core.bot import Red
 
-from .chatterbot import ChatBot
-from .chatterbot.trainers import ListTrainer
+from .source import ChatBot
+from .source.trainers import ListTrainer
 
 from datetime import datetime,timedelta
 
@@ -31,6 +31,8 @@ class Chatter:
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
+        
+        self.loop = asyncio.get_event_loop()
     
     async def _get_conversation(self, ctx, in_channel: discord.TextChannel):
         """
@@ -59,12 +61,13 @@ class Chatter:
         
         return out
         
-    async def _train(self, data):
+    def _train(self, data):
         try:
             self.chatbot.train(data)
         except:
             return False
         return True
+
     @commands.group()
     async def chatter(self, ctx: commands.Context):
         """
@@ -90,12 +93,14 @@ class Chatter:
         
         conversation = await self._get_conversation(ctx, channel)
         
-        await ctx.send("Gather successful! Training begins now")
         if not conversation:
             await ctx.send("Failed to gather training data")
             return
-
-        if await self._train(conversation):
+            
+        await ctx.send("Gather successful! Training begins now\n(**This will take a long time, be patient**)")
+        future = await self.loop.run_in_executor(None, self._train, conversation)
+        
+        if future:
             await ctx.send("Training successful!")
         else:
             await ctx.send("Error occurred :(")
