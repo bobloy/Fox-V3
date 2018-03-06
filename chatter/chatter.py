@@ -121,9 +121,9 @@ class Chatter:
                 return
             text = text.replace(to_strip, "", 1)
             async with channel.typing():
-                response = self.chatbot.get_response(text)
+                response = escape(self.chatbot.get_response(text))
                 if response:
-                    await channel.send(escape(response))
+                    await channel.send(response)
                 else:
                     await channel.send(":thinking:")
 
