@@ -87,11 +87,6 @@ class Fight:
         
       
 
-# ************************v3 Shit************************  
- 
-#    def check(m):    #Check Message from author
-#            return m.author == ctx.author and m.channel == ctx.channel
-
 # ************************Fight command group start************************
 
 
