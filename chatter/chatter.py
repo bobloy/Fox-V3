@@ -7,8 +7,8 @@ from discord.ext import commands
 from redbot.core import Config
 from redbot.core.bot import Red
 
-from chatterbot import ChatBot
-from chatterbot.trainers import ListTrainer
+from .chatterbot import ChatBot
+from .chatterbot.trainers import ListTrainer
 
 from datetime import datetime,timedelta
 
