@@ -6,7 +6,6 @@ from discord.ext import commands
 
 from redbot.core import Config
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import escape
 
 from .source import ChatBot
 from .source.trainers import ListTrainer
@@ -49,9 +48,14 @@ class Chatter:
             if in_channel:
                 channel = in_channel
             await ctx.send("Gathering {}".format(channel.mention))
+            user = None
             try:
                 async for message in channel.history(limit=None, reverse=True, after=after):
-                    out.append(message.content)
+                    if user == message.author:
+                        out[-1] += "\n"+message.clean_content
+                    else:
+                        user = message.author
+                        out.append(message.clean_content)
             except discord.Forbidden:
                 pass
             except discord.HTTPException:
@@ -121,7 +125,7 @@ class Chatter:
                 return
             text = text.replace(to_strip, "", 1)
             async with channel.typing():
-                response = escape(self.chatbot.get_response(text))
+                response = self.chatbot.get_response(text)
                 if response:
                     await channel.send(response)
                 else:
