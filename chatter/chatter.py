@@ -34,7 +34,7 @@ class Chatter:
         
         self.loop = asyncio.get_event_loop()
     
-    async def _get_conversation(self, ctx, in_channel: discord.TextChannel):
+    async def _get_conversation(self, ctx, in_channel: discord.TextChannel=None):
         """
         Compiles all conversation in the Guild this bot can get it's hands on
         Currently takes a stupid long time
@@ -95,7 +95,7 @@ class Chatter:
         """
         Trains the bot based on language in this guild
         """
-        
+        await self.bot.say("Gathering conversations...")
         conversation = await self._get_conversation(ctx, channel)
         
         if not conversation:
