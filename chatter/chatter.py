@@ -95,7 +95,7 @@ class Chatter:
         """
         Trains the bot based on language in this guild
         """
-        await ctx.send("Gathering conversations...")
+        
         conversation = await self._get_conversation(ctx, channel)
         
         if not conversation:
