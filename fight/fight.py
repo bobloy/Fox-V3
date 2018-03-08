@@ -27,7 +27,7 @@ class Fight:
 
     def __init__(self, bot):
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=49564952847684)
+        self.config = Config.get_conf(self, identifier=49564952847684, force_registration=True)
         default_global = {  
                 "srtracker": {},
                 "win": None,
