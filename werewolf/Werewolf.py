@@ -36,7 +36,7 @@ class Werewolf:
             await ctx.send_help()
             
     @ww.command()
-    async def join(self, ctx, setup_id=None):
+    async def join(self, ctx, role_code=None):
         """
         Joins a game of Werewolf or start a new one
         """
@@ -57,22 +57,10 @@ class Werewolf:
         out = await game.quit(ctx.author)
         
         ctx.send(out)
-        
-    @ww.command()
-    async def start(self, ctx):
-        """
-        Vote to start a game of Werewolf
-        """
-        
-        game = self._get_game(ctx)
-        
-        out = await game.start_vote(ctx.author)
-        
-        ctx.send(out)
-    
-    def _get_game(self, ctx, setup):
+
+    def _get_game(self, ctx, role_code):
         if ctx.guild.id not in self.games:
-            self.games[ctx.guild.id] = Game()
+            self.games[ctx.guild.id] = Game(role_code)
 
         return self.games[ctx.guild.id]
 

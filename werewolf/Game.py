@@ -22,17 +22,58 @@ class Game:
         self.start_vote = 0
         
         self.started = False
+        self.game_over = False
+        
+        self.village_channel = None
+        self.secret_channels = {}
+        
+        
+        
 
     async def setup(self, ctx):
         """
         Runs the initial setup
-        """
-        if self.role_code:
-            if not await self.get_roles():
         
-        if not self.roles:
-            ctx.send("No game code set, cannot start until this is set")
+        1. Assign Roles
+        2. Create Channels
+        2a.  Channel Permissions :eyes:
+        3. Check Initial role setup (including alerts)
+        4. Start game
+        """
+        
+        
+    async def _cycle(self):
+        """
+        Each event calls the next event
+        
+        _at_start()
+        
+        _at_day_start()
+            _at_vote()
+                _at_kill()
+        _at_day_end()
+        _at_night_begin()
+        _at_night_end()
+        
+        and repeat with _at_morning_start() again
+        """
+        await self._at_start():
+    
+    async def _at_start(self):
+    
+    async def _at_day_start(self):
+    
+    async def _at_vote(self):
+    
+    async def _at_kill(self):
+    
+    async def _at_day_end(self):
+    
+    async def _at_night_start(self):
+    
+    async def _at_night_end(self):
             
+ 
     async def join(self, member: discord.Member):
         """
         Joins a game
