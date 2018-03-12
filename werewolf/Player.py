@@ -12,6 +12,7 @@ class Player:
     def __init__(self, member: discord.Member):
         self.user = member
         self.role = None
+        self.id = -1
         
         self.alive = True
         self.muted = False
@@ -22,11 +23,3 @@ class Player:
         Give this player a role
         """
         self.role = role
-            
-    async def join(self, ctx: commands.Context):
-        """
-        Joins a game
-        """
-        
-        await self.config.guild(ctx.guild).days.set(days)
-        await ctx.send("Success")

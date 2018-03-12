@@ -36,15 +36,18 @@ class Werewolf:
             await ctx.send_help()
             
     @ww.command()
-    async def join(self, ctx, role_code=None):
+    async def join(self, ctx, role_code):
         """
         Joins a game of Werewolf or start a new one
         """
         
-        game = self._get_game(ctx, setup_id)
-        out = await game.join(ctx.author)
+        game = self._get_game(ctx.guild, role_code)
         
-        ctx.send(out)
+        if not game:
+            ctx.send("Please provide a role code to get started!")
+            return
+
+        ctx.send(await game.join(ctx.author))
     
     @ww.command()
     async def quit(self, ctx):
@@ -52,18 +55,35 @@ class Werewolf:
         Quit a game of Werewolf
         """
         
-        game = self._get_game(ctx)
+        game = self._get_game(ctx.guild)
         
         out = await game.quit(ctx.author)
         
         ctx.send(out)
 
-    def _get_game(self, ctx, role_code):
-        if ctx.guild.id not in self.games:
-            self.games[ctx.guild.id] = Game(role_code)
+    def _get_game(self, guild, role_code = None):
+        if guild.id not in self.games:
+            if not role_code:
+                return None
+            self.games[guild.id] = Game(role_code)
 
-        return self.games[ctx.guild.id]
+        return self.games[guild.id]
 
 
     async def _game_start(self, game):
         await game.start()
+        
+    
+    async def on_message(self, message):
+        if message.author.id == self.bot.user.id:
+            return
+        
+        author = message.author
+        channel = message.channel
+        guild = message.guild
+        game = self._get_game(guild)
+        if not game:
+            return
+        
+        if channel is game.village_channel:
+            
