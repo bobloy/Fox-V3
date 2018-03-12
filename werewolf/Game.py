@@ -158,6 +158,7 @@ class Game:
         
         if not player:
             return "You're not in a game!"
+
         if self.started:
             await self.kill()
         
