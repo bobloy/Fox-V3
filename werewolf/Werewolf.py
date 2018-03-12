@@ -11,7 +11,7 @@ from .game import Game
 
 class Werewolf:
     """
-    Base to host a game of werewolf
+    Base to host werewolf on a server
     """
 
     def __init__(self, bot):
@@ -67,4 +67,3 @@ class Werewolf:
 
     async def _game_start(self, game):
         await game.start()
-            

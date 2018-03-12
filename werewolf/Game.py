@@ -8,7 +8,7 @@ from .builder import parse_code
 
 class Game:
     """
-    Base to host a game of werewolf
+    Base class to run a single game of Werewolf
     """
 
     def __init__(self, role_code=None):
@@ -26,6 +26,8 @@ class Game:
         
         self.village_channel = None
         self.secret_channels = {}
+        
+        self.loop = asyncio.get_event_loop()
         
         
         
@@ -59,21 +61,41 @@ class Game:
         """
         await self._at_start():
     
-    async def _at_start(self):
-    
+    async def _at_game_start(self):
+        asyncio.sleep(60)
+        await self._at_day_start()
+        
     async def _at_day_start(self):
-    
+        asyncio.sleep(240)  # 4 minute days
+        await self._at_day_end()
+        
     async def _at_vote(self):
     
     async def _at_kill(self):
-    
+        
     async def _at_day_end(self):
-    
+        asyncio.sleep(60)
+        await self._at_night_start()
+        
     async def _at_night_start(self):
-    
+        asyncio.sleep(240)
+        await self._at_night_end()
+        
     async def _at_night_end(self):
+        self._notify()
+        asyncio.sleep(15)
+        await self._at_day_start()
             
- 
+    async def _notify(self, event):
+        for i in range(10):
+            tasks = []
+            role_action = [role for role in self.roles if role.action==i]
+            for role in role_action:
+                tasks.append(asyncio.ensure_future(role.on_event(event))
+            # self.loop.create_task(role.on_event(event))
+            self.loop.run_until_complete(asyncio.gather(*tasks))
+        
+    
     async def join(self, member: discord.Member):
         """
         Joins a game
