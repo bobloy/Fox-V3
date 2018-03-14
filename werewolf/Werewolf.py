@@ -36,12 +36,12 @@ class Werewolf:
             await ctx.send_help()
 
     @ww.command()
-    async def join(self, ctx, role_code):
+    async def join(self, ctx, game_code):
         """
         Joins a game of Werewolf or start a new one
         """
         
-        game = self._get_game(ctx.guild, role_code)
+        game = self._get_game(ctx.guild, game_code)
         
         if not game:
             ctx.send("Please provide a role code to get started!")
@@ -76,11 +76,11 @@ class Werewolf:
         if channel in (c for id,c in game.secret_channels.items()):
             await game.vote(ctx.author, id, channel)
 
-    def _get_game(self, guild, role_code = None):
+    def _get_game(self, guild, game_code = None):
         if guild.id not in self.games:
-            if not role_code:
+            if not game_code:
                 return None
-            self.games[guild.id] = Game(role_code)
+            self.games[guild.id] = Game(game_code)
 
         return self.games[guild.id]
 

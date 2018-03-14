@@ -13,11 +13,11 @@ class Game:
     Base class to run a single game of Werewolf
     """
 
-    def __init__(self, role_code):
+    def __init__(self, game_code):
         self.roles = []
-        self.role_code = role_code
+        self.game_code = game_code
         
-        if self.role_code:
+        if self.game_code:
             self.get_roles()
         
         self.players = []
@@ -191,14 +191,14 @@ class Game:
         except IndexError
         
     
-    async def get_roles(self, role_code=None):
-        if role_code:
-            self.role_code=role_code
+    async def get_roles(self, game_code=None):
+        if game_code:
+            self.game_code=game_code
         
-        if not self.role_code:
+        if not self.game_code:
             return False
         
-        self.roles = await parse_code(self.role_code)
+        self.roles = await parse_code(self.game_code)
         
         if not self.roles:
             return False
