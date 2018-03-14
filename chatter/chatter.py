@@ -103,7 +103,15 @@ class Chatter:
             return
             
         await ctx.send("Gather successful! Training begins now\n(**This will take a long time, be patient**)")
+        embed=discord.Embed(title="Loading")
+        embed.set_image("http://www.loop.universaleverything.com/animations/1295.gif")
+        temp_message = await self.bot.say(embed=embed)
         future = await self.loop.run_in_executor(None, self._train, conversation)
+        
+        try:
+            await temp_message.delete()
+        except:
+            pass
         
         if future:
             await ctx.send("Training successful!")
