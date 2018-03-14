@@ -105,7 +105,7 @@ class Chatter:
         await ctx.send("Gather successful! Training begins now\n(**This will take a long time, be patient**)")
         embed=discord.Embed(title="Loading")
         embed.set_image(url="http://www.loop.universaleverything.com/animations/1295.gif")
-        temp_message = await self.bot.say(embed=embed)
+        temp_message = await ctx.send(embed=embed)
         future = await self.loop.run_in_executor(None, self._train, conversation)
         
         try:
