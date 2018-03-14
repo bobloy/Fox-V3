@@ -34,7 +34,7 @@ class Werewolf:
         """
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
-            
+
     @ww.command()
     async def join(self, ctx, role_code):
         """
@@ -47,8 +47,8 @@ class Werewolf:
             ctx.send("Please provide a role code to get started!")
             return
 
-        ctx.send(await game.join(ctx.author))
-    
+        await game.join(ctx.author, ctx.channel)
+
     @ww.command()
     async def quit(self, ctx):
         """
@@ -57,9 +57,24 @@ class Werewolf:
         
         game = self._get_game(ctx.guild)
         
-        out = await game.quit(ctx.author)
+        await game.quit(ctx.author, ctx.channel)
+
+    @ww.command()
+    async def vote(self, ctx, id):
+        """
+        Vote for a player by ID
+        """
+        game = self._get_game(guild)
+        if not game:
+            ctx.send("No game running, cannot vote")
         
-        ctx.send(out)
+        # Game handles response now
+        channel = ctx.channel
+        if channel is game.village_channel: 
+            await game.vote(ctx.author, id, channel)
+        
+        if channel in (c for id,c in game.secret_channels.items()):
+            await game.vote(ctx.author, id, channel)
 
     def _get_game(self, guild, role_code = None):
         if guild.id not in self.games:
@@ -81,9 +96,7 @@ class Werewolf:
         author = message.author
         channel = message.channel
         guild = message.guild
-        game = self._get_game(guild)
-        if not game:
-            return
+        
         
         if channel is game.village_channel:
             

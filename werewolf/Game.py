@@ -4,6 +4,8 @@ import discord
 
 from datetime import datetime,timedelta
 
+from random import shuffle
+
 from .builder import parse_code
 
 class Game:
@@ -19,7 +21,7 @@ class Game:
             self.get_roles()
         
         self.players = []
-        self.start_vote = 0
+        self.day_vote = {}  # ID, votes
         
         self.started = False
         self.game_over = False
@@ -56,7 +58,7 @@ class Game:
         _at_start()
         
         _at_day_start()
-            _at_vote()
+            _at_voted()
                 _at_kill()
         _at_day_end()
         _at_night_begin()
@@ -82,7 +84,7 @@ class Game:
         asyncio.sleep(240)  # 4 minute days
         await self._at_day_end()
         
-    async def _at_vote(self, target):  # ID 2
+    async def _at_voted(self, target):  # ID 2
         if self.game_over:
             return
         await self._notify(2, target)
@@ -129,14 +131,17 @@ class Game:
     async def _notify(self, event):
         for i in range(10):
             tasks = []
-            role_order = [role for role in self.roles if role.priority==i]
+            role_order = [role for role in self.roles if role.action_list[event][1]==i]
             for role in role_action:
                 tasks.append(asyncio.ensure_future(role.on_event(event))
             # self.loop.create_task(role.on_event(event))
             self.loop.run_until_complete(asyncio.gather(*tasks))
+            # Run same-priority task simultaneously
+    
+    async def _generate_targets(self):
         
     
-    async def join(self, member: discord.Member):
+    async def join(self, member: discord.Member, channel: discord.Channel):
         """
         Have a member join a game
         """
@@ -148,7 +153,7 @@ class Game:
         
         self.started.append(member)
         
-        out = "{} has been added to the game, total players is **{}**".format(member.mention, len(self.players))
+        channel.send("{} has been added to the game, total players is **{}**".format(member.mention, len(self.players)))
         
     async def quit(self, member: discord.Member):
         """
@@ -167,8 +172,23 @@ class Game:
         
         self.started.append(member)
         
-        out = "{} has been added to the game, total players is **{}**".format(member.mention, len(self.players))
+        channel.send("{} has been added to the game, total players is **{}**".format(member.mention, len(self.players)))
+    
+    async def vote(self, author, id, channel):
+        """
+        Member attempts to cast a vote (usually to lynch)
+        """
+        player = self._get_player(author)
         
+        if player is None:
+            channel.send("You're not in this game!")
+            
+        if not player.alive:
+            channel.send("Corpses can't vote")
+        
+        try:
+            target = self.players[id]
+        except IndexError
         
     
     async def get_roles(self, role_code=None):
@@ -182,3 +202,4 @@ class Game:
         
         if not self.roles:
             return False
+    

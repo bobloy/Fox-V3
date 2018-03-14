@@ -12,7 +12,7 @@ class Player:
     def __init__(self, member: discord.Member):
         self.user = member
         self.role = None
-        self.id = -1
+        self.id = None
         
         self.alive = True
         self.muted = False
@@ -22,4 +22,5 @@ class Player:
         """
         Give this player a role
         """
+        role.player = self
         self.role = role
