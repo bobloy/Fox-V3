@@ -12,6 +12,9 @@ class Game:
     """
     Base class to run a single game of Werewolf
     """
+    def __new__(cls, game_code):
+        game_code = ["DefaultWerewolf", "Villager", "Villager""]
+        return Game(game_code)
 
     def __init__(self, game_code):
         self.roles = []

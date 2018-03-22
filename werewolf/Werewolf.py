@@ -34,17 +34,28 @@ class Werewolf:
         """
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
-
+    
     @ww.command()
-    async def join(self, ctx, game_code):
+    async def new(self, ctx, game_code):
         """
-        Joins a game of Werewolf or start a new one
+        Create and join a new game of Werewolf
         """
         
         game = self._get_game(ctx.guild, game_code)
         
         if not game:
-            ctx.send("Please provide a role code to get started!")
+            ctx.send("
+        
+    @ww.command()
+    async def join(self, ctx):
+        """
+        Joins a game of Werewolf
+        """
+        
+        game = self._get_game(ctx.guild)
+        
+        if not game:
+            ctx.send("No game to join!\nCreate a new one with `[p]ww new`")
             return
 
         await game.join(ctx.author, ctx.channel)
