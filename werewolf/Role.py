@@ -41,10 +41,10 @@ class Role:
         6. Role altering actions (Cult / Mason)
     """
     
-    rand_choice = True  # Determines if it can be picked as a random
-    category = [0]      # List of enrolled categories
+    rand_choice = False  # Determines if it can be picked as a random role (False for unusually disruptive roles)
+    category = [0]      # List of enrolled categories (listed above)
     allignment = 0      # 1: Town, 2: Werewolf, 3: Neutral
-    channel_id = ""     # No private channel
+    channel_id = ""     # Empty for no private channel
     unique = False      # Only one of this role per game
     action_list = [
             (self._at_game_start, 0),  # (Action, Priority)
@@ -57,7 +57,8 @@ class Role:
             (self._at_night_end, 0)
             ]
             
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.player = None
         self.blocked = False
         self.properties = {}  # Extra data for other roles (i.e. arsonist)
@@ -78,9 +79,20 @@ class Role:
 
         player.role = self
         self.player = player
-        
+    
+    async def _get_role(self, source=None):
+        """
+        Interaction for powerful access of role
+        Unlikely to be able to deceive this
+        """
+        return "Default"
+    
     async def _see_role(self, source=None):
-        return 
+        """
+        Interaction for investigative roles.
+        More common to be able to deceive these roles
+        """
+        return "Role"
     
     async def _at_game_start(self, data=None):
         pass

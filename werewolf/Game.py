@@ -31,8 +31,6 @@ class Game:
         
         self.loop = asyncio.get_event_loop()
         
-        
-        
 
     async def setup(self, ctx):
         """
