@@ -113,11 +113,11 @@ class Game:
             return
         await self._notify(6)
         
-        asyncio.sleep(120) 
-        # 2 minutes left
-        asyncio.sleep(90) 
-        # 30 seconds left
-        asyncio.sleep(30)
+        asyncio.sleep(120) # 2 minutes
+
+        asyncio.sleep(90)  # 1.5 minutes
+
+        asyncio.sleep(30) # .5 minutes
         
         await self._at_night_end()
         
@@ -129,17 +129,20 @@ class Game:
         asyncio.sleep(15)
         await self._at_day_start()
             
-    async def _notify(self, event):
+    async def _notify(self, event, data=None):
         for i in range(10):
             tasks = []
             role_order = [role for role in self.roles if role.action_list[event][1]==i]
-            for role in role_action:
-                tasks.append(asyncio.ensure_future(role.on_event(event))
+            for role in role_order:
+                tasks.append(asyncio.ensure_future(role.on_event(event, data))
             # self.loop.create_task(role.on_event(event))
             self.loop.run_until_complete(asyncio.gather(*tasks))
             # Run same-priority task simultaneously
     
     async def _generate_targets(self):
+    
+    async def register_channel(self, channel_id):
+        
         
     
     async def join(self, member: discord.Member, channel: discord.Channel):

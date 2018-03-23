@@ -10,7 +10,7 @@ class Player:
     """
 
     def __init__(self, member: discord.Member):
-        self.user = member
+        self.member = member
         self.role = None
         self.id = None
         
@@ -24,3 +24,6 @@ class Player:
         """
         role.player = self
         self.role = role
+        
+    async def send_dm(self, message):
+        await self.member.send(message) # Lets do embeds later
