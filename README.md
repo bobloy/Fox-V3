@@ -4,12 +4,15 @@
 
 Cog Status
 
-  - ccrole: **Incomplete**
+  - ccrole: **Incomplete** - Not yet ported to v3
   - challonge: **Incomplete** - Challonge integration with discord
-  - fight: **Incomplete** Still in-progress, a massive project
-  - flag: **Incomplete** Not yet ported to v3
-  - hangman: **Incomplete** v2 version is functional at [Fox-Cogs v2](https://github.com/bobloy/Fox-Cogs)
-  - immortal: **Private** Designed for a specific server, not recommended to install
-  - leaver: **Incomplete** Have not begun conversion yet
+  - fight: **Incomplete** - Still in-progress, a massive project
+  - flag: **Incomplete** - Not yet ported to v3
+  - hangman: **Incomplete** - Not yet ported to v3
+  - immortal: **Private** - Designed for a specific server, not recommended to install
+  - leaver: **Incomplete** - Not yet ported to v3
   - reactrestrict: **Beta** - Removes reactions by role per channel
   - stealemoji: **Incomplete** - Steals any custom emoji it sees
+  - werewolf: **Incomplete** - Play the classic party game Werewolf within discord
+  
+Many of these are functional in my V2 cogs at [Fox-Cogs v2](https://github.com/bobloy/Fox-Cogs)
