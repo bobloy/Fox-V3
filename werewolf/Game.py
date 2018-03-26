@@ -28,9 +28,11 @@ class Game:
         
         self.started = False
         self.game_over = False
+        self.can_vote = False
         
         self.village_channel = None
         self.secret_channels = {}
+        self.vote_groups = []
         
         self.loop = asyncio.get_event_loop()
         
@@ -82,6 +84,8 @@ class Game:
             return
         await self._notify(1)
         
+        self.can_vote = True
+        
         asyncio.sleep(240)  # 4 minute days
         await self._at_day_end()
         
@@ -105,7 +109,9 @@ class Game:
             return
         await self._notify(5)
         
-        asyncio.sleep(60)
+        self.can_vote = False
+        
+        asyncio.sleep(30)
         await self._at_night_start()
         
     async def _at_night_start(self):  # ID 6
@@ -132,16 +138,33 @@ class Game:
     async def _notify(self, event, data=None):
         for i in range(10):
             tasks = []
+            
+            # Role priorities
             role_order = [role for role in self.roles if role.action_list[event][1]==i]
             for role in role_order:
                 tasks.append(asyncio.ensure_future(role.on_event(event, data))
+            # VoteGroup priorities    
+            vote_order = [votes for votes in self.vote_groups if votes.action_list[event][1]==i]
+            for vote_group in vote_order:
+                tasks.append(asyncio.ensure_future(vote_group.on_event(event, data))
+                
             # self.loop.create_task(role.on_event(event))
             self.loop.run_until_complete(asyncio.gather(*tasks))
             # Run same-priority task simultaneously
     
-    async def _generate_targets(self):
+    async def generate_targets(self, channel):
+        embed=discord.Embed(title="Remaining Players")
+        for i in range(len(self.players)):
+            player = self.players[i]
+            if player.alive:
+                status=""
+            else:
+                status="*Dead*"
+            embed.add_field(name="ID# **{}**".format(i), value="{} {}".format(status, player.member.display_name, inline=True)
+  
+        return await channel.send(embed=embed)
     
-    async def register_channel(self, channel_id):
+    async def register_channel(self, channel_id, votegroup = None):
         
         
     
@@ -186,13 +209,29 @@ class Game:
         
         if player is None:
             channel.send("You're not in this game!")
+            return
             
         if not player.alive:
             channel.send("Corpses can't vote")
+            return
+        
+        if channel in self.secret_channels.values():
+            
+        if channel == self.village_channel:
+            if not self.can_vote:
+                channel.send("Voting is not allowed right now")
+                return
+                
         
         try:
             target = self.players[id]
-        except IndexError
+        except IndexError:
+            target = None
+        
+        if target is None:
+            channel.send("Not a valid target")
+            return
+        
         
     
     async def get_roles(self, game_code=None):

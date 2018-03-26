@@ -13,7 +13,7 @@ class DefaultWerewolf(Role):
     rand_choice = True  
     category = [11, 15]
     allignment = 2     # 1: Town, 2: Werewolf, 3: Neutral
-    channel_id = "werewolf"
+    channel_id = "werewolves"
     unique = False
     action_list = [
             (self._at_game_start, 0),  # (Action, Priority)
@@ -67,22 +67,7 @@ class DefaultWerewolf(Role):
         super()._at_day_end(data)
         
     async def _at_night_start(self, data=None):
-        channel = self.game.channel_lock(self.channel_id, False)
-        # channel = await self.game.get_channel(self.channel_id)
-        
-        await self.game._generate_targets(channel)
         super()._at_night_start(data)
         
     async def _at_night_end(self, data=None):
-        await self.game.channel_lock(self.channel_id, True)
-        
-        try:
-            target = data["target"]
-        except:
-            # No target chosen, no kill
-            target = None
-        
-        if target:
-            await self.game.kill(target)
-            
         super()._at_night_end(data)
