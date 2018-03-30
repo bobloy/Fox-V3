@@ -6,5 +6,5 @@
     "install_msg" : "Thank you for installing Werewolf! Use [p]wwset to run inital setup",
     "requirements" : [],
     "short" : "Werewolf Game",
-    "tags" : ["fun", "game", "bobloy"]
+    "tags" : ["mafia", "werewolf", "party", "fun", "game", "bobloy"]
 }

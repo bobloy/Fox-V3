@@ -51,9 +51,7 @@ class Game:
             ctx.send("Players does not match roles, cannot start")
             return False
         
-        
-        
-        
+    ############START Notify structure############
     async def _cycle(self):
         """
         Each event calls the next event
@@ -151,7 +149,9 @@ class Game:
             # self.loop.create_task(role.on_event(event))
             self.loop.run_until_complete(asyncio.gather(*tasks))
             # Run same-priority task simultaneously
-    
+
+    ############END Notify structure############
+
     async def generate_targets(self, channel):
         embed=discord.Embed(title="Remaining Players")
         for i in range(len(self.players)):
@@ -160,23 +160,31 @@ class Game:
                 status=""
             else:
                 status="*Dead*"
-            embed.add_field(name="ID# **{}**".format(i), value="{} {}".format(status, player.member.display_name, inline=True)
+            embed.add_field(name="ID# **{}**".format(i), value="{} {}".format(status, player.member.display_name), inline=True)
   
         return await channel.send(embed=embed)
-    
+
     async def register_channel(self, channel_id, votegroup = None):
+        # Create channel, set permissions, register votegroup
+        if channel_id not in self.secret_channels:
+            
         
-        
+    async def register_vote_group(self, channel_id, votegroup = None):
+        # Register channel and assign passed votegroup to it
+        if channel_id not in self.secret_channels:
+            await self.register_channel(channel_id, votegroup(self))
     
     async def join(self, member: discord.Member, channel: discord.Channel):
         """
         Have a member join a game
         """
         if self.started:
-            return "**Game has already started!**"
+            await channel.send("**Game has already started!**")
+            return 
         
         if member in self.players:
-            return "{} is already in the game!".format(member.mention)
+            await channel.send("{} is already in the game!".format(member.mention))
+            return 
         
         self.started.append(member)
         
@@ -232,8 +240,12 @@ class Game:
             channel.send("Not a valid target")
             return
         
+    async def kill(self, target, source=None, method: str=None):    
+        """
+        Attempt to kill a target
+        Source allows admin override
+        """
         
-    
     async def get_roles(self, game_code=None):
         if game_code:
             self.game_code=game_code
