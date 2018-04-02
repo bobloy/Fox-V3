@@ -2,20 +2,21 @@ import asyncio
 
 import discord
 
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 from cogs.werewolf.Role import Role
 
 from cogs.werewolf.votegroups.wolfvote import WolfVote
 
+
 class VanillaWerewolf(Role):
      
-    rand_choice = True  
+    rand_choice = True
     category = [11, 15]
     allignment = 2     # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = "werewolves"
     unique = False
-    game_start_message="""
+    game_start_message = """
             Your role is **Werewolf**
             You win by killing everyone else in the village
             Lynch players during the day with `[p]ww lynch <ID>`
@@ -45,15 +46,14 @@ class VanillaWerewolf(Role):
             
         # await action_list[event][0](data)
         
-        
     # async def assign_player(self, player):
         # """
         # Give this role a player
-        # Can be used after the game has started  (Cult, Mason, other role swap)
+        # Can be used after the game has started  (Cult, Mason, role swap)
         # """
 
         # player.role = self
-        # self.player = player    
+        # self.player = player
         
     async def _get_role(self, source=None):
         """
