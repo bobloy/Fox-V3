@@ -11,7 +11,7 @@ from .game import Game
 
 class Werewolf:
     """
-    Base to host werewolf on a server
+    Base to host werewolf on a guild
     """
 
     def __init__(self, bot):
@@ -25,7 +25,7 @@ class Werewolf:
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
         
-        self.games = {}  # Active games stored here, id is per server
+        self.games = {}  # Active games stored here, id is per guild
     
     @commands.group()
     async def ww(self, ctx: commands.Context):
@@ -44,7 +44,7 @@ class Werewolf:
         game = self._get_game(ctx.guild, game_code)
         
         if not game:
-            ctx.send("
+            ctx.send("Failed to start a new game")
         
     @ww.command()
     async def join(self, ctx):
@@ -84,14 +84,14 @@ class Werewolf:
         if channel is game.village_channel: 
             await game.vote(ctx.author, id, channel)
         
-        if channel in (c for id,c in game.secret_channels.items()):
+        if channel in (c["channel"] for c in game.p_channels.values()):
             await game.vote(ctx.author, id, channel)
 
     def _get_game(self, guild, game_code = None):
         if guild.id not in self.games:
             if not game_code:
                 return None
-            self.games[guild.id] = Game(game_code)
+            self.games[guild.id] = Game(guild, game_code)
 
         return self.games[guild.id]
 

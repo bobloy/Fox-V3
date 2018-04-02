@@ -27,16 +27,17 @@ class WolfVote(VoteGroup):
             
     
     kill_messages = [
-        "{target} was attacked by wolves",
-        "{target} was found torn to shreds"]
+        "**{ID}** - {target} was attacked by wolves",
+        "**{ID}** - {target} was found torn to shreds"]
     
-    def __init__(self, game, members):
-        self.game = game
-        self.members = members
-        self.channel = None
-        self.vote_results = {}
-        self.properties = {}  # Extra data for other options
+    def __init__(self, game, channel):
+        # self.game = game
+        # self.channel = channel
+        # self.players = []
+        # self.vote_results = {}
+        # self.properties = {}  # Extra data for other options
         self.killer = None  # Added killer
+        super().__init__(game, channel)
         
         
     # async def on_event(self, event, data):
@@ -57,10 +58,12 @@ class WolfVote(VoteGroup):
         # pass
         
     # async def _at_kill(self, data=None):
-        # pass
+        # if data["player"] in self.players:
+            # self.players.pop(data["player"])
         
     # async def _at_hang(self, data=None):
-        # pass
+        # if data["player"] in self.players:
+            # self.players.pop(data["player"])
         
     # async def _at_day_end(self, data=None):
         # pass
@@ -71,7 +74,7 @@ class WolfVote(VoteGroup):
         
         await self.game.generate_targets(self.channel)
         
-        self.killer = random.choice(self.members)
+        self.killer = random.choice(self.players)
         
         await channel.send("{} has been selected as tonight's killer")
         

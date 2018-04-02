@@ -67,7 +67,6 @@ class Role:
         self.game = game
         self.player = None
         self.blocked = False
-        self.secret_channel = None
         self.properties = {}  # Extra data for other roles (i.e. arsonist)
         
     async def on_event(self, event, data):
@@ -103,7 +102,7 @@ class Role:
     
     async def _at_game_start(self, data=None):
         if self.channel_id:
-            self.properties["channel"] = await self.game.register_channel(self.channel_id)
+            await self.game.register_channel(self.channel_id, self)
         
         await self.player.send_dm(self.game_start_message) #Maybe embeds eventually
         

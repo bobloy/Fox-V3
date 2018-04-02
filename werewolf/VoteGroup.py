@@ -26,10 +26,10 @@ class VoteGroup:
             ]
             
 
-    def __init__(self, game, members):
+    def __init__(self, game, channel):
         self.game = game
-        self.members = members
-        self.channel = None
+        self.channel = channel
+        self.players = []
         self.vote_results = {}
         self.properties = {}  # Extra data for other options
         
@@ -42,8 +42,7 @@ class VoteGroup:
         await action_list[event][0](data)
 
     async def _at_game_start(self, data=None):
-        if self.channel_id:
-            self.channel = await self.game.register_channel(self.channel_id)
+        pass
 
     async def _at_day_start(self, data=None):
         pass
@@ -52,11 +51,13 @@ class VoteGroup:
         pass
         
     async def _at_kill(self, data=None):
-        pass
+        if data["player"] in self.players:
+            self.players.pop(data["player"])
         
     async def _at_hang(self, data=None):
-        pass
-        
+        if data["player"] in self.players:
+            self.players.pop(data["player"])
+
     async def _at_day_end(self, data=None):
         pass
         
@@ -80,18 +81,18 @@ class VoteGroup:
             # Do what you voted on
             pass
     
-    async def register_member(self, member):
+    async def register_player(self, player):
         """
-        Add a member to member list
+        Add a player to player list
         """
-        self.members.append(member)
+        self.players.append(player)
     
-    async def remove_member(self, member):
+    async def remove_player(self, player):
         """
-        Remove a member from member list
+        Remove a player from player list
         """
-        if member in self.members:
-            self.members.remove(member)
+        if player.id in self.players:
+            self.players.remove(player)
 
     async def vote(self, author, id):
         """

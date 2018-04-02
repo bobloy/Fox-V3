@@ -33,11 +33,11 @@ class VanillaWerewolf(Role):
             (self._at_night_end, 5)
             ]
             
-    def __init__(self, game):
-        self.game = game
-        self.player = None
-        self.blocked = False
-        self.properties = {}  # Extra data for other roles (i.e. arsonist)
+    # def __init__(self, game):
+        # self.game = game
+        # self.player = None
+        # self.blocked = False
+        # self.properties = {}  # Extra data for other roles (i.e. arsonist)
     
     # async def on_event(self, event, data):
         # """
@@ -70,9 +70,11 @@ class VanillaWerewolf(Role):
         return "Werewolf"
     
     async def _at_game_start(self, data=None):
-        # super()._at_game_start(data)  # Registers channel
+        if self.channel_id:
+            await self.game.register_channel(self.channel_id, self, WolfVote)  # Add VoteGroup WolfVote
         
-        await self.game.register_vote_group(self.channel_id, WolfVote)
+        await self.player.send_dm(self.game_start_message)
+        
 
     # async def _at_day_start(self, data=None):
         # super()._at_day_start(data)
