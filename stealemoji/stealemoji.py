@@ -1,6 +1,5 @@
 import asyncio
 
-import urllib
 from urllib.parse import urlparse
 
 import os
@@ -13,7 +12,13 @@ from discord.ext import commands
 from redbot.core import Config
 from redbot.core.bot import Red
 
+async def fetch_img(session, url):
+    with aiohttp.Timeout(10):
+        async with session.get(url) as response:
+            assert response.status == 200
+            return await response.read()
 
+      
 class StealEmoji:
     """
     This cog steals emojis and creates servers for them
@@ -57,9 +62,28 @@ class StealEmoji:
         await self.config.on.set(not currSetting)
         await ctx.send("Collection is now "+str(not currSetting))
         
+    async def se_bank(self, ctx):
+        """Add current server as emoji bank"""
+        await ctx.send("This will upload custom emojis to this server\n"
+                        "Are you sure you want to make the current server an emoji bank? (y/n)"
+        
+        def check(m):
+            return upper(m.content) in ["Y","YES","N","NO"]  and m.channel == ctx.channel and m.author == ctx.author
+
+        msg = await client.wait_for('message', check=check)
+        
+        if msg.content in ["N","NO"]
+            await ctx.send("Cancelled")
+            return
+        
+        async with self.config.guildbanks() as guildbanks:
+            guildbanks.append(ctx.guild.id)
+            
+        await ctx.send("This server has been added as an emoji bank")
+        
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         """Event handler for reaction watching"""
-        if not reaction.custom_emoji():
+        if not reaction.custom_emoji:
             return
         
         if not (await self.config.on()):
@@ -75,12 +99,13 @@ class StealEmoji:
         
         guildbank = None
         banklist = await self.config.guildbanks()
-        for guild in banklist:
+        for guild_id in banklist:
+            guild = self.bot.get_guild(guild_id)
             if len(guild.emojis)<50:
                 guildbank = guild
                 break
         
-        if not guildbank:
+        if guildbank is None:
             # Eventually make a new banklist
             return
             
@@ -94,13 +119,21 @@ class StealEmoji:
         # Alright, time to steal it for real
         path = urlparse(emoji.url).path
         ext = os.path.splitext(path)[1]
-        urllib.urlretrieve(emoji.url, emoji.name+ext)
+        
+        img = await fetch_img(emoji.url)
+        
+        with open("\\cogs\\stealemoji\\"+emoji.name+ext, "wb") as f:
+            f.write(img)
+        # urllib.urlretrieve(emoji.url, emoji.name+ext)
+        
         
         try:
-            await guildbank.create_custom_emoji(name=emoji.name,image=emoji.url,reason="Stole from "+str(user))
+            await guildbank.create_custom_emoji(name=emoji.name,image="\\cogs\\stealemoji\\"+emoji.name+ext,reason="Stole from "+str(user))
         except Forbidden as e:
+            print("PermissionError - no permission to add emojis")
             raise PermissionError("No permission to add emojis") from e
         except HTTPException:
+            print("Unhandled exception")
             pass  # Unhandled error
             
         # If you get this far, YOU DID IT
@@ -109,50 +142,4 @@ class StealEmoji:
         owner = owner.owner
         await owner.send("Just added emoji "+str(emoji)+" to server "+str(guildbank))
         
-        
-        
-        
-    # async def 
-    
-    
-    # async def on_raw_reaction_add(self, emoji: discord.PartialReactionEmoji,
-                                  # message_id: int, channel_id: int, user_id: int):
-        # """
-        # Event handler for long term reaction watching.
-
-        # :param discord.PartialReactionEmoji emoji:
-        # :param int message_id:
-        # :param int channel_id:
-        # :param int user_id:
-        # :return:
-        # """
-        # if emoji.is_custom_emoji():
-            # emoji_id = emoji.id
-        # else:
-            # return
-        
-        # has_reactrestrict, combos = await self.has_reactrestrict_combo(message_id)
-
-        # if not has_reactrestrict:
-            # return
-
-        # try:
-            # member = self._get_member(channel_id, user_id)
-        # except LookupError:
-            # return
-
-        # if member.bot:
-            # return
-
-        # try:
-            # roles = [self._get_role(member.guild, c.role_id) for c in combos]
-        # except LookupError:
-            # return
-
-        # for apprrole in roles:
-            # if apprrole in member.roles:
-                # return
-                
-        # message = await self._get_message_from_channel(channel_id, message_id)
-        # await message.remove_reaction(emoji, member)
-        
+        # add to config.stolemoji()?
