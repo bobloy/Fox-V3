@@ -12,6 +12,7 @@ from discord.ext import commands
 
 from redbot.core import Config
 from redbot.core.bot import Red
+# from redbot.core import data_manager
 
 async def fetch_img(session, url):
     with aiohttp.Timeout(10):
@@ -40,10 +41,8 @@ class StealEmoji:
                 "require_colons": False,
                 "managed": False,
                 "guild_id": None,
-                "created_at": None,
                 "url": None,
-                "roles": [],
-                "guild": None  # Will not save this one
+                "animated": False
                 }
                 
         self.config.register_global(**default_global)
@@ -82,7 +81,7 @@ class StealEmoji:
             guildbanks.append(ctx.guild.id)
             
         await ctx.send("This server has been added as an emoji bank")
-        
+    
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         """Event handler for reaction watching"""
         if not reaction.custom_emoji:
@@ -115,7 +114,7 @@ class StealEmoji:
             # Eventually make a new banklist
             return
             
-        # Next, have I saved this emoji before (in self.bot.emojis should've done this)
+        # Next, have I saved this emoji before (because uploaded emoji != orignal emoji)
         
         stolemojis = await self.config.stolemoji()
         
@@ -124,30 +123,44 @@ class StealEmoji:
             return
         
         # Alright, time to steal it for real
-        path = urlparse(emoji.url).path
-        ext = os.path.splitext(path)[1]
+        # path = urlparse(emoji.url).path
+        # ext = os.path.splitext(path)[1]
         
         async with aiohttp.ClientSession() as session:
             img = await fetch_img(session, emoji.url)
         
-        with open("\\cogs\\stealemoji\\"+emoji.name+ext, "wb") as f:
-            f.write(img)
+        # path = data_manager.cog_data_path(cog_instance=self) / (emoji.name+ext)
+        
+        # with path.open("wb") as f:
+            # f.write(img)
         # urllib.urlretrieve(emoji.url, emoji.name+ext)
         
         
         try:
-            await guildbank.create_custom_emoji(name=emoji.name,image="\\cogs\\stealemoji\\"+emoji.name+ext,reason="Stole from "+str(user))
+            await guildbank.create_custom_emoji(name=emoji.name,image=img,reason="Stole from "+str(user))
         except Forbidden as e:
             print("PermissionError - no permission to add emojis")
             raise PermissionError("No permission to add emojis") from e
         except HTTPException:
-            print("Unhandled exception")
-            pass  # Unhandled error
-            
+            print("HTTPException exception")
+            raise HTTPException # Unhandled error
+
         # If you get this far, YOU DID IT
         
-        owner = await self.bot.application_info()
-        owner = owner.owner
-        await owner.send("Just added emoji "+str(emoji)+" to server "+str(guildbank))
+        save_dict = self.default_stolemoji.copy()
+        e_dict = vars(emoji)
         
-        # add to config.stolemoji()?
+        for k in e_dict:
+            if k in save_dict:
+                save_dict[k] = e_dict[k]
+        
+        save_dict["guildbank"] = guildbank.id
+        
+        async with self.config.stolemoji() as stolemoji:
+            stolemoji[emoji.id] = save_dict
+        
+        #Enable the below if you want to get notified when it works
+        # owner = await self.bot.application_info()
+        # owner = owner.owner
+        # await owner.send("Just added emoji "+str(emoji)+" to server "+str(guildbank))
+        
