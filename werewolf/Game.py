@@ -38,6 +38,7 @@ class Game:
         self.started = False
         self.game_over = False
         self.can_vote = False
+        self.used_votes = 0
         
         self.channel_category = None
         self.village_channel = None
@@ -61,10 +62,10 @@ class Game:
         if len(self.players) != self.roles:
             ctx.send("Player count does not match role count, cannot start")
             return False
-        
+        # Create category and channel with individual overwrites
         overwrite = {
-                    self.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                    self.guild.me: discord.PermissionOverwrite(read_messages=True)
+                    self.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=True),
+                    self.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
                     }
 
         self.channel_category = await self.guild.create_category("ww-game", overwrites=overwrite, reason="New game of werewolf")
@@ -126,11 +127,18 @@ class Game:
     async def _at_day_start(self):  # ID 1
         if self.game_over:
             return
+        await self.village_channel.send("The sun rises on a new day in the village")
+        
+        await self.day_perms(self.village_channel)
         await self._notify(1)
         
         self.can_vote = True
         
         asyncio.sleep(240)  # 4 minute days
+        
+        if not self.can_vote or self.game_over:
+            return
+            
         await self._at_day_end()
         
     async def _at_voted(self, target):  # ID 2
@@ -138,6 +146,48 @@ class Game:
             return
         data = {"player": target}
         await self._notify(2, data)
+        
+        self.used_votes += 1
+        
+        await self.all_but_perms(self.village_channel, target)
+        await self.village_channel.send("{} will be put to trial and has 30 seconds to defend themselves".format(target.mention))
+        
+        asyncio.sleep(30)
+        
+        await self.village_channel.set_permissions(target, read_messages=True)
+        
+        message = await self.village_channel.send("Everyone will now vote whether to lynch {}\n👍 to save, 👎 to lynch\n*Majority rules, no-lynch on ties, vote for both or neither to abstain, 15 seconds to vote*".format(target.mention))
+        
+        await self.village_channel.add_reaction("👍")
+        await self.village_channel.add_reaction("👎")
+        
+        asyncio.sleep(15)
+        
+        reaction_list = message.reactions
+        
+        up_votes = sum(p.emoji == "👍" and not p.me for p in reaction_list)
+        down_votes = sum(p.emoji == "👎" and not p.me for p in reaction_list)
+        
+        if len(down_votes)>len(up_votes):
+            embed=discord.Embed(title="Vote Results", color=0xff0000)
+        else:
+            embed=discord.Embed(title="Vote Results", color=0x80ff80)
+        
+        embed.add_field(name="👎", value="**{}**".format(len(up_votes)), inline=True)
+        embed.add_field(name="👍", value="**{}**".format(len(down_votes)), inline=True)
+        
+        await self.village_channel.send(embed=embed)
+        
+        if len(down_votes)>len(up_votes):
+            await self.village_channel.send("Voted to lynch {}!".format(target.mention))
+            await self.kill(target)
+            self.can_vote = False
+        elif self.used_votes >= 3:
+            self.can_vote = False
+        
+        if not self.can_vote:
+            await self._at_day_end()
+            
     
     async def _at_kill(self, target):  # ID 3
         if self.game_over:
@@ -154,10 +204,13 @@ class Game:
     async def _at_day_end(self):  # ID 5
         if self.game_over:
             return
-        await self._notify(5)
-        
+
         self.can_vote = False
+        await self.night_perms(self.village_channel)
         
+        await self.village_channel.send("**The sun sets on the village...**")
+        
+        await self._notify(5)
         asyncio.sleep(30)
         await self._at_night_start()
         
@@ -195,7 +248,6 @@ class Game:
             for vote_group in vote_order:
                 tasks.append(asyncio.ensure_future(vote_group.on_event(event, data))
                 
-            # self.loop.create_task(role.on_event(event))
             self.loop.run_until_complete(asyncio.gather(*tasks))
             # Run same-priority task simultaneously
 
@@ -291,7 +343,16 @@ class Game:
         Attempt to kill a target
         Source allows admin override
         Be sure to remove permissions appropriately
+        Important to finish execution before triggering notify
         """
+        pass
+        
+    async def lynch(self, target):    
+        """
+        Attempt to lynch a target
+        Important to finish execution before triggering notify
+        """
+        pass
         
     async def get_roles(self, game_code=None):
         if game_code:
@@ -305,3 +366,21 @@ class Game:
         if not self.roles:
             return False
     
+    async def night_perms(self, channel):
+        await channel.set_permissions(self.guild.default_role, read_messages=False, send_messages=False)
+    
+    async def day_perms(self, channel):
+        await channel.set_permissions(self.guild.default_role, read_messages=False)
+        
+    async def speech_perms(self, channel, member, undo=False):
+        if undo:
+            await channel.set_permissions(self.guild.default_role, read_messages=False)
+            await channel.set_permissions(member, read_messages=True)
+        elif:
+            await channel.set_permissions(self.guild.default_role, read_messages=False, send_messages=False)
+            await channel.set_permissions(member, read_messages=True, send_messages=True)
+    
+    async def normal_perms(self, channel, member_list):
+        await channel.set_permissions(self.guild.default_role, read_messages=False)
+        for member in member_list:
+            await channel.set_permissions(member, read_messages=True)
