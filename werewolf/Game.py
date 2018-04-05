@@ -2,11 +2,12 @@ import asyncio
 
 import discord
 
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 from random import shuffle
 
-from .builder import parse_code
+# from .builder import parse_code
+
 
 class Game:
     """
@@ -20,7 +21,7 @@ class Game:
                 }
     
     def __new__(cls, game_code):
-        game_code = ["DefaultWerewolf", "Villager", "Villager""]
+        game_code = ["DefaultWerewolf", "Villager", "Villager"]
         return Game(game_code)
 
     def __init__(self, guild, game_code):
@@ -47,7 +48,6 @@ class Game:
         self.vote_groups = {}
         
         self.loop = asyncio.get_event_loop()
-        
 
     async def setup(self, ctx):
         """
@@ -76,7 +76,7 @@ class Game:
         self.village_channel = await self.guild.create_text_channel("Village Square", overwrites=overwrite, reason="New game of werewolf", category=self.channel_category)
         
         # Assuming everything worked so far
-        await self._at_day_start() # This will queue channels and votegroups to be made
+        await self._at_day_start()  # This will queue channels and votegroups to be made
         
         for channel_id in self.p_channels:
             overwrite = {
@@ -87,7 +87,7 @@ class Game:
             for member in self.p_channels[channel_id]["players"]:
                 overwrite[member] = discord.PermissionOverwrite(read_messages=True)
                 
-            channel =  await self.guild.create_text_channel(channel_id, overwrites=overwrite, reason="Werewolf secret channel", category=self.channel_category)
+            channel = await self.guild.create_text_channel(channel_id, overwrites=overwrite, reason="Werewolf secret channel", category=self.channel_category)
             
             self.p_channels[channel_id]["channel"] = channel
             
@@ -96,7 +96,6 @@ class Game:
                 
                 await vote_group.register_player()
                 self.vote_groups[channel_id] = self.p_channels[channel_id]["votegroup"](self, channel)
-                
         
     ############START Notify structure############
     async def _cycle(self):
@@ -114,7 +113,7 @@ class Game:
         
         and repeat with _at_day_start() again
         """
-        await self._at_day_start():
+        await self._at_day_start()
     
     async def _at_game_start(self):  # ID 0
         if self.game_over:
@@ -123,7 +122,6 @@ class Game:
         
         await self._notify(0)
 
-        
     async def _at_day_start(self):  # ID 1
         if self.game_over:
             return
@@ -168,7 +166,7 @@ class Game:
         up_votes = sum(p.emoji == "👍" and not p.me for p in reaction_list)
         down_votes = sum(p.emoji == "👎" and not p.me for p in reaction_list)
         
-        if len(down_votes)>len(up_votes):
+        if len(down_votes) > len(up_votes):
             embed=discord.Embed(title="Vote Results", color=0xff0000)
         else:
             embed=discord.Embed(title="Vote Results", color=0x80ff80)
@@ -178,7 +176,7 @@ class Game:
         
         await self.village_channel.send(embed=embed)
         
-        if len(down_votes)>len(up_votes):
+        if len(down_votes) > len(up_votes):
             await self.village_channel.send("Voted to lynch {}!".format(target.mention))
             await self.kill(target)
             self.can_vote = False
@@ -187,7 +185,6 @@ class Game:
         
         if not self.can_vote:
             await self._at_day_end()
-            
     
     async def _at_kill(self, target):  # ID 3
         if self.game_over:
@@ -219,11 +216,11 @@ class Game:
             return
         await self._notify(6)
         
-        asyncio.sleep(120) # 2 minutes
+        asyncio.sleep(120)  # 2 minutes
 
-        asyncio.sleep(90)  # 1.5 minutes
+        asyncio.sleep(90)   # 1.5 minutes
 
-        asyncio.sleep(30) # .5 minutes
+        asyncio.sleep(30)  # .5 minutes
         
         await self._at_night_end()
         
@@ -238,15 +235,14 @@ class Game:
     async def _notify(self, event, data=None):
         for i in range(10):
             tasks = []
-            
             # Role priorities
             role_order = [role for role in self.roles if role.action_list[event][1]==i]
             for role in role_order:
-                tasks.append(asyncio.ensure_future(role.on_event(event, data))
+                tasks.append(asyncio.ensure_future(role.on_event(event, data)))
             # VoteGroup priorities    
             vote_order = [votes for votes in self.vote_groups.values() if votes.action_list[event][1]==i]
             for vote_group in vote_order:
-                tasks.append(asyncio.ensure_future(vote_group.on_event(event, data))
+                tasks.append(asyncio.ensure_future(vote_group.on_event(event, data)))
                 
             self.loop.run_until_complete(asyncio.gather(*tasks))
             # Run same-priority task simultaneously
@@ -280,7 +276,7 @@ class Game:
         if votegroup:
             self.p_channels[channel_id]["votegroup"] = votegroup
 
-    async def join(self, member: discord.Member, channel: discord.Channel):
+    async def join(self, member: discord.Member, channel: discord.TextChannel):
         """
         Have a member join a game
         """
@@ -326,9 +322,10 @@ class Game:
             if not self.can_vote:
                 channel.send("Voting is not allowed right now")
                 return
-                
-        if channel in self.p_channels.values():
-
+        elif channel not in self.p_channels.values():
+            # Not part of the game
+            return  # Don't say anything
+            
         try:
             target = self.players[id]
         except IndexError:
@@ -337,6 +334,8 @@ class Game:
         if target is None:
             channel.send("Not a valid target")
             return
+            
+        # Now handle village vote or send to votegroup
         
     async def kill(self, target, source=None, method: str=None):    
         """
@@ -345,14 +344,23 @@ class Game:
         Be sure to remove permissions appropriately
         Important to finish execution before triggering notify
         """
-        pass
+        if not target.protected:
+            target.alive = False
+            await self._at_kill(target)
+            if not target.alive:  # Still dead after notifying
+                await self.dead_perms(target.member)
+        else:
+            target.protected = False
         
     async def lynch(self, target):    
         """
         Attempt to lynch a target
         Important to finish execution before triggering notify
         """
-        pass
+        target.alive = False
+        await self._at_hang(target)
+        if not target.alive:  # Still dead after notifying
+            await self.dead_perms(target.member)
         
     async def get_roles(self, game_code=None):
         if game_code:
@@ -366,6 +374,10 @@ class Game:
         if not self.roles:
             return False
     
+    async def dead_perms(self, channel, member):
+        await channel.set_permissions(member, read_messages=True, send_message=False, add_reactions=False)
+        
+        
     async def night_perms(self, channel):
         await channel.set_permissions(self.guild.default_role, read_messages=False, send_messages=False)
     
@@ -376,7 +388,7 @@ class Game:
         if undo:
             await channel.set_permissions(self.guild.default_role, read_messages=False)
             await channel.set_permissions(member, read_messages=True)
-        elif:
+        else:
             await channel.set_permissions(self.guild.default_role, read_messages=False, send_messages=False)
             await channel.set_permissions(member, read_messages=True, send_messages=True)
     

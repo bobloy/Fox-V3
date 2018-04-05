@@ -5,9 +5,10 @@ from discord.ext import commands
 
 from redbot.core import Config
 
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 from .game import Game
+
 
 class Werewolf:
     """
@@ -20,8 +21,7 @@ class Werewolf:
         default_global = {}
         default_guild = {
             }
-        
-       
+
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
         
@@ -87,7 +87,7 @@ class Werewolf:
         if channel in (c["channel"] for c in game.p_channels.values()):
             await game.vote(ctx.author, id, channel)
 
-    def _get_game(self, guild, game_code = None):
+    def _get_game(self, guild, game_code=None):
         if guild.id not in self.games:
             if not game_code:
                 return None
@@ -95,19 +95,5 @@ class Werewolf:
 
         return self.games[guild.id]
 
-
     async def _game_start(self, game):
         await game.start()
-        
-    
-    async def on_message(self, message):
-        if message.author.id == self.bot.user.id:
-            return
-        
-        author = message.author
-        channel = message.channel
-        guild = message.guild
-        
-        
-        if channel is game.village_channel:
-            
