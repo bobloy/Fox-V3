@@ -1,9 +1,5 @@
 import asyncio
 
-import discord
-
-from datetime import datetime,timedelta
-
 class Role:
     """
     Base Role class for werewolf game
@@ -52,7 +48,14 @@ class Role:
             You win by testing the game
             Lynch players during the day with `[p]ww lynch <ID>`
             """
-    action_list = [
+
+    def __init__(self, game):
+        self.game = game
+        self.player = None
+        self.blocked = False
+        self.properties = {}  # Extra data for other roles (i.e. arsonist)
+        
+        self.action_list = [
             (self._at_game_start, 0),  # (Action, Priority)
             (self._at_day_start, 0),
             (self._at_voted, 0),
@@ -62,12 +65,6 @@ class Role:
             (self._at_night_start, 0),
             (self._at_night_end, 0)
             ]
-            
-    def __init__(self, game):
-        self.game = game
-        self.player = None
-        self.blocked = False
-        self.properties = {}  # Extra data for other roles (i.e. arsonist)
         
     async def on_event(self, event, data):
         """

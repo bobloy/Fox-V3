@@ -14,7 +14,14 @@ class VoteGroup:
     allignment = 0     # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = "" 
 
-    action_list = [
+    def __init__(self, game, channel):
+        self.game = game
+        self.channel = channel
+        self.players = []
+        self.vote_results = {}
+        self.properties = {}  # Extra data for other options
+        
+        self.action_list = [
             (self._at_game_start, 0),  # (Action, Priority)
             (self._at_day_start, 0),
             (self._at_voted, 0),
@@ -24,15 +31,6 @@ class VoteGroup:
             (self._at_night_start, 2),
             (self._at_night_end, 0)
             ]
-            
-
-    def __init__(self, game, channel):
-        self.game = game
-        self.channel = channel
-        self.players = []
-        self.vote_results = {}
-        self.properties = {}  # Extra data for other options
-        
         
     async def on_event(self, event, data):
         """

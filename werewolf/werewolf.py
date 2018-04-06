@@ -7,7 +7,7 @@ from redbot.core import Config
 
 from datetime import datetime, timedelta
 
-from .game import Game
+from werewolf.game import Game
 
 
 class Werewolf:
@@ -44,7 +44,11 @@ class Werewolf:
         game = self._get_game(ctx.guild, game_code)
         
         if not game:
-            ctx.send("Failed to start a new game")
+            await ctx.send("Failed to start a new game")
+        else:
+            await ctx.send("New game has started")
+        
+        
         
     @ww.command()
     async def join(self, ctx):
@@ -55,7 +59,7 @@ class Werewolf:
         game = self._get_game(ctx.guild)
         
         if not game:
-            ctx.send("No game to join!\nCreate a new one with `[p]ww new`")
+            await ctx.send("No game to join!\nCreate a new one with `[p]ww new`")
             return
 
         await game.join(ctx.author, ctx.channel)
@@ -69,7 +73,18 @@ class Werewolf:
         game = self._get_game(ctx.guild)
         
         await game.quit(ctx.author, ctx.channel)
-
+    
+    @ww.command()
+    async def start(self, ctx):
+        """
+        Checks number of players and attempts to start the game
+        """
+        game = self._get_game(guild)
+        if not game:
+            await ctx.send("No game running, cannot start")
+        
+        await game.setup(ctx)
+        
     @ww.command()
     async def vote(self, ctx, id):
         """
@@ -77,7 +92,7 @@ class Werewolf:
         """
         game = self._get_game(guild)
         if not game:
-            ctx.send("No game running, cannot vote")
+            await ctx.send("No game running, cannot vote")
         
         # Game handles response now
         channel = ctx.channel

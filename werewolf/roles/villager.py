@@ -1,8 +1,6 @@
 import asyncio
 
-import discord
-
-from datetime import datetime, timedelta
+from werewolf.role import Role
 
 class Villager(Role):
      
@@ -16,17 +14,7 @@ class Villager(Role):
             You win by lynching all evil in the town
             Lynch players during the day with `[p]ww lynch <ID>`
             """
-    action_list = [
-            (self._at_game_start, 0),  # (Action, Priority)
-            (self._at_day_start, 0),
-            (self._at_voted, 0),
-            (self._at_kill, 0),
-            (self._at_hang, 0),
-            (self._at_day_end, 0),
-            (self._at_night_start, 0),
-            (self._at_night_end, 0)
-            ]
-            
+
     # def __init__(self, game):
         # self.game = game
         # self.player = None

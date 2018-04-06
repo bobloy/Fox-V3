@@ -4,7 +4,7 @@ import discord
 
 import random
 
-from cogs.werewolf.votegroup import VoteGroup
+from werewolf.votegroup import VoteGroup
 
 class WolfVote(VoteGroup):
     """
@@ -14,18 +14,6 @@ class WolfVote(VoteGroup):
     allignment = 2     # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = "werewolves" 
 
-    action_list = [
-            (self._at_game_start, 0),  # (Action, Priority)
-            (self._at_day_start, 0),
-            (self._at_voted, 0),
-            (self._at_kill, 0),
-            (self._at_hang, 0),
-            (self._at_day_end, 0),
-            (self._at_night_start, 2),
-            (self._at_night_end, 5)  # Kill priority
-            ]
-            
-    
     kill_messages = [
         "**{ID}** - {target} was attacked by wolves",
         "**{ID}** - {target} was found torn to shreds"]
@@ -36,9 +24,20 @@ class WolfVote(VoteGroup):
         # self.players = []
         # self.vote_results = {}
         # self.properties = {}  # Extra data for other options
-        self.killer = None  # Added killer
         super().__init__(game, channel)
-        
+
+        self.killer = None  # Added killer
+
+        self.action_list = [
+            (self._at_game_start, 0),  # (Action, Priority)
+            (self._at_day_start, 0),
+            (self._at_voted, 0),
+            (self._at_kill, 0),
+            (self._at_hang, 0),
+            (self._at_day_end, 0),
+            (self._at_night_start, 2),
+            (self._at_night_end, 5)  # Kill priority
+            ] 
         
     # async def on_event(self, event, data):
         # """

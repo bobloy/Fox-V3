@@ -1,12 +1,8 @@
 import asyncio
 
-import discord
+from werewolf.role import Role
 
-from datetime import datetime, timedelta
-
-from cogs.werewolf.Role import Role
-
-from cogs.werewolf.votegroups.wolfvote import WolfVote
+from werewolf.votegroups.wolfvote import WolfVote
 
 
 class VanillaWerewolf(Role):
@@ -22,7 +18,14 @@ class VanillaWerewolf(Role):
             Lynch players during the day with `[p]ww lynch <ID>`
             Vote to kill players at night with `[p]ww vote <ID>`
             """
-    action_list = [
+    
+ 
+    def __init__(self, game):
+        # self.game = game
+        # self.player = None
+        # self.blocked = False
+        # self.properties = {}  # Extra data for other roles (i.e. arsonist)
+        self.action_list = [
             (self._at_game_start, 0),  # (Action, Priority)
             (self._at_day_start, 0),
             (self._at_voted, 0),
@@ -30,14 +33,8 @@ class VanillaWerewolf(Role):
             (self._at_hang, 0),
             (self._at_day_end, 0),
             (self._at_night_start, 2),
-            (self._at_night_end, 5)
+            (self._at_night_end, 0)
             ]
-            
-    # def __init__(self, game):
-        # self.game = game
-        # self.player = None
-        # self.blocked = False
-        # self.properties = {}  # Extra data for other roles (i.e. arsonist)
     
     # async def on_event(self, event, data):
         # """

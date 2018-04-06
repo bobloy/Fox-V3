@@ -6,7 +6,9 @@ from datetime import datetime, timedelta
 
 from random import shuffle
 
-# from .builder import parse_code
+from werewolf.player import Player
+
+from werewolf.builder import parse_code
 
 
 class Game:
@@ -20,18 +22,16 @@ class Game:
                 "votegroup": None
                 }
     
-    def __new__(cls, game_code):
-        game_code = ["DefaultWerewolf", "Villager", "Villager"]
-        return Game(game_code)
+    # def __new__(cls, guild, game_code):
+        # game_code = ["DefaultWerewolf", "Villager", "Villager"]
+        
+        # return super().__new__(cls, guild, game_code)
 
     def __init__(self, guild, game_code):
         self.guild = guild
-        self.game_code = game_code
+        self.game_code = ["VanillaWerewolf", "Villager", "Villager"]
         
         self.roles = []
-        
-        if self.game_code:
-            self.get_roles()
         
         self.players = []
         self.day_vote = {}  # ID, votes
@@ -59,8 +59,15 @@ class Game:
         3. Check Initial role setup (including alerts)
         4. Start game
         """
+        if self.game_code:
+            await self.get_roles()
+        else:
+            await ctx.send("Number of players does not match number of roles, adjust before starting")
+            return False
+
         if len(self.players) != self.roles:
-            ctx.send("Player count does not match role count, cannot start")
+            await ctx.send("Player count does not match role count, cannot start")
+            self.roles = []
             return False
         # Create category and channel with individual overwrites
         overwrite = {
@@ -284,15 +291,15 @@ class Game:
             await channel.send("**Game has already started!**")
             return 
         
-        if member in self.players:
+        if await self.get_player_by_member(member):
             await channel.send("{} is already in the game!".format(member.mention))
             return 
         
-        self.started.append(member)
+        self.players.append(Player(member))
         
-        channel.send("{} has been added to the game, total players is **{}**".format(member.mention, len(self.players)))
+        await channel.send("{} has been added to the game, total players is **{}**".format(member.mention, len(self.players)))
         
-    async def quit(self, member: discord.Member):
+    async def quit(self, member: discord.Member, channel: discord.TextChannel = None):
         """
         Have a member quit a game
         """
@@ -302,7 +309,11 @@ class Game:
             return "You're not in a game!"
 
         if self.started:
-            await self.kill()
+            await self.kill(member)
+            await channel.send("{} has left the game".format(member.mention))
+        else:
+            self.players = [player for player in self.players if player.member != member]
+            await channel.send("{} chickened out, player count is now **{}**".format(member.mention, len(self.players)))
     
     async def vote(self, author, id, channel):
         """
@@ -311,16 +322,16 @@ class Game:
         player = self._get_player(author)
         
         if player is None:
-            channel.send("You're not in this game!")
+            await channel.send("You're not in this game!")
             return
             
         if not player.alive:
-            channel.send("Corpses can't vote")
+            await channel.send("Corpses can't vote")
             return
             
         if channel == self.village_channel:
             if not self.can_vote:
-                channel.send("Voting is not allowed right now")
+                await channel.send("Voting is not allowed right now")
                 return
         elif channel not in self.p_channels.values():
             # Not part of the game
@@ -332,7 +343,7 @@ class Game:
             target = None
         
         if target is None:
-            channel.send("Not a valid target")
+            await channel.send("Not a valid target")
             return
             
         # Now handle village vote or send to votegroup
@@ -373,6 +384,12 @@ class Game:
         
         if not self.roles:
             return False
+            
+    async def get_player_by_member(self, member):
+        for player in self.players:
+            if player.member == member:
+                return player
+        return False
     
     async def dead_perms(self, channel, member):
         await channel.set_permissions(member, read_messages=True, send_message=False, add_reactions=False)
