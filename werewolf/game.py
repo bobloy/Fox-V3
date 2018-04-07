@@ -1,5 +1,4 @@
 import asyncio
-
 import discord
 
 from datetime import datetime, timedelta
@@ -29,7 +28,7 @@ class Game:
 
     def __init__(self, guild, game_code):
         self.guild = guild
-        self.game_code = ["VanillaWerewolf", "Villager", "Villager"]
+        self.game_code = ["Villager"]
         
         self.roles = []
         
@@ -61,14 +60,14 @@ class Game:
         """
         if self.game_code:
             await self.get_roles()
-        else:
-            await ctx.send("Number of players does not match number of roles, adjust before starting")
-            return False
 
-        if len(self.players) != self.roles:
+        if len(self.players) != len(self.roles):
             await ctx.send("Player count does not match role count, cannot start")
             self.roles = []
             return False
+        
+        await self.assign_roles()
+        
         # Create category and channel with individual overwrites
         overwrite = {
                     self.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=True),
@@ -83,7 +82,8 @@ class Game:
         self.village_channel = await self.guild.create_text_channel("Village Square", overwrites=overwrite, reason="New game of werewolf", category=self.channel_category)
         
         # Assuming everything worked so far
-        await self._at_day_start()  # This will queue channels and votegroups to be made
+        print("Pre-game_start")
+        await self._at_game_start()  # This will queue channels and votegroups to be made
         
         for channel_id in self.p_channels:
             overwrite = {
@@ -103,6 +103,9 @@ class Game:
                 
                 await vote_group.register_player()
                 self.vote_groups[channel_id] = self.p_channels[channel_id]["votegroup"](self, channel)
+        print("Pre-cycle")
+        await asyncio.sleep(1)
+        await self._cycle() # Start the loop
         
     ############START Notify structure############
     async def _cycle(self):
@@ -139,7 +142,7 @@ class Game:
         
         self.can_vote = True
         
-        asyncio.sleep(240)  # 4 minute days
+        await asyncio.sleep(240)  # 4 minute days
         
         if not self.can_vote or self.game_over:
             return
@@ -157,7 +160,7 @@ class Game:
         await self.all_but_perms(self.village_channel, target)
         await self.village_channel.send("{} will be put to trial and has 30 seconds to defend themselves".format(target.mention))
         
-        asyncio.sleep(30)
+        await asyncio.sleep(30)
         
         await self.village_channel.set_permissions(target, read_messages=True)
         
@@ -166,7 +169,7 @@ class Game:
         await self.village_channel.add_reaction("👍")
         await self.village_channel.add_reaction("👎")
         
-        asyncio.sleep(15)
+        await asyncio.sleep(15)
         
         reaction_list = message.reactions
         
@@ -215,7 +218,7 @@ class Game:
         await self.village_channel.send("**The sun sets on the village...**")
         
         await self._notify(5)
-        asyncio.sleep(30)
+        await asyncio.sleep(30)
         await self._at_night_start()
         
     async def _at_night_start(self):  # ID 6
@@ -223,11 +226,11 @@ class Game:
             return
         await self._notify(6)
         
-        asyncio.sleep(120)  # 2 minutes
+        await asyncio.sleep(120)  # 2 minutes
 
-        asyncio.sleep(90)   # 1.5 minutes
+        await asyncio.sleep(90)   # 1.5 minutes
 
-        asyncio.sleep(30)  # .5 minutes
+        await asyncio.sleep(30)  # .5 minutes
         
         await self._at_night_end()
         
@@ -236,22 +239,22 @@ class Game:
             return
         await self._notify(7)
         
-        asyncio.sleep(15)
+        await asyncio.sleep(15)
         await self._at_day_start()
             
     async def _notify(self, event, data=None):
-        for i in range(10):
+        for i in range(8):
             tasks = []
             # Role priorities
             role_order = [role for role in self.roles if role.action_list[event][1]==i]
             for role in role_order:
-                tasks.append(asyncio.ensure_future(role.on_event(event, data)))
+                tasks.append(asyncio.ensure_future(role.on_event(event, data), loop=self.loop))
             # VoteGroup priorities    
             vote_order = [votes for votes in self.vote_groups.values() if votes.action_list[event][1]==i]
             for vote_group in vote_order:
-                tasks.append(asyncio.ensure_future(vote_group.on_event(event, data)))
+                tasks.append(asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop))
                 
-            self.loop.run_until_complete(asyncio.gather(*tasks))
+            await asyncio.gather(*tasks)
             # Run same-priority task simultaneously
 
     ############END Notify structure############
@@ -374,16 +377,24 @@ class Game:
             await self.dead_perms(target.member)
         
     async def get_roles(self, game_code=None):
-        if game_code:
+        if game_code is not None:
             self.game_code=game_code
         
-        if not self.game_code:
+        if self.game_code is None:
             return False
         
         self.roles = await parse_code(self.game_code)
         
         if not self.roles:
             return False
+    
+    async def assign_roles(self):
+        """len(self.roles) must == len(self.players)"""
+        shuffle(self.roles)
+        
+        for idx, role in enumerate(self.roles):
+            self.roles[idx] = role(self)
+            await self.roles[idx].assign_player(self.players[idx])
             
     async def get_player_by_member(self, member):
         for player in self.players:

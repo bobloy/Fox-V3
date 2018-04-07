@@ -15,19 +15,29 @@ class Villager(Role):
             Lynch players during the day with `[p]ww lynch <ID>`
             """
 
-    # def __init__(self, game):
-        # self.game = game
-        # self.player = None
-        # self.blocked = False
-        # self.secret_channel = None
-        # self.properties = {}  # Extra data for other roles (i.e. arsonist)
+    def __init__(self, game):
+        self.game = game
+        self.player = None
+        self.blocked = False
+        self.properties = {}  # Extra data for other roles (i.e. arsonist)
+        
+        self.action_list = [
+            (self._at_game_start, 0),  # (Action, Priority)
+            (self._at_day_start, 0),
+            (self._at_voted, 0),
+            (self._at_kill, 0),
+            (self._at_hang, 0),
+            (self._at_day_end, 0),
+            (self._at_night_start, 0),
+            (self._at_night_end, 0)
+            ]
         
     # async def on_event(self, event, data):
         # """
         # See Game class for event guide
         # """
             
-        # await action_list[event][0](data)
+        # await self.action_list[event][0](data)
         
         
     # async def assign_player(self, player):

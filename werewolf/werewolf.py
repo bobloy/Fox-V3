@@ -79,7 +79,7 @@ class Werewolf:
         """
         Checks number of players and attempts to start the game
         """
-        game = self._get_game(guild)
+        game = self._get_game(ctx.guild)
         if not game:
             await ctx.send("No game running, cannot start")
         
@@ -90,7 +90,7 @@ class Werewolf:
         """
         Vote for a player by ID
         """
-        game = self._get_game(guild)
+        game = self._get_game(ctx.guild)
         if not game:
             await ctx.send("No game running, cannot vote")
         

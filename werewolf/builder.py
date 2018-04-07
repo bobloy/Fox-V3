@@ -21,13 +21,14 @@ role_list = [Villager, VanillaWerewolf]
 # 0,0,0,1,11,12,E1,R1,R1,R1,R2,P2
 
 # pre-letter = exact role position
-# double digit position pre-empted by -
+# double digit position pre-empted by `-`
 
 async def parse_code(code):
     out = []
     #Do the magic described above
     decode = code.copy() # for now, pass exact names
     for role_id in decode:
+        print(role_id)
         if role_id == "Villager":
             role = Villager
         if role_id == "VanillaWerewolf":

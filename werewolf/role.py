@@ -71,7 +71,7 @@ class Role:
         See Game class for event guide
         """
             
-        await action_list[event][0](data)
+        await self.action_list[event][0](data)
         
         
     async def assign_player(self, player):

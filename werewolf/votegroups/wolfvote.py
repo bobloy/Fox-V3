@@ -19,12 +19,11 @@ class WolfVote(VoteGroup):
         "**{ID}** - {target} was found torn to shreds"]
     
     def __init__(self, game, channel):
-        # self.game = game
-        # self.channel = channel
-        # self.players = []
-        # self.vote_results = {}
-        # self.properties = {}  # Extra data for other options
-        super().__init__(game, channel)
+        self.game = game
+        self.channel = channel
+        self.players = []
+        self.vote_results = {}
+        self.properties = {}  # Extra data for other options
 
         self.killer = None  # Added killer
 

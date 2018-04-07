@@ -21,10 +21,10 @@ class VanillaWerewolf(Role):
     
  
     def __init__(self, game):
-        # self.game = game
-        # self.player = None
-        # self.blocked = False
-        # self.properties = {}  # Extra data for other roles (i.e. arsonist)
+        self.game = game
+        self.player = None
+        self.blocked = False
+        self.properties = {}  # Extra data for other roles (i.e. arsonist)
         self.action_list = [
             (self._at_game_start, 0),  # (Action, Priority)
             (self._at_day_start, 0),
@@ -41,7 +41,7 @@ class VanillaWerewolf(Role):
         # See Game class for event guide
         # """
             
-        # await action_list[event][0](data)
+        # await self.action_list[event][0](data)
         
     # async def assign_player(self, player):
         # """
