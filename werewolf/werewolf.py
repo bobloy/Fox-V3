@@ -98,9 +98,10 @@ class Werewolf:
         channel = ctx.channel
         if channel is game.village_channel: 
             await game.vote(ctx.author, id, channel)
-        
-        if channel in (c["channel"] for c in game.p_channels.values()):
+        elif channel in (c["channel"] for c in game.p_channels.values()):
             await game.vote(ctx.author, id, channel)
+        else:
+            await ctx.send("Nothing to vote for in this channel")
 
     def _get_game(self, guild, game_code=None):
         if guild.id not in self.games:

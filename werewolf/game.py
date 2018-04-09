@@ -22,7 +22,7 @@ class Game:
                 }
     
     # def __new__(cls, guild, game_code):
-        # game_code = ["DefaultWerewolf", "Villager", "Villager"]
+        # game_code = ["VanillaWerewolf", "Villager", "Villager"]
         
         # return super().__new__(cls, guild, game_code)
 
@@ -33,7 +33,9 @@ class Game:
         self.roles = []
         
         self.players = []
-        self.day_vote = {}  # ID, votes
+        
+        self.day_vote = {}  # author, target
+        self.vote_totals = {}  # id, total_votes
         
         self.started = False
         self.game_over = False
@@ -331,12 +333,16 @@ class Game:
         if not player.alive:
             await channel.send("Corpses can't vote")
             return
-            
+        
+        channel_list = []
         if channel == self.village_channel:
             if not self.can_vote:
                 await channel.send("Voting is not allowed right now")
                 return
-        elif channel not in self.p_channels.values():
+        else: 
+            channel_list = [c["channel"] for c in self.p_channels.values()]
+        
+        if channel not in channel_list:
             # Not part of the game
             return  # Don't say anything
             
@@ -346,11 +352,25 @@ class Game:
             target = None
         
         if target is None:
-            await channel.send("Not a valid target")
+            await channel.send("Not a valid ID")
             return
             
         # Now handle village vote or send to votegroup
+        if channel == self.village_channel:
+            await self._village_vote(target, author, id)
+        elif channel in self.p_channels:
+            
+    async def _village_vote(self, target, author, id):
+        if author in self.day_vote:
+            self.vote_totals[self.day_vote[author]] -= 1
         
+        self.day_vote[author] = id
+        self.vote_totals[id] += 1
+        
+        if self.vote_totals[id] <
+        
+        if sum
+        await self.village_channel.send("{} has voted to put {} to trial. {} more votes needed".format(
     async def kill(self, target, source=None, method: str=None):    
         """
         Attempt to kill a target
