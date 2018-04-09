@@ -18,7 +18,7 @@ class Game:
     default_secret_channel = {
                 "channel": None,
                 "players": [],
-                "votegroup": None
+                "votegroup": None  # uninitialized VoteGroup
                 }
     
     # def __new__(cls, guild, game_code):
@@ -28,7 +28,7 @@ class Game:
 
     def __init__(self, guild, game_code):
         self.guild = guild
-        self.game_code = ["Villager"]
+        self.game_code = ["VanillaWerewolf"]
         
         self.roles = []
         
@@ -43,8 +43,8 @@ class Game:
         self.channel_category = None
         self.village_channel = None
                 
-        self.p_channels = {}
-        self.vote_groups = {}
+        self.p_channels = {}  # uses default_secret_channel
+        self.vote_groups = {}  # ID : VoteGroup()
         
         self.loop = asyncio.get_event_loop()
 
@@ -91,18 +91,20 @@ class Game:
                 self.guild.me: discord.PermissionOverwrite(read_messages=True)
                 }
                 
-            for member in self.p_channels[channel_id]["players"]:
-                overwrite[member] = discord.PermissionOverwrite(read_messages=True)
+            for player in self.p_channels[channel_id]["players"]:
+                overwrite[player.member] = discord.PermissionOverwrite(read_messages=True)
                 
-            channel = await self.guild.create_text_channel(channel_id, overwrites=overwrite, reason="Werewolf secret channel", category=self.channel_category)
+            channel = await self.guild.create_text_channel(channel_id, overwrites=overwrite, reason="Ww game secret channel", category=self.channel_category)
             
             self.p_channels[channel_id]["channel"] = channel
             
             if self.p_channels[channel_id]["votegroup"] is not None:
                 vote_group = self.p_channels[channel_id]["votegroup"](self, channel)
                 
-                await vote_group.register_player()
-                self.vote_groups[channel_id] = self.p_channels[channel_id]["votegroup"](self, channel)
+                await vote_group.register_players([player in self.p_channels[channel_id]["players"]])
+                
+                self.vote_groups[channel_id] = vote_group
+
         print("Pre-cycle")
         await asyncio.sleep(1)
         await self._cycle() # Start the loop
@@ -250,7 +252,7 @@ class Game:
             for role in role_order:
                 tasks.append(asyncio.ensure_future(role.on_event(event, data), loop=self.loop))
             # VoteGroup priorities    
-            vote_order = [votes for votes in self.vote_groups.values() if votes.action_list[event][1]==i]
+            vote_order = [vg for vg in self.vote_groups.values() if vg.action_list[event][1]==i]
             for vote_group in vote_order:
                 tasks.append(asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop))
                 
@@ -272,7 +274,7 @@ class Game:
         return await channel.send(embed=embed)
     
     
-    async def register_channel(self, channel_id, player, votegroup=None):
+    async def register_channel(self, channel_id, role, votegroup=None):
         """
         Queue a channel to be created by game_start
         """
@@ -281,7 +283,7 @@ class Game:
 
         await asyncio.sleep(1)
         
-        self.p_channels[channel_id]["players"].append(player)
+        self.p_channels[channel_id]["players"].append(role.player)
         
         if votegroup:
             self.p_channels[channel_id]["votegroup"] = votegroup
