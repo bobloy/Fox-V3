@@ -12,19 +12,18 @@ class VanillaWerewolf(Role):
     allignment = 2     # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = "werewolves"
     unique = False
-    game_start_message = """
-            Your role is **Werewolf**
-            You win by killing everyone else in the village
-            Lynch players during the day with `[p]ww lynch <ID>`
-            Vote to kill players at night with `[p]ww vote <ID>`
-            """
+    game_start_message = (
+        "Your role is **Werewolf**\n"
+        "You win by killing everyone else in the village\n"
+        "Lynch players during the day with `[p]ww lynch <ID>`\n"
+        "Vote to kill players at night with `[p]ww vote <ID>`"
+        )
+            
     
  
     def __init__(self, game):
-        self.game = game
-        self.player = None
-        self.blocked = False
-        self.properties = {}  # Extra data for other roles (i.e. arsonist)
+        super().__init__(game)
+        
         self.action_list = [
             (self._at_game_start, 0),  # (Action, Priority)
             (self._at_day_start, 0),
@@ -32,9 +31,10 @@ class VanillaWerewolf(Role):
             (self._at_kill, 0),
             (self._at_hang, 0),
             (self._at_day_end, 0),
-            (self._at_night_start, 2),
+            (self._at_night_start, 2),  # Get vote priority
             (self._at_night_end, 0)
             ]
+        self.killer = None  # Added killer
     
     # async def on_event(self, event, data):
         # """

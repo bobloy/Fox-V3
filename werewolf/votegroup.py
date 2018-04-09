@@ -37,10 +37,10 @@ class VoteGroup:
         See Game class for event guide
         """
         
-        await action_list[event][0](data)
+        await self.action_list[event][0](data)
 
     async def _at_game_start(self, data=None):
-        pass
+        await self.channel.send(" ".join(player.mention for player in self.players))
 
     async def _at_day_start(self, data=None):
         pass
@@ -79,11 +79,11 @@ class VoteGroup:
             # Do what you voted on
             pass
     
-    async def register_player(self, player):
+    async def register_players(self, *players):
         """
-        Add a player to player list
+        Extend players by passed list
         """
-        self.players.append(player)
+        self.players.extend(players)
     
     async def remove_player(self, player):
         """

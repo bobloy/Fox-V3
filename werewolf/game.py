@@ -3,7 +3,7 @@ import discord
 
 from datetime import datetime, timedelta
 
-from random import shuffle
+import random
 
 from werewolf.player import Player
 
@@ -18,8 +18,13 @@ class Game:
     default_secret_channel = {
                 "channel": None,
                 "players": [],
-                "votegroup": None
+                "votegroup": None  # uninitialized VoteGroup
                 }
+    
+    morning_messages = [
+        "**The sun rises on the village..**",
+        "**Morning has arrived..**"
+                ]
     
     # def __new__(cls, guild, game_code):
         # game_code = ["VanillaWerewolf", "Villager", "Villager"]
@@ -28,7 +33,7 @@ class Game:
 
     def __init__(self, guild, game_code):
         self.guild = guild
-        self.game_code = ["Villager"]
+        self.game_code = ["VanillaWerewolf"]
         
         self.roles = []
         
@@ -45,8 +50,13 @@ class Game:
         self.channel_category = None
         self.village_channel = None
                 
-        self.p_channels = {}
-        self.vote_groups = {}
+        self.p_channels = {}  # uses default_secret_channel
+        self.vote_groups = {}  # ID : VoteGroup()
+        
+        self.night_results = []
+        
+        
+        
         
         self.loop = asyncio.get_event_loop()
 
@@ -93,18 +103,20 @@ class Game:
                 self.guild.me: discord.PermissionOverwrite(read_messages=True)
                 }
                 
-            for member in self.p_channels[channel_id]["players"]:
-                overwrite[member] = discord.PermissionOverwrite(read_messages=True)
+            for player in self.p_channels[channel_id]["players"]:
+                overwrite[player.member] = discord.PermissionOverwrite(read_messages=True)
                 
-            channel = await self.guild.create_text_channel(channel_id, overwrites=overwrite, reason="Werewolf secret channel", category=self.channel_category)
+            channel = await self.guild.create_text_channel(channel_id, overwrites=overwrite, reason="Ww game secret channel", category=self.channel_category)
             
             self.p_channels[channel_id]["channel"] = channel
             
             if self.p_channels[channel_id]["votegroup"] is not None:
                 vote_group = self.p_channels[channel_id]["votegroup"](self, channel)
                 
-                await vote_group.register_player()
-                self.vote_groups[channel_id] = self.p_channels[channel_id]["votegroup"](self, channel)
+                await vote_group.register_players(*self.p_channels[channel_id]["players"])
+                
+                self.vote_groups[channel_id] = vote_group
+
         print("Pre-cycle")
         await asyncio.sleep(1)
         await self._cycle() # Start the loop
@@ -126,25 +138,39 @@ class Game:
         and repeat with _at_day_start() again
         """
         await self._at_day_start()
+        # Once cycle ends, this will trigger end_game
+        await self._end_game() # Handle open channels
     
     async def _at_game_start(self):  # ID 0
         if self.game_over:
             return
-        await self.village_channel.send("Game is starting, please wait for setup to complete")
+        
+        await self.village_channel.send(embed=discord.Embed(title="Game is starting, please wait for setup to complete"))
         
         await self._notify(0)
 
     async def _at_day_start(self):  # ID 1
         if self.game_over:
             return
-        await self.village_channel.send("The sun rises on a new day in the village")
+            
+        embed=discord.Embed(title=random.choice(self.morning_messages))
+        for result in self.night_results:
+            embed.add_field(name=result, value="________", inline=False)
         
+        await self.village_channel.send(embed=embed)
+        await self.generate_targets(self.village_channel)
+
         await self.day_perms(self.village_channel)
         await self._notify(1)
         
+        await self._check_game_over()
+        if self.game_over:
+            return
         self.can_vote = True
         
-        await asyncio.sleep(240)  # 4 minute days
+        await asyncio.sleep(120)  # 4 minute days
+        await self.village_channel.send(embed=discord.Embed(title="**Two minutes of daylight remain...**"))
+        await asyncio.sleep(120)  # 4 minute days
         
         if not self.can_vote or self.game_over:
             return
@@ -160,7 +186,7 @@ class Game:
         self.used_votes += 1
         
         await self.all_but_perms(self.village_channel, target)
-        await self.village_channel.send("{} will be put to trial and has 30 seconds to defend themselves".format(target.mention))
+        await self.village_channel.send("**{} will be put to trial and has 30 seconds to defend themselves**".format(target.mention))
         
         await asyncio.sleep(30)
         
@@ -189,7 +215,7 @@ class Game:
         await self.village_channel.send(embed=embed)
         
         if len(down_votes) > len(up_votes):
-            await self.village_channel.send("Voted to lynch {}!".format(target.mention))
+            await self.village_channel.send("**Voted to lynch {}!**".format(target.mention))
             await self.kill(target)
             self.can_vote = False
         elif self.used_votes >= 3:
@@ -211,13 +237,15 @@ class Game:
         await self._notify(4, data)
         
     async def _at_day_end(self):  # ID 5
+        await self._check_game_over()
+
         if self.game_over:
             return
 
         self.can_vote = False
         await self.night_perms(self.village_channel)
         
-        await self.village_channel.send("**The sun sets on the village...**")
+        await self.village_channel.send(embed=discord.Embed(title="**The sun sets on the village...**"))
         
         await self._notify(5)
         await asyncio.sleep(30)
@@ -252,7 +280,7 @@ class Game:
             for role in role_order:
                 tasks.append(asyncio.ensure_future(role.on_event(event, data), loop=self.loop))
             # VoteGroup priorities    
-            vote_order = [votes for votes in self.vote_groups.values() if votes.action_list[event][1]==i]
+            vote_order = [vg for vg in self.vote_groups.values() if vg.action_list[event][1]==i]
             for vote_group in vote_order:
                 tasks.append(asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop))
                 
@@ -274,7 +302,7 @@ class Game:
         return await channel.send(embed=embed)
     
     
-    async def register_channel(self, channel_id, player, votegroup=None):
+    async def register_channel(self, channel_id, role, votegroup=None):
         """
         Queue a channel to be created by game_start
         """
@@ -283,7 +311,7 @@ class Game:
 
         await asyncio.sleep(1)
         
-        self.p_channels[channel_id]["players"].append(player)
+        self.p_channels[channel_id]["players"].append(role.player)
         
         if votegroup:
             self.p_channels[channel_id]["votegroup"] = votegroup
@@ -410,11 +438,18 @@ class Game:
     
     async def assign_roles(self):
         """len(self.roles) must == len(self.players)"""
-        shuffle(self.roles)
+        random.shuffle(self.roles)
+        self.players.sort(key=lambda pl: pl.member.display_name.lower())
+        
+        if len(self.roles) != len(self.players):
+            await self.village_channel("Unhandled error - roles!=players")
+            return False
         
         for idx, role in enumerate(self.roles):
             self.roles[idx] = role(self)
             await self.roles[idx].assign_player(self.players[idx])
+            # Sorted players, now assign id's
+            await self.players[idx].assign_id(idx)
             
     async def get_player_by_member(self, member):
         for player in self.players:
@@ -444,3 +479,11 @@ class Game:
         await channel.set_permissions(self.guild.default_role, read_messages=False)
         for member in member_list:
             await channel.set_permissions(member, read_messages=True)
+    
+    async def _check_game_over(self):
+        #ToDo
+        pass
+
+    async def _end_game(self):
+        #ToDo
+        pass
