@@ -46,8 +46,7 @@ class WolfVote(VoteGroup):
         # await action_list[event][0](data)
 
     # async def _at_game_start(self, data=None):
-        # if self.channel_id:
-            # self.channel = await self.game.register_channel(self.channel_id)
+        # await self.channel.send(" ".join(player.mention for player in self.players))
 
     # async def _at_day_start(self, data=None):
         # pass
@@ -74,7 +73,7 @@ class WolfVote(VoteGroup):
         
         self.killer = random.choice(self.players)
         
-        await channel.send("{} has been selected as tonight's killer")
+        await self.channel.send("{} has been selected as tonight's killer".format(self.killer.member.display_name))
         
     async def _at_night_end(self, data=None):
         if self.channel is None:

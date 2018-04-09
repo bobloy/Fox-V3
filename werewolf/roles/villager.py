@@ -9,28 +9,29 @@ class Villager(Role):
     allignment = 0      # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""     # Empty for no private channel
     unique = False      # Only one of this role per game
-    game_start_message="""
-            Your role is **Villager**
-            You win by lynching all evil in the town
-            Lynch players during the day with `[p]ww lynch <ID>`
-            """
+    game_start_message=(
+            "Your role is **Villager**\n"
+            "You win by lynching all evil in the town\n"
+            "Lynch players during the day with `[p]ww lynch <ID>`\n"
+            )
 
     def __init__(self, game):
-        self.game = game
-        self.player = None
-        self.blocked = False
-        self.properties = {}  # Extra data for other roles (i.e. arsonist)
+        super().__init__()
+        # self.game = game
+        # self.player = None
+        # self.blocked = False
+        # self.properties = {}  # Extra data for other roles (i.e. arsonist)
         
-        self.action_list = [
-            (self._at_game_start, 0),  # (Action, Priority)
-            (self._at_day_start, 0),
-            (self._at_voted, 0),
-            (self._at_kill, 0),
-            (self._at_hang, 0),
-            (self._at_day_end, 0),
-            (self._at_night_start, 0),
-            (self._at_night_end, 0)
-            ]
+        # self.action_list = [
+            # (self._at_game_start, 0),  # (Action, Priority)
+            # (self._at_day_start, 0),
+            # (self._at_voted, 0),
+            # (self._at_kill, 0),
+            # (self._at_hang, 0),
+            # (self._at_day_end, 0),
+            # (self._at_night_start, 0),
+            # (self._at_night_end, 0)
+            # ]
         
     # async def on_event(self, event, data):
         # """

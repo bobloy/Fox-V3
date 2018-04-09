@@ -40,7 +40,7 @@ class VoteGroup:
         await self.action_list[event][0](data)
 
     async def _at_game_start(self, data=None):
-        pass
+        await self.channel.send(" ".join(player.mention for player in self.players))
 
     async def _at_day_start(self, data=None):
         pass

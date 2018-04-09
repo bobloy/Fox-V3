@@ -43,11 +43,11 @@ class Role:
     allignment = 0      # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""     # Empty for no private channel
     unique = False      # Only one of this role per game
-    game_start_message="""
-            Your role is **Default**
-            You win by testing the game
-            Lynch players during the day with `[p]ww lynch <ID>`
-            """
+    game_start_message= (
+        "Your role is **Default**\n"
+        "You win by testing the game\n"
+        "Lynch players during the day with `[p]ww lynch <ID>`"
+        )
 
     def __init__(self, game):
         self.game = game
