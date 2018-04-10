@@ -46,7 +46,7 @@ class Role:
     game_start_message= (
         "Your role is **Default**\n"
         "You win by testing the game\n"
-        "Lynch players during the day with `[p]ww lynch <ID>`"
+        "Lynch players during the day with `[p]ww vote <ID>`"
         )
 
     def __init__(self, game):
@@ -122,4 +122,8 @@ class Role:
         pass
         
     async def _at_night_end(self, data=None):
+        pass
+        
+    async def vote(self, target, id):
+        """Handle night actions"""
         pass

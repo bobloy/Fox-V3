@@ -15,7 +15,7 @@ class WolfVote(VoteGroup):
     channel_id = "werewolves" 
 
     kill_messages = [
-        "**{ID}** - {target} was attacked by wolves",
+        "**{ID}** - {target} was mauled by wolves",
         "**{ID}** - {target} was found torn to shreds"]
     
     def __init__(self, game, channel):
@@ -70,7 +70,7 @@ class WolfVote(VoteGroup):
             return
         
         await self.game.generate_targets(self.channel)
-        
+        await self.channel.send(" ".join(player.mention for player in self.players))
         self.killer = random.choice(self.players)
         
         await self.channel.send("{} has been selected as tonight's killer".format(self.killer.member.display_name))
@@ -87,10 +87,14 @@ class WolfVote(VoteGroup):
         
         if target and self.killer:
             await self.game.kill(target, self.killer, random.choice(self.kill_messages))
+        else:
+            await self.channel.send("**No kill will be attempted tonight...**")
         
-    # async def vote(self, author, id):
-        # """
-        # Receive vote from game
-        # """
+    async def vote(self, target, author, id):
+        """
+        Receive vote from game
+        """
         
-        # self.vote_results[author.id] = id
+        self.vote_results[author.id] = id
+        
+        await self.channel.send("{} has voted to kill {}".format(author.mention, target.member.display_name))

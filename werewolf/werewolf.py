@@ -84,19 +84,40 @@ class Werewolf:
             await ctx.send("No game running, cannot start")
         
         await game.setup(ctx)
+    
+    @ww.command()
+    async def stop(self, ctx):
+        """
+        Stops the current game
+        """
+        game = self._get_game(ctx.guild)
+        if not game:
+            await ctx.send("No game running, cannot stop")
+        
+        game.game_over = True
+        
         
     @ww.command()
-    async def vote(self, ctx, id):
+    async def vote(self, ctx, id: int):
         """
         Vote for a player by ID
         """
+        try:
+            id = int(id)
+        except:
+            id = None
+        
+        if id is None:
+            await ctx.send("`id` must be an integer")
+            return
+
         game = self._get_game(ctx.guild)
         if not game:
             await ctx.send("No game running, cannot vote")
         
         # Game handles response now
         channel = ctx.channel
-        if channel is game.village_channel: 
+        if channel == game.village_channel: 
             await game.vote(ctx.author, id, channel)
         elif channel in (c["channel"] for c in game.p_channels.values()):
             await game.vote(ctx.author, id, channel)

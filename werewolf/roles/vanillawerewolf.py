@@ -15,7 +15,7 @@ class VanillaWerewolf(Role):
     game_start_message = (
         "Your role is **Werewolf**\n"
         "You win by killing everyone else in the village\n"
-        "Lynch players during the day with `[p]ww lynch <ID>`\n"
+        "Lynch players during the day with `[p]ww vote <ID>`\n"
         "Vote to kill players at night with `[p]ww vote <ID>`"
         )
             
@@ -93,3 +93,7 @@ class VanillaWerewolf(Role):
         
     # async def _at_night_end(self, data=None):
         # super()._at_night_end(data)
+        
+    async def vote(self, target, id):
+        """Handle night actions"""
+        await self.player.member.send("Use this command in your wolf channel at night")

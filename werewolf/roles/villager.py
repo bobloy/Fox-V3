@@ -12,7 +12,7 @@ class Villager(Role):
     game_start_message=(
             "Your role is **Villager**\n"
             "You win by lynching all evil in the town\n"
-            "Lynch players during the day with `[p]ww lynch <ID>`\n"
+            "Lynch players during the day with `[p]ww vote <ID>`\n"
             )
 
     def __init__(self, game):

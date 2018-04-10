@@ -39,8 +39,8 @@ class Game:
         
         self.players = []
         
-        self.day_vote = {}  # author, target
-        self.vote_totals = {}  # id, total_votes
+        self.day_vote = {}  # author: target
+        self.vote_totals = {}  # id: total_votes
         
         self.started = False
         self.game_over = False
@@ -156,6 +156,8 @@ class Game:
         embed=discord.Embed(title=random.choice(self.morning_messages))
         for result in self.night_results:
             embed.add_field(name=result, value="________", inline=False)
+            
+        self.night_results = []  # Clear for next day
         
         await self.village_channel.send(embed=embed)
         await self.generate_targets(self.village_channel)
@@ -243,6 +245,9 @@ class Game:
             return
 
         self.can_vote = False
+        self.day_vote = {}
+        self.vote_totals = {}
+        
         await self.night_perms(self.village_channel)
         
         await self.village_channel.send(embed=discord.Embed(title="**The sun sets on the village...**"))
@@ -352,7 +357,7 @@ class Game:
         """
         Member attempts to cast a vote (usually to lynch)
         """
-        player = self._get_player(author)
+        player = await self.get_player_by_member(author)
         
         if player is None:
             await channel.send("You're not in this game!")
@@ -362,18 +367,17 @@ class Game:
             await channel.send("Corpses can't vote")
             return
         
-        channel_list = []
         if channel == self.village_channel:
             if not self.can_vote:
                 await channel.send("Voting is not allowed right now")
                 return
-        else: 
-            channel_list = [c["channel"] for c in self.p_channels.values()]
-        
-        if channel not in channel_list:
+        elif channel.name in self.p_channels:
+            pass
+        else:
             # Not part of the game
-            return  # Don't say anything
-            
+            await channel.send("Cannot vote in this channel")
+            return
+
         try:
             target = self.players[id]
         except IndexError:
@@ -386,19 +390,36 @@ class Game:
         # Now handle village vote or send to votegroup
         if channel == self.village_channel:
             await self._village_vote(target, author, id)
-        elif channel in self.p_channels:
+        elif self.p_channels[channel.name]["votegroup"] is not None:
+            await self.vote_groups[channel.name].vote(target, author, id)
+        else:  # Private channel voting, send to role
+            await self.player.role.vote(target, id)
+            
+            
+            
             
     async def _village_vote(self, target, author, id):
         if author in self.day_vote:
             self.vote_totals[self.day_vote[author]] -= 1
         
         self.day_vote[author] = id
-        self.vote_totals[id] += 1
+        if id not in self.vote_totals:
+            self.vote_totals[id] = 1
+        else:
+            self.vote_totals[id] += 1
         
-        if self.vote_totals[id] <
+        required_votes = len([player for player in self.players if player.alive]) // 7 + 2
+        if self.vote_totals[id] < required_votes:
+            await self.village_channel.send("{} has voted to put {} to trial. {} more votes needed".format(author.mention, target.member.mention, required_votes - self.vote_totals[id]))
+        else:
+            self.vote_totals[id] = 0
+            self.day_vote = {k:v for k,v in self.day_vote.items() if v != id}  # Remove votes for this id
+            await self._at_voted(target)
         
-        if sum
-        await self.village_channel.send("{} has voted to put {} to trial. {} more votes needed".format(
+    
+    async def eval_results(self, target, source=None, method = None):
+        return "{} was found dead".format(target.member.display_name)
+
     async def kill(self, target, source=None, method: str=None):    
         """
         Attempt to kill a target
@@ -410,6 +431,7 @@ class Game:
             target.alive = False
             await self._at_kill(target)
             if not target.alive:  # Still dead after notifying
+                self.night_results.append(await self.eval_results(target, source, method))
                 await self.dead_perms(target.member)
         else:
             target.protected = False

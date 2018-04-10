@@ -92,7 +92,7 @@ class VoteGroup:
         if player.id in self.players:
             self.players.remove(player)
 
-    async def vote(self, author, id):
+    async def vote(self, target, author, id):
         """
         Receive vote from game
         """
