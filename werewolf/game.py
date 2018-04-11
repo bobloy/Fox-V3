@@ -119,7 +119,7 @@ class Game:
 
         print("Pre-cycle")
         await asyncio.sleep(1)
-        await self._cycle() # Start the loop
+        asyncio.ensure_future(self._cycle()) # Start the loop
         
     ############START Notify structure############
     async def _cycle(self):
@@ -276,9 +276,15 @@ class Game:
         
         await asyncio.sleep(15)
         await self._at_day_start()
-            
+        
+    async def _at_visit(self, target, source):  # ID 8
+        if self.game_over:
+            return
+        data = {"target": target, "source": source}
+        await self._notify(8, data)
+
     async def _notify(self, event, data=None):
-        for i in range(8):
+        for i in range(1,7):  # action guide 1-6 (0 is no action)
             tasks = []
             # Role priorities
             role_order = [role for role in self.roles if role.action_list[event][1]==i]
@@ -288,8 +294,8 @@ class Game:
             vote_order = [vg for vg in self.vote_groups.values() if vg.action_list[event][1]==i]
             for vote_group in vote_order:
                 tasks.append(asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop))
-                
-            await asyncio.gather(*tasks)
+            if tasks:    
+                await asyncio.gather(*tasks)
             # Run same-priority task simultaneously
 
     ############END Notify structure############
@@ -353,9 +359,37 @@ class Game:
             self.players = [player for player in self.players if player.member != member]
             await channel.send("{} chickened out, player count is now **{}**".format(member.mention, len(self.players)))
     
+    async def choose(self, ctx, data):
+        """
+        Arbitrary decision making
+        Example: seer picking target to see
+        """
+        player = await self.get_player_by_member(ctx.author)
+        
+        if player is None:
+            await ctx.send("You're not in this game!")
+            return
+            
+        if not player.alive:
+            await ctx.send("**Corpses** can't vote...")
+            return
+        
+        if player.blocked:
+            await ctx.send("Something is preventing you from doing this...")
+            return
+        
+        # Let role do target validation, might be alternate targets
+        # I.E. Go on alert? y/n
+
+        await player.choose(ctx, data)
+            
+        
+        
+        
     async def vote(self, author, id, channel):
         """
         Member attempts to cast a vote (usually to lynch)
+        Also used in vote groups
         """
         player = await self.get_player_by_member(author)
         
@@ -393,8 +427,8 @@ class Game:
         elif self.p_channels[channel.name]["votegroup"] is not None:
             await self.vote_groups[channel.name].vote(target, author, id)
         else:  # Private channel voting, send to role
-            await self.player.role.vote(target, id)
-            
+            # await self.player.role.vote(target, id)
+            # I'll think of something later
             
             
             
@@ -420,13 +454,20 @@ class Game:
     async def eval_results(self, target, source=None, method = None):
         return "{} was found dead".format(target.member.display_name)
 
-    async def kill(self, target, source=None, method: str=None):    
+    async def kill(self, target_id, source=None, method: str=None):    
         """
         Attempt to kill a target
         Source allows admin override
         Be sure to remove permissions appropriately
         Important to finish execution before triggering notify
         """
+        target = await self.get_night_target(target_id, source)
+        if source is not None: 
+            if source.blocked:
+                # Do nothing if blocked, blocker handles text
+                return  
+            else:
+                
         if not target.protected:
             target.alive = False
             await self._at_kill(target)
@@ -436,16 +477,23 @@ class Game:
         else:
             target.protected = False
         
-    async def lynch(self, target):    
+    async def lynch(self, target_id):    
         """
         Attempt to lynch a target
         Important to finish execution before triggering notify
         """
+        target = await self.get_day_target(target_id)
         target.alive = False
         await self._at_hang(target)
         if not target.alive:  # Still dead after notifying
             await self.dead_perms(target.member)
-        
+    
+    async def get_night_target(self, target_id, source=None):
+        return self.players[target_id]  # For now
+    
+    async def get_day_target(self, target_id, source=None):
+        return self.player[target_id]  # For now
+
     async def get_roles(self, game_code=None):
         if game_code is not None:
             self.game_code=game_code

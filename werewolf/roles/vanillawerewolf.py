@@ -32,7 +32,8 @@ class VanillaWerewolf(Role):
             (self._at_hang, 0),
             (self._at_day_end, 0),
             (self._at_night_start, 2),  # Get vote priority
-            (self._at_night_end, 0)
+            (self._at_night_end, 0),
+            (self._at_visit, 0)
             ]
         self.killer = None  # Added killer
     
@@ -93,7 +94,17 @@ class VanillaWerewolf(Role):
         
     # async def _at_night_end(self, data=None):
         # super()._at_night_end(data)
-        
-    async def vote(self, target, id):
+    
+    # async def _at_visit(self, data=None):
+        # pass
+    
+    # async def visit(self, source):
+        # """
+        # Called whenever a night action targets you
+        # Source is the player who visited you
+        # """
+        # pass
+
+    async def choose(self, ctx, data):
         """Handle night actions"""
-        await self.player.member.send("Use this command in your wolf channel at night")
+        await self.player.member.send("Use `[p]ww vote` in your werewolf channel")

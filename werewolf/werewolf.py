@@ -26,7 +26,7 @@ class Werewolf:
         self.config.register_guild(**default_guild)
         
         self.games = {}  # Active games stored here, id is per guild
-    
+
     @commands.group()
     async def ww(self, ctx: commands.Context):
         """
@@ -34,7 +34,8 @@ class Werewolf:
         """
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
-    
+            
+    @guild_only()
     @ww.command()
     async def new(self, ctx, game_code):
         """
@@ -49,7 +50,7 @@ class Werewolf:
             await ctx.send("New game has started")
         
         
-        
+    @guild_only()    
     @ww.command()
     async def join(self, ctx):
         """
@@ -63,7 +64,8 @@ class Werewolf:
             return
 
         await game.join(ctx.author, ctx.channel)
-
+        
+    @guild_only()
     @ww.command()
     async def quit(self, ctx):
         """
@@ -74,6 +76,7 @@ class Werewolf:
         
         await game.quit(ctx.author, ctx.channel)
     
+    @guild_only()
     @ww.command()
     async def start(self, ctx):
         """
@@ -85,6 +88,7 @@ class Werewolf:
         
         await game.setup(ctx)
     
+    @guild_only()
     @ww.command()
     async def stop(self, ctx):
         """
@@ -96,7 +100,7 @@ class Werewolf:
         
         game.game_over = True
         
-        
+    @guild_only() 
     @ww.command()
     async def vote(self, ctx, id: int):
         """
@@ -110,11 +114,24 @@ class Werewolf:
         if id is None:
             await ctx.send("`id` must be an integer")
             return
-
-        game = self._get_game(ctx.guild)
-        if not game:
-            await ctx.send("No game running, cannot vote")
         
+        # if ctx.guild is None:
+            # # DM nonsense, find their game
+            # # If multiple games, panic
+            # for game in self.games.values():
+                # if await game.get_player_by_member(ctx.author):
+                    # break #game = game
+            # else:
+                # await ctx.send("You're not part of any werewolf game")
+                # return
+        # else:
+        
+        game = self._get_game(ctx.guild)
+        
+        if game is None:
+            await ctx.send("No game running, cannot vote")
+            return
+
         # Game handles response now
         channel = ctx.channel
         if channel == game.village_channel: 
@@ -123,8 +140,34 @@ class Werewolf:
             await game.vote(ctx.author, id, channel)
         else:
             await ctx.send("Nothing to vote for in this channel")
+    
+    @ww.command()
+    async def choose(self, ctx, data):
+        """
+        Arbitrary decision making
+        Handled by game+role
+        Can be received by DM
+        """
 
+        if ctx.guild is not None:
+            await ctx.send("This action is only available in DM's")
+            return
+        
+        # DM nonsense, find their game
+        # If multiple games, panic
+        for game in self.games.values():
+            if await game.get_player_by_member(ctx.author):
+                break #game = game
+        else:
+            await ctx.send("You're not part of any werewolf game")
+            return
+
+        await game.choose(ctx, data)
+    
     def _get_game(self, guild, game_code=None):
+        if guild is None:
+            # Private message, can't get guild
+            return None
         if guild.id not in self.games:
             if not game_code:
                 return None

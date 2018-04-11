@@ -83,13 +83,16 @@ class WolfVote(VoteGroup):
         vote_list = list(self.vote_results.values())
         
         if vote_list:
-            target = max(set(vote_list), key=vote_list.count)
+            target_id = max(set(vote_list), key=vote_list.count)
         
         if target and self.killer:
-            await self.game.kill(target, self.killer, random.choice(self.kill_messages))
+            await self.game.kill(target_id, self.killer, random.choice(self.kill_messages))
         else:
             await self.channel.send("**No kill will be attempted tonight...**")
-        
+            
+    # async def _at_visit(self, data=None):
+        # pass   
+
     async def vote(self, target, author, id):
         """
         Receive vote from game

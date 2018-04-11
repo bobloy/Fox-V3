@@ -26,7 +26,7 @@ class Role:
         _at_night_start
         0. No Action
         1. Detain actions (Jailer/Kidnapper)
-        2. Group discussions and Pick targets
+        2. Group discussions and choose targets
         
         _at_night_end
         0. No Action
@@ -34,7 +34,7 @@ class Role:
         2. Target switching and role blocks (bus driver, witch, escort)
         3. Protection / Preempt actions (bodyguard/framer)
         4. Non-disruptive actions (seer/silencer)
-        5. Disruptive actions (werewolf kill)
+        5. Disruptive actions (Killing)
         6. Role altering actions (Cult / Mason)
     """
     
@@ -63,7 +63,8 @@ class Role:
             (self._at_hang, 0),
             (self._at_day_end, 0),
             (self._at_night_start, 0),
-            (self._at_night_end, 0)
+            (self._at_night_end, 0),
+            (self._at_visit, 0)
             ]
         
     async def on_event(self, event, data):
@@ -124,6 +125,16 @@ class Role:
     async def _at_night_end(self, data=None):
         pass
         
-    async def vote(self, target, id):
+    async def _at_visit(self, data=None):
+        pass
+    
+    async def visit(self, source):
+        """
+        Called whenever a night action targets you
+        Source is the player who visited you
+        """
+        pass
+
+    async def choose(self, ctx, data):
         """Handle night actions"""
         pass
