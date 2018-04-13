@@ -105,12 +105,15 @@ class Seer(Role):
     async def _at_night_end(self):
         target = await self.game.visit(self.see_target)
         
-        team = await target._see
+        alignment = await target.see_alignment(self.player)
         
-        await self.player.send_dm("Your seer skills hav")
-        
-        
-        
+        if alignment == "Werewolf":
+            out = "Your insight reveals this player to be a **Werewolf!**"
+        else:
+            out = "You fail to find anything suspicious about this player..."
+
+        await self.player.send_dm(out)
+
     # async def _at_visit(self, data=None):
         # pass
         
