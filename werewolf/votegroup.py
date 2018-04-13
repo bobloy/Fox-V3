@@ -11,7 +11,7 @@ class VoteGroup:
     Handles secret channels and group decisions
     """
     
-    allignment = 0     # 1: Town, 2: Werewolf, 3: Neutral
+    alignment = 0     # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = "" 
 
     def __init__(self, game, channel):
@@ -63,7 +63,7 @@ class VoteGroup:
     async def _at_night_start(self, data=None):
         if self.channel is None:
             return
-        
+
         await self.game.generate_targets(self.channel)
         
     async def _at_night_end(self, data=None):
@@ -80,6 +80,9 @@ class VoteGroup:
             # Do what you voted on
             pass
     
+    async def _at_visit(self, data=None):
+        pass
+
     async def register_players(self, *players):
         """
         Extend players by passed list

@@ -22,9 +22,11 @@ class Game:
                 }
     
     morning_messages = [
-        "**The sun rises on the village..**",
-        "**Morning has arrived..**"
+        "**The sun rises on day {} in the village..**",
+        "**Morning has arrived on day {}..**"
                 ]
+    
+    day_vote_count = 3
     
     # def __new__(cls, guild, game_code):
         # game_code = ["VanillaWerewolf", "Villager", "Villager"]
@@ -46,6 +48,9 @@ class Game:
         self.game_over = False
         self.can_vote = False
         self.used_votes = 0
+        
+        self.day_time = False 
+        self.day_count = 0
         
         self.channel_category = None
         self.village_channel = None
@@ -153,10 +158,13 @@ class Game:
         if self.game_over:
             return
             
-        embed=discord.Embed(title=random.choice(self.morning_messages))
+        self.day_count += 1    
+        embed=discord.Embed(title=random.choice(self.morning_messages.format(self.day_count)))
         for result in self.night_results:
             embed.add_field(name=result, value="________", inline=False)
-            
+        
+        self.day_time = True
+        
         self.night_results = []  # Clear for next day
         
         await self.village_channel.send(embed=embed)
@@ -174,7 +182,9 @@ class Game:
         await self.village_channel.send(embed=discord.Embed(title="**Two minutes of daylight remain...**"))
         await asyncio.sleep(120)  # 4 minute days
         
-        if not self.can_vote or self.game_over:
+        # Need a loop here to wait for trial to end
+        
+        if not self.can_vote or  not self.day_time or self.game_over:
             return
             
         await self._at_day_end()
@@ -187,14 +197,14 @@ class Game:
         
         self.used_votes += 1
         
-        await self.all_but_perms(self.village_channel, target)
+        await self.speech_perms(self.village_channel, target.member)
         await self.village_channel.send("**{} will be put to trial and has 30 seconds to defend themselves**".format(target.mention))
         
         await asyncio.sleep(30)
         
-        await self.village_channel.set_permissions(target, read_messages=True)
+        await self.speech_perms(self.village_channel, target.member, undo=True)
         
-        message = await self.village_channel.send("Everyone will now vote whether to lynch {}\n👍 to save, 👎 to lynch\n*Majority rules, no-lynch on ties, vote for both or neither to abstain, 15 seconds to vote*".format(target.mention))
+        message = await self.village_channel.send("Everyone will now vote whether to lynch {}\n👍 to save, 👎 to lynch\n*Majority rules, no-lynch on ties, vote both or neither to abstain, 15 seconds to vote*".format(target.mention))
         
         await self.village_channel.add_reaction("👍")
         await self.village_channel.add_reaction("👎")
@@ -218,11 +228,17 @@ class Game:
         
         if len(down_votes) > len(up_votes):
             await self.village_channel.send("**Voted to lynch {}!**".format(target.mention))
-            await self.kill(target)
+            await self.lynch(target)
             self.can_vote = False
-        elif self.used_votes >= 3:
-            self.can_vote = False
-        
+        else:
+            await self.village_channel.send("**{} has been spared!**".format(target.mention))
+
+            if self.used_votes >= self.day_vote_count:
+                await self.village_channel.send("**All votes have been used! Day is now over!**")
+                self.can_vote = False
+            else:
+                await self.village_channel.send("**{}**/**{}** of today's votes have been used!\nNominate carefully..".format(self.used_votes, self.day_vote_count))
+            
         if not self.can_vote:
             await self._at_day_end()
     
@@ -247,6 +263,7 @@ class Game:
         self.can_vote = False
         self.day_vote = {}
         self.vote_totals = {}
+        self.day_time = False
         
         await self.night_perms(self.village_channel)
         
@@ -353,7 +370,7 @@ class Game:
             return "You're not in a game!"
 
         if self.started:
-            await self.kill(member)
+            await self._quit(player)
             await channel.send("{} has left the game".format(member.mention))
         else:
             self.players = [player for player in self.players if player.member != member]
@@ -384,6 +401,16 @@ class Game:
         await player.choose(ctx, data)
             
         
+    async def visit(self, target_id, source):
+        """
+        Night visit target_id
+        Returns a target for role information (i.e. Seer)
+        """
+        target = await self.get_night_target(target_id, source)
+        await target.role.visit(source)
+        await self._at_visit(target, source)
+
+        return target
         
         
     async def vote(self, author, id, channel):
@@ -443,6 +470,7 @@ class Game:
             self.vote_totals[id] += 1
         
         required_votes = len([player for player in self.players if player.alive]) // 7 + 2
+        
         if self.vote_totals[id] < required_votes:
             await self.village_channel.send("{} has voted to put {} to trial. {} more votes needed".format(author.mention, target.member.mention, required_votes - self.vote_totals[id]))
         else:
@@ -452,7 +480,22 @@ class Game:
         
     
     async def eval_results(self, target, source=None, method = None):
-        return "{} was found dead".format(target.member.display_name)
+        if method is not None:
+            out = "**{ID}** - " + method
+            return out.format(ID=target.id, target=target.member.display_name)
+        else:   
+            return "**{ID}** - {} was found dead".format(ID=target.id, target=target.member.display_name)
+
+    async def _quit(self, player):
+        """
+        Have player quit the game
+        """
+
+        player.alive = False
+        await self._at_kill(player)
+        player.alive = False  # Do not allow resurrection
+        await self.dead_perms(player.member)
+        # Add a punishment system for quitting games later
 
     async def kill(self, target_id, source=None, method: str=None):    
         """
@@ -461,18 +504,25 @@ class Game:
         Be sure to remove permissions appropriately
         Important to finish execution before triggering notify
         """
-        target = await self.get_night_target(target_id, source)
+        
+        if source is None:
+            target = self.players[target_id]
+        elif self.day_time:
+            target = self.get_day_target(target_id, source)
+        else:
+            target = await self.get_night_target(target_id, source)
         if source is not None: 
             if source.blocked:
                 # Do nothing if blocked, blocker handles text
                 return  
-            else:
-                
+
         if not target.protected:
             target.alive = False
+            await target.kill(source)
             await self._at_kill(target)
             if not target.alive:  # Still dead after notifying
-                self.night_results.append(await self.eval_results(target, source, method))
+                if not self.day_time:
+                    self.night_results.append(await self.eval_results(target, source, method))
                 await self.dead_perms(target.member)
         else:
             target.protected = False
@@ -530,7 +580,6 @@ class Game:
     async def dead_perms(self, channel, member):
         await channel.set_permissions(member, read_messages=True, send_message=False, add_reactions=False)
         
-        
     async def night_perms(self, channel):
         await channel.set_permissions(self.guild.default_role, read_messages=False, send_messages=False)
     
@@ -539,7 +588,6 @@ class Game:
         
     async def speech_perms(self, channel, member, undo=False):
         if undo:
-            await channel.set_permissions(self.guild.default_role, read_messages=False)
             await channel.set_permissions(member, read_messages=True)
         else:
             await channel.set_permissions(self.guild.default_role, read_messages=False, send_messages=False)
