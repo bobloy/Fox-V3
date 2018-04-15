@@ -9,7 +9,7 @@ class VanillaWerewolf(Role):
      
     rand_choice = True
     category = [11, 15]
-    allignment = 2     # 1: Town, 2: Werewolf, 3: Neutral
+    alignment = 2     # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = "werewolves"
     unique = False
     game_start_message = (
@@ -52,6 +52,20 @@ class VanillaWerewolf(Role):
 
         # player.role = self
         # self.player = player
+        
+    # async def get_alignment(self, source=None):
+        # """
+        # Interaction for power access of team (Village, Werewolf, Other)
+        # Unlikely to be able to deceive this
+        # """
+        # return self.alignment
+        
+    async def see_alignment(self, source=None):
+        """
+        Interaction for investigative roles attempting
+        to see team (Village, Werewolf Other)
+        """
+        return "Werewolf"   
         
     async def _get_role(self, source=None):
         """
@@ -97,7 +111,15 @@ class VanillaWerewolf(Role):
     
     # async def _at_visit(self, data=None):
         # pass
-    
+        
+    # async def kill(self, source):
+        # """
+        # Called when someone is trying to kill you!
+        # Can you do anything about it?
+        # self.alive is now set to False, set to True to stay alive
+        # """
+        # pass
+        
     # async def visit(self, source):
         # """
         # Called whenever a night action targets you

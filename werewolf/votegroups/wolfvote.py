@@ -11,7 +11,7 @@ class WolfVote(VoteGroup):
     Werewolf implementation of base VoteGroup class
     """
     
-    allignment = 2     # 1: Town, 2: Werewolf, 3: Neutral
+    alignment = 2     # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = "werewolves" 
 
     kill_messages = [
@@ -35,7 +35,8 @@ class WolfVote(VoteGroup):
             (self._at_hang, 0),
             (self._at_day_end, 0),
             (self._at_night_start, 2),
-            (self._at_night_end, 5)  # Kill priority
+            (self._at_night_end, 5),  # Kill priority
+            (self._at_visit, 0)
             ] 
         
     # async def on_event(self, event, data):

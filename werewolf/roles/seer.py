@@ -6,7 +6,7 @@ class Seer(Role):
      
     rand_choice = False  # Determines if it can be picked as a random role (False for unusually disruptive roles)
     category = [1,2]      # List of enrolled categories (listed above)
-    allignment = 1      # 1: Town, 2: Werewolf, 3: Neutral
+    alignment = 1      # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""     # Empty for no private channel
     unique = False      # Only one of this role per game
     game_start_message=(
@@ -50,7 +50,21 @@ class Seer(Role):
 
         # player.role = self
         # self.player = player
-    
+        
+    # async def get_alignment(self, source=None):
+        # """
+        # Interaction for power access of team (Village, Werewolf, Other)
+        # Unlikely to be able to deceive this
+        # """
+        # return self.alignment
+        
+    async def see_alignment(self, source=None):
+        """
+        Interaction for investigative roles attempting
+        to see team (Village, Werewolf Other)
+        """
+        return "Village"
+
     async def _get_role(self, source=None):
         """
         Interaction for powerful access of role
@@ -85,17 +99,44 @@ class Seer(Role):
         
     async def _at_night_start(self):
         await self.game.generate_targets(self.player.member)
-        await self.player.member.send("{}\n**Pick a target to see tonight**\n")
+        await self.player.send_dm("{}\n**Pick a target to see tonight**\n")
         
         
     async def _at_night_end(self):
+        target = await self.game.visit(self.see_target)
         
-    
+        alignment = await target.see_alignment(self.player)
+        
+        if alignment == "Werewolf":
+            out = "Your insight reveals this player to be a **Werewolf!**"
+        else:
+            out = "You fail to find anything suspicious about this player..."
+
+        await self.player.send_dm(out)
+
+    # async def _at_visit(self, data=None):
+        # pass
+        
+    # async def kill(self, source):
+        # """
+        # Called when someone is trying to kill you!
+        # Can you do anything about it?
+        # self.alive is now set to False, set to True to stay alive
+        # """
+        # pass
+        
+    # async def visit(self, source):
+        # """
+        # Called whenever a night action targets you
+        # Source is the player who visited you
+        # """
+        # pass
+        
     async def choose(self, ctx, data):
         """Handle night actions"""
         id = int(data)
         try:
-            target = game.players[id]
+            target = self.game.players[id]
         except IndexError:
             target = None
         

@@ -40,7 +40,7 @@ class Role:
     
     rand_choice = False  # Determines if it can be picked as a random role (False for unusually disruptive roles)
     category = [0]      # List of enrolled categories (listed above)
-    allignment = 0      # 1: Town, 2: Werewolf, 3: Neutral
+    alignment = 0      # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""     # Empty for no private channel
     unique = False      # Only one of this role per game
     game_start_message= (
@@ -74,7 +74,7 @@ class Role:
             
         await self.action_list[event][0](data)
         
-        
+
     async def assign_player(self, player):
         """
         Give this role a player
@@ -84,14 +84,29 @@ class Role:
         player.role = self
         self.player = player
     
-    async def _get_role(self, source=None):
+    async def get_alignment(self, source=None):
+        """
+        Interaction for powerful access of alignment
+        (Village, Werewolf, Other)
+        Unlikely to be able to deceive this
+        """
+        return self.alignment
+        
+    async def see_alignment(self, source=None):
+        """
+        Interaction for investigative roles attempting
+        to see alignment (Village, Werewolf Other)
+        """
+        return "Other"
+        
+    async def get_role(self, source=None):
         """
         Interaction for powerful access of role
         Unlikely to be able to deceive this
         """
         return "Default"
     
-    async def _see_role(self, source=None):
+    async def see_role(self, source=None):
         """
         Interaction for investigative roles.
         More common to be able to deceive this action
@@ -128,6 +143,14 @@ class Role:
     async def _at_visit(self, data=None):
         pass
     
+    async def kill(self, source):
+        """
+        Called when someone is trying to kill you!
+        Can you do anything about it?
+        self.alive is now set to False, set to True to stay alive
+        """
+        pass
+
     async def visit(self, source):
         """
         Called whenever a night action targets you
