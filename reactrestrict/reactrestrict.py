@@ -35,8 +35,7 @@ class ReactRestrictCombo:
 
 class ReactRestrict:
     """
-    This cog enables role assignment/removal based on reactions to specific
-    messages.
+    Prevent specific roles from reacting to specific messages
     """
 
     def __init__(self, red: Red):
@@ -269,7 +268,7 @@ class ReactRestrict:
 
         await ctx.send("Reaction removed.")
 
-    async def on_raw_reaction_add(self, emoji: discord.PartialReactionEmoji,
+    async def on_raw_reaction_add(self, emoji: discord.PartialEmoji,
                                   message_id: int, channel_id: int, user_id: int):
         """
         Event handler for long term reaction watching.
