@@ -56,7 +56,7 @@ class Role:
         self.properties = {}  # Extra data for other roles (i.e. arsonist)
         
         self.action_list = [
-            (self._at_game_start, 0),  # (Action, Priority)
+            (self._at_game_start, 1),  # (Action, Priority)
             (self._at_day_start, 0),
             (self._at_voted, 0),
             (self._at_kill, 0),

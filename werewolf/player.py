@@ -11,14 +11,14 @@ class Player:
 
     def __init__(self, member: discord.Member):
         self.member = member
+        self.mention = member.mention
         self.role = None
         self.id = None
         
         self.alive = True
         self.muted = False
         self.protected = False
-        self.mention = self.member.mention
-        
+
     async def assign_role(self, role):
         """
         Give this player a role

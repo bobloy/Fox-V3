@@ -35,7 +35,7 @@ class Werewolf:
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
             
-    @guild_only()
+    @commands.guild_only()
     @ww.command()
     async def new(self, ctx, game_code):
         """
@@ -50,7 +50,7 @@ class Werewolf:
             await ctx.send("New game has started")
         
         
-    @guild_only()    
+    @commands.guild_only()    
     @ww.command()
     async def join(self, ctx):
         """
@@ -65,7 +65,7 @@ class Werewolf:
 
         await game.join(ctx.author, ctx.channel)
         
-    @guild_only()
+    @commands.guild_only()
     @ww.command()
     async def quit(self, ctx):
         """
@@ -76,7 +76,7 @@ class Werewolf:
         
         await game.quit(ctx.author, ctx.channel)
     
-    @guild_only()
+    @commands.guild_only()
     @ww.command()
     async def start(self, ctx):
         """
@@ -88,7 +88,7 @@ class Werewolf:
         
         await game.setup(ctx)
     
-    @guild_only()
+    @commands.guild_only()
     @ww.command()
     async def stop(self, ctx):
         """
@@ -100,7 +100,7 @@ class Werewolf:
         
         game.game_over = True
         
-    @guild_only() 
+    @commands.guild_only() 
     @ww.command()
     async def vote(self, ctx, id: int):
         """

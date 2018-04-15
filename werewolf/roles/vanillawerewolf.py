@@ -25,17 +25,16 @@ class VanillaWerewolf(Role):
         super().__init__(game)
         
         self.action_list = [
-            (self._at_game_start, 0),  # (Action, Priority)
+            (self._at_game_start, 1),  # (Action, Priority)
             (self._at_day_start, 0),
             (self._at_voted, 0),
             (self._at_kill, 0),
             (self._at_hang, 0),
             (self._at_day_end, 0),
-            (self._at_night_start, 2),  # Get vote priority
+            (self._at_night_start, 0),
             (self._at_night_end, 0),
             (self._at_visit, 0)
             ]
-        self.killer = None  # Added killer
     
     # async def on_event(self, event, data):
         # """
@@ -83,6 +82,7 @@ class VanillaWerewolf(Role):
     
     async def _at_game_start(self, data=None):
         if self.channel_id:
+            print("Wolf has channel_id: "+self.channel_id)
             await self.game.register_channel(self.channel_id, self, WolfVote)  # Add VoteGroup WolfVote
         
         await self.player.send_dm(self.game_start_message)

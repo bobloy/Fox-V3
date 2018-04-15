@@ -71,7 +71,7 @@ class Game:
         
         1. Assign Roles
         2. Create Channels
-        2a.  Channel Permissions :eyes:
+        2a.  Channel Permissions
         3. Check Initial role setup (including alerts)
         4. Start game
         """
@@ -99,10 +99,11 @@ class Game:
         self.village_channel = await self.guild.create_text_channel("Village Square", overwrites=overwrite, reason="New game of werewolf", category=self.channel_category)
         
         # Assuming everything worked so far
-        print("Pre-game_start")
+        print("Pre at_game_start")
         await self._at_game_start()  # This will queue channels and votegroups to be made
-        
+        print("Post at_game_start")
         for channel_id in self.p_channels:
+            print("Channel id: "+channel_id)
             overwrite = {
                 self.guild.default_role: discord.PermissionOverwrite(read_messages=False),
                 self.guild.me: discord.PermissionOverwrite(read_messages=True)
@@ -159,7 +160,7 @@ class Game:
             return
             
         self.day_count += 1    
-        embed=discord.Embed(title=random.choice(self.morning_messages.format(self.day_count)))
+        embed=discord.Embed(title=random.choice(self.morning_messages).format(self.day_count))
         for result in self.night_results:
             embed.add_field(name=result, value="________", inline=False)
         
@@ -337,7 +338,7 @@ class Game:
         if channel_id not in self.p_channels:
             self.p_channels[channel_id] = self.default_secret_channel.copy()
 
-        await asyncio.sleep(1)
+        await asyncio.sleep(1)  # This will have multiple calls
         
         self.p_channels[channel_id]["players"].append(role.player)
         
@@ -453,12 +454,10 @@ class Game:
             await self._village_vote(target, author, id)
         elif self.p_channels[channel.name]["votegroup"] is not None:
             await self.vote_groups[channel.name].vote(target, author, id)
-        else:  # Private channel voting, send to role
-            # await self.player.role.vote(target, id)
-            # I'll think of something later
-            
-            
-            
+        else:  # Somehow previous check failed
+            await channel.send("Cannot vote in this channel")
+            return
+ 
     async def _village_vote(self, target, author, id):
         if author in self.day_vote:
             self.vote_totals[self.day_vote[author]] -= 1

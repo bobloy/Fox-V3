@@ -5,7 +5,7 @@ import discord
 from werewolf.role import Role
 from werewolf.roles.vanillawerewolf import VanillaWerewolf
 from werewolf.roles.villager import Villager
-
+from werewolf.roles.seer import Seer
 
 # All roles in this list for iterating
 role_list = [Villager, VanillaWerewolf] 
@@ -33,6 +33,8 @@ async def parse_code(code):
             role = Villager
         if role_id == "VanillaWerewolf":
             role = VanillaWerewolf
+        if role_id == "Seer":
+            role = Seer
         out.append(role)
     
     return out
