@@ -80,14 +80,15 @@ class WolfVote(VoteGroup):
         if self.channel is None:
             return
         
-        target = None
+        target_id = None
         vote_list = list(self.vote_results.values())
         
         if vote_list:
             target_id = max(set(vote_list), key=vote_list.count)
         
-        if target and self.killer:
+        if target_id and self.killer:
             await self.game.kill(target_id, self.killer, random.choice(self.kill_messages))
+            await self.channel.send("**{} has left to complete the kill...**".format(self.killer.member.display_name))
         else:
             await self.channel.send("**No kill will be attempted tonight...**")
             

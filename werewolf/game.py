@@ -401,16 +401,18 @@ class Game:
 
         await player.choose(ctx, data)
             
-        
+    
+    async def _visit(self, target, source):
+        await target.role.visit(source)
+        await self._at_visit(target, source)
+    
     async def visit(self, target_id, source):
         """
         Night visit target_id
         Returns a target for role information (i.e. Seer)
         """
         target = await self.get_night_target(target_id, source)
-        await target.role.visit(source)
-        await self._at_visit(target, source)
-
+        await self._visit(target, source)
         return target
         
         
@@ -496,7 +498,7 @@ class Game:
         await self.dead_perms(player.member)
         # Add a punishment system for quitting games later
 
-    async def kill(self, target_id, source=None, method: str=None):    
+    async def kill(self, target_id, source=None, method: str=None, novisit=False):    
         """
         Attempt to kill a target
         Source allows admin override
@@ -514,7 +516,11 @@ class Game:
             if source.blocked:
                 # Do nothing if blocked, blocker handles text
                 return  
-
+        
+        if not novisit:
+            # Arsonist wouldn't visit before killing
+            await self._visit(target, source)  # Visit before killing
+        
         if not target.protected:
             target.alive = False
             await target.kill(source)
