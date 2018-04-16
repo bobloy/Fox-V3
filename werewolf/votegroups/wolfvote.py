@@ -31,8 +31,8 @@ class WolfVote(VoteGroup):
             (self._at_game_start, 0),  # (Action, Priority)
             (self._at_day_start, 0),
             (self._at_voted, 0),
-            (self._at_kill, 0),
-            (self._at_hang, 0),
+            (self._at_kill, 1),
+            (self._at_hang, 1),
             (self._at_day_end, 0),
             (self._at_night_start, 2),
             (self._at_night_end, 5),  # Kill priority
@@ -86,14 +86,27 @@ class WolfVote(VoteGroup):
         if vote_list:
             target_id = max(set(vote_list), key=vote_list.count)
         
-        if target_id and self.killer:
+        if target_id is not None and self.killer:
             await self.game.kill(target_id, self.killer, random.choice(self.kill_messages))
             await self.channel.send("**{} has left to complete the kill...**".format(self.killer.member.display_name))
         else:
             await self.channel.send("**No kill will be attempted tonight...**")
             
     # async def _at_visit(self, data=None):
-        # pass   
+        # pass
+
+    # async def register_players(self, *players):
+        # """
+        # Extend players by passed list
+        # """
+        # self.players.extend(players)
+    
+    # async def remove_player(self, player):
+        # """
+        # Remove a player from player list
+        # """
+        # if player.id in self.players:
+            # self.players.remove(player)  
 
     async def vote(self, target, author, id):
         """

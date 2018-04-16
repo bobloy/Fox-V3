@@ -105,7 +105,9 @@ class Seer(Role):
     async def _at_night_end(self):
         target = await self.game.visit(self.see_target)
         
-        alignment = await target.see_alignment(self.player)
+        alignment = None
+        if target:
+            alignment = await target.see_alignment(self.player)
         
         if alignment == "Werewolf":
             out = "Your insight reveals this player to be a **Werewolf!**"
