@@ -3,10 +3,9 @@ import asyncio
 
 from discord.ext import commands
 
-from redbot.core import Config
+from redbot.core import Config, checks
 
-from .utils import checks
-from .utils.chat_formatting import pagify, box
+from redbot.core.utils.chat_formatting import pagify, box
 import os
 import re
 
@@ -20,8 +19,12 @@ class CCRole:
     def __init__(self, bot):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9999114111108101)
+        default_guild = {
+            "cmdlist" : {}, 
+            "settings": {}
+        }
         
-        self.config.register_guild(**{cmdlist : {}, settings: {} )
+        self.config.register_guild(**default_guild)
 
 
     @commands.group(no_pm=True)
@@ -53,7 +56,7 @@ class CCRole:
         await ctx.send('What roles should it add? (Must be **comma separated**)\nSay `None` to skip adding roles')
         
         def check(m):
-            return m.author == author and m.channel=channel
+            return m.author == author and m.channel==channel
         
         try:
             answer = await self.bot.wait_for('message', timeout=120, check=check)
@@ -208,9 +211,10 @@ class CCRole:
         for p in prefixes:
             if content.startswith(p):
                 return p
-        raise ValueError(_("No prefix found."))
+        raise ValueError
         
     async def eval_cc(self, cmd, message):
+        """Does all the work"""
         if cmd['proles'] and not (set(role.id for role in message.author.roles) & set(cmd['proles'])):
             return  # Not authorized, do nothing
         
