@@ -238,15 +238,19 @@ class CCRole:
         if cmd['aroles']:
             arole_list = [discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd['aroles']]
             # await self.bot.send_message(message.channel, "Adding: "+str([str(arole) for arole in arole_list]))
-            await target.add_roles(*arole_list)
-            
+            try:
+                await target.add_roles(*arole_list)
+            except discord.Forbidden:
+                await message.channel.send("Permission error: Unable to add roles")
         await asyncio.sleep(1)
         
         if cmd['rroles']:
             rrole_list = [discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd['rroles']]
             # await self.bot.send_message(message.channel, "Removing: "+str([str(rrole) for rrole in rrole_list]))
-            await target.remove_roles(*rrole_list)
-        
+            try:
+                await target.remove_roles(*rrole_list)
+            except discord.Forbidden:
+                await message.channel.send("Permission error: Unable to remove roles")
         await message.channel.send(cmd['text'])
             
         # {'text': text, 'aroles': arole_list, 'rroles': rrole_list, "proles", prole_list, "targeted": targeted}
