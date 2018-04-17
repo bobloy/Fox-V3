@@ -130,7 +130,9 @@ class CCRole:
         out = {'text': text, 'aroles': arole_list, 'rroles': rrole_list, "proles": prole_list, "targeted": targeted}
         
         await cmdlist.set_raw(command, value=out)
-
+        
+        ctx.send("Custom Command **`{}`** successfully added".format(command))
+        
     @ccrole.command(name="delete")
     @checks.mod_or_permissions(administrator=True)
     async def ccrole_delete(self, ctx, command : str):
@@ -183,7 +185,7 @@ class CCRole:
         if cmd:
             await self.eval_cc(cmd, message)
     
-    async def _get_roles_from_content(ctx, content):
+    async def _get_roles_from_content(self, ctx, content):
         content_list = content.split(",")
         role_list = []
         try:
