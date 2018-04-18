@@ -151,7 +151,7 @@ class CCRole:
     async def ccrole_list(self, ctx):
         """Shows custom commands list"""
         guild = ctx.guild
-        commands = await self.config.guild(ctx.guild).cmdlist
+        commands = await self.config.guild(ctx.guild).cmdlist()
 
         if not commands:
             await ctx.send("There are no custom commands in this server. Use `{}ccrole add` to start adding some.".format(ctx.prefix))
