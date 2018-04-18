@@ -5,8 +5,6 @@ from discord.ext import commands
 
 from redbot.core import Config
 
-from datetime import datetime, timedelta
-
 from werewolf.game import Game
 
 
@@ -48,9 +46,8 @@ class Werewolf:
             await ctx.send("Failed to start a new game")
         else:
             await ctx.send("New game has started")
-        
-        
-    @commands.guild_only()    
+
+    @commands.guild_only()
     @ww.command()
     async def join(self, ctx):
         """
@@ -157,7 +154,7 @@ class Werewolf:
         # If multiple games, panic
         for game in self.games.values():
             if await game.get_player_by_member(ctx.author):
-                break #game = game
+                break  # game = game
         else:
             await ctx.send("You're not part of any werewolf game")
             return
