@@ -137,7 +137,7 @@ class Werewolf:
             await game.vote(ctx.author, id, channel)
         else:
             await ctx.send("Nothing to vote for in this channel")
-    
+
     @ww.command()
     async def choose(self, ctx, data):
         """

@@ -141,7 +141,7 @@ class Game:
         """
         await self._at_day_start()
         # Once cycle ends, this will trigger end_game
-        await self._end_game() # Handle open channels
+        await self._end_game()  # Handle open channels
     
     async def _at_game_start(self):  # ID 0
         if self.game_over:

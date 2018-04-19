@@ -46,8 +46,7 @@ async def parse_code(code):
 
 async def build_game(channel: discord.TextChannel):
     await channel.send("Not currently available")
-    
-    
+
     code = 12345678
     
     await channel.send("Your game code is **`{}`**".format(code))
