@@ -11,7 +11,7 @@ class Player:
         self.mention = member.mention
         self.role = None
         self.id = None
-        
+
         self.alive = True
         self.muted = False
         self.protected = False
@@ -22,9 +22,9 @@ class Player:
         """
         role.player = self
         self.role = role
-        
+
     async def assign_id(self, target_id):
         self.id = target_id
 
     async def send_dm(self, message):
-        await self.member.send(message) # Lets do embeds later
+        await self.member.send(message)  # Lets do embeds later

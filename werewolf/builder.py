@@ -7,7 +7,7 @@ from werewolf.roles.villager import Villager
 from werewolf.roles.seer import Seer
 
 # All roles in this list for iterating
-role_list = [Villager, VanillaWerewolf] 
+role_list = [Villager, VanillaWerewolf]
 
 """
 Example code:
@@ -28,7 +28,7 @@ double digit position preempted by `-`
 async def parse_code(code):
     """Do the magic described above"""
     out = []
-    decode = code.copy() # for now, pass exact names
+    decode = code.copy()  # for now, pass exact names
     for role_id in decode:
         print(role_id)
         if role_id == "Villager":
@@ -40,7 +40,7 @@ async def parse_code(code):
         else:  # Fail to parse
             return None
         out.append(role)
-    
+
     return out
 
 
@@ -48,6 +48,6 @@ async def build_game(channel: discord.TextChannel):
     await channel.send("Not currently available")
 
     code = 12345678
-    
+
     await channel.send("Your game code is **`{}`**".format(code))
     # Make this embeds

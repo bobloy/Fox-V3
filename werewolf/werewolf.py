@@ -16,11 +16,11 @@ class Werewolf:
         default_global = {}
         default_guild = {
             "role": None
-            }
+        }
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
-        
+
         self.games = {}  # Active games stored here, id is per guild
 
     @commands.group()
@@ -48,16 +48,16 @@ class Werewolf:
         """
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
-            
+
     @commands.guild_only()
     @ww.command()
     async def new(self, ctx, game_code):
         """
         Create and join a new game of Werewolf
         """
-        
+
         game = self._get_game(ctx.guild, game_code)
-        
+
         if not game:
             await ctx.send("Failed to start a new game")
         else:
@@ -69,26 +69,26 @@ class Werewolf:
         """
         Joins a game of Werewolf
         """
-        
+
         game = self._get_game(ctx.guild)
-        
+
         if not game:
             await ctx.send("No game to join!\nCreate a new one with `[p]ww new`")
             return
 
         await game.join(ctx.author, ctx.channel)
-        
+
     @commands.guild_only()
     @ww.command()
     async def quit(self, ctx):
         """
         Quit a game of Werewolf
         """
-        
+
         game = self._get_game(ctx.guild)
-        
+
         await game.quit(ctx.author, ctx.channel)
-    
+
     @commands.guild_only()
     @ww.command()
     async def start(self, ctx):
@@ -98,9 +98,9 @@ class Werewolf:
         game = self._get_game(ctx.guild)
         if not game:
             await ctx.send("No game running, cannot start")
-        
+
         await game.setup(ctx)
-    
+
     @commands.guild_only()
     @ww.command()
     async def stop(self, ctx):
@@ -110,10 +110,10 @@ class Werewolf:
         game = self._get_game(ctx.guild)
         if not game:
             await ctx.send("No game running, cannot stop")
-        
+
         game.game_over = True
-        
-    @commands.guild_only() 
+
+    @commands.guild_only()
     @ww.command()
     async def vote(self, ctx, id: int):
         """
@@ -123,31 +123,31 @@ class Werewolf:
             id = int(id)
         except:
             id = None
-        
+
         if id is None:
             await ctx.send("`id` must be an integer")
             return
-        
+
         # if ctx.guild is None:
-            # # DM nonsense, find their game
-            # # If multiple games, panic
-            # for game in self.games.values():
-                # if await game.get_player_by_member(ctx.author):
-                    # break #game = game
-            # else:
-                # await ctx.send("You're not part of any werewolf game")
-                # return
+        #     # DM nonsense, find their game
+        #     # If multiple games, panic
+        #     for game in self.games.values():
+        #         if await game.get_player_by_member(ctx.author):
+        #             break #game = game
+        #     else:
+        #         await ctx.send("You're not part of any werewolf game")
+        #         return
         # else:
-        
+
         game = self._get_game(ctx.guild)
-        
+
         if game is None:
             await ctx.send("No game running, cannot vote")
             return
 
         # Game handles response now
         channel = ctx.channel
-        if channel == game.village_channel: 
+        if channel == game.village_channel:
             await game.vote(ctx.author, id, channel)
         elif channel in (c["channel"] for c in game.p_channels.values()):
             await game.vote(ctx.author, id, channel)
@@ -165,7 +165,7 @@ class Werewolf:
         if ctx.guild is not None:
             await ctx.send("This action is only available in DM's")
             return
-        
+
         # DM nonsense, find their game
         # If multiple games, panic
         for game in self.games.values():
@@ -176,7 +176,7 @@ class Werewolf:
             return
 
         await game.choose(ctx, data)
-    
+
     def _get_game(self, guild, game_code=None):
         if guild is None:
             # Private message, can't get guild

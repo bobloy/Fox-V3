@@ -7,14 +7,14 @@ class WolfVote(VoteGroup):
     """
     Werewolf implementation of base VoteGroup class
     """
-    
-    alignment = 2     # 1: Town, 2: Werewolf, 3: Neutral
-    channel_id = "werewolves" 
+
+    alignment = 2  # 1: Town, 2: Werewolf, 3: Neutral
+    channel_id = "werewolves"
 
     kill_messages = [
         "**{ID}** - {target} was mauled by wolves",
         "**{ID}** - {target} was found torn to shreds"]
-    
+
     def __init__(self, game, channel):
         super().__init__(game, channel)
         # self.game = game
@@ -35,9 +35,10 @@ class WolfVote(VoteGroup):
             (self._at_night_start, 2),
             (self._at_night_end, 5),  # Kill priority
             (self._at_visit, 0)
-            ] 
-        
-    # async def on_event(self, event, data):
+        ]
+
+        # async def on_event(self, event, data):
+
     #     """
     #     See Game class for event guide
     #     """
@@ -63,24 +64,24 @@ class WolfVote(VoteGroup):
     #
     # async def _at_day_end(self, data=None):
     #     pass
-        
+
     async def _at_night_start(self, data=None):
         if self.channel is None:
             return
-        
+
         await self.game.generate_targets(self.channel)
         await self.channel.send(" ".join(player.mention for player in self.players))
         self.killer = random.choice(self.players)
-        
+
         await self.channel.send("{} has been selected as tonight's killer".format(self.killer.member.display_name))
-        
+
     async def _at_night_end(self, data=None):
         if self.channel is None:
             return
-        
+
         target_id = None
         vote_list = list(self.vote_results.values())
-        
+
         if vote_list:
             target_id = max(set(vote_list), key=vote_list.count)
 
@@ -90,7 +91,7 @@ class WolfVote(VoteGroup):
             await self.channel.send("**{} has left to complete the kill...**".format(self.killer.member.display_name))
         else:
             await self.channel.send("**No kill will be attempted tonight...**")
-            
+
     # async def _at_visit(self, data=None):
     #     pass
     #
@@ -111,7 +112,7 @@ class WolfVote(VoteGroup):
         """
         Receive vote from game
         """
-        
+
         self.vote_results[author.id] = target_id
-        
+
         await self.channel.send("{} has voted to kill {}".format(author.mention, target.member.display_name))
