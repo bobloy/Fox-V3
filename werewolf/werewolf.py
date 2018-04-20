@@ -1,8 +1,5 @@
-import asyncio
-
 import discord
 from discord.ext import commands
-
 from redbot.core import Config
 
 from werewolf.game import Game

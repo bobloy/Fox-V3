@@ -1,7 +1,3 @@
-import asyncio
-
-import discord
-
 import random
 
 from werewolf.votegroup import VoteGroup

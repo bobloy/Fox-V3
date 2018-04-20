@@ -1,5 +1,3 @@
-import asyncio
-
 from werewolf.role import Role
 
 from werewolf.votegroups.wolfvote import WolfVote

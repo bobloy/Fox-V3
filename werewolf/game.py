@@ -1,11 +1,10 @@
 import asyncio
-import discord
-
 import random
 
-from werewolf.player import Player
+import discord
 
 from werewolf.builder import parse_code
+from werewolf.player import Player
 
 
 class Game:

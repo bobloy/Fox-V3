@@ -1,5 +1,3 @@
-import asyncio
-
 from werewolf.role import Role
 
 class Villager(Role):

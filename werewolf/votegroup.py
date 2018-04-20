@@ -1,8 +1,3 @@
-import asyncio
-
-import discord
-
-
 class VoteGroup:
     """
     Base VoteGroup class for werewolf game

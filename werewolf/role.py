@@ -1,6 +1,3 @@
-import asyncio
-
-
 class Role:
     """
     Base Role class for werewolf game
