@@ -27,9 +27,9 @@ class Game:
     day_vote_count = 3
     
     # def __new__(cls, guild, game_code):
-        # game_code = ["VanillaWerewolf", "Villager", "Villager"]
-        
-        # return super().__new__(cls, guild, game_code)
+    #     game_code = ["VanillaWerewolf", "Villager", "Villager"]
+    #
+    #     return super().__new__(cls, guild, game_code)
 
     def __init__(self, guild, game_code):
         self.guild = guild
@@ -92,7 +92,10 @@ class Game:
         for player in self.players:
             overwrite[player.member] = discord.PermissionOverwrite(read_messages=True)
         
-        self.village_channel = await self.guild.create_text_channel("Village Square", overwrites=overwrite, reason="New game of werewolf", category=self.channel_category)
+        self.village_channel = await self.guild.create_text_channel("Village Square",
+                                                                    overwrites=overwrite,
+                                                                    reason="New game of werewolf",
+                                                                    category=self.channel_category)
         
         # Assuming everything worked so far
         print("Pre at_game_start")
@@ -108,7 +111,10 @@ class Game:
             for player in self.p_channels[channel_id]["players"]:
                 overwrite[player.member] = discord.PermissionOverwrite(read_messages=True)
                 
-            channel = await self.guild.create_text_channel(channel_id, overwrites=overwrite, reason="Ww game secret channel", category=self.channel_category)
+            channel = await self.guild.create_text_channel(channel_id,
+                                                           overwrites=overwrite,
+                                                           reason="Ww game secret channel",
+                                                           category=self.channel_category)
             
             self.p_channels[channel_id]["channel"] = channel
             
@@ -147,7 +153,8 @@ class Game:
         if self.game_over:
             return
         
-        await self.village_channel.send(embed=discord.Embed(title="Game is starting, please wait for setup to complete"))
+        await self.village_channel.send(
+            embed=discord.Embed(title="Game is starting, please wait for setup to complete"))
         
         await self._notify(0)
 
@@ -201,13 +208,18 @@ class Game:
 
         self.can_vote = False
         await self.speech_perms(self.village_channel, target.member)
-        await self.village_channel.send("**{} will be put to trial and has 30 seconds to defend themselves**".format(target.mention))
+        await self.village_channel.send(
+            "**{} will be put to trial and has 30 seconds to defend themselves**".format(target.mention))
         
         await asyncio.sleep(30)
         
         await self.speech_perms(self.village_channel, target.member, undo=True)
         
-        message = await self.village_channel.send("Everyone will now vote whether to lynch {}\n👍 to save, 👎 to lynch\n*Majority rules, no-lynch on ties, vote both or neither to abstain, 15 seconds to vote*".format(target.mention))
+        message = await self.village_channel.send(
+            "Everyone will now vote whether to lynch {}\n"
+            "👍 to save, 👎 to lynch\n"
+            "*Majority rules, no-lynch on ties, "
+            "vote both or neither to abstain, 15 seconds to vote*".format(target.mention))
         
         await self.village_channel.add_reaction("👍")
         await self.village_channel.add_reaction("👎")
@@ -238,7 +250,9 @@ class Game:
             if self.used_votes >= self.day_vote_count:
                 await self.village_channel.send("**All votes have been used! Day is now over!**")
             else:
-                await self.village_channel.send("**{}**/**{}** of today's votes have been used!\nNominate carefully..".format(self.used_votes, self.day_vote_count))
+                await self.village_channel.send(
+                    "**{}**/**{}** of today's votes have been used!\n"
+                    "Nominate carefully..".format(self.used_votes, self.day_vote_count))
                 self.can_vote = True  # Only re-enable voting if more votes remain
 
         if not self.can_vote:
