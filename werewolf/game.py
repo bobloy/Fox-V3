@@ -154,7 +154,10 @@ class Game:
     async def _at_day_start(self):  # ID 1
         if self.game_over:
             return
-            
+
+        def check():
+            return not self.can_vote or not self.day_time or self.game_over
+
         self.day_count += 1    
         embed=discord.Embed(title=random.choice(self.morning_messages).format(self.day_count))
         for result in self.night_results:
@@ -176,12 +179,14 @@ class Game:
         self.can_vote = True
         
         await asyncio.sleep(120)  # 4 minute days
+        if check():
+            return
         await self.village_channel.send(embed=discord.Embed(title="**Two minutes of daylight remain...**"))
         await asyncio.sleep(120)  # 4 minute days
         
-        # Need a loop here to wait for trial to end
+        # Need a loop here to wait for trial to end (can_vote?)
         
-        if not self.can_vote or  not self.day_time or self.game_over:
+        if check():
             return
             
         await self._at_day_end()
@@ -193,7 +198,8 @@ class Game:
         await self._notify(2, data)
         
         self.used_votes += 1
-        
+
+        self.can_vote = False
         await self.speech_perms(self.village_channel, target.member)
         await self.village_channel.send("**{} will be put to trial and has 30 seconds to defend themselves**".format(target.mention))
         
@@ -226,16 +232,15 @@ class Game:
         if len(down_votes) > len(up_votes):
             await self.village_channel.send("**Voted to lynch {}!**".format(target.mention))
             await self.lynch(target)
-            self.can_vote = False
         else:
             await self.village_channel.send("**{} has been spared!**".format(target.mention))
 
             if self.used_votes >= self.day_vote_count:
                 await self.village_channel.send("**All votes have been used! Day is now over!**")
-                self.can_vote = False
             else:
                 await self.village_channel.send("**{}**/**{}** of today's votes have been used!\nNominate carefully..".format(self.used_votes, self.day_vote_count))
-            
+                self.can_vote = True  # Only re-enable voting if more votes remain
+
         if not self.can_vote:
             await self._at_day_end()
     
@@ -349,7 +354,7 @@ class Game:
             await channel.send("**Game has already started!**")
             return 
         
-        if await self.get_player_by_member(member):
+        if await self.get_player_by_member(member) is not None:
             await channel.send("{} is already in the game!".format(member.mention))
             return 
         
@@ -363,7 +368,7 @@ class Game:
         """
         player = await self.get_player_by_member(member)
         
-        if not player:
+        if player is None:
             return "You're not in a game!"
 
         if self.started:
@@ -396,8 +401,7 @@ class Game:
         # I.E. Go on alert? y/n
 
         await player.choose(ctx, data)
-            
-    
+
     async def _visit(self, target, source):
         await target.role.visit(source)
         await self._at_visit(target, source)
@@ -410,8 +414,7 @@ class Game:
         target = await self.get_night_target(target_id, source)
         await self._visit(target, source)
         return target
-        
-        
+
     async def vote(self, author, id, channel):
         """
         Member attempts to cast a vote (usually to lynch)
@@ -576,7 +579,7 @@ class Game:
         for player in self.players:
             if player.member == member:
                 return player
-        return False
+        return None
     
     async def dead_perms(self, channel, member):
         await channel.set_permissions(member, read_messages=True, send_message=False, add_reactions=False)

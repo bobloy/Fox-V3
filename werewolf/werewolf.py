@@ -18,12 +18,31 @@ class Werewolf:
         self.config = Config.get_conf(self, identifier=87101114101119111108102, force_registration=True)
         default_global = {}
         default_guild = {
+            "role": None
             }
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
         
         self.games = {}  # Active games stored here, id is per guild
+
+    @commands.group()
+    async def wwset(self, ctx: commands.Context):
+        """
+        Base command to adjust settings. Check help for command list.
+        """
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help()
+
+    @commands.guild_only()
+    @wwset.command(name="role")
+    async def wwset_role(self, ctx, role: discord.Role):
+        """
+        Assign the game role
+        This role should not be manually assigned
+        """
+        await self.config.guild(ctx.guild).role.set(role)
+        await ctx.send("Game role has been set to **{}**".format(role.name))
 
     @commands.group()
     async def ww(self, ctx: commands.Context):

@@ -85,8 +85,9 @@ class WolfVote(VoteGroup):
         
         if vote_list:
             target_id = max(set(vote_list), key=vote_list.count)
-        
-        if target_id and self.killer:
+
+        print("Target id: {}\nKiller: {}".format(target_id, self.killer.member.display_name))
+        if target_id is not None and self.killer:
             await self.game.kill(target_id, self.killer, random.choice(self.kill_messages))
             await self.channel.send("**{} has left to complete the kill...**".format(self.killer.member.display_name))
         else:
