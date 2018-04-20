@@ -25,8 +25,8 @@ class VoteGroup:
             (self._at_game_start, 0),  # (Action, Priority)
             (self._at_day_start, 0),
             (self._at_voted, 0),
-            (self._at_kill, 0),
-            (self._at_hang, 0),
+            (self._at_kill, 1),
+            (self._at_hang, 1),
             (self._at_day_end, 0),
             (self._at_night_start, 2),
             (self._at_night_end, 0),

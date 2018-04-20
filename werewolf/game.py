@@ -272,7 +272,7 @@ class Game:
         await self.village_channel.send(embed=discord.Embed(title="**The sun sets on the village...**"))
         
         await self._notify(5)
-        await asyncio.sleep(30)
+        await asyncio.sleep(5)
         await self._at_night_start()
         
     async def _at_night_start(self):  # ID 6
@@ -281,9 +281,9 @@ class Game:
         await self._notify(6)
         
         await asyncio.sleep(120)  # 2 minutes
-
+        await self.village_channel.send(embed=discord.Embed(title="**Two minutes of night remain...**"))
         await asyncio.sleep(90)   # 1.5 minutes
-
+        await self.village_channel.send(embed=discord.Embed(title="**Thirty seconds until sunrise...**"))
         await asyncio.sleep(30)  # .5 minutes
         
         await self._at_night_end()
@@ -393,9 +393,10 @@ class Game:
             await ctx.send("**Corpses** can't vote...")
             return
         
-        if player.blocked:
+        if player.role.blocked:
             await ctx.send("Something is preventing you from doing this...")
             return
+            
         
         # Let role do target validation, might be alternate targets
         # I.E. Go on alert? y/n
@@ -411,6 +412,9 @@ class Game:
         Night visit target_id
         Returns a target for role information (i.e. Seer)
         """
+        if source.role.blocked:
+            # Blocker handles text
+            return
         target = await self.get_night_target(target_id, source)
         await self._visit(target, source)
         return target
@@ -512,13 +516,13 @@ class Game:
         else:
             target = await self.get_night_target(target_id, source)
         if source is not None: 
-            if source.blocked:
+            if source.role.blocked:
                 # Do nothing if blocked, blocker handles text
                 return  
         
-        if not novisit:
-            # Arsonist wouldn't visit before killing
-            await self._visit(target, source)  # Visit before killing
+            if not novisit:
+                # Arsonist wouldn't visit before killing
+                await self._visit(target, source)  # Visit before killing
         
         if not target.protected:
             target.alive = False
