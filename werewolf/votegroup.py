@@ -15,7 +15,7 @@ class VoteGroup:
         self.properties = {}  # Extra data for other options
 
         self.action_list = [
-            (self._at_game_start, 0),  # (Action, Priority)
+            (self._at_game_start, 1),  # (Action, Priority)
             (self._at_day_start, 0),
             (self._at_voted, 0),
             (self._at_kill, 1),
@@ -44,11 +44,11 @@ class VoteGroup:
 
     async def _at_kill(self, data=None):
         if data["player"] in self.players:
-            self.players.pop(data["player"])
+            self.players.remove(data["player"])
 
     async def _at_hang(self, data=None):
         if data["player"] in self.players:
-            self.players.pop(data["player"])
+            self.players.remove(data["player"])
 
     async def _at_day_end(self, data=None):
         pass
@@ -88,6 +88,10 @@ class VoteGroup:
         """
         if player.id in self.players:
             self.players.remove(player)
+
+        if not self.players:
+            # ToDo: Trigger deletion of votegroup
+            pass
 
     async def vote(self, target, author, id):
         """

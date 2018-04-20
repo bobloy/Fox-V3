@@ -59,10 +59,25 @@ class Game:
 
         self.loop = asyncio.get_event_loop()
 
+    def __del__(self):
+        """
+        Cleanup channels as necessary
+        :return:
+        """
+
+        print("Delete is called")
+
+        self.game_over = True
+        if self.village_channel:
+            asyncio.ensure_future(self.village_channel.delete("Werewolf game-over"))
+
+        for c_data in self.p_channels.values():
+            asyncio.ensure_future(c_data["channel"].delete("Werewolf game-over"))
+
     async def setup(self, ctx):
         """
         Runs the initial setup
-        
+
         1. Assign Roles
         2. Create Channels
         2a.  Channel Permissions
@@ -184,11 +199,11 @@ class Game:
             return
         self.can_vote = True
 
-        await asyncio.sleep(120)  # 4 minute days
+        await asyncio.sleep(12)  # 4 minute days FixMe to 120 later
         if check():
             return
         await self.village_channel.send(embed=discord.Embed(title="**Two minutes of daylight remain...**"))
-        await asyncio.sleep(120)  # 4 minute days
+        await asyncio.sleep(12)  # 4 minute days FixMe to 120 later
 
         # Need a loop here to wait for trial to end (can_vote?)
 
@@ -293,11 +308,11 @@ class Game:
             return
         await self._notify(6)
 
-        await asyncio.sleep(120)  # 2 minutes
+        await asyncio.sleep(12)  # 2 minutes FixMe to 120 later
         await self.village_channel.send(embed=discord.Embed(title="**Two minutes of night remain...**"))
-        await asyncio.sleep(90)  # 1.5 minutes
+        await asyncio.sleep(9)  # 1.5 minutes FixMe to 90 later
         await self.village_channel.send(embed=discord.Embed(title="**Thirty seconds until sunrise...**"))
-        await asyncio.sleep(30)  # .5 minutes
+        await asyncio.sleep(3)  # .5 minutes FixMe to 3 Later
 
         await self._at_night_end()
 
@@ -352,12 +367,16 @@ class Game:
         if channel_id not in self.p_channels:
             self.p_channels[channel_id] = self.default_secret_channel.copy()
 
-        await asyncio.sleep(1)  # This will have multiple calls
-
-        self.p_channels[channel_id]["players"].append(role.player)
-
-        if votegroup:
-            self.p_channels[channel_id]["votegroup"] = votegroup
+        for x in range(10):  # Retry 10 times
+            try:
+                await asyncio.sleep(1)  # This will have multiple calls
+                self.p_channels[channel_id]["players"].append(role.player)
+                if votegroup is not None:
+                    self.p_channels[channel_id]["votegroup"] = votegroup
+            except AttributeError:
+                continue
+            else:
+                break
 
     async def join(self, member: discord.Member, channel: discord.TextChannel):
         """
@@ -528,7 +547,7 @@ class Game:
         if source is None:
             target = self.players[target_id]
         elif self.day_time:
-            target = self.get_day_target(target_id, source)
+            target = await self.get_day_target(target_id, source)
         else:
             target = await self.get_night_target(target_id, source)
         if source is not None:
@@ -541,9 +560,9 @@ class Game:
                 await self._visit(target, source)  # Visit before killing
 
         if not target.protected:
-            target.alive = False
-            await target.kill(source)
-            await self._at_kill(target)
+            target.alive = False  # Set them as dead first
+            await target.role.kill(source)  # Notify target that someone is trying to kill them
+            await self._at_kill(target)  # Notify other roles of the kill attempt
             if not target.alive:  # Still dead after notifying
                 if not self.day_time:
                     self.night_results.append(await self.eval_results(target, source, method))
@@ -563,10 +582,10 @@ class Game:
             await self.dead_perms(self.village_channel, target.member)
 
     async def get_night_target(self, target_id, source=None):
-        return self.players[target_id]  # For now
+        return self.players[target_id]  # ToDo
 
     async def get_day_target(self, target_id, source=None):
-        return self.players[target_id]  # For now
+        return self.players[target_id]  # ToDo
 
     async def get_roles(self, game_code=None):
         if game_code is not None:
@@ -602,7 +621,7 @@ class Game:
         return None
 
     async def dead_perms(self, channel, member):
-        await channel.set_permissions(member, read_messages=True, send_message=False, add_reactions=False)
+        await channel.set_permissions(member, read_messages=True, send_messages=False, add_reactions=False)
 
     async def night_perms(self, channel):
         await channel.set_permissions(self.guild.default_role, read_messages=False, send_messages=False)

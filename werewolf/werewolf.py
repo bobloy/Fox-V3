@@ -23,6 +23,11 @@ class Werewolf:
 
         self.games = {}  # Active games stored here, id is per guild
 
+    def __unload(self):
+        print("Unload called")
+        for game in self.games.values():
+            del game
+
     @commands.group()
     async def wwset(self, ctx: commands.Context):
         """

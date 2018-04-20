@@ -26,7 +26,7 @@ class WolfVote(VoteGroup):
         self.killer = None  # Added killer
 
         self.action_list = [
-            (self._at_game_start, 0),  # (Action, Priority)
+            (self._at_game_start, 1),  # (Action, Priority)
             (self._at_day_start, 0),
             (self._at_voted, 0),
             (self._at_kill, 1),
@@ -70,7 +70,9 @@ class WolfVote(VoteGroup):
             return
 
         await self.game.generate_targets(self.channel)
-        await self.channel.send(" ".join(player.mention for player in self.players))
+        mention_list = " ".join(player.mention for player in self.players)
+        if mention_list != "":
+            await self.channel.send(mention_list)
         self.killer = random.choice(self.players)
 
         await self.channel.send("{} has been selected as tonight's killer".format(self.killer.member.display_name))
