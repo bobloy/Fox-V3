@@ -44,7 +44,7 @@ class Role:
     alignment = 0      # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""     # Empty for no private channel
     unique = False      # Only one of this role per game
-    game_start_message= (
+    game_start_message = (
         "Your role is **Default**\n"
         "You win by testing the game\n"
         "Lynch players during the day with `[p]ww vote <ID>`"
@@ -74,7 +74,6 @@ class Role:
         """
             
         await self.action_list[event][0](data)
-        
 
     async def assign_player(self, player):
         """

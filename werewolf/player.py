@@ -24,8 +24,8 @@ class Player:
         role.player = self
         self.role = role
         
-    async def assign_id(self, id):
-        self.id = id
+    async def assign_id(self, target_id):
+        self.id = target_id
 
     async def send_dm(self, message):
         await self.member.send(message) # Lets do embeds later

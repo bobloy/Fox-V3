@@ -324,14 +324,14 @@ class Game:
         for i in range(len(self.players)):
             player = self.players[i]
             if player.alive:
-                status=""
+                status = ""
             else:
-                status="*Dead*"
-            embed.add_field(name="ID# **{}**".format(i), value="{} {}".format(status, player.member.display_name), inline=True)
+                status = "*Dead*"
+            embed.add_field(name="ID# **{}**".format(i),
+                            value="{} {}".format(status, player.member.display_name), inline=True)
   
         return await channel.send(embed=embed)
-    
-    
+
     async def register_channel(self, channel_id, role, votegroup=None):
         """
         Queue a channel to be created by game_start
@@ -360,7 +360,8 @@ class Game:
         
         self.players.append(Player(member))
         
-        await channel.send("{} has been added to the game, total players is **{}**".format(member.mention, len(self.players)))
+        await channel.send("{} has been added to the game, "
+                           "total players is **{}**".format(member.mention, len(self.players)))
         
     async def quit(self, member: discord.Member, channel: discord.TextChannel = None):
         """
@@ -396,8 +397,7 @@ class Game:
         if player.role.blocked:
             await ctx.send("Something is preventing you from doing this...")
             return
-            
-        
+
         # Let role do target validation, might be alternate targets
         # I.E. Go on alert? y/n
 
@@ -419,7 +419,7 @@ class Game:
         await self._visit(target, source)
         return target
 
-    async def vote(self, author, id, channel):
+    async def vote(self, author, target_id, channel):
         """
         Member attempts to cast a vote (usually to lynch)
         Also used in vote groups
@@ -446,7 +446,7 @@ class Game:
             return
 
         try:
-            target = self.players[id]
+            target = self.players[target_id]
         except IndexError:
             target = None
         
@@ -456,39 +456,42 @@ class Game:
             
         # Now handle village vote or send to votegroup
         if channel == self.village_channel:
-            await self._village_vote(target, author, id)
+            await self._village_vote(target, author, target_id)
         elif self.p_channels[channel.name]["votegroup"] is not None:
-            await self.vote_groups[channel.name].vote(target, author, id)
+            await self.vote_groups[channel.name].vote(target, author, target_id)
         else:  # Somehow previous check failed
             await channel.send("Cannot vote in this channel")
             return
  
-    async def _village_vote(self, target, author, id):
+    async def _village_vote(self, target, author, target_id):
         if author in self.day_vote:
             self.vote_totals[self.day_vote[author]] -= 1
         
-        self.day_vote[author] = id
-        if id not in self.vote_totals:
-            self.vote_totals[id] = 1
+        self.day_vote[author] = target_id
+        if target_id not in self.vote_totals:
+            self.vote_totals[target_id] = 1
         else:
-            self.vote_totals[id] += 1
+            self.vote_totals[target_id] += 1
         
         required_votes = len([player for player in self.players if player.alive]) // 7 + 2
         
-        if self.vote_totals[id] < required_votes:
-            await self.village_channel.send("{} has voted to put {} to trial. {} more votes needed".format(author.mention, target.member.mention, required_votes - self.vote_totals[id]))
+        if self.vote_totals[target_id] < required_votes:
+            await self.village_channel.send(""
+                                            "{} has voted to put {} to trial. "
+                                            "{} more votes needed".format(author.mention,
+                                                                          target.member.mention,
+                                                                          required_votes - self.vote_totals[target_id]))
         else:
-            self.vote_totals[id] = 0
-            self.day_vote = {k:v for k,v in self.day_vote.items() if v != id}  # Remove votes for this id
+            self.vote_totals[target_id] = 0
+            self.day_vote = {k: v for k, v in self.day_vote.items() if v != target_id}  # Remove votes for this id
             await self._at_voted(target)
-        
-    
-    async def eval_results(self, target, source=None, method = None):
+
+    async def eval_results(self, target, source=None, method=None):
         if method is not None:
             out = "**{ID}** - " + method
             return out.format(ID=target.id, target=target.member.display_name)
         else:   
-            return "**{ID}** - {} was found dead".format(ID=target.id, target=target.member.display_name)
+            return "**{ID}** - {target} was found dead".format(ID=target.id, target=target.member.display_name)
 
     async def _quit(self, player):
         """
@@ -498,7 +501,7 @@ class Game:
         player.alive = False
         await self._at_kill(player)
         player.alive = False  # Do not allow resurrection
-        await self.dead_perms(player.member)
+        await self.dead_perms(self.village_channel, player.member)
         # Add a punishment system for quitting games later
 
     async def kill(self, target_id, source=None, method: str=None, novisit=False):    
@@ -531,7 +534,7 @@ class Game:
             if not target.alive:  # Still dead after notifying
                 if not self.day_time:
                     self.night_results.append(await self.eval_results(target, source, method))
-                await self.dead_perms(target.member)
+                await self.dead_perms(self.village_channel, target.member)
         else:
             target.protected = False
         
@@ -544,17 +547,17 @@ class Game:
         target.alive = False
         await self._at_hang(target)
         if not target.alive:  # Still dead after notifying
-            await self.dead_perms(target.member)
+            await self.dead_perms(self.village_channel, target.member)
     
     async def get_night_target(self, target_id, source=None):
         return self.players[target_id]  # For now
     
     async def get_day_target(self, target_id, source=None):
-        return self.player[target_id]  # For now
+        return self.players[target_id]  # For now
 
     async def get_roles(self, game_code=None):
         if game_code is not None:
-            self.game_code=game_code
+            self.game_code = game_code
         
         if self.game_code is None:
             return False
@@ -607,9 +610,9 @@ class Game:
             await channel.set_permissions(member, read_messages=True)
     
     async def _check_game_over(self):
-        #ToDo
+        # ToDo
         pass
 
     async def _end_game(self):
-        #ToDo
+        # ToDo
         pass

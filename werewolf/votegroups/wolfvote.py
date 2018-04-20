@@ -20,11 +20,12 @@ class WolfVote(VoteGroup):
         "**{ID}** - {target} was found torn to shreds"]
     
     def __init__(self, game, channel):
-        self.game = game
-        self.channel = channel
-        self.players = []
-        self.vote_results = {}
-        self.properties = {}  # Extra data for other options
+        super().__init__(game, channel)
+        # self.game = game
+        # self.channel = channel
+        # self.players = []
+        # self.vote_results = {}
+        # self.properties = {}  # Extra data for other options
 
         self.killer = None  # Added killer
 
@@ -41,31 +42,31 @@ class WolfVote(VoteGroup):
             ] 
         
     # async def on_event(self, event, data):
-        # """
-        # See Game class for event guide
-        # """
-        
-        # await action_list[event][0](data)
-
+    #     """
+    #     See Game class for event guide
+    #     """
+    #
+    #     await action_list[event][0](data)
+    #
     # async def _at_game_start(self, data=None):
-        # await self.channel.send(" ".join(player.mention for player in self.players))
-
+    #     await self.channel.send(" ".join(player.mention for player in self.players))
+    #
     # async def _at_day_start(self, data=None):
-        # pass
-        
+    #     pass
+    #
     # async def _at_voted(self, data=None):
-        # pass
-        
+    #     pass
+    #
     # async def _at_kill(self, data=None):
-        # if data["player"] in self.players:
-            # self.players.pop(data["player"])
-        
+    #     if data["player"] in self.players:
+    #         self.players.pop(data["player"])
+    #
     # async def _at_hang(self, data=None):
-        # if data["player"] in self.players:
-            # self.players.pop(data["player"])
-        
+    #     if data["player"] in self.players:
+    #         self.players.pop(data["player"])
+    #
     # async def _at_day_end(self, data=None):
-        # pass
+    #     pass
         
     async def _at_night_start(self, data=None):
         if self.channel is None:
@@ -95,26 +96,26 @@ class WolfVote(VoteGroup):
             await self.channel.send("**No kill will be attempted tonight...**")
             
     # async def _at_visit(self, data=None):
-        # pass
-
+    #     pass
+    #
     # async def register_players(self, *players):
-        # """
-        # Extend players by passed list
-        # """
-        # self.players.extend(players)
-    
+    #     """
+    #     Extend players by passed list
+    #     """
+    #     self.players.extend(players)
+    #
     # async def remove_player(self, player):
-        # """
-        # Remove a player from player list
-        # """
-        # if player.id in self.players:
-            # self.players.remove(player)  
+    #     """
+    #     Remove a player from player list
+    #     """
+    #     if player.id in self.players:
+    #         self.players.remove(player)
 
-    async def vote(self, target, author, id):
+    async def vote(self, target, author, target_id):
         """
         Receive vote from game
         """
         
-        self.vote_results[author.id] = id
+        self.vote_results[author.id] = target_id
         
         await self.channel.send("{} has voted to kill {}".format(author.mention, target.member.display_name))
