@@ -97,12 +97,12 @@ class Seer(Role):
     # async def _at_day_end(self):
         # pass
         
-    async def _at_night_start(self):
+    async def _at_night_start(self, data=None):
         await self.game.generate_targets(self.player.member)
         await self.player.send_dm("{}\n**Pick a target to see tonight**\n")
         
         
-    async def _at_night_end(self):
+    async def _at_night_end(self, data=None):
         target = await self.game.visit(self.see_target)
         
         alignment = None

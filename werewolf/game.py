@@ -1,8 +1,6 @@
 import asyncio
 import discord
 
-from datetime import datetime, timedelta
-
 import random
 
 from werewolf.player import Player
@@ -14,7 +12,7 @@ class Game:
     """
     Base class to run a single game of Werewolf
     """
-    
+
     default_secret_channel = {
                 "channel": None,
                 "players": [],
@@ -59,10 +57,7 @@ class Game:
         self.vote_groups = {}  # ID : VoteGroup()
         
         self.night_results = []
-        
-        
-        
-        
+
         self.loop = asyncio.get_event_loop()
 
     async def setup(self, ctx):
@@ -91,7 +86,8 @@ class Game:
                     self.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
                     }
 
-        self.channel_category = await self.guild.create_category("ww-game", overwrites=overwrite, reason="New game of werewolf")
+        self.channel_category = await self.guild.create_category("ww-game", overwrites=overwrite, reason="New game of "
+                                                                                                         "werewolf")
         
         for player in self.players:
             overwrite[player.member] = discord.PermissionOverwrite(read_messages=True)
@@ -145,7 +141,7 @@ class Game:
         """
         await self._at_day_start()
         # Once cycle ends, this will trigger end_game
-        await self._end_game() # Handle open channels
+        await self._end_game()  # Handle open channels
     
     async def _at_game_start(self):  # ID 0
         if self.game_over:
