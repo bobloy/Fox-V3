@@ -1,6 +1,8 @@
 import math
 
 import discord
+import asyncio
+
 from discord.ext import commands
 from redbot.core import Config
 from redbot.core import checks
@@ -102,23 +104,23 @@ class Fight:
         if not user:
             user = ctx.author
 
-        currFight = await self._getcurrentfight(ctx)
-        tID = await self._activefight(ctx)
-        if not currFight:
+        curr_fight = await self._getcurrentfight(ctx)
+        t_id = await self._activefight(ctx)
+        if not curr_fight:
             await ctx.send("No tournament currently running!")
             return
 
-        if not currFight["OPEN"]:
+        if not curr_fight["OPEN"]:
             await ctx.send("Tournament currently not accepting new players")
             return
 
-        if await self._infight(ctx, tID, user.id):
+        if await self._infight(ctx, t_id, user.id):
             await ctx.send("You are already in this tournament!")
             return
 
-        currFight["PLAYERS"].append(user.id)
+        curr_fight["PLAYERS"].append(user.id)
 
-        await self._save_fight(ctx, tID, currFight)
+        await self._save_fight(ctx, t_id, curr_fight)
 
         await ctx.send("User has been added to tournament")
 
@@ -153,30 +155,27 @@ class Fight:
     # await self._rr_score(ctx, tID, mID, score1, score2)
 
     @fight.command(name="leave")
-    async def fight_leave(self, ctx, tID=None, user: discord.Member = None):
+    async def fight_leave(self, ctx, t_id=None, user: discord.Member = None):
         """Forfeit your match and all future matches"""
         # guild = ctx.message.guild
         if not user:
             user = ctx.author
 
-        if not tID:
-            tID = await self._activefight(ctx)
+        if not t_id:
+            t_id = await self._activefight(ctx)
         await ctx.send("Todo Leave")
 
-    #    @fight.command(name="leaderboard", pass_context=True)
-    #    async def fight_leaderboard(self, ctx, ctag, ckind="Unranked", irank=0):
-    #        await ctx.send("Todo Leaderboard")
-    #        """Adds clan to grab-list"""
-
     @fight.group(name="bracket")
-    async def fight_bracket(self, ctx, tID):
+    async def fight_bracket(self, ctx, t_id):
         """Shows your current match your next opponent,
             run [p]fight bracket full to see all matches"""
+        # ToDo Bracket
         await ctx.send("Todo Bracket")
 
     @fight_bracket.command(name="full")
-    async def fight_bracket_full(self, ctx, tID):
+    async def fight_bracket_full(self, ctx, t_id):
         """Shows the full bracket"""
+        # ToDo Bracket Full
         await ctx.send("Todo Bracket Full")
 
     # **********************Fightset command group start*********************
@@ -190,27 +189,15 @@ class Fight:
             await ctx.send_help()
 
     @fadmin.command(name="score")
-    async def fadmin_score(self, ctx, mID, score1, score2):
+    async def fadmin_score(self, ctx, m_id, score1, score2):
         """Set's the score for matchID and clears disputes"""
-        currFight = await self._getcurrentfight(ctx)
-        tID = await self._activefight(ctx)
-        if not currFight:
+        curr_fight = await self._getcurrentfight(ctx)
+        t_id = await self._activefight(ctx)
+        if not curr_fight:
             await ctx.send("No tournament currently running!")
             return
 
-        if not currFight["OPEN"]:
-            await ctx.send("Tournament currently not accepting new players")
-            return
-
-        if await self._infight(ctx, tID, user.id):
-            await ctx.send("You are already in this tournament!")
-            return
-
-        currFight["PLAYERS"].append(user.id)
-
-        await self._save_fight(ctx, tID, currFight)
-
-        await ctx.send("User has been added to tournament")
+        #ToDo allow score adjustment
 
     # **********************Fightset command group start*********************
 
@@ -219,34 +206,8 @@ class Fight:
     @checks.mod_or_permissions(administrator=True)
     async def fightset(self, ctx):
         """Admin command for starting or managing tournaments"""
-        # guild = ctx.message.guild
-
-        # if guild.id not in self.the_data:
-        # self.the_data[guild.id] = {
-        # "CURRENT": None,
-        # "TOURNEYS": {},
-        # "SETTINGS": {
-        # "SELFREPORT": True,
-        # "REPORTCHNNL": None,
-        # "ANNOUNCECHNNL": None,
-        # "ADMIN": None
-        # },
-        # "SRTRACKER": {
-        # "ROUND": None,
-        # "CHNNLS": None,
-        # },
-        # "EMOJI": {
-        # "NUMS": [],
-        # "UNDO": None,
-        # "APPR": None
-        # }
-        # }
-
-        # self.save_data()
-
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
-        # await ctx.send("I can do stuff!")
 
     @fightset.command(name="emoji")
     async def fightset_emoji(self, ctx):
