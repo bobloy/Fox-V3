@@ -651,8 +651,21 @@ class Game:
         #     await channel.set_permissions(member, read_messages=True)
 
     async def _check_game_over(self):
-        # ToDo
-        pass
+        alive_players = [player for player self.players if player.alive]
+
+        if len(alive_players)<=2:
+            # Check 1v1 victory conditions ToDo
+            pass
+        else:
+            #Check if everyone is on the same team
+            alignment = alive_players[0].role.alignment
+            for player in alive_players:
+                if player.role.alignment != alignment:
+                    return False
+
+            # Only remaining team wins
+
+
 
     async def _end_game(self):
         # ToDo
