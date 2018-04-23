@@ -11,6 +11,7 @@ class Game:
     """
     Base class to run a single game of Werewolf
     """
+    village_channel: discord.TextChannel
 
     default_secret_channel = {
         "channel": None,
@@ -30,7 +31,7 @@ class Game:
     #
     #     return super().__new__(cls, guild, game_code)
 
-    def __init__(self, guild, role, game_code):
+    def __init__(self, guild: discord.Guild, role: discord.Role, game_code):
         self.guild = guild
         self.game_code = ["VanillaWerewolf"]
         self.game_role = role
@@ -355,7 +356,7 @@ class Game:
 
     ############END Notify structure############
 
-    async def generate_targets(self, channel):
+    async def generate_targets(self, channel, with_roles = False):
         embed = discord.Embed(title="Remaining Players")
         for i in range(len(self.players)):
             player = self.players[i]
@@ -363,7 +364,11 @@ class Game:
                 status = ""
             else:
                 status = "*Dead*"
-            embed.add_field(name="ID# **{}**".format(i),
+            if with_roles:
+                embed.add_field(name="ID# **{}**".format(i),
+                                value="{} {} {}".format(status, player.member.display_name, str(player.role)), inline=True)
+            else:
+                embed.add_field(name="ID# **{}**".format(i),
                             value="{} {}".format(status, player.member.display_name), inline=True)
 
         return await channel.send(embed=embed)
@@ -654,17 +659,35 @@ class Game:
         alive_players = [player for player in self.players if player.alive]
 
         if len(alive_players) <= 2:
+            self.game_over = True
             # Check 1v1 victory conditions ToDo
             pass
         else:
             # Check if everyone is on the same team
-            alignment = alive_players[0].role.alignment
+            alignment = alive_players[0].role.alignment  # Get first allignment and compare to rest
             for player in alive_players:
                 if player.role.alignment != alignment:
-                    return False
+                    return
 
             # Only remaining team wins
+            self.game_over = True
+            await self._announce_winners(alive_players)
+
+        # If no return, cleanup and end game
+        await self._end_game()
+
+    async def _announce_winners(self, winnerlist):
+        await self.village_channel.send(self.game_role.mention)
+        embed = discord.Embed(title='Game Over', description='The Following Players have won!')
+        for player in winnerlist:
+            embed.add_field(name=player.member.display_name, value=str(player.role), inline=True)
+        embed.set_thumbnail(url='https://emojipedia-us.s3.amazonaws.com/thumbs/160/twitter/134/trophy_1f3c6.png')
+        await self.village_channel.send(embed=embed)
+
+        await self.generate_targets(self.village_channel, True)
+
 
     async def _end_game(self):
-        # ToDo
+        # Remove game_role access for potential archiving for now
+        await self.village_channel.set_permissions(self.game_role, overwrite=None)
         pass

@@ -65,6 +65,9 @@ class Role:
             (self._at_visit, 0)
         ]
 
+    def __repr__(self):
+        return self.__class__.__name__
+
     async def on_event(self, event, data):
         """
         See Game class for event guide

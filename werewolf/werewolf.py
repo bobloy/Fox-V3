@@ -1,3 +1,5 @@
+from typing import Dict
+
 import discord
 from discord.ext import commands
 from redbot.core import Config
@@ -10,6 +12,7 @@ class Werewolf:
     """
     Base to host werewolf on a guild
     """
+    games: Dict[int, Game]
 
     def __init__(self, bot):
         self.bot = bot
@@ -57,17 +60,17 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command()
-    async def new(self, ctx, game_code):
+    async def new(self, ctx, game_code=None):
         """
         Create and join a new game of Werewolf
         """
 
-        game = await self._get_game(ctx.guild, game_code)
+        game = await self._get_game(ctx, game_code)
 
         if not game:
             await ctx.send("Failed to start a new game")
         else:
-            await ctx.send("New game has started")
+            await ctx.send("Game is ready to join! Use `[p]`ww join`")
 
     @commands.guild_only()
     @ww.command()
@@ -183,20 +186,21 @@ class Werewolf:
 
         await game.choose(ctx, data)
 
-    async def _get_game(self, guild, game_code=None):
-        if guild is None:
+    async def _get_game(self, ctx, game_code=None):
+        if ctx.guild is None:
             # Private message, can't get guild
             return None
-        if guild.id not in self.games:
+        if ctx.guild.id not in self.games or self.games[ctx.guild.id].game_over:
+            await ctx.send("Starting a new game...")
             if not game_code:
                 return None
-            role = await self.config.guild(guild).role()
-            role = discord.utils.get(guild.roles, id=role)
+            role = await self.config.guild(ctx.guild).role()
+            role = discord.utils.get(ctx.guild.roles, id=role)
             if role is None:
                 return None
-            self.games[guild.id] = Game(guild, role, game_code)
+            self.games[ctx.guild.id] = Game(ctx.guild, role, game_code)
 
-        return self.games[guild.id]
+        return self.games[ctx.guild.id]
 
     async def _game_start(self, game):
         await game.start()
