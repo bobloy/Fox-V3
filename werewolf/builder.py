@@ -1,5 +1,9 @@
+from typing import List
+
 import discord
+
 # Import all roles here
+from werewolf.role import Role
 from werewolf.roles.seer import Seer
 from werewolf.roles.vanillawerewolf import VanillaWerewolf
 from werewolf.roles.villager import Villager
@@ -23,18 +27,18 @@ double digit position preempted by `-`
 """
 
 
-async def parse_code(code):
+async def parse_code(code, game):
     """Do the magic described above"""
-    out = []
+    out: List[Role] = []
     decode = code.copy()  # for now, pass exact names
     for role_id in decode:
         print(role_id)
         if role_id == "Villager":
-            role = Villager
+            role = Villager(game)
         elif role_id == "VanillaWerewolf":
-            role = VanillaWerewolf
+            role = VanillaWerewolf(game)
         elif role_id == "Seer":
-            role = Seer
+            role = Seer(game)
         else:  # Fail to parse
             return None
         out.append(role)

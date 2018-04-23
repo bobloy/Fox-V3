@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from redbot.core import Config
 from redbot.core import RedContext
+from redbot.core.bot import Red
 
 from werewolf.game import Game
 
@@ -14,12 +15,12 @@ class Werewolf:
     """
     games: Dict[int, Game]
 
-    def __init__(self, bot):
+    def __init__(self, bot: Red):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=87101114101119111108102, force_registration=True)
         default_global = {}
         default_guild = {
-            "role": None
+            "role_id": None
         }
 
         self.config.register_global(**default_global)
@@ -47,7 +48,7 @@ class Werewolf:
         Assign the game role
         This role should not be manually assigned
         """
-        await self.config.guild(ctx.guild).role.set(role.id)
+        await self.config.guild(ctx.guild).role_id.set(role.id)
         await ctx.send("Game role has been set to **{}**".format(role.name))
 
     @commands.group()
@@ -64,13 +65,11 @@ class Werewolf:
         """
         Create and join a new game of Werewolf
         """
-
         game = await self._get_game(ctx, game_code)
-
         if not game:
             await ctx.send("Failed to start a new game")
         else:
-            await ctx.send("Game is ready to join! Use `[p]`ww join`")
+            await ctx.send("Game is ready to join! Use `[p]ww join`")
 
     @commands.guild_only()
     @ww.command()
@@ -79,7 +78,7 @@ class Werewolf:
         Joins a game of Werewolf
         """
 
-        game = await self._get_game(ctx.guild)
+        game = await self._get_game(ctx)
 
         if not game:
             await ctx.send("No game to join!\nCreate a new one with `[p]ww new`")
@@ -94,7 +93,7 @@ class Werewolf:
         Quit a game of Werewolf
         """
 
-        game = await self._get_game(ctx.guild)
+        game = await self._get_game(ctx)
 
         await game.quit(ctx.author, ctx.channel)
 
@@ -104,7 +103,7 @@ class Werewolf:
         """
         Checks number of players and attempts to start the game
         """
-        game = await self._get_game(ctx.guild)
+        game = await self._get_game(ctx)
         if not game:
             await ctx.send("No game running, cannot start")
 
@@ -116,7 +115,7 @@ class Werewolf:
         """
         Stops the current game
         """
-        game = await self._get_game(ctx.guild)
+        game = await self._get_game(ctx)
         if not game:
             await ctx.send("No game running, cannot stop")
 
@@ -130,7 +129,7 @@ class Werewolf:
         """
         try:
             target_id = int(target_id)
-        except:
+        except ValueError:
             target_id = None
 
         if target_id is None:
@@ -148,7 +147,7 @@ class Werewolf:
         #         return
         # else:
 
-        game = await self._get_game(ctx.guild)
+        game = await self._get_game(ctx)
 
         if game is None:
             await ctx.send("No game running, cannot vote")
@@ -186,17 +185,17 @@ class Werewolf:
 
         await game.choose(ctx, data)
 
-    async def _get_game(self, ctx, game_code=None):
+    async def _get_game(self, ctx: RedContext, game_code=None):
         if ctx.guild is None:
             # Private message, can't get guild
+            ctx.send("Cannot start game from PM!")
             return None
         if ctx.guild.id not in self.games or self.games[ctx.guild.id].game_over:
             await ctx.send("Starting a new game...")
-            if not game_code:
-                return None
-            role = await self.config.guild(ctx.guild).role()
-            role = discord.utils.get(ctx.guild.roles, id=role)
+            role_id = await self.config.guild(ctx.guild).role_id()
+            role = discord.utils.get(ctx.guild.roles, id=role_id)
             if role is None:
+                ctx.send("Game role is invalid, cannot start new game")
                 return None
             self.games[ctx.guild.id] = Game(ctx.guild, role, game_code)
 
