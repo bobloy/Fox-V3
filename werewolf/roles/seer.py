@@ -15,7 +15,7 @@ class Seer(Role):
     )
 
     def __init__(self, game):
-        super().__init__()
+        super().__init__(game)
         # self.game = game
         # self.player = None
         # self.blocked = False
@@ -63,14 +63,14 @@ class Seer(Role):
         """
         return "Village"
 
-    async def _get_role(self, source=None):
+    async def get_role(self, source=None):
         """
         Interaction for powerful access of role
         Unlikely to be able to deceive this
         """
         return "Villager"
 
-    async def _see_role(self, source=None):
+    async def see_role(self, source=None):
         """
         Interaction for investigative roles.
         More common to be able to deceive these roles
@@ -133,9 +133,9 @@ class Seer(Role):
 
     async def choose(self, ctx, data):
         """Handle night actions"""
-        id = int(data)
+        target_id = int(data)
         try:
-            target = self.game.players[id]
+            target = self.game.players[target_id]
         except IndexError:
             target = None
 
@@ -143,5 +143,5 @@ class Seer(Role):
             await ctx.send("Not a valid ID")
             return
 
-        self.see_target = id
+        self.see_target = target_id
         await ctx.send("**You will attempt to see the role of {} tonight...**".format(target.member.display_name))

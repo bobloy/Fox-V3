@@ -1,10 +1,8 @@
-import asyncio
 import discord
-
 # Import all roles here
+from werewolf.roles.seer import Seer
 from werewolf.roles.vanillawerewolf import VanillaWerewolf
 from werewolf.roles.villager import Villager
-from werewolf.roles.seer import Seer
 
 # All roles in this list for iterating
 role_list = [Villager, VanillaWerewolf]

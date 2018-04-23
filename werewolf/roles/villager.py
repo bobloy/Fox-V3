@@ -14,7 +14,7 @@ class Villager(Role):
     )
 
     def __init__(self, game):
-        super().__init__()
+        super().__init__(game)
         # self.game = game
         # self.player = None
         # self.blocked = False
@@ -63,14 +63,14 @@ class Villager(Role):
         """
         return "Village"
 
-    async def _get_role(self, source=None):
+    async def get_role(self, source=None):
         """
         Interaction for powerful access of role
         Unlikely to be able to deceive this
         """
         return "Villager"
 
-    async def _see_role(self, source=None):
+    async def see_role(self, source=None):
         """
         Interaction for investigative roles.
         More common to be able to deceive these roles

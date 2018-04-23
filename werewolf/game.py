@@ -30,9 +30,10 @@ class Game:
     #
     #     return super().__new__(cls, guild, game_code)
 
-    def __init__(self, guild, game_code):
+    def __init__(self, guild, role, game_code):
         self.guild = guild
         self.game_code = ["VanillaWerewolf"]
+        self.game_role = role
 
         self.roles = []
 
@@ -92,19 +93,26 @@ class Game:
             self.roles = []
             return False
 
+        if self.game_role is None:
+            await ctx.send("Game role not configured, cannot start")
+            self.roles = []
+            return False
+
         await self.assign_roles()
 
         # Create category and channel with individual overwrites
         overwrite = {
-            self.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=True),
-            self.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+            self.guild.default_role: discord.PermissionOverwrite(read_messages=True, send_messages=False,
+                                                                 add_reactions=False),
+            self.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, add_reactions=True),
+            self.game_role: discord.PermissionOverwrite(read_messages=True, send_messages=True)
         }
 
         self.channel_category = await self.guild.create_category("ww-game", overwrites=overwrite, reason="New game of "
                                                                                                          "werewolf")
 
-        for player in self.players:
-            overwrite[player.member] = discord.PermissionOverwrite(read_messages=True)
+        # for player in self.players:
+        #     overwrite[player.member] = discord.PermissionOverwrite(read_messages=True)
 
         self.village_channel = await self.guild.create_text_channel("Village Square",
                                                                     overwrites=overwrite,
@@ -582,10 +590,10 @@ class Game:
             await self.dead_perms(self.village_channel, target.member)
 
     async def get_night_target(self, target_id, source=None):
-        return self.players[target_id]  # ToDo
+        return self.players[target_id]  # ToDo check source
 
     async def get_day_target(self, target_id, source=None):
-        return self.players[target_id]  # ToDo
+        return self.players[target_id]  # ToDo check source
 
     async def get_roles(self, game_code=None):
         if game_code is not None:
@@ -621,25 +629,26 @@ class Game:
         return None
 
     async def dead_perms(self, channel, member):
-        await channel.set_permissions(member, read_messages=True, send_messages=False, add_reactions=False)
+        await channel.set_permissions(member, overwrite=None)
+        await member.remove_roles(*[self.game_role])
 
     async def night_perms(self, channel):
-        await channel.set_permissions(self.guild.default_role, read_messages=False, send_messages=False)
+        await channel.set_permissions(self.game_role, read_messages=True, send_messages=False)
 
     async def day_perms(self, channel):
-        await channel.set_permissions(self.guild.default_role, read_messages=False)
+        await channel.set_permissions(self.game_role, read_messages=True, send_messages=True)
 
     async def speech_perms(self, channel, member, undo=False):
         if undo:
-            await channel.set_permissions(member, read_messages=True)
+            await channel.set_permissions(member, overwrite=None)
         else:
-            await channel.set_permissions(self.guild.default_role, read_messages=False, send_messages=False)
-            await channel.set_permissions(member, read_messages=True, send_messages=True)
+            await channel.set_permissions(self.game_role, read_messages=True, send_messages=False)
+            await channel.set_permissions(member, send_messages=True)
 
     async def normal_perms(self, channel, member_list):
-        await channel.set_permissions(self.guild.default_role, read_messages=False)
-        for member in member_list:
-            await channel.set_permissions(member, read_messages=True)
+        await channel.set_permissions(self.game_role, read_messages=True, send_messages=True)
+        # for member in member_list:
+        #     await channel.set_permissions(member, read_messages=True)
 
     async def _check_game_over(self):
         # ToDo

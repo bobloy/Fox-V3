@@ -93,9 +93,9 @@ class VoteGroup:
             # ToDo: Trigger deletion of votegroup
             pass
 
-    async def vote(self, target, author, id):
+    async def vote(self, target, author, target_id):
         """
         Receive vote from game
         """
 
-        self.vote_results[author.id] = id
+        self.vote_results[author.id] = target_id

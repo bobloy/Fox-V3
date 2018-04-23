@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from redbot.core import Config
+from redbot.core import RedContext
 
 from werewolf.game import Game
 
@@ -29,7 +30,7 @@ class Werewolf:
             del game
 
     @commands.group()
-    async def wwset(self, ctx: commands.Context):
+    async def wwset(self, ctx: RedContext):
         """
         Base command to adjust settings. Check help for command list.
         """
@@ -43,11 +44,11 @@ class Werewolf:
         Assign the game role
         This role should not be manually assigned
         """
-        await self.config.guild(ctx.guild).role.set(role)
+        await self.config.guild(ctx.guild).role.set(role.id)
         await ctx.send("Game role has been set to **{}**".format(role.name))
 
     @commands.group()
-    async def ww(self, ctx: commands.Context):
+    async def ww(self, ctx: RedContext):
         """
         Base command for this cog. Check help for the commands list.
         """
@@ -61,7 +62,7 @@ class Werewolf:
         Create and join a new game of Werewolf
         """
 
-        game = self._get_game(ctx.guild, game_code)
+        game = await self._get_game(ctx.guild, game_code)
 
         if not game:
             await ctx.send("Failed to start a new game")
@@ -75,7 +76,7 @@ class Werewolf:
         Joins a game of Werewolf
         """
 
-        game = self._get_game(ctx.guild)
+        game = await self._get_game(ctx.guild)
 
         if not game:
             await ctx.send("No game to join!\nCreate a new one with `[p]ww new`")
@@ -90,7 +91,7 @@ class Werewolf:
         Quit a game of Werewolf
         """
 
-        game = self._get_game(ctx.guild)
+        game = await self._get_game(ctx.guild)
 
         await game.quit(ctx.author, ctx.channel)
 
@@ -100,7 +101,7 @@ class Werewolf:
         """
         Checks number of players and attempts to start the game
         """
-        game = self._get_game(ctx.guild)
+        game = await self._get_game(ctx.guild)
         if not game:
             await ctx.send("No game running, cannot start")
 
@@ -112,7 +113,7 @@ class Werewolf:
         """
         Stops the current game
         """
-        game = self._get_game(ctx.guild)
+        game = await self._get_game(ctx.guild)
         if not game:
             await ctx.send("No game running, cannot stop")
 
@@ -120,16 +121,16 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command()
-    async def vote(self, ctx, id: int):
+    async def vote(self, ctx, target_id: int):
         """
         Vote for a player by ID
         """
         try:
-            id = int(id)
+            target_id = int(target_id)
         except:
-            id = None
+            target_id = None
 
-        if id is None:
+        if target_id is None:
             await ctx.send("`id` must be an integer")
             return
 
@@ -144,7 +145,7 @@ class Werewolf:
         #         return
         # else:
 
-        game = self._get_game(ctx.guild)
+        game = await self._get_game(ctx.guild)
 
         if game is None:
             await ctx.send("No game running, cannot vote")
@@ -153,9 +154,9 @@ class Werewolf:
         # Game handles response now
         channel = ctx.channel
         if channel == game.village_channel:
-            await game.vote(ctx.author, id, channel)
+            await game.vote(ctx.author, target_id, channel)
         elif channel in (c["channel"] for c in game.p_channels.values()):
-            await game.vote(ctx.author, id, channel)
+            await game.vote(ctx.author, target_id, channel)
         else:
             await ctx.send("Nothing to vote for in this channel")
 
@@ -182,14 +183,18 @@ class Werewolf:
 
         await game.choose(ctx, data)
 
-    def _get_game(self, guild, game_code=None):
+    async def _get_game(self, guild, game_code=None):
         if guild is None:
             # Private message, can't get guild
             return None
         if guild.id not in self.games:
             if not game_code:
                 return None
-            self.games[guild.id] = Game(guild, game_code)
+            role = await self.config.guild(guild).role()
+            role = discord.utils.get(guild.roles, id=role)
+            if role is None:
+                return None
+            self.games[guild.id] = Game(guild, role, game_code)
 
         return self.games[guild.id]
 

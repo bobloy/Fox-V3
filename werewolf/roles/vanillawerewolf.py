@@ -61,14 +61,14 @@ class VanillaWerewolf(Role):
         """
         return "Werewolf"
 
-    async def _get_role(self, source=None):
+    async def get_role(self, source=None):
         """
         Interaction for powerful access of role
         Unlikely to be able to deceive this
         """
         return "Werewolf"
 
-    async def _see_role(self, source=None):
+    async def see_role(self, source=None):
         """
         Interaction for investigative roles.
         More common to be able to deceive these roles
