@@ -3,20 +3,16 @@ import random
 from typing import List
 
 import discord
+from redbot.core import RedContext
 
 from werewolf.builder import parse_code
 from werewolf.player import Player
-from werewolf.role import Role
 
 
 class Game:
     """
     Base class to run a single game of Werewolf
     """
-    players: List[Player]
-    roles: List[Role]
-    channel_category: discord.CategoryChannel
-    village_channel: discord.TextChannel
 
     default_secret_channel = {
         "channel": None,
@@ -33,11 +29,11 @@ class Game:
 
     def __init__(self, guild: discord.Guild, role: discord.Role, game_code=None):
         self.guild = guild
-        self.game_code = ["Seer", "VanillaWerewolf", "Villager"]
+        self.game_code = game_code
         self.game_role = role
 
-        self.roles = []
-        self.players = []
+        self.roles = []  # List[Role]
+        self.players = []  # List[Player]
 
         self.day_vote = {}  # author: target
         self.vote_totals = {}  # id: total_votes
@@ -51,8 +47,8 @@ class Game:
         self.day_count = 0
         self.ongoing_vote = False
 
-        self.channel_category = None
-        self.village_channel = None
+        self.channel_category = None  # discord.CategoryChannel
+        self.village_channel = None  # discord.TextChannel
 
         self.p_channels = {}  # uses default_secret_channel
         self.vote_groups = {}  # ID : VoteGroup()
@@ -76,7 +72,7 @@ class Game:
         for c_data in self.p_channels.values():
             asyncio.ensure_future(c_data["channel"].delete("Werewolf game-over"))
 
-    async def setup(self, ctx):
+    async def setup(self, ctx: RedContext):
         """
         Runs the initial setup
 
@@ -87,10 +83,13 @@ class Game:
         4. Start game
         """
         if self.game_code:
-            await self.get_roles()
+            await self.get_roles(ctx)
 
         if len(self.players) != len(self.roles):
-            await ctx.send("Player count does not match role count, cannot start")
+            await ctx.send("Player count does not match role count, cannot start\n"
+                           "Currently **{} / {}**\n"
+                           "Use `{}ww code` to pick a new game"
+                           "".format(len(self.players), len(self.roles), ctx.prefix))
             self.roles = []
             return False
 
@@ -256,7 +255,7 @@ class Game:
         reaction_list = message.reactions
 
         up_votes = sum(p for p in reaction_list if p.emoji == "👍" and not p.me)
-        down_votes = sum(p for p in reaction_list if p.emoji == "👎" and not p.me )
+        down_votes = sum(p for p in reaction_list if p.emoji == "👎" and not p.me)
 
         if down_votes > up_votes:
             embed = discord.Embed(title="Vote Results", color=0xff0000)
@@ -616,14 +615,21 @@ class Game:
     async def get_day_target(self, target_id, source=None):
         return self.players[target_id]  # ToDo check source
 
-    async def get_roles(self, game_code=None):
+    async def get_roles(self, ctx, game_code=None):
         if game_code is not None:
             self.game_code = game_code
 
         if self.game_code is None:
             return False
 
-        self.roles = await parse_code(self.game_code, self)
+        try:
+            self.roles = await parse_code(self.game_code, self)
+        except ValueError("Invalid Code"):
+            await ctx.send("Invalid Code")
+            return False
+        except ValueError("No Match Found"):
+            await ctx.send("Code contains unknown role")
+            return False
 
         if not self.roles:
             return False

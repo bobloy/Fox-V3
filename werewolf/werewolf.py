@@ -1,11 +1,10 @@
-from typing import Dict
-
 import discord
 from discord.ext import commands
 from redbot.core import Config
 from redbot.core import RedContext
 from redbot.core.bot import Red
 
+from werewolf.builder import GameBuilder
 from werewolf.game import Game
 
 
@@ -13,7 +12,6 @@ class Werewolf:
     """
     Base to host werewolf on a guild
     """
-    games: Dict[int, Game]
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -32,6 +30,16 @@ class Werewolf:
         print("Unload called")
         for game in self.games.values():
             del game
+
+    @commands.command()
+    async def buildgame(self, ctx):
+        gb = GameBuilder()
+        code = await gb.build_game(ctx)
+
+        if code is not None:
+            await ctx.send("Your game code is **{}**".format(code))
+        else:
+            await ctx.send("No code generated")
 
     @commands.group()
     async def wwset(self, ctx: RedContext):
