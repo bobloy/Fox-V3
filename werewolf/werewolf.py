@@ -96,6 +96,21 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command()
+    async def code(self, ctx: RedContext, code):
+        """
+        Adjust game code
+        """
+
+        game = await self._get_game(ctx)
+
+        if not game:
+            await ctx.send("No game to join!\nCreate a new one with `[p]ww new`")
+            return
+
+        await game.set_code(ctx, code)
+
+    @commands.guild_only()
+    @ww.command()
     async def quit(self, ctx: RedContext):
         """
         Quit a game of Werewolf

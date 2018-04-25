@@ -1,6 +1,5 @@
 import asyncio
 import random
-from typing import List
 
 import discord
 from redbot.core import RedContext
@@ -615,6 +614,11 @@ class Game:
     async def get_day_target(self, target_id, source=None):
         return self.players[target_id]  # ToDo check source
 
+    async def set_code(self, ctx: RedContext, game_code):
+        if game_code is not None:
+            self.game_code = game_code
+        await ctx.send("Code has been set")
+
     async def get_roles(self, ctx, game_code=None):
         if game_code is not None:
             self.game_code = game_code
@@ -624,12 +628,11 @@ class Game:
 
         try:
             self.roles = await parse_code(self.game_code, self)
-        except ValueError("Invalid Code"):
-            await ctx.send("Invalid Code")
+        except ValueError as e:
+            await ctx.send("Invalid Code: Code contains unknown character\n{}".format(e))
             return False
-        except ValueError("No Match Found"):
-            await ctx.send("Code contains unknown role")
-            return False
+        except IndexError as e:
+            await ctx.send("Invalid Code: Code references unknown role\n{}".format(e))
 
         if not self.roles:
             return False

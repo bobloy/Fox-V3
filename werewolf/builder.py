@@ -136,7 +136,7 @@ async def parse_code(code, game):
                 pass
 
             if not options:
-                raise ValueError("No Match Found")
+                raise IndexError("No Match Found")
 
             decode.append(choice(options)(game))
 
