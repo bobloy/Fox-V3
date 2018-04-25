@@ -32,7 +32,7 @@ class Werewolf:
             del game
 
     @commands.command()
-    async def buildgame(self, ctx):
+    async def buildgame(self, ctx: RedContext):
         gb = GameBuilder()
         code = await gb.build_game(ctx)
 
@@ -51,7 +51,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="role")
-    async def wwset_role(self, ctx, role: discord.Role):
+    async def wwset_role(self, ctx: RedContext, role: discord.Role):
         """
         Assign the game role
         This role should not be manually assigned
@@ -69,7 +69,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command()
-    async def new(self, ctx, game_code=None):
+    async def new(self, ctx: RedContext, game_code=None):
         """
         Create and join a new game of Werewolf
         """
@@ -81,7 +81,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command()
-    async def join(self, ctx):
+    async def join(self, ctx: RedContext):
         """
         Joins a game of Werewolf
         """
@@ -96,7 +96,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command()
-    async def quit(self, ctx):
+    async def quit(self, ctx: RedContext):
         """
         Quit a game of Werewolf
         """
@@ -107,7 +107,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command()
-    async def start(self, ctx):
+    async def start(self, ctx: RedContext):
         """
         Checks number of players and attempts to start the game
         """
@@ -119,7 +119,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command()
-    async def stop(self, ctx):
+    async def stop(self, ctx: RedContext):
         """
         Stops the current game
         """
@@ -133,11 +133,11 @@ class Werewolf:
 
         game = await self._get_game(ctx)
         game.game_over = True
-        await ctx.sent("Game has been stopped")
+        await ctx.send("Game has been stopped")
 
     @commands.guild_only()
     @ww.command()
-    async def vote(self, ctx, target_id: int):
+    async def vote(self, ctx: RedContext, target_id: int):
         """
         Vote for a player by ID
         """
@@ -177,7 +177,7 @@ class Werewolf:
             await ctx.send("Nothing to vote for in this channel")
 
     @ww.command()
-    async def choose(self, ctx, data):
+    async def choose(self, ctx: RedContext, data):
         """
         Arbitrary decision making
         Handled by game+role
