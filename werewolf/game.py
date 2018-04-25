@@ -26,7 +26,9 @@ class Game:
 
     day_vote_count = 3
 
-    def __init__(self, guild: discord.Guild, role: discord.Role, game_code=None):
+    def __init__(self, guild: discord.Guild, role: discord.Role=None,
+                 category: discord.CategoryChannel=None, village: discord.TextChannel=None,
+                 game_code=None):
         self.guild = guild
         self.game_code = game_code
         self.game_role = role
@@ -46,8 +48,8 @@ class Game:
         self.day_count = 0
         self.ongoing_vote = False
 
-        self.channel_category = None  # discord.CategoryChannel
-        self.village_channel = None  # discord.TextChannel
+        self.channel_category = category  # discord.CategoryChannel
+        self.village_channel = village  # discord.TextChannel
 
         self.p_channels = {}  # uses default_secret_channel
         self.vote_groups = {}  # ID : VoteGroup()
@@ -93,11 +95,16 @@ class Game:
             return False
 
         if self.game_role is None:
-            await ctx.send("Game role not configured, cannot start")
-            self.roles = []
-            return False
+            try:
+                self.game_role = await ctx.guild.create_role(name="Players",
+                                                             hoist=True,
+                                                             mentionable=True,
+                                                             reason="(BOT) Werewolf game role")
+            except (discord.Forbidden, discord.HTTPException):
+                await ctx.send("Game role not configured and unable to generate one, cannot start")
+                self.roles = []
+                return False
 
-        self.started = True
         await self.assign_roles()
 
         # Create category and channel with individual overwrites
@@ -107,19 +114,29 @@ class Game:
             self.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, add_reactions=True),
             self.game_role: discord.PermissionOverwrite(read_messages=True, send_messages=True)
         }
-
-        self.channel_category = await self.guild.create_category("ww-game",
-                                                                 overwrites=overwrite,
-                                                                 reason="(BOT) New game of werewolf")
-
-        # for player in self.players:
-        #     overwrite[player.member] = discord.PermissionOverwrite(read_messages=True)
-
-        self.village_channel = await self.guild.create_text_channel("Village Square",
-                                                                    overwrites=overwrite,
-                                                                    reason="(BOT) New game of werewolf",
-                                                                    category=self.channel_category)
-
+        if self.channel_category is None:
+            self.channel_category = await self.guild.create_category("ww-game",
+                                                                     overwrites=overwrite,
+                                                                     reason="(BOT) New game of werewolf")
+        else:
+            for target, ow in overwrite.items():
+                await self.channel_category.set_permissions(target=target,
+                                                            overwrite=ow,
+                                                            reason="(BOT) New game of werewolf")
+        if self.village_channel is None:
+            self.village_channel = await self.guild.create_text_channel("Village Square",
+                                                                        overwrites=overwrite,
+                                                                        reason="(BOT) New game of werewolf",
+                                                                        category=self.channel_category)
+        else:
+            await self.village_channel.edit(name="Village Square",
+                                            category=self.channel_category,
+                                            reason="(BOT) New game of werewolf")
+            for target, ow in overwrite.items():
+                await self.village_channel.set_permissions(target=target,
+                                                           overwrite=ow,
+                                                           reason="(BOT) New game of werewolf")
+        self.started = True
         # Assuming everything worked so far
         print("Pre at_game_start")
         await self._at_game_start()  # This will queue channels and votegroups to be made
