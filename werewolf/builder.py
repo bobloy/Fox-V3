@@ -117,7 +117,6 @@ async def parse_code(code, game):
 
         if len(built) < digits:
             built += c
-            continue
 
         try:
             idx = int(built)

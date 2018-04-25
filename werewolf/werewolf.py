@@ -123,11 +123,17 @@ class Werewolf:
         """
         Stops the current game
         """
-        game = await self._get_game(ctx)
-        if not game:
-            await ctx.send("No game running, cannot stop")
+        if ctx.guild is None:
+            # Private message, can't get guild
+            await ctx.send("Cannot start game from PM!")
+            return
+        if ctx.guild.id not in self.games or self.games[ctx.guild.id].game_over:
+            await ctx.send("No game to stop")
+            return
 
+        game = await self._get_game(ctx)
         game.game_over = True
+        await ctx.sent("Game has been stopped")
 
     @commands.guild_only()
     @ww.command()
@@ -196,14 +202,14 @@ class Werewolf:
     async def _get_game(self, ctx: RedContext, game_code=None):
         if ctx.guild is None:
             # Private message, can't get guild
-            ctx.send("Cannot start game from PM!")
+            await ctx.send("Cannot start game from PM!")
             return None
         if ctx.guild.id not in self.games or self.games[ctx.guild.id].game_over:
             await ctx.send("Starting a new game...")
             role_id = await self.config.guild(ctx.guild).role_id()
             role = discord.utils.get(ctx.guild.roles, id=role_id)
             if role is None:
-                ctx.send("Game role is invalid, cannot start new game")
+                await ctx.send("Game role is invalid, cannot start new game")
                 return None
             self.games[ctx.guild.id] = Game(ctx.guild, role, game_code)
 
