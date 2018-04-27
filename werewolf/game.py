@@ -26,8 +26,8 @@ class Game:
 
     day_vote_count = 3
 
-    def __init__(self, guild: discord.Guild, role: discord.Role=None,
-                 category: discord.CategoryChannel=None, village: discord.TextChannel=None,
+    def __init__(self, guild: discord.Guild, role: discord.Role = None,
+                 category: discord.CategoryChannel = None, village: discord.TextChannel = None,
                  game_code=None):
         self.guild = guild
         self.game_code = game_code

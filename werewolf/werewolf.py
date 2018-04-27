@@ -4,8 +4,9 @@ from redbot.core import Config
 from redbot.core import RedContext
 from redbot.core.bot import Red
 
-from werewolf.builder import GameBuilder
+from werewolf.builder import GameBuilder, role_from_name, role_from_alignment, role_from_category, role_from_id
 from werewolf.game import Game
+from werewolf.utils.menus import menu, DEFAULT_CONTROLS
 
 
 class Werewolf:
@@ -103,8 +104,8 @@ class Werewolf:
             await ctx.send_help()
 
     @commands.guild_only()
-    @ww.command()
-    async def new(self, ctx: RedContext, game_code=None):
+    @ww.command(name="new")
+    async def ww_new(self, ctx: RedContext, game_code=None):
         """
         Create and join a new game of Werewolf
         """
@@ -115,8 +116,8 @@ class Werewolf:
             await ctx.send("Game is ready to join! Use `[p]ww join`")
 
     @commands.guild_only()
-    @ww.command()
-    async def join(self, ctx: RedContext):
+    @ww.command(name="join")
+    async def ww_join(self, ctx: RedContext):
         """
         Joins a game of Werewolf
         """
@@ -130,8 +131,8 @@ class Werewolf:
         await game.join(ctx.author, ctx.channel)
 
     @commands.guild_only()
-    @ww.command()
-    async def code(self, ctx: RedContext, code):
+    @ww.command(name="code")
+    async def ww_code(self, ctx: RedContext, code):
         """
         Adjust game code
         """
@@ -145,8 +146,8 @@ class Werewolf:
         await game.set_code(ctx, code)
 
     @commands.guild_only()
-    @ww.command()
-    async def quit(self, ctx: RedContext):
+    @ww.command(name="quit")
+    async def ww_quit(self, ctx: RedContext):
         """
         Quit a game of Werewolf
         """
@@ -156,8 +157,8 @@ class Werewolf:
         await game.quit(ctx.author, ctx.channel)
 
     @commands.guild_only()
-    @ww.command()
-    async def start(self, ctx: RedContext):
+    @ww.command(name="start")
+    async def ww_start(self, ctx: RedContext):
         """
         Checks number of players and attempts to start the game
         """
@@ -168,8 +169,8 @@ class Werewolf:
         await game.setup(ctx)
 
     @commands.guild_only()
-    @ww.command()
-    async def stop(self, ctx: RedContext):
+    @ww.command(name="stop")
+    async def ww_stop(self, ctx: RedContext):
         """
         Stops the current game
         """
@@ -186,8 +187,8 @@ class Werewolf:
         await ctx.send("Game has been stopped")
 
     @commands.guild_only()
-    @ww.command()
-    async def vote(self, ctx: RedContext, target_id: int):
+    @ww.command(name="vote")
+    async def ww_vote(self, ctx: RedContext, target_id: int):
         """
         Vote for a player by ID
         """
@@ -226,8 +227,8 @@ class Werewolf:
         else:
             await ctx.send("Nothing to vote for in this channel")
 
-    @ww.command()
-    async def choose(self, ctx: RedContext, data):
+    @ww.command(name="choose")
+    async def ww_choose(self, ctx: RedContext, data):
         """
         Arbitrary decision making
         Handled by game+role
@@ -248,6 +249,54 @@ class Werewolf:
             return
 
         await game.choose(ctx, data)
+
+    @ww.group(name="search")
+    async def ww_search(self, ctx: RedContext):
+        """
+        Find custom roles by name, alignment, category, or ID
+        """
+        if ctx.invoked_subcommand is None or ctx.invoked_subcommand == self.ww_search:
+            await ctx.send_help()
+
+    @ww_search.command(name="name")
+    async def ww_search_name(self, ctx: RedContext, *, name):
+        """Search for a role by name"""
+        if name is not None:
+            from_name = role_from_name(name)
+            if from_name:
+                await menu(ctx, from_name, DEFAULT_CONTROLS)
+            else:
+                await ctx.send("No roles containing that name were found")
+
+    @ww_search.command(name="alignment")
+    async def ww_search_alignment(self, ctx: RedContext, alignment: int):
+        """Search for a role by alignment"""
+        if alignment is not None:
+            from_alignment = role_from_alignment(alignment)
+            if from_alignment:
+                await menu(ctx, from_alignment, DEFAULT_CONTROLS)
+            else:
+                await ctx.send("No roles with that alignment were found")
+
+    @ww_search.command(name="category")
+    async def ww_search_category(self, ctx: RedContext, category: int):
+        """Search for a role by category"""
+        if category is not None:
+            pages = role_from_category(category)
+            if pages:
+                await menu(ctx, pages, DEFAULT_CONTROLS)
+            else:
+                await ctx.send("No roles in that category were found")
+
+    @ww_search.command(name="index")
+    async def ww_search_index(self, ctx: RedContext, idx: int):
+        """Search for a role by ID"""
+        if idx is not None:
+            idx_embed = role_from_id(idx)
+            if idx_embed is not None:
+                await ctx.send(embed=idx_embed)
+            else:
+                await ctx.send("Role ID not found")
 
     async def _get_game(self, ctx: RedContext, game_code=None):
         if ctx.guild is None:
@@ -276,8 +325,6 @@ class Werewolf:
                 if role is None:
                     await ctx.send("Game role is invalid, cannot start new game")
                     return None
-
-
 
             self.games[ctx.guild.id] = Game(ctx.guild, role, game_code)
 
