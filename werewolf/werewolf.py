@@ -7,7 +7,6 @@ from redbot.core.bot import Red
 from werewolf.builder import GameBuilder
 from werewolf.game import Game
 
-
 class Werewolf:
     """
     Base to host werewolf on a guild
@@ -87,7 +86,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="logchannel")
-    async def wwset_channel(self, ctx: RedContext, channel: discord.TextChannel):
+    async def wwset_log_channel(self, ctx: RedContext, channel: discord.TextChannel):
         """
         Assign the log channel
         """
@@ -237,7 +236,6 @@ class Werewolf:
         if ctx.guild is not None:
             await ctx.send("This action is only available in DM's")
             return
-
         # DM nonsense, find their game
         # If multiple games, panic
         for game in self.games.values():
@@ -250,38 +248,48 @@ class Werewolf:
         await game.choose(ctx, data)
 
     async def _get_game(self, ctx: RedContext, game_code=None):
-        if ctx.guild is None:
+        guild: discord.Guild = ctx.guild
+
+        if guild is None:
             # Private message, can't get guild
             await ctx.send("Cannot start game from PM!")
             return None
-        if ctx.guild.id not in self.games or self.games[ctx.guild.id].game_over:
+        if guild.id not in self.games or self.games[guild.id].game_over:
             await ctx.send("Starting a new game...")
             role = None
             category = None
             channel = None
             log_channel = None
 
-            role_id = await self.config.guild(ctx.guild).role_id()
-            category_id = await self.config.guild(ctx.guild).category_id()
-            channel_id = await self.config.guild(ctx.guild).channel_id()
-            log_channel_id = await self.config.guild(ctx.guild).log_channel_id()
+            role_id = await self.config.guild(guild).role_id()
+            category_id = await self.config.guild(guild).category_id()
+            channel_id = await self.config.guild(guild).channel_id()
+            log_channel_id = await self.config.guild(guild).log_channel_id()
 
             if role_id is not None:
-                role = discord.utils.get(ctx.guild.roles, id=role_id)
+                role = discord.utils.get(guild.roles, id=role_id)
                 if role is None:
-                    await ctx.send("Game role is invalid, cannot start new game")
+                    await ctx.send("Game Role is invalid, cannot start new game")
                     return None
             if category_id is not None:
-                category = discord.utils.get(ctx.guild.categories, id=category_id)
-                if role is None:
-                    await ctx.send("Game role is invalid, cannot start new game")
+                category = discord.utils.get(guild.categories, id=category_id)
+                if category is None:
+                    await ctx.send("Game Category is invalid, cannot start new game")
+                    return None
+            if channel_id is not None:
+                channel = discord.utils.get(guild.text_channels, id=channel_id)
+                if channel is None:
+                    await ctx.send("Village Channel is invalid, cannot start new game")
+                    return None
+            if log_channel_id is not None:
+                log_channel = discord.utils.get(guild.text_channels, id=log_channel_id)
+                if log_channel is None:
+                    await ctx.send("Log Channel is invalid, cannot start new game")
                     return None
 
+            self.games[guild.id] = Game(guild, role, category, channel, log_channel, game_code)
 
-
-            self.games[ctx.guild.id] = Game(ctx.guild, role, game_code)
-
-        return self.games[ctx.guild.id]
+        return self.games[guild.id]
 
     async def _game_start(self, game):
         await game.start()

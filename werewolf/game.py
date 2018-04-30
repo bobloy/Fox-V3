@@ -28,7 +28,7 @@ class Game:
 
     def __init__(self, guild: discord.Guild, role: discord.Role=None,
                  category: discord.CategoryChannel=None, village: discord.TextChannel=None,
-                 game_code=None):
+                 log_channel: discord.TextChannel=None, game_code=None):
         self.guild = guild
         self.game_code = game_code
         self.game_role = role
@@ -50,6 +50,7 @@ class Game:
 
         self.channel_category = category  # discord.CategoryChannel
         self.village_channel = village  # discord.TextChannel
+        self.log_channel = log_channel
 
         self.p_channels = {}  # uses default_secret_channel
         self.vote_groups = {}  # ID : VoteGroup()
@@ -58,20 +59,20 @@ class Game:
 
         self.loop = asyncio.get_event_loop()
 
-    def __del__(self):
-        """
-        Cleanup channels as necessary
-        :return:
-        """
-
-        print("Delete is called")
-
-        self.game_over = True
-        if self.village_channel:
-            asyncio.ensure_future(self.village_channel.delete("Werewolf game-over"))
-
-        for c_data in self.p_channels.values():
-            asyncio.ensure_future(c_data["channel"].delete("Werewolf game-over"))
+    # def __del__(self):
+    #     """
+    #     Cleanup channels as necessary
+    #     :return:
+    #     """
+    #
+    #     print("Delete is called")
+    #
+    #     self.game_over = True
+    #     if self.village_channel:
+    #         asyncio.ensure_future(self.village_channel.delete("Werewolf game-over"))
+    #
+    #     for c_data in self.p_channels.values():
+    #         asyncio.ensure_future(c_data["channel"].delete("Werewolf game-over"))
 
     async def setup(self, ctx: RedContext):
         """
@@ -115,16 +116,17 @@ class Game:
             self.game_role: discord.PermissionOverwrite(read_messages=True, send_messages=True)
         }
         if self.channel_category is None:
-            self.channel_category = await self.guild.create_category("ww-game",
+            self.channel_category = await self.guild.create_category("🔴 Werewolf Game (ACTIVE)",
                                                                      overwrites=overwrite,
                                                                      reason="(BOT) New game of werewolf")
         else:
+            await self.channel_category.edit(name="🔴 Werewolf Game (ACTIVE)", reason="(BOT) New game of werewolf")
             for target, ow in overwrite.items():
                 await self.channel_category.set_permissions(target=target,
                                                             overwrite=ow,
                                                             reason="(BOT) New game of werewolf")
         if self.village_channel is None:
-            self.village_channel = await self.guild.create_text_channel("Village Square",
+            self.village_channel = await self.guild.create_text_channel("village-square",
                                                                         overwrites=overwrite,
                                                                         reason="(BOT) New game of werewolf",
                                                                         category=self.channel_category)
@@ -744,4 +746,5 @@ class Game:
         reason = '(BOT) End of WW game'
         await self.village_channel.set_permissions(self.game_role, overwrite=None, reason=reason)
         await self.channel_category.set_permissions(self.game_role, overwrite=None, reason=reason)
-        await self.channel_category.edit(reason=reason, name="Archived Game")
+        await self.channel_category.edit(reason=reason, name="Werewolf Game (INACTIVE)")
+        # Optional dynamic channels/categories
