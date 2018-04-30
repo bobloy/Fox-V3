@@ -218,6 +218,30 @@ async def prev_group(ctx: RedContext, pages: list,
                       page=page, timeout=timeout)
 
 
+def role_from_alignment(alignment):
+    return [role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
+            for idx, role in enumerate(ROLE_LIST) if alignment == role.alignment]
+
+
+def role_from_category(category):
+    return [role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
+            for idx, role in enumerate(ROLE_LIST) if category in role.category]
+
+
+def role_from_id(idx):
+    try:
+        role = ROLE_LIST[idx]
+    except IndexError:
+        return None
+
+    return role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
+
+
+def role_from_name(name: str):
+    return [role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
+            for idx, role in enumerate(ROLE_LIST) if name in role.__name__]
+
+
 def say_role_list(code_list):
     roles = [ROLE_LIST[idx] for idx in code_list]
     embed = discord.Embed(title="Currently selected roles")
