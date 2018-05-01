@@ -26,12 +26,11 @@ class Game:
 
     day_vote_count = 3
 
-    def __init__(self, guild: discord.Guild, role: discord.Role=None,
-                 category: discord.CategoryChannel=None, village: discord.TextChannel=None,
-                 log_channel: discord.TextChannel=None, game_code=None):
+    def __init__(self, guild: discord.Guild, role: discord.Role = None,
+                 category: discord.CategoryChannel = None, village: discord.TextChannel = None,
+                 log_channel: discord.TextChannel = None, game_code=None):
         self.guild = guild
         self.game_code = game_code
-        self.game_role = role
 
         self.roles = []  # List[Role]
         self.players = []  # List[Player]
@@ -48,9 +47,13 @@ class Game:
         self.day_count = 0
         self.ongoing_vote = False
 
+        self.game_role = role  # discord.Role
         self.channel_category = category  # discord.CategoryChannel
         self.village_channel = village  # discord.TextChannel
         self.log_channel = log_channel
+
+        self.to_delete = set()
+        self.save_perms = {}
 
         self.p_channels = {}  # uses default_secret_channel
         self.vote_groups = {}  # ID : VoteGroup()
@@ -97,13 +100,21 @@ class Game:
 
         if self.game_role is None:
             try:
-                self.game_role = await ctx.guild.create_role(name="Players",
+                self.game_role = await ctx.guild.create_role(name="WW Players",
                                                              hoist=True,
                                                              mentionable=True,
                                                              reason="(BOT) Werewolf game role")
+                self.to_delete.add(self.game_role)
             except (discord.Forbidden, discord.HTTPException):
                 await ctx.send("Game role not configured and unable to generate one, cannot start")
                 self.roles = []
+                return False
+            try:
+                for player in self.players:
+                    await player.member.add_roles(*[self.game_role])
+            except discord.Forbidden:
+                await ctx.send(
+                    "Unable to add role **{}**\nBot is missing `manage_roles` permissions".format(self.game_role.name))
                 return False
 
         await self.assign_roles()
@@ -112,32 +123,54 @@ class Game:
         overwrite = {
             self.guild.default_role: discord.PermissionOverwrite(read_messages=True, send_messages=False,
                                                                  add_reactions=False),
-            self.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, add_reactions=True),
+            self.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, add_reactions=True,
+                                                       manage_messages=True, manage_channels=True,
+                                                       manage_roles=True),
             self.game_role: discord.PermissionOverwrite(read_messages=True, send_messages=True)
         }
         if self.channel_category is None:
-            self.channel_category = await self.guild.create_category("🔴 Werewolf Game (ACTIVE)",
+            self.channel_category = await self.guild.create_category("Werewolf Game",
                                                                      overwrites=overwrite,
                                                                      reason="(BOT) New game of werewolf")
-        else:
-            await self.channel_category.edit(name="🔴 Werewolf Game (ACTIVE)", reason="(BOT) New game of werewolf")
-            for target, ow in overwrite.items():
-                await self.channel_category.set_permissions(target=target,
-                                                            overwrite=ow,
-                                                            reason="(BOT) New game of werewolf")
+        else:  # No need to modify categories
+            pass
+            # await self.channel_category.edit(name="🔴 Werewolf Game (ACTIVE)", reason="(BOT) New game of werewolf")
+            # for target, ow in overwrite.items():
+            #     await self.channel_category.set_permissions(target=target,
+            #                                                 overwrite=ow,
+            #                                                 reason="(BOT) New game of werewolf")
         if self.village_channel is None:
-            self.village_channel = await self.guild.create_text_channel("village-square",
-                                                                        overwrites=overwrite,
-                                                                        reason="(BOT) New game of werewolf",
-                                                                        category=self.channel_category)
+            try:
+                self.village_channel = await self.guild.create_text_channel("🔵Werewolf",
+                                                                            overwrites=overwrite,
+                                                                            reason="(BOT) New game of werewolf",
+                                                                            category=self.channel_category)
+            except discord.Forbidden:
+                await ctx.send("Unable to create Game Channel and none was provided\n"
+                               "Grant Bot appropriate permissions or assign a game_channel")
+                return False
         else:
-            await self.village_channel.edit(name="Village Square",
-                                            category=self.channel_category,
-                                            reason="(BOT) New game of werewolf")
-            for target, ow in overwrite.items():
-                await self.village_channel.set_permissions(target=target,
-                                                           overwrite=ow,
-                                                           reason="(BOT) New game of werewolf")
+            self.save_perms[self.village_channel] = self.village_channel.overwrites()
+            try:
+                await self.village_channel.edit(name="🔵Werewolf",
+                                                category=self.channel_category,
+                                                reason="(BOT) New game of werewolf")
+            except discord.Forbidden as e:
+                print("Unable to rename Game Channel")
+                print(e)
+                await ctx.send("Unable to rename Game Channel, ignoring")
+
+            try:
+                for target, ow in overwrite.items():
+                    curr = self.village_channel.overwrites_for(target)
+                    curr.update(**{perm: value for perm, value in ow})
+                    await self.village_channel.set_permissions(target=target,
+                                                               overwrite=curr,
+                                                               reason="(BOT) New game of werewolf")
+            except discord.Forbidden:
+                await ctx.send("Unable to edit Game Channel permissions\n"
+                               "Grant Bot appropriate permissions to manage permissions")
+                return
         self.started = True
         # Assuming everything worked so far
         print("Pre at_game_start")
@@ -147,7 +180,9 @@ class Game:
             print("Channel id: " + channel_id)
             overwrite = {
                 self.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                self.guild.me: discord.PermissionOverwrite(read_messages=True)
+                self.guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, add_reactions=True,
+                                                           manage_messages=True, manage_channels=True,
+                                                           manage_roles=True)
             }
 
             for player in self.p_channels[channel_id]["players"]:
@@ -433,7 +468,12 @@ class Game:
 
         self.players.append(Player(member))
 
-        await member.add_roles(*[self.game_role])
+        if self.game_role is not None:
+            try:
+                await member.add_roles(*[self.game_role])
+            except discord.Forbidden:
+                await channel.send(
+                    "Unable to add role **{}**\nBot is missing `manage_roles` permissions".format(self.game_role.name))
 
         await channel.send("{} has been added to the game, "
                            "total players is **{}**".format(member.mention, len(self.players)))
@@ -744,7 +784,14 @@ class Game:
     async def _end_game(self):
         # Remove game_role access for potential archiving for now
         reason = '(BOT) End of WW game'
-        await self.village_channel.set_permissions(self.game_role, overwrite=None, reason=reason)
-        await self.channel_category.set_permissions(self.game_role, overwrite=None, reason=reason)
-        await self.channel_category.edit(reason=reason, name="Werewolf Game (INACTIVE)")
+        for obj in self.to_delete:
+            print(obj)
+            await obj.delete(reason=reason)
+
+        try:
+            await self.village_channel.edit(reason=reason, name="Werewolf")
+            await self.village_channel.set_permissions(self.game_role, overwrite=None, reason=reason)
+        except (discord.HTTPException, discord.NotFound, discord.errors.NotFound):
+            pass
+
         # Optional dynamic channels/categories
