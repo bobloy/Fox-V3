@@ -388,3 +388,4 @@ class Werewolf:
                 return False, None, None, None, None
 
         return True, role, category, channel, log_channel
+

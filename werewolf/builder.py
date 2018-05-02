@@ -164,21 +164,21 @@ async def encode(roles, rand_roles):
         if digit_sort:
             out_code += "T"
             for role in digit_sort:
-                out_code += role
+                out_code += str(role)
 
         # werewolf sort
         digit_sort = sorted(role for role in rand_roles if 10 < role <= 20)
         if digit_sort:
             out_code += "W"
             for role in digit_sort:
-                out_code += role
+                out_code += str(role)
 
         # neutral sort
         digit_sort = sorted(role for role in rand_roles if 20 < role <= 30)
         if digit_sort:
             out_code += "N"
             for role in digit_sort:
-                out_code += role
+                out_code += str(role)
 
     return out_code
 
@@ -242,7 +242,7 @@ def role_from_name(name: str):
             for idx, role in enumerate(ROLE_LIST) if name in role.__name__]
 
 
-def say_role_list(code_list):
+def say_role_list(code_list, rand_roles):
     roles = [ROLE_LIST[idx] for idx in code_list]
     embed = discord.Embed(title="Currently selected roles")
     role_dict = defaultdict(int)
@@ -290,7 +290,7 @@ class GameBuilder:
             except discord.NotFound:
                 pass
 
-        await ctx.send(embed=say_role_list(self.code))
+        await ctx.send(embed=say_role_list(self.code, self.rand_roles))
 
         return await menu(ctx, pages, controls, message=message,
                           page=page, timeout=timeout)

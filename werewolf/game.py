@@ -150,7 +150,7 @@ class Game:
                                "Grant Bot appropriate permissions or assign a game_channel")
                 return False
         else:
-            self.save_perms[self.village_channel] = self.village_channel.overwrites()
+            self.save_perms[self.village_channel] = self.village_channel.overwrites
             try:
                 await self.village_channel.edit(name="🔵Werewolf",
                                                 category=self.channel_category,
@@ -790,6 +790,8 @@ class Game:
 
         try:
             await self.village_channel.edit(reason=reason, name="Werewolf")
+            for target, overwrites in self.save_perms[self.village_channel]:
+                await self.village_channel.set_permissions(target, overwrite=overwrites, reason=reason)
             await self.village_channel.set_permissions(self.game_role, overwrite=None, reason=reason)
         except (discord.HTTPException, discord.NotFound, discord.errors.NotFound):
             pass
