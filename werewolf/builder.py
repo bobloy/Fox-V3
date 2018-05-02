@@ -21,7 +21,7 @@ WW_ROLES = [(idx, role) for idx, role in enumerate(ROLE_LIST) if role.alignment 
 OTHER_ROLES = [(idx, role) for idx, role in enumerate(ROLE_LIST) if role.alignment not in [0, 1]]
 
 ROLE_PAGES = []
-PAGE_GROUPS = []
+PAGE_GROUPS = [0]
 
 ROLE_CATEGORIES = {
     1: "Random", 2: "Investigative", 3: "Protective", 4: "Government",
@@ -45,9 +45,6 @@ def role_embed(idx, role, color):
 
 def setup():
     # Roles
-    if len(ROLE_PAGES) - 1 not in PAGE_GROUPS:
-        PAGE_GROUPS.append(len(ROLE_PAGES) - 1)
-
     last_alignment = ROLE_LIST[0].alignment
     for idx, role in enumerate(ROLE_LIST):
         if role.alignment != last_alignment and len(ROLE_PAGES) - 1 not in PAGE_GROUPS:
@@ -61,7 +58,7 @@ def setup():
         PAGE_GROUPS.append(len(ROLE_PAGES) - 1)
     for k, v in ROLE_CATEGORIES.items():
         if 0 < k <= 6:
-            ROLE_PAGES.append(discord.Embed(title="RANDOM Town Role", description="Town {}".format(v), color=0x008000))
+            ROLE_PAGES.append(discord.Embed(title="RANDOM:Town Role", description="Town {}".format(v), color=0x008000))
             CATEGORY_COUNT.append(k)
 
     # Random WW Roles
@@ -70,7 +67,7 @@ def setup():
     for k, v in ROLE_CATEGORIES.items():
         if 10 < k <= 16:
             ROLE_PAGES.append(
-                discord.Embed(title="RANDOM Werewolf Role", description="Werewolf {}".format(v), color=0xff0000))
+                discord.Embed(title="RANDOM:Werewolf Role", description="Werewolf {}".format(v), color=0xff0000))
             CATEGORY_COUNT.append(k)
     # Random Neutral Roles
     if len(ROLE_PAGES) - 1 not in PAGE_GROUPS:
@@ -78,7 +75,7 @@ def setup():
     for k, v in ROLE_CATEGORIES.items():
         if 20 < k <= 26:
             ROLE_PAGES.append(
-                discord.Embed(title="RANDOM Neutral Role", description="Neutral {}".format(v), color=0xc0c0c0))
+                discord.Embed(title="RANDOM:Neutral Role", description="Neutral {}".format(v), color=0xc0c0c0))
             CATEGORY_COUNT.append(k)
 
 
@@ -117,6 +114,7 @@ async def parse_code(code, game):
 
         if len(built) < digits:
             built += c
+            continue
 
         try:
             idx = int(built)
@@ -249,6 +247,14 @@ def say_role_list(code_list, rand_roles):
     for role in roles:
         role_dict[str(role.__name__)] += 1
 
+    for role in rand_roles:
+        if 0 < role <= 6:
+            role_dict["Town {}".format(ROLE_CATEGORIES[role])] += 1
+        if 10 < role <= 16:
+            role_dict["Werewolf {}".format(ROLE_CATEGORIES[role])] += 1
+        if 20 < role <= 26:
+            role_dict["Neutral {}".format(ROLE_CATEGORIES[role])] += 1
+
     for k, v in role_dict.items():
         embed.add_field(name=k, value="Count: {}".format(v), inline=True)
 
@@ -306,7 +312,7 @@ class GameBuilder:
                 pass
 
         if page >= len(ROLE_LIST):
-            self.rand_roles.append(CATEGORY_COUNT[len(ROLE_LIST) - page])
+            self.rand_roles.append(CATEGORY_COUNT[page-len(ROLE_LIST)])
         else:
             self.code.append(page)
 

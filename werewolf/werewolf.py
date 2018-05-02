@@ -40,7 +40,7 @@ class Werewolf:
         gb = GameBuilder()
         code = await gb.build_game(ctx)
 
-        if code is not None:
+        if code != "":
             await ctx.send("Your game code is **{}**".format(code))
         else:
             await ctx.send("No code generated")

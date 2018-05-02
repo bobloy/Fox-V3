@@ -2,7 +2,7 @@ from werewolf.role import Role
 
 
 class Villager(Role):
-    rand_choice = False  # Determines if it can be picked as a random role (False for unusually disruptive roles)
+    rand_choice = True  # Determines if it can be picked as a random role (False for unusually disruptive roles)
     category = [1]  # List of enrolled categories (listed above)
     alignment = 1  # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""  # Empty for no private channel
