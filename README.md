@@ -12,21 +12,21 @@ Cog Function
 | immortal | **Private** | Cog designed for a specific server, not recommended to install |
 | leaver | **Incomplete** | Send a message in a channel when a user leaves the server |
 | reactrestrict | **Alpha** | Removes reactions by role per channel |
-| stealemoji | **Alpha** | Steals any custom emoji it sees |
+| stealemoji | **Alpha** | Steals any custom emoji it sees in a reaction |
 | werewolf | **Incomplete** | Play the classic party game Werewolf within discord |
+| test | test | <details><summary>"Click to expand"</summary>this is hidden</details> |
 
 Cog Status Descriptions
 
-  - ccrole: May have some bugs, please create an issue if you find any
-  - chatter: Missing some key features, but currently functional
-  - fight: Still in-progress, a massive project
-  - flag: Not yet ported to v3
-  - hangman: Not yet ported to v3
-  - immortal: Designed for a specific server, not recommended to install
-  - leaver: Not yet ported to v3
-  - reactrestrict: A bit clunky, but functional
-  - stealemoji: Some planned upgrades for server generation
-  - werewolf: Another massive project, will be fully customizable
+  - [x] ccrole: May have some bugs, please create an issue if you find any
+  - [ ] chatter: Missing some key features, but currently functional
+  - [ ] fight: Still in-progress, a massive project
+  - [x] flag: Not yet ported to v3
+  - [ ] hangman: Not yet ported to v3
+  - [ ] immortal: Designed for a specific server, not recommended to install
+  - [ ] leaver: Not yet ported to v3
+  - [ ] reactrestrict: A bit clunky, but functional
+  - [ ] stealemoji: Some planned upgrades for server generation
+  - [ ] werewolf: Another massive project, will be fully customizable
 
-Many of these are functional in my V2 cogs at [Fox-Cogs v2](https://github.com/bobloy/Fox-Cogs)
-  
+Check out my V2 cogs at [Fox-Cogs v2](https://github.com/bobloy/Fox-Cogs)
