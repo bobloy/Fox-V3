@@ -26,7 +26,7 @@ class Chatter:
         self.chatbot = ChatBot(
             "ChatterBot",
             storage_adapter='chatter.chatterbot.storage.SQLStorageAdapter',
-            database='./database.sqlite3'
+            database='chatter/database/database.sqlite3'
         )
         self.chatbot.set_trainer(ListTrainer)
 
@@ -90,6 +90,18 @@ class Chatter:
 
         await self.config.guild(ctx.guild).days.set(days)
         await ctx.send("Success")
+
+    @chatter.command()
+    async def backup(self, ctx, backupname):
+        """
+        Backup your training data to a json for later use
+        :param ctx:
+        :param backupname:
+        :return:
+        """
+
+        self.chatbot.trainer.export_for_training('./{}.json'.format(backupname))
+
 
     @chatter.command()
     async def train(self, ctx: commands.Context, channel: discord.TextChannel = None):
