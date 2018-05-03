@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
-from chatterbot.logic import LogicAdapter
+
 from chatterbot.conversation import Statement
+from chatterbot.logic import LogicAdapter
 
 
 class MathematicalEvaluation(LogicAdapter):

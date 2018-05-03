@@ -1,8 +1,9 @@
 import logging
 import os
 import sys
-from .conversation import Statement, Response
+
 from . import utils
+from .conversation import Statement, Response
 
 
 class Trainer(object):

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
-from chatterbot.input import InputAdapter
+
 from chatterbot.conversation import Statement
+from chatterbot.input import InputAdapter
 from chatterbot.utils import input_function
 
 

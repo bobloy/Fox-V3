@@ -1,11 +1,10 @@
+from chatterbot.constants import TAG_NAME_MAX_LENGTH, STATEMENT_TEXT_MAX_LENGTH
+from chatterbot.conversation import StatementMixin
+from chatterbot.ext.sqlalchemy_app.types import UnicodeString
 from sqlalchemy import Table, Column, Integer, DateTime, ForeignKey, PickleType
+from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy.ext.declarative import declared_attr, declarative_base
-
-from chatterbot.constants import TAG_NAME_MAX_LENGTH, STATEMENT_TEXT_MAX_LENGTH
-from chatterbot.ext.sqlalchemy_app.types import UnicodeString
-from chatterbot.conversation import StatementMixin
 
 
 class ModelBase(object):

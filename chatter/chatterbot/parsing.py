@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+import calendar
 import re
 from datetime import timedelta, datetime
-import calendar
 
 # Variations of dates that the parser can capture
 year_variations = ['year', 'years', 'yrs']

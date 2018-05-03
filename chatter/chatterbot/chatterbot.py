@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
+
 import logging
-from .storage import StorageAdapter
+
+from . import utils
 from .input import InputAdapter
 from .output import OutputAdapter
-from . import utils
+from .storage import StorageAdapter
 
 
 class ChatBot(object):

@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+
 from .logic_adapter import LogicAdapter
 
 
