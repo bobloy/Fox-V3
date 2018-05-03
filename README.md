@@ -4,17 +4,16 @@ Cog Function
 
 | Name | Status | Description
 | --- | --- | --- | 
-| ccrole | **Beta** | Create custom commands that also assign roles |
-| chatter | **Alpha** | Chat-bot trained to talk like your guild
-| fight | **Incomplete** | Organize bracket tournaments within discord |
-| flag | **Beta** | Create temporary marks on users that expire after specified time |
-| hangman | **Incomplete** | Play a game of hangman |
-| immortal | **Private** | Cog designed for a specific server, not recommended to install |
-| leaver | **Incomplete** | Send a message in a channel when a user leaves the server |
-| reactrestrict | **Alpha** | Removes reactions by role per channel |
-| stealemoji | **Alpha** | Steals any custom emoji it sees in a reaction |
-| werewolf | **Incomplete** | Play the classic party game Werewolf within discord |
-| test | test | <details><summary>"Click to expand"</summary>this is hidden</details> |
+| ccrole | **Beta** | <details><summary>Create custom commands that also assign roles</summary>May have some bugs, please create an issue if you find any</details> |
+| chatter | **Alpha** | <details><summary>Chat-bot trained to talk like your guild</summary>Missing some key features, but currently functional</details> |
+| fight | **Incomplete** | <details><summary>Organize bracket tournaments within discord</summary>Still in-progress, a massive project</details> |
+| flag | **Beta** | <details><summary>Create temporary marks on users that expire after specified time</summary>Not yet ported to v3</details> |
+| hangman | **Incomplete** | <details><summary>Play a game of hangman</summary>Not yet ported to v3</details> |
+| immortal | **Private** | <details><summary>Cog designed for a specific server, not recommended to install</summary>Designed for a specific server, not recommended to install</details> |
+| leaver | **Incomplete** | <details><summary>Send a message in a channel when a user leaves the server</summary>Not yet ported to v3</details> |
+| reactrestrict | **Alpha** | <details><summary>Removes reactions by role per channel</summary>A bit clunky, but functional</details> |
+| stealemoji | **Alpha** | <details><summary>Steals any custom emoji it sees in a reaction</summary>Some planned upgrades for server generation</details> |
+| werewolf | **Incomplete** | <details><summary>Play the classic party game Werewolf within discord</summary>Another massive project, will be fully customizable</details> |
 
 Cog Status Descriptions
 
