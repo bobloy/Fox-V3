@@ -42,8 +42,8 @@ class TimeLogicAdapter(LogicAdapter):
         ])
 
         labeled_data = (
-            [(name, 0) for name in self.negative] +
-            [(name, 1) for name in self.positive]
+                [(name, 0) for name in self.negative] +
+                [(name, 1) for name in self.positive]
         )
 
         train_set = [

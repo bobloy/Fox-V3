@@ -51,7 +51,7 @@ class MultiLogicAdapter(LogicAdapter):
             if adapter.can_process(statement):
 
                 output = adapter.process(statement)
-                results.append((output.confidence, output, ))
+                results.append((output.confidence, output,))
 
                 self.logger.info(
                     '{} selected "{}" as a response with a confidence of {}'.format(

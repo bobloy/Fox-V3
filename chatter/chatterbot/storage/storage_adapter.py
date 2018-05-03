@@ -24,12 +24,12 @@ class StorageAdapter(object):
         # The string must be lowercase
         model_name = model_name.lower()
 
-        kwarg_model_key = '%s_model' % (model_name, )
+        kwarg_model_key = '%s_model' % (model_name,)
 
         if kwarg_model_key in self.kwargs:
             return self.kwargs.get(kwarg_model_key)
 
-        get_model_method = getattr(self, 'get_%s_model' % (model_name, ))
+        get_model_method = getattr(self, 'get_%s_model' % (model_name,))
 
         return get_model_method()
 
@@ -157,7 +157,8 @@ class StorageAdapter(object):
 
     class EmptyDatabaseException(Exception):
 
-        def __init__(self, value='The database currently contains no entries. At least one entry is expected. You may need to train your chat bot to populate your database.'):
+        def __init__(self,
+                     value='The database currently contains no entries. At least one entry is expected. You may need to train your chat bot to populate your database.'):
             self.value = value
 
         def __str__(self):

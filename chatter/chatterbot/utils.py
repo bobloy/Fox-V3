@@ -76,7 +76,7 @@ def input_function():
     The function 'raw_input' becomes 'input' in Python 3.
     """
 
-    user_input = input() # NOQA
+    user_input = input()  # NOQA
 
     return user_input
 

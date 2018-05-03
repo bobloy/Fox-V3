@@ -61,8 +61,8 @@ class Trainer(object):
 
         def __init__(self, value=None):
             default = (
-                'A training class must be specified before calling train(). ' +
-                'See http://chatterbot.readthedocs.io/en/stable/training.html'
+                    'A training class must be specified before calling train(). ' +
+                    'See http://chatterbot.readthedocs.io/en/stable/training.html'
             )
             self.value = value or default
 
@@ -392,7 +392,6 @@ class UbuntuCorpusTrainer(Trainer):
         )
 
         file_kwargs = {}
-
 
         # Specify the encoding in Python versions 3 and up
         file_kwargs['encoding'] = 'utf-8'

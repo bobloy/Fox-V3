@@ -5,11 +5,10 @@ from chatter.chatterbot.input import InputAdapter
 
 
 class VariableInputTypeAdapter(InputAdapter):
-
     JSON = 'json'
     TEXT = 'text'
     OBJECT = 'object'
-    VALID_FORMATS = (JSON, TEXT, OBJECT, )
+    VALID_FORMATS = (JSON, TEXT, OBJECT,)
 
     def detect_type(self, statement):
 

@@ -29,7 +29,6 @@ class ModelBase(object):
 
 Base = declarative_base(cls=ModelBase)
 
-
 tag_association_table = Table(
     'tag_association',
     Base.metadata,
