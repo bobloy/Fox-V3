@@ -198,26 +198,26 @@ class Hangman:
             outphrase = phrases[randint(0, len(phrases) - 1)].partition(" (")[0]
         return outphrase
 
-    def _hideanswer(self):
+    def _hideanswer(self, guild):
         """Returns the obscured answer"""
         out_str = ""
 
         self.winbool = True
-        for i in self.the_data["answer"]:
+        for i in self.the_data[guild]["answer"]:
             if i == " " or i == "-":
                 out_str += i * 2
-            elif i in self.the_data["guesses"] or i not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+            elif i in self.the_data[guild]["guesses"] or i not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
                 out_str += "__" + i + "__ "
             else:
                 out_str += "**\_** "
-                self.winbool = False
+                self.winbool[guild] = False
 
         return out_str
 
-    def _guesslist(self):
+    def _guesslist(self, guild):
         """Returns the current letter list"""
         out_str = ""
-        for i in self.the_data["guesses"]:
+        for i in self.the_data[guild]["guesses"]:
             out_str += str(i) + ","
         out_str = out_str[:-1]
 
@@ -233,7 +233,7 @@ class Hangman:
             await channel.send("Already guessed that! Try again")
             return
         if guess.upper() not in self.the_data[channel.guild]["answer"]:
-            self.the_data["hangman"] += 1
+            self.the_data[channel.guild]["hangman"] += 1
 
         self.the_data[channel.guild]["guesses"].append(guess.upper())
 
@@ -243,16 +243,13 @@ class Hangman:
         """ Thanks to flapjack reactpoll for guidelines
             https://github.com/flapjax/FlapJack-Cogs/blob/master/reactpoll/reactpoll.py"""
 
-        if not self.the_data["trackmessage"]:
+        if reaction.message.id != self.the_data[user.guild]["trackmessage"]:
             return
 
         if user == self.bot.user:
             return  # Don't remove bot's own reactions
         message = reaction.message
         emoji = reaction.emoji
-
-        if not message.id == self.the_data["trackmessage"]:
-            return
 
         if str(emoji) in self.letters:
             letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[self.letters.index(str(emoji))]
@@ -292,14 +289,14 @@ class Hangman:
 
     async def _printgame(self, channel):
         """Print the current state of game"""
-        cSay = ("Guess this: " + str(self._hideanswer()) + "\n"
-                + "Used Letters: " + str(self._guesslist()) + "\n"
-                + self.hanglist[self.the_data["hangman"]] + "\n"
+        cSay = ("Guess this: " + str(self._hideanswer(channel.guild)) + "\n"
+                + "Used Letters: " + str(self._guesslist(channel.guild)) + "\n"
+                + self.hanglist[self.the_data[channel.guild]["hangman"]] + "\n"
                 + self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z")
 
         message = await channel.send(cSay)
 
-        self.the_data["trackmessage"] = message.id
+        self.the_data[channel.guild]["trackmessage"] = message.id
 
         await self._reactmessage_menu(message)
         await self._checkdone(channel)
