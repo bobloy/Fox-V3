@@ -75,8 +75,6 @@ def input_function():
     Normalizes reading input between python 2 and 3.
     The function 'raw_input' becomes 'input' in Python 3.
     """
-    import sys
-
 
     user_input = input() # NOQA
 

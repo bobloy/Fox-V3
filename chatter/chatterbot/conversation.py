@@ -25,7 +25,6 @@ class Statement(StatementMixin):
     """
 
     def __init__(self, text, **kwargs):
-        import sys
 
         # Try not to allow non-string types to be passed to statements
         try:

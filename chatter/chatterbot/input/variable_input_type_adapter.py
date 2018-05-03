@@ -12,8 +12,6 @@ class VariableInputTypeAdapter(InputAdapter):
     VALID_FORMATS = (JSON, TEXT, OBJECT, )
 
     def detect_type(self, statement):
-        import sys
-
 
         string_types = str
 
