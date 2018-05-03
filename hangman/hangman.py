@@ -151,7 +151,7 @@ class Hangman:
         if guess is None:
             if self.the_data[ctx.guild]["running"]:
                 await ctx.send("Game of hangman is already running!\nEnter your guess!")
-                self._printgame(ctx.channel)
+                await self._printgame(ctx.channel)
                 """await self.bot.send_cmd_help(ctx)"""
             else:
                 await ctx.send("Starting a game of hangman!")
