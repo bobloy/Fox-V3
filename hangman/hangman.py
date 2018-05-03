@@ -8,6 +8,8 @@ from redbot.core import Config, checks
 
 class Hangman:
     """Lets anyone play a game of hangman with custom phrases"""
+    navigate = "🔼🔽"
+    letters = "🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿"
 
     def __init__(self, bot):
         self.bot = bot
@@ -22,9 +24,6 @@ class Hangman:
             lambda: {"running": False, "hangman": 0, "guesses": [], "trackmessage": False, "answer": ''})
         self.answer_path = "hangman/data/hanganswers.txt"
         self.winbool = defaultdict(lambda: False)
-
-        self.letters = "🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿"
-        self.navigate = "🔼🔽"
 
         self.hanglist = {}
 
@@ -290,10 +289,10 @@ class Hangman:
 
     async def _printgame(self, channel):
         """Print the current state of game"""
-        c_say = ("Guess this: " + str(self._hideanswer(channel.guild)) + "\n"
-                 + "Used Letters: " + str(self._guesslist(channel.guild)) + "\n"
-                 + self.hanglist[self.the_data[channel.guild]["hangman"]] + "\n"
-                 + self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z")
+        c_say =("Guess this: " + str(self._hideanswer(channel.guild)) + "\n"
+                + "Used Letters: " + str(self._guesslist(channel.guild)) + "\n"
+                + self.hanglist[self.the_data[channel.guild]["hangman"]] + "\n"
+                + self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z")
 
         message = await channel.send(c_say)
 
