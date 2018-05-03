@@ -85,7 +85,7 @@ class Trainer(object):
         import json
         export = {'conversations': self._generate_export_data()}
         with open(file_path, 'w+') as jsonfile:
-            json.dump(export, jsonfile, ensure_ascii=False)
+            json.dump(export, jsonfile, ensure_ascii=True)
 
 
 class ListTrainer(Trainer):

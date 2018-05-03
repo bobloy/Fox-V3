@@ -26,7 +26,7 @@ class Chatter:
         self.chatbot = ChatBot(
             "ChatterBot",
             storage_adapter='chatter.chatterbot.storage.SQLStorageAdapter',
-            database='chatter/database/database.sqlite3'
+            database='./database.sqlite3'
         )
         self.chatbot.set_trainer(ListTrainer)
 
@@ -95,16 +95,17 @@ class Chatter:
     async def backup(self, ctx, backupname):
         """
         Backup your training data to a json for later use
-        :param ctx:
-        :param backupname:
-        :return:
         """
+        await ctx.send("Backing up data, this may take a while")
+        future = await self.loop.run_in_executor(None, self.chatbot.trainer.export_for_training, './{}.json'.format(backupname))
 
-        self.chatbot.trainer.export_for_training('./{}.json'.format(backupname))
-
+        if future:
+            await ctx.send("Backup successful!")
+        else:
+            await ctx.send("Error occurred :(")
 
     @chatter.command()
-    async def train(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def train(self, ctx: commands.Context, channel: discord.TextChannel):
         """
         Trains the bot based on language in this guild
         """
@@ -146,7 +147,9 @@ class Chatter:
                 return
             text = text.replace(to_strip, "", 1)
             async with channel.typing():
-                response = self.chatbot.get_response(text)
-                if not response:
-                    response = ":thinking:"
-                await channel.send(response)
+                future = await self.loop.run_in_executor(None, self.chatbot.get_response, text)
+
+                if future:
+                    await channel.send(str(future))
+                else:
+                    await channel.send(':thinking:')
