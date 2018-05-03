@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from chatterbot.adapters import Adapter
+from chatter.chatterbot.adapters import Adapter
 
 
 class InputAdapter(Adapter):

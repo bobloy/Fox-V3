@@ -1,8 +1,8 @@
-from chatterbot.storage import StorageAdapter
+from chatter.chatterbot.storage import StorageAdapter
 
 
 def get_response_table(response):
-    from chatterbot.ext.sqlalchemy_app.models import Response
+    from chatter.chatterbot.ext.sqlalchemy_app.models import Response
     return Response(text=response.text, occurrence=response.occurrence)
 
 
@@ -86,28 +86,28 @@ class SQLStorageAdapter(StorageAdapter):
         """
         Return the statement model.
         """
-        from chatterbot.ext.sqlalchemy_app.models import Statement
+        from chatter.chatterbot.ext.sqlalchemy_app.models import Statement
         return Statement
 
     def get_response_model(self):
         """
         Return the response model.
         """
-        from chatterbot.ext.sqlalchemy_app.models import Response
+        from chatter.chatterbot.ext.sqlalchemy_app.models import Response
         return Response
 
     def get_conversation_model(self):
         """
         Return the conversation model.
         """
-        from chatterbot.ext.sqlalchemy_app.models import Conversation
+        from chatter.chatterbot.ext.sqlalchemy_app.models import Conversation
         return Conversation
 
     def get_tag_model(self):
         """
         Return the conversation model.
         """
-        from chatterbot.ext.sqlalchemy_app.models import Tag
+        from chatter.chatterbot.ext.sqlalchemy_app.models import Tag
         return Tag
 
     def count(self):
@@ -379,14 +379,14 @@ class SQLStorageAdapter(StorageAdapter):
         """
         Drop the database attached to a given adapter.
         """
-        from chatterbot.ext.sqlalchemy_app.models import Base
+        from chatter.chatterbot.ext.sqlalchemy_app.models import Base
         Base.metadata.drop_all(self.engine)
 
     def create(self):
         """
         Populate the database with the tables.
         """
-        from chatterbot.ext.sqlalchemy_app.models import Base
+        from chatter.chatterbot.ext.sqlalchemy_app.models import Base
         Base.metadata.create_all(self.engine)
 
     def _session_finish(self, session, statement_text=None):

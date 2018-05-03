@@ -81,7 +81,7 @@ class TimeLogicAdapter(LogicAdapter):
         return features
 
     def process(self, statement):
-        from chatterbot.conversation import Statement
+        from chatter.chatterbot.conversation import Statement
 
         now = datetime.now()
 

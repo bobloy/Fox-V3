@@ -16,7 +16,7 @@ class SpecificResponseAdapter(LogicAdapter):
 
     def __init__(self, **kwargs):
         super(SpecificResponseAdapter, self).__init__(**kwargs)
-        from chatterbot.conversation import Statement
+        from chatter.chatterbot.conversation import Statement
 
         self.input_text = kwargs.get('input_text')
 

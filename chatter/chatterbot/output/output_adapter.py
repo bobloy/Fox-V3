@@ -1,4 +1,4 @@
-from chatterbot.adapters import Adapter
+from chatter.chatterbot.adapters import Adapter
 
 
 class OutputAdapter(Adapter):

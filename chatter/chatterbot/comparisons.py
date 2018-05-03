@@ -125,7 +125,7 @@ class SynsetDistance(Comparator):
         """
         from nltk.corpus import wordnet
         from nltk import word_tokenize
-        from chatterbot import utils
+        from chatter.chatterbot import utils
         import itertools
 
         tokens1 = word_tokenize(statement.text.lower())

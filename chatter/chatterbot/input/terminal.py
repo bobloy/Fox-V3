@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 
-from chatterbot.conversation import Statement
-from chatterbot.input import InputAdapter
-from chatterbot.utils import input_function
+from chatter.chatterbot.conversation import Statement
+from chatter.chatterbot.input import InputAdapter
+from chatter.chatterbot.utils import input_function
 
 
 class TerminalAdapter(InputAdapter):

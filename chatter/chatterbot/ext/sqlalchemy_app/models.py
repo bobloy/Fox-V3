@@ -1,6 +1,6 @@
-from chatterbot.constants import TAG_NAME_MAX_LENGTH, STATEMENT_TEXT_MAX_LENGTH
-from chatterbot.conversation import StatementMixin
-from chatterbot.ext.sqlalchemy_app.types import UnicodeString
+from chatter.chatterbot.constants import TAG_NAME_MAX_LENGTH, STATEMENT_TEXT_MAX_LENGTH
+from chatter.chatterbot.conversation import StatementMixin
+from chatter.chatterbot.ext.sqlalchemy_app.types import UnicodeString
 from sqlalchemy import Table, Column, Integer, DateTime, ForeignKey, PickleType
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
@@ -72,8 +72,8 @@ class Statement(Base, StatementMixin):
         return [tag.name for tag in self.tags]
 
     def get_statement(self):
-        from chatterbot.conversation import Statement as StatementObject
-        from chatterbot.conversation import Response as ResponseObject
+        from chatter.chatterbot.conversation import Statement as StatementObject
+        from chatter.chatterbot.conversation import Response as ResponseObject
 
         statement = StatementObject(
             self.text,

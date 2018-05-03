@@ -130,7 +130,7 @@ def remove_stopwords(tokens, language):
     Stop words are words like "is, the, a, ..."
 
     Be sure to download the required NLTK corpus before calling this function:
-    - from chatterbot.utils import nltk_download_corpus
+    - from chatter.chatterbot.utils import nltk_download_corpus
     - nltk_download_corpus('corpora/stopwords')
     """
     from nltk.corpus import stopwords
