@@ -223,8 +223,9 @@ class Hangman:
 
         return out_str
 
-    async def _guessletter(self, guess, channel):
+    async def _guessletter(self, guess, message):
         """Checks the guess on a letter and prints game if acceptable guess"""
+        channel = message.channel
         if guess.upper() not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" or len(guess) != 1:
             await channel.send("Invalid guess. Only A-Z is accepted")
             return
@@ -237,7 +238,7 @@ class Hangman:
 
         self.the_data[channel.guild]["guesses"].append(guess.upper())
 
-        await self._printgame(channel)
+        await self._reprintgame(message)
 
     async def _on_react(self, reaction, user):
         """ Thanks to flapjack reactpoll for guidelines
@@ -254,6 +255,8 @@ class Hangman:
         if str(emoji) in self.letters:
             letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[self.letters.index(str(emoji))]
             await self._guessletter(letter, message.channel)
+            await message.remove_reaction(emoji, user)
+            await message.remove_reaction(emoji, self.bot.user)
 
         if str(emoji) in self.navigate:
             if str(emoji) == self.navigate[0]:
@@ -287,18 +290,34 @@ class Hangman:
 
         await message.add_reaction(self.navigate[0])
 
+    def _make_say(self, guild):
+        c_say = "Guess this: " + str(self._hideanswer(guild)) + "\n"
+
+        c_say += "Used Letters: " + str(self._guesslist(guild)) + "\n"
+
+        c_say += self.hanglist[guild][self.the_data[guild]["hangman"]] + "\n"
+
+        c_say += self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z"
+
+        return c_say
+
+    async def _reprintgame(self, message):
+        if message.guild not in self.hanglist:
+            await self._update_hanglist()
+
+        c_say = self._make_say(message.guild)
+
+        await message.edit(c_say)
+        self.the_data[message.guild]["trackmessage"] = message.id
+
+        await self._checkdone(message.channel)
+
     async def _printgame(self, channel):
         """Print the current state of game"""
         if channel.guild not in self.hanglist:
             await self._update_hanglist()
 
-        c_say ="Guess this: " + str(self._hideanswer(channel.guild)) + "\n"
-
-        c_say += "Used Letters: " + str(self._guesslist(channel.guild)) + "\n"
-
-        c_say +=  self.hanglist[channel.guild][self.the_data[channel.guild]["hangman"]] + "\n"
-
-        c_say += self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z"
+        c_say = self._make_say(channel.guild)
 
         message = await channel.send(c_say)
 
