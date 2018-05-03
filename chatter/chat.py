@@ -25,7 +25,7 @@ class Chatter:
 
         self.chatbot = ChatBot(
             "ChatterBot",
-            storage_adapter='chatter.chatterbotstorage.SQLStorageAdapter',
+            storage_adapter='chatter.chatterbot.storage.SQLStorageAdapter',
             database='./database.sqlite3'
         )
         self.chatbot.set_trainer(ListTrainer)

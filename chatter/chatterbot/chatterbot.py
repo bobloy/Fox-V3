@@ -22,15 +22,15 @@ class ChatBot(object):
 
         self.default_session = None
 
-        storage_adapter = kwargs.get('storage_adapter', 'chatterbot.storage.SQLStorageAdapter')
+        storage_adapter = kwargs.get('storage_adapter', 'chatter.chatterbot.storage.SQLStorageAdapter')
 
         logic_adapters = kwargs.get('logic_adapters', [
-            'chatterbot.logic.BestMatch'
+            'chatter.chatterbot.logic.BestMatch'
         ])
 
-        input_adapter = kwargs.get('input_adapter', 'chatterbot.input.VariableInputTypeAdapter')
+        input_adapter = kwargs.get('input_adapter', 'chatter.chatterbot.input.VariableInputTypeAdapter')
 
-        output_adapter = kwargs.get('output_adapter', 'chatterbot.output.OutputAdapter')
+        output_adapter = kwargs.get('output_adapter', 'chatter.chatterbot.output.OutputAdapter')
 
         # Check that each adapter is a valid subclass of it's respective parent
         utils.validate_adapter_class(storage_adapter, StorageAdapter)
@@ -47,7 +47,7 @@ class ChatBot(object):
 
         # Add required system logic adapter
         self.logic.system_adapters.append(
-            utils.initialize_class('chatterbot.logic.NoKnowledgeAdapter', **kwargs)
+            utils.initialize_class('chatter.chatterbot.logic.NoKnowledgeAdapter', **kwargs)
         )
 
         for adapter in logic_adapters:
@@ -61,7 +61,7 @@ class ChatBot(object):
 
         preprocessors = kwargs.get(
             'preprocessors', [
-                'chatterbot.preprocessors.clean_whitespace'
+                'chatter.chatterbot.preprocessors.clean_whitespace'
             ]
         )
 
@@ -71,7 +71,7 @@ class ChatBot(object):
             self.preprocessors.append(utils.import_module(preprocessor))
 
         # Use specified trainer or fall back to the default
-        trainer = kwargs.get('trainer', 'chatterbot.trainers.Trainer')
+        trainer = kwargs.get('trainer', 'chatter.chatterbot.trainers.Trainer')
         TrainerClass = utils.import_module(trainer)
         self.trainer = TrainerClass(self.storage, **kwargs)
         self.training_data = kwargs.get('training_data')
