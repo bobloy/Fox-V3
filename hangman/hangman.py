@@ -296,7 +296,7 @@ class Hangman:
 
         c_say += "Used Letters: " + str(self._guesslist(channel.guild)) + "\n"
 
-        c_say +=  self.hanglist[channel.guild[self.the_data[channel.guild]["hangman"]]] + "\n"
+        c_say +=  self.hanglist[channel.guild][self.the_data[channel.guild]["hangman"]] + "\n"
 
         c_say += self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z"
 
