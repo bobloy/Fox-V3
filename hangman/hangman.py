@@ -289,10 +289,16 @@ class Hangman:
 
     async def _printgame(self, channel):
         """Print the current state of game"""
-        c_say =("Guess this: " + str(self._hideanswer(channel.guild)) + "\n"
-                + "Used Letters: " + str(self._guesslist(channel.guild)) + "\n"
-                + self.hanglist[self.the_data[channel.guild]["hangman"]] + "\n"
-                + self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z")
+        if channel.guild not in self.hanglist:
+            await self._update_hanglist()
+
+        c_say ="Guess this: " + str(self._hideanswer(channel.guild)) + "\n"
+
+        c_say += "Used Letters: " + str(self._guesslist(channel.guild)) + "\n"
+
+        c_say +=  self.hanglist[channel.guild[self.the_data[channel.guild]["hangman"]]] + "\n"
+
+        c_say += self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z"
 
         message = await channel.send(c_say)
 
