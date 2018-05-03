@@ -3,8 +3,11 @@ from chatter.chatterbot.storage import StorageAdapter
 
 class Query(object):
 
-    def __init__(self, query={}):
-        self.query = query
+    def __init__(self, query=None):
+        if query is None:
+            self.query = {}
+        else:
+            self.query = query
 
     def value(self):
         return self.query.copy()
