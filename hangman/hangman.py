@@ -130,7 +130,8 @@ class Hangman:
     @hangset.command(pass_context=True)
     async def face(self, ctx: commands.Context, theface):
         message = ctx.message
-        # Borrowing FlapJack's emoji validation (https://github.com/flapjax/FlapJack-Cogs/blob/master/smartreact/smartreact.py)
+        # Borrowing FlapJack's emoji validation
+        # (https://github.com/flapjax/FlapJack-Cogs/blob/master/smartreact/smartreact.py)
         if theface[:2] == "<:":
             theface = [r for r in self.bot.emojis if r.id == theface.split(':')[2][:-1]][0]
 
@@ -202,7 +203,7 @@ class Hangman:
         """Returns the obscured answer"""
         out_str = ""
 
-        self.winbool = True
+        self.winbool[guild] = True
         for i in self.the_data[guild]["answer"]:
             if i == " " or i == "-":
                 out_str += i * 2
@@ -273,7 +274,7 @@ class Hangman:
         await message.clear_reactions()
 
         for x in range(len(self.letters)):
-            if x in [i for i, b in enumerate("ABCDEFGHIJKLM") if b not in self._guesslist()]:
+            if x in [i for i, b in enumerate("ABCDEFGHIJKLM") if b not in self._guesslist(message.guild)]:
                 await message.add_reaction(self.letters[x])
 
         await message.add_reaction(self.navigate[-1])
@@ -282,19 +283,19 @@ class Hangman:
         await self.bot.clear_reactions(message)
 
         for x in range(len(self.letters)):
-            if x in [i for i, b in enumerate("NOPQRSTUVWXYZ") if b not in self._guesslist()]:
+            if x in [i for i, b in enumerate("NOPQRSTUVWXYZ") if b not in self._guesslist(message.guild)]:
                 await message.add_reaction(self.letters[x + 13])
 
         await message.add_reaction(self.navigate[0])
 
     async def _printgame(self, channel):
         """Print the current state of game"""
-        cSay = ("Guess this: " + str(self._hideanswer(channel.guild)) + "\n"
-                + "Used Letters: " + str(self._guesslist(channel.guild)) + "\n"
-                + self.hanglist[self.the_data[channel.guild]["hangman"]] + "\n"
-                + self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z")
+        c_say = ("Guess this: " + str(self._hideanswer(channel.guild)) + "\n"
+                 + "Used Letters: " + str(self._guesslist(channel.guild)) + "\n"
+                 + self.hanglist[self.the_data[channel.guild]["hangman"]] + "\n"
+                 + self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z")
 
-        message = await channel.send(cSay)
+        message = await channel.send(c_say)
 
         self.the_data[channel.guild]["trackmessage"] = message.id
 
