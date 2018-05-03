@@ -5,8 +5,8 @@ import discord
 from discord.ext import commands
 from redbot.core import Config
 
-from .source import ChatBot
-from .source.trainers import ListTrainer
+from .chatterbot import ChatBot
+from .chatterbot.trainers import ListTrainer
 
 
 class Chatter:
@@ -23,7 +23,11 @@ class Chatter:
             "days": 1
         }
 
-        self.chatbot = ChatBot("ChatterBot")
+        self.chatbot = ChatBot(
+            "ChatterBot",
+            storage_adapter='chatterbot.storage.SQLStorageAdapter',
+            database='./database.sqlite3'
+        )
         self.chatbot.set_trainer(ListTrainer)
 
         self.config.register_global(**default_global)
