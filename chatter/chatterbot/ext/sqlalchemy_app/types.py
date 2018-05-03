@@ -13,9 +13,4 @@ class UnicodeString(TypeDecorator):
         Coerce Python bytestrings to unicode before
         saving them to the database.
         """
-        import sys
-
-        if sys.version_info[0] < 3:
-            if isinstance(value, str):
-                value = value.decode('utf-8')
         return value

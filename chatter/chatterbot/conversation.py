@@ -33,13 +33,6 @@ class Statement(StatementMixin):
         except UnicodeEncodeError:
             pass
 
-        # Prefer decoded utf8-strings in Python 2.7
-        if sys.version_info[0] < 3:
-            try:
-                text = text.decode('utf-8')
-            except UnicodeEncodeError:
-                pass
-
         self.text = text
         self.tags = kwargs.pop('tags', [])
         self.in_response_to = kwargs.pop('in_response_to', [])
