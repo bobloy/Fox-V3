@@ -279,7 +279,7 @@ class Hangman:
         await message.add_reaction(self.navigate[-1])
 
     async def _reactmessage_nz(self, message):
-        await self.bot.clear_reactions(message)
+        await message.clear_reactions()
 
         for x in range(len(self.letters)):
             if x in [i for i, b in enumerate("NOPQRSTUVWXYZ") if b not in self._guesslist(message.guild)]:
