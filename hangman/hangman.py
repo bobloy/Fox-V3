@@ -162,7 +162,8 @@ class Hangman:
             self._startgame(ctx.guild)
             await self._printgame(ctx.channel)
         else:
-            await self._guessletter(guess, ctx.channel)
+            await ctx.send("Guess by reacting to the message")
+            # await self._guessletter(guess, ctx.channel)
 
     def _startgame(self, guild):
         """Starts a new game of hangman"""
@@ -254,7 +255,7 @@ class Hangman:
 
         if str(emoji) in self.letters:
             letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[self.letters.index(str(emoji))]
-            await self._guessletter(letter, message.channel)
+            await self._guessletter(letter, message)
             await message.remove_reaction(emoji, user)
             await message.remove_reaction(emoji, self.bot.user)
 
