@@ -1,5 +1,5 @@
-from chatterbot.storage import StorageAdapter
-from chatterbot import constants
+from chatter.chatterbot.storage import StorageAdapter
+from chatter.chatterbot import constants
 
 
 class DjangoStorageAdapter(StorageAdapter):
