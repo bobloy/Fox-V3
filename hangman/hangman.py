@@ -22,7 +22,7 @@ class Hangman:
 
         self.the_data = defaultdict(
             lambda: {"running": False, "hangman": 0, "guesses": [], "trackmessage": False, "answer": ''})
-        self.answer_path = ".data/hanganswers.txt"
+        self.answer_path = "./data/hanganswers.txt"
         self.winbool = defaultdict(lambda: False)
 
         self.hanglist = {}
