@@ -1,9 +1,12 @@
 import discord
 from discord.ext import commands
-from redbot.core import Config
-from redbot.core import RedContext
+from redbot.core import Config, checks
 
+from redbot.core.bot import Red
+
+from werewolf.builder import GameBuilder, role_from_name, role_from_alignment, role_from_category, role_from_id
 from werewolf.game import Game
+from redbot.core.utils.menus import menu, DEFAULT_CONTROLS
 
 
 class Werewolf:
@@ -11,12 +14,15 @@ class Werewolf:
     Base to host werewolf on a guild
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: Red):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=87101114101119111108102, force_registration=True)
         default_global = {}
         default_guild = {
-            "role": None
+            "role_id": None,
+            "category_id": None,
+            "channel_id": None,
+            "log_channel_id": None
         }
 
         self.config.register_global(**default_global)
@@ -29,8 +35,19 @@ class Werewolf:
         for game in self.games.values():
             del game
 
+    @commands.command()
+    async def buildgame(self, ctx: commands.Context):
+        gb = GameBuilder()
+        code = await gb.build_game(ctx)
+
+        if code != "":
+            await ctx.send("Your game code is **{}**".format(code))
+        else:
+            await ctx.send("No code generated")
+
+    @checks.guildowner()
     @commands.group()
-    async def wwset(self, ctx: RedContext):
+    async def wwset(self, ctx: commands.Context):
         """
         Base command to adjust settings. Check help for command list.
         """
@@ -38,17 +55,82 @@ class Werewolf:
             await ctx.send_help()
 
     @commands.guild_only()
+    @wwset.command(name="list")
+    async def wwset_list(self, ctx: commands.Context):
+        """
+        Lists current guild settings
+        """
+        success, role, category, channel, log_channel = await self._get_settings(ctx)
+        if not success:
+            await ctx.send("Failed to get settings")
+            return None
+
+        embed = discord.Embed(title="Current Guild Settings")
+        embed.add_field(name="Role", value=str(role))
+        embed.add_field(name="Category", value=str(category))
+        embed.add_field(name="Channel", value=str(channel))
+        embed.add_field(name="Log Channel", value=str(log_channel))
+        await ctx.send(embed=embed)
+
+    @commands.guild_only()
     @wwset.command(name="role")
-    async def wwset_role(self, ctx, role: discord.Role):
+    async def wwset_role(self, ctx: commands.Context, role: discord.Role=None):
         """
         Assign the game role
         This role should not be manually assigned
         """
-        await self.config.guild(ctx.guild).role.set(role.id)
-        await ctx.send("Game role has been set to **{}**".format(role.name))
+        if role is None:
+            await self.config.guild(ctx.guild).role_id.set(None)
+            await ctx.send("Cleared Game Role")
+        else:
+            await self.config.guild(ctx.guild).role_id.set(role.id)
+            await ctx.send("Game Role has been set to **{}**".format(role.name))
+
+    @commands.guild_only()
+    @wwset.command(name="category")
+    async def wwset_category(self, ctx: commands.Context, category_id=None):
+        """
+        Assign the channel category
+        """
+        if category_id is None:
+            await self.config.guild(ctx.guild).category_id.set(None)
+            await ctx.send("Cleared Game Channel Category")
+        else:
+            category = discord.utils.get(ctx.guild.categories, id=int(category_id))
+            if category is None:
+                await ctx.send("Category not found")
+                return
+            await self.config.guild(ctx.guild).category_id.set(category.id)
+            await ctx.send("Game Channel Category has been set to **{}**".format(category.name))
+
+    @commands.guild_only()
+    @wwset.command(name="channel")
+    async def wwset_channel(self, ctx: commands.Context, channel: discord.TextChannel=None):
+        """
+        Assign the village channel
+        """
+        if channel is None:
+            await self.config.guild(ctx.guild).channel_id.set(None)
+            await ctx.send("Cleared Game Channel")
+        else:
+            await self.config.guild(ctx.guild).channel_id.set(channel.id)
+            await ctx.send("Game Channel has been set to **{}**".format(channel.mention))
+
+    @commands.guild_only()
+    @wwset.command(name="logchannel")
+    async def wwset_log_channel(self, ctx: commands.Context, channel: discord.TextChannel=None):
+        """
+        Assign the log channel
+        """
+        if channel is None:
+            await self.config.guild(ctx.guild).log_channel_id.set(None)
+            await ctx.send("Cleared Game Log Channel")
+        else:
+            await self.config.guild(ctx.guild).log_channel_id.set(channel.id)
+            await ctx.send("Game Log Channel has been set to **{}**".format(channel.mention))
 
     @commands.group()
-    async def ww(self, ctx: RedContext):
+    async def ww(self, ctx: commands.Context):
         """
         Base command for this cog. Check help for the commands list.
         """
@@ -56,27 +138,25 @@ class Werewolf:
             await ctx.send_help()
 
     @commands.guild_only()
-    @ww.command()
-    async def new(self, ctx, game_code):
+    @ww.command(name="new")
+    async def ww_new(self, ctx: commands.Context, game_code=None):
         """
         Create and join a new game of Werewolf
         """
-
-        game = await self._get_game(ctx.guild, game_code)
-
+        game = await self._get_game(ctx, game_code)
         if not game:
             await ctx.send("Failed to start a new game")
         else:
-            await ctx.send("New game has started")
+            await ctx.send("Game is ready to join! Use `[p]ww join`")
 
     @commands.guild_only()
-    @ww.command()
-    async def join(self, ctx):
+    @ww.command(name="join")
+    async def ww_join(self, ctx: commands.Context):
         """
         Joins a game of Werewolf
         """
 
-        game = await self._get_game(ctx.guild)
+        game = await self._get_game(ctx)
 
         if not game:
             await ctx.send("No game to join!\nCreate a new one with `[p]ww new`")
@@ -85,49 +165,71 @@ class Werewolf:
         await game.join(ctx.author, ctx.channel)
 
     @commands.guild_only()
-    @ww.command()
-    async def quit(self, ctx):
+    @ww.command(name="code")
+    async def ww_code(self, ctx: commands.Context, code):
+        """
+        Adjust game code
+        """
+
+        game = await self._get_game(ctx)
+
+        if not game:
+            await ctx.send("No game to join!\nCreate a new one with `[p]ww new`")
+            return
+
+        await game.set_code(ctx, code)
+
+    @commands.guild_only()
+    @ww.command(name="quit")
+    async def ww_quit(self, ctx: commands.Context):
         """
         Quit a game of Werewolf
         """
 
-        game = await self._get_game(ctx.guild)
+        game = await self._get_game(ctx)
 
         await game.quit(ctx.author, ctx.channel)
 
     @commands.guild_only()
-    @ww.command()
-    async def start(self, ctx):
+    @ww.command(name="start")
+    async def ww_start(self, ctx: commands.Context):
         """
         Checks number of players and attempts to start the game
         """
-        game = await self._get_game(ctx.guild)
+        game = await self._get_game(ctx)
         if not game:
             await ctx.send("No game running, cannot start")
 
-        await game.setup(ctx)
+        if not await game.setup(ctx):
+            pass  # Do something?
 
     @commands.guild_only()
-    @ww.command()
-    async def stop(self, ctx):
+    @ww.command(name="stop")
+    async def ww_stop(self, ctx: commands.Context):
         """
         Stops the current game
         """
-        game = await self._get_game(ctx.guild)
-        if not game:
-            await ctx.send("No game running, cannot stop")
+        if ctx.guild is None:
+            # Private message, can't get guild
+            await ctx.send("Cannot start game from PM!")
+            return
+        if ctx.guild.id not in self.games or self.games[ctx.guild.id].game_over:
+            await ctx.send("No game to stop")
+            return
 
+        game = await self._get_game(ctx)
         game.game_over = True
+        await ctx.send("Game has been stopped")
 
     @commands.guild_only()
-    @ww.command()
-    async def vote(self, ctx, target_id: int):
+    @ww.command(name="vote")
+    async def ww_vote(self, ctx: commands.Context, target_id: int):
         """
         Vote for a player by ID
         """
         try:
             target_id = int(target_id)
-        except:
+        except ValueError:
             target_id = None
 
         if target_id is None:
@@ -145,7 +247,7 @@ class Werewolf:
         #         return
         # else:
 
-        game = await self._get_game(ctx.guild)
+        game = await self._get_game(ctx)
 
         if game is None:
             await ctx.send("No game running, cannot vote")
@@ -160,8 +262,8 @@ class Werewolf:
         else:
             await ctx.send("Nothing to vote for in this channel")
 
-    @ww.command()
-    async def choose(self, ctx, data):
+    @ww.command(name="choose")
+    async def ww_choose(self, ctx: commands.Context, data):
         """
         Arbitrary decision making
         Handled by game+role
@@ -171,7 +273,6 @@ class Werewolf:
         if ctx.guild is not None:
             await ctx.send("This action is only available in DM's")
             return
-
         # DM nonsense, find their game
         # If multiple games, panic
         for game in self.games.values():
@@ -183,20 +284,108 @@ class Werewolf:
 
         await game.choose(ctx, data)
 
-    async def _get_game(self, guild, game_code=None):
+    @ww.group(name="search")
+    async def ww_search(self, ctx: commands.Context):
+        """
+        Find custom roles by name, alignment, category, or ID
+        """
+        if ctx.invoked_subcommand is None or ctx.invoked_subcommand == self.ww_search:
+            await ctx.send_help()
+
+    @ww_search.command(name="name")
+    async def ww_search_name(self, ctx: commands.Context, *, name):
+        """Search for a role by name"""
+        if name is not None:
+            from_name = role_from_name(name)
+            if from_name:
+                await menu(ctx, from_name, DEFAULT_CONTROLS)
+            else:
+                await ctx.send("No roles containing that name were found")
+
+    @ww_search.command(name="alignment")
+    async def ww_search_alignment(self, ctx: commands.Context, alignment: int):
+        """Search for a role by alignment"""
+        if alignment is not None:
+            from_alignment = role_from_alignment(alignment)
+            if from_alignment:
+                await menu(ctx, from_alignment, DEFAULT_CONTROLS)
+            else:
+                await ctx.send("No roles with that alignment were found")
+
+    @ww_search.command(name="category")
+    async def ww_search_category(self, ctx: commands.Context, category: int):
+        """Search for a role by category"""
+        if category is not None:
+            pages = role_from_category(category)
+            if pages:
+                await menu(ctx, pages, DEFAULT_CONTROLS)
+            else:
+                await ctx.send("No roles in that category were found")
+
+    @ww_search.command(name="index")
+    async def ww_search_index(self, ctx: commands.Context, idx: int):
+        """Search for a role by ID"""
+        if idx is not None:
+            idx_embed = role_from_id(idx)
+            if idx_embed is not None:
+                await ctx.send(embed=idx_embed)
+            else:
+                await ctx.send("Role ID not found")
+
+    async def _get_game(self, ctx: commands.Context, game_code=None):
+        guild: discord.Guild = ctx.guild
+
         if guild is None:
             # Private message, can't get guild
+            await ctx.send("Cannot start game from PM!")
             return None
-        if guild.id not in self.games:
-            if not game_code:
+        if guild.id not in self.games or self.games[guild.id].game_over:
+            await ctx.send("Starting a new game...")
+            success, role, category, channel, log_channel = await self._get_settings(ctx)
+
+            if not success:
+                await ctx.send("Cannot start a new game")
                 return None
-            role = await self.config.guild(guild).role()
-            role = discord.utils.get(guild.roles, id=role)
-            if role is None:
-                return None
-            self.games[guild.id] = Game(guild, role, game_code)
+
+            self.games[guild.id] = Game(guild, role, category, channel, log_channel, game_code)
 
         return self.games[guild.id]
 
     async def _game_start(self, game):
         await game.start()
+
+    async def _get_settings(self, ctx):
+        guild = ctx.guild
+        role = None
+        category = None
+        channel = None
+        log_channel = None
+
+        role_id = await self.config.guild(guild).role_id()
+        category_id = await self.config.guild(guild).category_id()
+        channel_id = await self.config.guild(guild).channel_id()
+        log_channel_id = await self.config.guild(guild).log_channel_id()
+
+        if role_id is not None:
+            role = discord.utils.get(guild.roles, id=role_id)
+            if role is None:
+                await ctx.send("Game Role is invalid")
+                return False, None, None, None, None
+        if category_id is not None:
+            category = discord.utils.get(guild.categories, id=category_id)
+            if category is None:
+                await ctx.send("Game Category is invalid")
+                return False, None, None, None, None
+        if channel_id is not None:
+            channel = discord.utils.get(guild.text_channels, id=channel_id)
+            if channel is None:
+                await ctx.send("Village Channel is invalid")
+                return False, None, None, None, None
+        if log_channel_id is not None:
+            log_channel = discord.utils.get(guild.text_channels, id=log_channel_id)
+            if log_channel is None:
+                await ctx.send("Log Channel is invalid")
+                return False, None, None, None, None
+
+        return True, role, category, channel, log_channel
+

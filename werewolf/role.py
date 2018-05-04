@@ -46,6 +46,12 @@ class Role:
         "You win by testing the game\n"
         "Lynch players during the day with `[p]ww vote <ID>`"
     )
+    description = (
+        "This is the basic role\n"
+        "All roles are based on this Class"
+        "Has no special significance"
+    )
+    icon_url = None  # Adding a URL here will enable a thumbnail of the role
 
     def __init__(self, game):
         self.game = game
@@ -64,6 +70,9 @@ class Role:
             (self._at_night_end, 0),
             (self._at_visit, 0)
         ]
+
+    def __repr__(self):
+        return self.__class__.__name__
 
     async def on_event(self, event, data):
         """

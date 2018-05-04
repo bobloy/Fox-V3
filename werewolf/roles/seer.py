@@ -2,7 +2,7 @@ from werewolf.role import Role
 
 
 class Seer(Role):
-    rand_choice = False  # Determines if it can be picked as a random role (False for unusually disruptive roles)
+    rand_choice = True  # Determines if it can be picked as a random role (False for unusually disruptive roles)
     category = [1, 2]  # List of enrolled categories (listed above)
     alignment = 1  # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""  # Empty for no private channel
@@ -29,7 +29,8 @@ class Seer(Role):
             (self._at_hang, 0),
             (self._at_day_end, 0),
             (self._at_night_start, 2),
-            (self._at_night_end, 4)
+            (self._at_night_end, 4),
+            (self._at_visit, 0)
         ]
 
     # async def on_event(self, event, data):
@@ -96,15 +97,22 @@ class Seer(Role):
     #     pass
 
     async def _at_night_start(self, data=None):
+        if not self.player.alive:
+            return
+        self.see_target = None
         await self.game.generate_targets(self.player.member)
-        await self.player.send_dm("{}\n**Pick a target to see tonight**\n")
+        await self.player.send_dm("**Pick a target to see tonight**\n")
 
     async def _at_night_end(self, data=None):
-        target = await self.game.visit(self.see_target)
+        if self.see_target is None:
+            if self.player.alive:
+                await self.player.send_dm("You will not use your powers tonight...")
+            return
+        target = await self.game.visit(self.see_target, self.player)
 
         alignment = None
         if target:
-            alignment = await target.see_alignment(self.player)
+            alignment = await target.role.see_alignment(self.player)
 
         if alignment == "Werewolf":
             out = "Your insight reveals this player to be a **Werewolf!**"
@@ -133,6 +141,10 @@ class Seer(Role):
 
     async def choose(self, ctx, data):
         """Handle night actions"""
+        if not self.player.alive:  # FixMe: Game handles this?
+            await self.player.send_dm("You're already dead!")
+            return
+
         target_id = int(data)
         try:
             target = self.game.players[target_id]
