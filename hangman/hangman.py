@@ -193,8 +193,11 @@ class Hangman:
 
     def _getphrase(self):
         """Get a new phrase for the game and returns it"""
+        openpath = cog_data_path("hangman")
 
-        with cog_data_path("hangman").open('r') as phrasefile:
+        openpath = openpath.joinpath("data")
+
+        with openpath.open('r') as phrasefile:
             phrases = phrasefile.readlines()
 
         outphrase = ""
