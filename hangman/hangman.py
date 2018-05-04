@@ -4,6 +4,7 @@ from random import randint
 import discord
 from discord.ext import commands
 from redbot.core import Config, checks
+from redbot.core.data_manager import cog_data_path, load_basic_configuration
 
 
 class Hangman:
@@ -13,6 +14,7 @@ class Hangman:
 
     def __init__(self, bot):
         self.bot = bot
+        load_basic_configuration("hangman")
         self.config = Config.get_conf(self, identifier=1049711010310997110)
         default_guild = {
             "theface": ':thinking:',
@@ -22,7 +24,7 @@ class Hangman:
 
         self.the_data = defaultdict(
             lambda: {"running": False, "hangman": 0, "guesses": [], "trackmessage": False, "answer": ''})
-        self.answer_path = "./data/hanganswers.txt"
+        self.answer_path = "/hanganswers.txt"
         self.winbool = defaultdict(lambda: False)
 
         self.hanglist = {}
@@ -191,8 +193,9 @@ class Hangman:
 
     def _getphrase(self):
         """Get a new phrase for the game and returns it"""
-        phrasefile = open(self.answer_path, 'r')
-        phrases = phrasefile.readlines()
+
+        with cog_data_path("hangman").open('r') as phrasefile:
+            phrases = phrasefile.readlines()
 
         outphrase = ""
         while outphrase == "":
