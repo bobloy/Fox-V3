@@ -3,6 +3,7 @@ class StatementMixin(object):
     This class has shared methods used to
     normalize different statement models.
     """
+    tags = []
 
     def get_tags(self):
         """
