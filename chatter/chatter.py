@@ -4,13 +4,14 @@ from typing import List, Union
 import discord
 from discord.ext import commands
 
-from redbot.core import Config
+from redbot.core import Config, RedContext
 from redbot.core.bot import Red
 
 from .source import ChatBot
 from .source.trainers import ListTrainer
 
 from datetime import datetime,timedelta
+
 
 class Chatter:
     """
@@ -74,14 +75,14 @@ class Chatter:
         return True
 
     @commands.group()
-    async def chatter(self, ctx: commands.Context):
+    async def chatter(self, ctx: RedContext):
         """
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
     @chatter.command()
-    async def age(self, ctx: commands.Context, days: int):
+    async def age(self, ctx: RedContext, days: int):
         """
         Sets the number of days to look back
         Will train on 1 day otherwise
@@ -91,7 +92,7 @@ class Chatter:
         await ctx.send("Success")
         
     @chatter.command()
-    async def train(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def train(self, ctx: RedContext, channel: discord.TextChannel = None):
         """
         Trains the bot based on language in this guild
         """
@@ -118,13 +119,14 @@ class Chatter:
         else:
             await ctx.send("Error occurred :(")
             
-    async def on_message(self, message): 
+    async def on_message(self, message: discord.Message):
         """
         Credit to https://github.com/Twentysix26/26-Cogs/blob/master/cleverbot/cleverbot.py
         for on_message recognition of @bot
         """
         author = message.author
         channel = message.channel
+
 
         if message.author.id != self.bot.user.id:
             to_strip = "@" + author.guild.me.display_name + " "
