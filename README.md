@@ -20,4 +20,3 @@ Cog Function
 Check out my V2 cogs at [Fox-Cogs v2](https://github.com/bobloy/Fox-Cogs)
 
 Get support on the [Third Party Cog Server](https://discord.gg/GET4DVk)
-<iframe src="https://discordapp.com/widget?id=240154543684321280&theme=dark"></iframe>
