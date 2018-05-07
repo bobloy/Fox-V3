@@ -4,7 +4,7 @@ Cog Function
 
 | Name | Status | Description (Click to see full status)
 | --- | --- | --- | 
-| ccrole | **Beta** | <details><summary>Create custom commands that also assign roles</summary>`May have some bugs, please create an issue if you find any`</details> |
+| ccrole | **Beta** | <details><summary>Create custom commands that also assign roles</summary>May have some bugs, please create an issue if you find any</details> |
 | chatter | **Alpha** | <details><summary>Chat-bot trained to talk like your guild</summary>Missing some key features, but currently functional</details> |
 | fight | **Incomplete** | <details><summary>Organize bracket tournaments within discord</summary>Still in-progress, a massive project</details> |
 | flag | **Incomplete** | <details><summary>Create temporary marks on users that expire after specified time</summary>Not yet ported to v3</details> |
