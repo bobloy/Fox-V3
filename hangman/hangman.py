@@ -14,7 +14,6 @@ class Hangman:
 
     def __init__(self, bot):
         self.bot = bot
-        load_basic_configuration("hangman")
         self.config = Config.get_conf(self, identifier=1049711010310997110)
         default_guild = {
             "theface": ':thinking:',
@@ -24,7 +23,10 @@ class Hangman:
 
         self.the_data = defaultdict(
             lambda: {"running": False, "hangman": 0, "guesses": [], "trackmessage": False, "answer": ''})
-        self.answer_path = "/hanganswers.txt"
+        self.path = str(cog_data_path(self)).replace('\\', '/')
+
+        self.answer_path = self.path+"/bundled_data/hanganswers.txt"
+
         self.winbool = defaultdict(lambda: False)
 
         self.hanglist = {}
@@ -179,25 +181,21 @@ class Hangman:
     def _stopgame(self, guild):
         """Stops the game in current state"""
         self.the_data[guild]["running"] = False
+        self.the_data[guild]["trackmessage"] = False
 
     async def _checkdone(self, channel):
         if self.winbool[channel.guild]:
             await channel.send("You Win!")
             self._stopgame(channel.guild)
-            return
-
-        if self.the_data[channel.guild]["hangman"] >= 7:
+        elif self.the_data[channel.guild]["hangman"] >= 7:
             await channel.send("You Lose!\nThe Answer was: **" + self.the_data[channel.guild]["answer"] + "**")
 
             self._stopgame(channel.guild)
 
     def _getphrase(self):
         """Get a new phrase for the game and returns it"""
-        openpath = cog_data_path("hangman")
 
-        openpath = openpath.joinpath("data")
-
-        with openpath.open('r') as phrasefile:
+        with open(self.answer_path, 'r') as phrasefile:
             phrases = phrasefile.readlines()
 
         outphrase = ""
@@ -314,7 +312,7 @@ class Hangman:
 
         c_say = self._make_say(message.guild)
 
-        await message.edit(c_say)
+        await message.edit(content=c_say)
         self.the_data[message.guild]["trackmessage"] = message.id
 
         await self._checkdone(message.channel)
