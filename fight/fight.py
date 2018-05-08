@@ -1142,7 +1142,7 @@ class Fight:
         
     #**************** Attempt 2, borrow from Squid*******
 
-    async def on_raw_reaction_add(self, emoji: discord.PartialReactionEmoji,
+    async def on_raw_reaction_add(self, emoji: discord.PartialEmoji,
                                   message_id: int, channel_id: int, user_id: int):
         """
         Event handler for long term reaction watching.
