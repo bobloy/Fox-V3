@@ -104,17 +104,21 @@ async def parse_code(code, game):
     built = ""
     category = ""
     for c in code:
+        if len(built) < digits:
+            built += c
+
         if built == "T" or built == "W" or built == "N":
             # Random Towns
             category = built
             built = ""
             digits = 1
-        elif built == "-":
-            digits += 1
-
-        if len(built) < digits:
-            built += c
             continue
+        elif built == "-":
+            built = ""
+            digits += 1
+            continue
+
+
 
         try:
             idx = int(built)
@@ -137,6 +141,9 @@ async def parse_code(code, game):
                 raise IndexError("No Match Found")
 
             decode.append(choice(options)(game))
+
+        built = ""
+
 
     return decode
 
