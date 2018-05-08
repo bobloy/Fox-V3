@@ -636,6 +636,7 @@ class Game:
             target = await self.get_day_target(target_id, source)
         else:
             target = await self.get_night_target(target_id, source)
+
         if source is not None:
             if source.role.blocked:
                 # Do nothing if blocked, blocker handles text
