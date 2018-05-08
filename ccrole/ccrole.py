@@ -149,8 +149,9 @@ class CCRole:
     @checks.mod_or_permissions(administrator=True)
     async def ccrole_delete(self, ctx, command: str):
         """Deletes a custom command
+
         Example:
-        [p]ccrole delete yourcommand"""
+        `[p]ccrole delete yourcommand`"""
         guild = ctx.guild
         command = command.lower()
         if not await self.config.guild(guild).cmdlist.get_raw(command, default=None):
@@ -158,6 +159,32 @@ class CCRole:
         else:
             await self.config.guild(guild).cmdlist.set_raw(command, value=None)
             await ctx.send("Custom command successfully deleted.")
+
+    @ccrole.command(name="details")
+    async def ccrole_details(self, ctx, command: str):
+        """Provide details about passed custom command"""
+        guild = ctx.guild
+        command = command.lower()
+        cmd = await self.config.guild(guild).cmdlist.get_raw(command, default=None)
+        if cmd is None:
+            await ctx.send("That command doesn't exist")
+            return
+
+        embed = discord.Embed(title=command,
+                              description="{} custom command".format("Targeted" if cmd['targeted'] else "Non-Targeted"))
+
+        def process_roles(role_list):
+            if not role_list:
+                return "None"
+            return ", ".join([discord.utils.get(ctx.guild.roles, id=roleid).name for roleid in role_list])
+
+        embed.add_field(name="Text", value="```{}```".format(cmd['text']))
+        embed.add_field(name="Adds Roles", value=process_roles(cmd['aroles']), inline=True)
+        embed.add_field(name="Removes Roles", value=process_roles(cmd['rroles']), inline=True)
+        embed.add_field(name="Role Restrictions", value=process_roles(cmd['proles']), inline=True)
+
+        await ctx.send(embed=embed)
+
 
     @ccrole.command(name="list")
     async def ccrole_list(self, ctx):
@@ -174,7 +201,7 @@ class CCRole:
         cmd_list = ", ".join([ctx.prefix + c for c in sorted(cmd_list.keys())])
         cmd_list = "Custom commands:\n\n" + cmd_list
 
-        if len(cmd_list) < 1500:
+        if len(cmd_list) < 1500:  # I'm allowed to have arbitrary numbers for when it's too much to dm dammit
             await ctx.send(box(cmd_list))
         else:
             for page in pagify(cmd_list, delims=[" ", "\n"]):
