@@ -136,7 +136,7 @@ class CCRole:
 
         await cmdlist.set_raw(command, value=out)
 
-        ctx.send("Custom Command **`{}`** successfully added".format(command))
+        await ctx.send("Custom Command **`{}`** successfully added".format(command))
 
     @ccrole.command(name="delete")
     @checks.mod_or_permissions(administrator=True)
