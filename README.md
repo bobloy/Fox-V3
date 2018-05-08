@@ -14,7 +14,7 @@ Cog Function
 | reactrestrict | **Alpha** | <details><summary>Removes reactions by role per channel</summary>A bit clunky, but functional</details> |
 | secrethitler | **Incomplete** | <details><summary>Play the Secret Hitler game</summary>Concept, no work done yet</details> |
 | stealemoji | **Alpha** | <details><summary>Steals any custom emoji it sees in a reaction</summary>Some planned upgrades for server generation</details> |
-| werewolf | **Incomplete** | <details><summary>Play the classic party game Werewolf within discord</summary>Another massive project, will be fully customizable</details> |
+| werewolf | **Alpha** | <details><summary>Play the classic party game Werewolf within discord</summary>Another massive project currently being developed, will be fully customizable</details> |
 
 
 Check out my V2 cogs at [Fox-Cogs v2](https://github.com/bobloy/Fox-Cogs)
