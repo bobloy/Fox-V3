@@ -277,7 +277,8 @@ class CCRole:
             "message": message,
             "author": message.author,
             "channel": message.channel,
-            "server": message.server,
+            "server": message.guild,
+            "guild": message.guild,
             "target": target
         }
         if result in objects:
