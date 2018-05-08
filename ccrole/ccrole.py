@@ -25,14 +25,19 @@ class CCRole:
 
     @commands.group(no_pm=True)
     async def ccrole(self, ctx):
-        """Custom commands management"""
+        """Custom commands management with roles
+
+        Highly customizable custom commands with role management."""
         if not ctx.invoked_subcommand:
             await ctx.send_help()
 
     @ccrole.command(name="add")
     @checks.mod_or_permissions(administrator=True)
     async def ccrole_add(self, ctx, command: str):
-        """Adds a custom command with roles"""
+        """Adds a custom command with roles
+
+        When adding text, put arguments in `{}` to eval them
+        Options: `{author}`, `{target}`, `{server}`, `{channel}`, `{message}`"""
         command = command.lower()
         if command in self.bot.all_commands:
             await ctx.send("That command is already a standard command.")
@@ -118,7 +123,9 @@ class CCRole:
         # Message to send
         await ctx.send(
             'What message should the bot say when using this command?\n'
-            'Say `None` to send the default `Success!` message')
+            'Say `None` to send the default `Success!` message\n'
+            'Eval Options: `{author}`, `{target}`, `{server}`, `{channel}`, `{message}`\n'
+            'For example: `Welcome {target.mention} to {server.name}!`')
 
         try:
             answer = await self.bot.wait_for('message', timeout=120, check=check)
