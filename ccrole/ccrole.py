@@ -47,9 +47,9 @@ class CCRole:
         author = ctx.author
         channel = ctx.channel
 
-        cmdlist = self.config.guild(guild).cmdlist
+        cmd_list = self.config.guild(guild).cmdlist
 
-        if await cmdlist.get_raw(command, default=None):
+        if await cmd_list.get_raw(command, default=None):
             await ctx.send("This command already exists. Delete it with `{}ccrole delete` first.".format(ctx.prefix))
             return
 
@@ -141,7 +141,7 @@ class CCRole:
 
         out = {'text': text, 'aroles': arole_list, 'rroles': rrole_list, "proles": prole_list, "targeted": targeted}
 
-        await cmdlist.set_raw(command, value=out)
+        await cmd_list.set_raw(command, value=out)
 
         await ctx.send("Custom Command **`{}`** successfully added".format(command))
 
@@ -185,13 +185,12 @@ class CCRole:
 
         await ctx.send(embed=embed)
 
-
     @ccrole.command(name="list")
     async def ccrole_list(self, ctx):
         """Shows custom commands list"""
         guild = ctx.guild
         cmd_list = await self.config.guild(guild).cmdlist()
-
+        cmd_list = {k: v for k,v in cmd_list.items() if v}
         if not cmd_list:
             await ctx.send(
                 "There are no custom commands in this server. Use `{}ccrole add` to start adding some.".format(
