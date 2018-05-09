@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from redbot.core import Config, checks
+from redbot.core import Config, checks, RedContext
 
 from redbot.core.bot import Red
 
@@ -36,7 +36,7 @@ class Werewolf:
             del game
 
     @commands.command()
-    async def buildgame(self, ctx: commands.Context):
+    async def buildgame(self, ctx: RedContext):
         gb = GameBuilder()
         code = await gb.build_game(ctx)
 
@@ -47,7 +47,7 @@ class Werewolf:
 
     @checks.guildowner()
     @commands.group()
-    async def wwset(self, ctx: commands.Context):
+    async def wwset(self, ctx: RedContext):
         """
         Base command to adjust settings. Check help for command list.
         """
@@ -56,7 +56,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="list")
-    async def wwset_list(self, ctx: commands.Context):
+    async def wwset_list(self, ctx: RedContext):
         """
         Lists current guild settings
         """
@@ -74,7 +74,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="role")
-    async def wwset_role(self, ctx: commands.Context, role: discord.Role=None):
+    async def wwset_role(self, ctx: RedContext, role: discord.Role=None):
         """
         Assign the game role
         This role should not be manually assigned
@@ -88,7 +88,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="category")
-    async def wwset_category(self, ctx: commands.Context, category_id=None):
+    async def wwset_category(self, ctx: RedContext, category_id=None):
         """
         Assign the channel category
         """
@@ -105,7 +105,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="channel")
-    async def wwset_channel(self, ctx: commands.Context, channel: discord.TextChannel=None):
+    async def wwset_channel(self, ctx: RedContext, channel: discord.TextChannel=None):
         """
         Assign the village channel
         """
@@ -118,7 +118,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="logchannel")
-    async def wwset_log_channel(self, ctx: commands.Context, channel: discord.TextChannel=None):
+    async def wwset_log_channel(self, ctx: RedContext, channel: discord.TextChannel=None):
         """
         Assign the log channel
         """
@@ -130,7 +130,7 @@ class Werewolf:
             await ctx.send("Game Log Channel has been set to **{}**".format(channel.mention))
 
     @commands.group()
-    async def ww(self, ctx: commands.Context):
+    async def ww(self, ctx: RedContext):
         """
         Base command for this cog. Check help for the commands list.
         """
@@ -139,7 +139,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command(name="new")
-    async def ww_new(self, ctx: commands.Context, game_code=None):
+    async def ww_new(self, ctx: RedContext, game_code=None):
         """
         Create and join a new game of Werewolf
         """
@@ -151,7 +151,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command(name="join")
-    async def ww_join(self, ctx: commands.Context):
+    async def ww_join(self, ctx: RedContext):
         """
         Joins a game of Werewolf
         """
@@ -166,7 +166,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command(name="code")
-    async def ww_code(self, ctx: commands.Context, code):
+    async def ww_code(self, ctx: RedContext, code):
         """
         Adjust game code
         """
@@ -181,7 +181,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command(name="quit")
-    async def ww_quit(self, ctx: commands.Context):
+    async def ww_quit(self, ctx: RedContext):
         """
         Quit a game of Werewolf
         """
@@ -192,7 +192,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command(name="start")
-    async def ww_start(self, ctx: commands.Context):
+    async def ww_start(self, ctx: RedContext):
         """
         Checks number of players and attempts to start the game
         """
@@ -205,7 +205,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command(name="stop")
-    async def ww_stop(self, ctx: commands.Context):
+    async def ww_stop(self, ctx: RedContext):
         """
         Stops the current game
         """
@@ -223,7 +223,7 @@ class Werewolf:
 
     @commands.guild_only()
     @ww.command(name="vote")
-    async def ww_vote(self, ctx: commands.Context, target_id: int):
+    async def ww_vote(self, ctx: RedContext, target_id: int):
         """
         Vote for a player by ID
         """
@@ -263,7 +263,7 @@ class Werewolf:
             await ctx.send("Nothing to vote for in this channel")
 
     @ww.command(name="choose")
-    async def ww_choose(self, ctx: commands.Context, data):
+    async def ww_choose(self, ctx: RedContext, data):
         """
         Arbitrary decision making
         Handled by game+role
@@ -285,7 +285,7 @@ class Werewolf:
         await game.choose(ctx, data)
 
     @ww.group(name="search")
-    async def ww_search(self, ctx: commands.Context):
+    async def ww_search(self, ctx: RedContext):
         """
         Find custom roles by name, alignment, category, or ID
         """
@@ -293,7 +293,7 @@ class Werewolf:
             await ctx.send_help()
 
     @ww_search.command(name="name")
-    async def ww_search_name(self, ctx: commands.Context, *, name):
+    async def ww_search_name(self, ctx: RedContext, *, name):
         """Search for a role by name"""
         if name is not None:
             from_name = role_from_name(name)
@@ -303,7 +303,7 @@ class Werewolf:
                 await ctx.send("No roles containing that name were found")
 
     @ww_search.command(name="alignment")
-    async def ww_search_alignment(self, ctx: commands.Context, alignment: int):
+    async def ww_search_alignment(self, ctx: RedContext, alignment: int):
         """Search for a role by alignment"""
         if alignment is not None:
             from_alignment = role_from_alignment(alignment)
@@ -313,7 +313,7 @@ class Werewolf:
                 await ctx.send("No roles with that alignment were found")
 
     @ww_search.command(name="category")
-    async def ww_search_category(self, ctx: commands.Context, category: int):
+    async def ww_search_category(self, ctx: RedContext, category: int):
         """Search for a role by category"""
         if category is not None:
             pages = role_from_category(category)
@@ -323,7 +323,7 @@ class Werewolf:
                 await ctx.send("No roles in that category were found")
 
     @ww_search.command(name="index")
-    async def ww_search_index(self, ctx: commands.Context, idx: int):
+    async def ww_search_index(self, ctx: RedContext, idx: int):
         """Search for a role by ID"""
         if idx is not None:
             idx_embed = role_from_id(idx)
@@ -332,7 +332,7 @@ class Werewolf:
             else:
                 await ctx.send("Role ID not found")
 
-    async def _get_game(self, ctx: commands.Context, game_code=None):
+    async def _get_game(self, ctx: RedContext, game_code=None):
         guild: discord.Guild = ctx.guild
 
         if guild is None:
