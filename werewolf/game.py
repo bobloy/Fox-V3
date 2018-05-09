@@ -2,7 +2,6 @@ import asyncio
 import random
 
 import discord
-from discord.ext import commands
 from redbot.core import RedContext
 
 from werewolf.builder import parse_code

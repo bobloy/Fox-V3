@@ -1,12 +1,11 @@
 import discord
 from discord.ext import commands
 from redbot.core import Config, checks, RedContext
-
 from redbot.core.bot import Red
+from redbot.core.utils.menus import menu, DEFAULT_CONTROLS
 
 from werewolf.builder import GameBuilder, role_from_name, role_from_alignment, role_from_category, role_from_id
 from werewolf.game import Game
-from redbot.core.utils.menus import menu, DEFAULT_CONTROLS
 
 
 class Werewolf:
@@ -74,7 +73,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="role")
-    async def wwset_role(self, ctx: RedContext, role: discord.Role=None):
+    async def wwset_role(self, ctx: RedContext, role: discord.Role = None):
         """
         Assign the game role
         This role should not be manually assigned
@@ -105,7 +104,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="channel")
-    async def wwset_channel(self, ctx: RedContext, channel: discord.TextChannel=None):
+    async def wwset_channel(self, ctx: RedContext, channel: discord.TextChannel = None):
         """
         Assign the village channel
         """
@@ -118,7 +117,7 @@ class Werewolf:
 
     @commands.guild_only()
     @wwset.command(name="logchannel")
-    async def wwset_log_channel(self, ctx: RedContext, channel: discord.TextChannel=None):
+    async def wwset_log_channel(self, ctx: RedContext, channel: discord.TextChannel = None):
         """
         Assign the log channel
         """
@@ -388,4 +387,3 @@ class Werewolf:
                 return False, None, None, None, None
 
         return True, role, category, channel, log_channel
-

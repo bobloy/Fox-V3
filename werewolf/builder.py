@@ -3,15 +3,13 @@ from collections import defaultdict
 from random import choice
 
 import discord
-from discord.ext import commands
-
 # Import all roles here
 from redbot.core import RedContext
+from redbot.core.utils.menus import menu, prev_page, next_page, close_menu
 
 from werewolf.roles.seer import Seer
 from werewolf.roles.vanillawerewolf import VanillaWerewolf
 from werewolf.roles.villager import Villager
-from redbot.core.utils.menus import menu, prev_page, next_page, close_menu
 
 # All roles in this list for iterating
 
@@ -120,8 +118,6 @@ async def parse_code(code, game):
             digits += 1
             continue
 
-
-
         try:
             idx = int(built)
         except ValueError:
@@ -145,7 +141,6 @@ async def parse_code(code, game):
             decode.append(choice(options)(game))
 
         built = ""
-
 
     return decode
 
@@ -321,7 +316,7 @@ class GameBuilder:
                 pass
 
         if page >= len(ROLE_LIST):
-            self.rand_roles.append(CATEGORY_COUNT[page-len(ROLE_LIST)])
+            self.rand_roles.append(CATEGORY_COUNT[page - len(ROLE_LIST)])
         else:
             self.code.append(page)
 
