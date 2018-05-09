@@ -61,7 +61,7 @@ class Seer(Role):
             return
         self.see_target = None
         await self.game.generate_targets(self.player.member)
-        await self.player.send_dm("**Pick a target to see tonight**\n")
+        await self.player.send_dm("**Pick a target to see tonight**")
 
     async def _at_night_end(self, data=None):
         if self.see_target is None:

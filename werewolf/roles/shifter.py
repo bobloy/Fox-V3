@@ -59,6 +59,7 @@ class Shifter(Role):
     def __init__(self, game):
         super().__init__(game)
 
+        self.shift_target = None
         self.action_list = [
             (self._at_game_start, 1),  # (Action, Priority)
             (self._at_day_start, 0),
@@ -74,7 +75,7 @@ class Shifter(Role):
     async def see_alignment(self, source=None):
         """
         Interaction for investigative roles attempting
-        to see alignment (Village, Werewolf Other)
+        to see alignment (Village, Werewolf, Other)
         """
         return "Other"
 
@@ -90,10 +91,13 @@ class Shifter(Role):
         Interaction for investigative roles.
         More common to be able to deceive this action
         """
-        return "MyRole"
+        return "Shifter"
 
     async def _at_night_start(self, data=None):
         await super()._at_night_start(data)
+        self.shift_target = None
+        await self.game.generate_targets(self.player.member)
+        await self.player.send_dm("**Pick a target to shift into**")
 
     async def _at_night_end(self, data=None):
         await super()._at_night_end(data)
