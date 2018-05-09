@@ -11,6 +11,7 @@ Cog Function
 | hangman | **Alpha** | <details><summary>Play a game of hangman</summary>Some visual glitches and needs more customization</details> |
 | howdoi | **Incomplete** | <details><summary>Create temporary marks on users that expire after specified time</summary>Not yet ported to v3</details> |
 | leaver | **Incomplete** | <details><summary>Send a message in a channel when a user leaves the server</summary>Not yet ported to v3</details> |
+| lseen | **Alpha** | <details><summary>Track when a member was last online</summary>Alpha release, please report bugs</details> |
 | reactrestrict | **Alpha** | <details><summary>Removes reactions by role per channel</summary>A bit clunky, but functional</details> |
 | secrethitler | **Incomplete** | <details><summary>Play the Secret Hitler game</summary>Concept, no work done yet</details> |
 | stealemoji | **Alpha** | <details><summary>Steals any custom emoji it sees in a reaction</summary>Some planned upgrades for server generation</details> |
