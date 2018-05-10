@@ -1,3 +1,4 @@
+from werewolf.night_powers import pick_target
 from werewolf.role import Role
 
 
@@ -101,7 +102,28 @@ class Shifter(Role):
 
     async def _at_night_end(self, data=None):
         await super()._at_night_end(data)
+        if self.shift_target is None:
+            if self.player.alive:
+                await self.player.send_dm("You will not use your powers tonight...")
+            return
+        target = await self.game.visit(self.shift_target, self.player)
 
+        if target and target.player.alive:
+            await target.role.assign_player(self.player)
+            await self.assign_player(target)
+
+            # Roles have now been swapped
+
+            await self.player.send_dm("Your role has been stolen...\n"
+                                      "You are now a **Shifter**.")
+            await self.player.send_dm(self.game_start_message)
+
+            await target.send_dm(target.role.game_start_message)
+        else:
+            await self.player.send_dm("**Your shift failed...**")
     async def choose(self, ctx, data):
         """Handle night actions"""
         await super().choose(ctx, data)
+
+        self.shift_target, target = await pick_target(self, ctx, data)
+        await ctx.send("**You will attempt to see the role of {} tonight...**".format(target.member.display_name))
