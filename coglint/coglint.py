@@ -23,6 +23,7 @@ class CogLint:
 
         self.path = str(cog_data_path(self)).replace('\\', '/')
 
+        self.do_lint = None
         self.counter = 0
 
         # self.answer_path = self.path + "/tmpfile.py"
@@ -33,10 +34,18 @@ class CogLint:
     @commands.command()
     async def autolint(self, ctx: RedContext):
         """Toggles automatically linting code"""
+        curr = await self.config.lint()
+
+        self.do_lint = not curr
+        await self.config.lint.set(not curr)
+        await ctx.send("Autolinting is now set to {}".format(not curr))
 
     @commands.command()
     async def lint(self, ctx: RedContext, *, code):
-        """Lint python code"""
+        """Lint python code
+
+        Toggle autolinting with `[p]autolint`
+        """
         await self.lint_message(ctx.message)
         await ctx.send("Hello World")
 
@@ -59,6 +68,10 @@ class CogLint:
         return pylint_stdout, pylint_stderr
 
     async def lint_message(self, message):
+        if self.do_lint is None:
+            self.do_lint = await self.config.lint()
+        if not self.do_lint:
+            return
         code_blocks = message.content.split('```')[1::2]
 
         for c in code_blocks:
