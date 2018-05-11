@@ -611,6 +611,7 @@ def date_from_duration(base_date, number_as_string, unit, duration, base_time=No
     if base_time is not None:
         base_date = date_from_adverb(base_date, base_time)
     num = convert_string_to_number(number_as_string)
+    args = {}
     if unit in day_variations:
         args = {'days': num}
     elif unit in minute_variations:
