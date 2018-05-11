@@ -14,6 +14,7 @@ Cog Function
 | leaver | **Incomplete** | <details><summary>Send a message in a channel when a user leaves the server</summary>Not yet ported to v3</details> |
 | lseen | **Alpha** | <details><summary>Track when a member was last online</summary>Alpha release, please report bugs</details> |
 | reactrestrict | **Alpha** | <details><summary>Removes reactions by role per channel</summary>A bit clunky, but functional</details> |
+| sayurl | **Alpha** | <details><summary>Convert any URL into text and post to discord</summary>No error checking and pretty spammy</details> |
 | secrethitler | **Incomplete** | <details><summary>Play the Secret Hitler game</summary>Concept, no work done yet</details> |
 | stealemoji | **Alpha** | <details><summary>Steals any custom emoji it sees in a reaction</summary>Some planned upgrades for server generation</details> |
 | werewolf | **Alpha** | <details><summary>Play the classic party game Werewolf within discord</summary>Another massive project currently being developed, will be fully customizable</details> |
