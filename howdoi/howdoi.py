@@ -5,7 +5,7 @@ from discord.ext import commands
 from .utils.chat_formatting import pagify
 from .utils.chat_formatting import box
 
-from howdoi import howdoi
+from .howdoi_source import howdoi as hdi, Answer
 
 
 class Howdoi:
@@ -13,8 +13,8 @@ class Howdoi:
 
     def __init__(self, bot):
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=104111119100111105)
         self.query = ""
+        self.config = Config.get_conf(self, identifier=72111119100111105)
         default_global = {
             "query": "",
             "pos": 1,
@@ -33,7 +33,7 @@ class Howdoi:
         """Adjust howdoi settings
         Settings are reset on reload"""
         if ctx.invoked_subcommand is None:
-            await self.bot.send_cmd_help(ctx)
+            await ctx.send_help()
     
     @howdoiset.command(pass_context=True, name="answers")
     async def howdoiset_answers(self, ctx, num_answers: int=1):
@@ -41,7 +41,7 @@ class Howdoi:
         Defaults to 1"""
         
         await self.config.num_answers.set(num_answers)
-        await self.bot.say("Number of answers provided will now be {}".format(num_answers))
+        await ctx.send("Number of answers provided will now be {}".format(num_answers))
     
     @howdoiset.command(pass_context=True, name="link")
     async def howdoiset_link(self, ctx):
@@ -50,10 +50,10 @@ class Howdoi:
         
         await self.config.link.set(not (await self.config.link()))
         
-        if (await self.config.link()):
-            await self.bot.say("Answers will now be provided as a link")
+        if await self.config.link():
+            await ctx.send("Answers will now be provided as a link")
         else:
-            await self.bot.say("Answers will now be provided as the response")
+            await ctx.send("Answers will now be provided as the response")
             
     @howdoiset.command(pass_context=True, name="full")
     async def howdoiset_full(self, ctx):
@@ -63,10 +63,10 @@ class Howdoi:
         
         await self.config.all.set(not (await self.config.all()))
         
-        if (await self.config.all()):
-            await self.bot.say("Answers will now be provided in full context")
+        if await self.config.all():
+            await ctx.send("Answers will now be provided in full context")
         else:
-            await self.bot.say("Answers will now be provided as a code snippet")
+            await ctx.send("Answers will now be provided as a code snippet")
         
     @commands.command(pass_context=True)
     async def howdoi(self, ctx, *question):
@@ -75,17 +75,11 @@ class Howdoi:
         
         await self.config.query.set(self.query)
         
-        argcopy = await self.config()
-        await self.bot.say(str(argcopy))
-        out = howdoi.howdoi(argcopy) # .encode('utf-8', 'ignore')
+        out = hdi.howdoi(await self.config.all()) # .encode('utf-8', 'ignore')
         
-        if await self.config.link():
-            await self.bot.say(out)
+        if await self.config.links():
+            await ctx.send(out)
         else:
-            await self.bot.say(box(out,"python"))
+            await ctx.send(box(out,"python"))
         # for page in pagify(out, shorten_by=24):
-            # await self.bot.say(box(page))
-        
-def setup(bot):
-    n = Howdoi(bot)
-    bot.add_cog(n)
+            # await ctx.send(box(page))

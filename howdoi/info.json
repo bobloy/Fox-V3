@@ -1,10 +1,10 @@
 {
     "author" : ["Bobloy"],
-	"bot_version" : [3,0,0],
-    "description" : "[Incomplete] Answer coding questions using gleitz's howdoi code @ https://github.com/gleitz/howdoi",
+    "bot_version" : [3,0,0],
+    "description" : "Answer coding questions using stackexchange",
     "hidden" : false,
-    "install_msg" : "Thank you for installing! Ask a question with [p]howdoi",
-	"requirements" : ["Pygments", "argparse", "cssselect", "lxml", "pyquery", "requests", "requests-cache"],
-    "short" : "[Incomplete] Answer coding questions",
-    "tags" : ["howdoi", "coding","bobloy"]
+    "install_msg" : "Thank you for installing Howdoi.",
+    "requirements" : ["Pygments==2.1.1", "argparse==1.4.0", "cssselect==0.9.1", "pyquery==1.4.0", "requests==2.9.1", "requests-cache==0.4.11"],
+    "short" : "Answer coding questions",
+    "tags" : ["coding", "tools", "utils", "bobloy"]
 }

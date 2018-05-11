@@ -1,0 +1,23 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Customizable Werewolf Game",
+  "hidden": false,
+  "install_msg": "Thank you for installing Werewolf! Use [p]wwset to run inital setup",
+  "requirements": [],
+  "short": "Werewolf Game",
+  "tags": [
+    "mafia",
+    "werewolf",
+    "party",
+    "fun",
+    "game",
+    "bobloy"
+  ]
+}

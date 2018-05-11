@@ -1,17 +1,17 @@
-import asyncio
-
-import urllib
-from urllib.parse import urlparse
-
-import os
-
-from typing import List, Union
+import aiohttp
 
 import discord
 from discord.ext import commands
 
-from redbot.core import Config
+from redbot.core import Config, RedContext
 from redbot.core.bot import Red
+
+
+async def fetch_img(session, url):
+    with aiohttp.Timeout(10):
+        async with session.get(url) as response:
+            assert response.status == 200
+            return await response.read()
 
 
 class StealEmoji:
@@ -19,31 +19,29 @@ class StealEmoji:
     This cog steals emojis and creates servers for them
     """
 
+    default_stolemoji = {
+        "guildbank": None,
+        "name": None,
+        "require_colons": False,
+        "managed": False,
+        "guild_id": None,
+        "url": None,
+        "animated": False
+    }
+
     def __init__(self, red: Red):
         self.bot = red
         self.config = Config.get_conf(self, identifier=11511610197108101109111106105)
-        default_global = {  
-                "stolemoji": {},
-                "guildbanks": [],
-                "on": False
-                }
-                
-        default_stolemoji = {
-                "guildbank": None,
-                "name": None,
-                "require_colons": False,
-                "managed": False,
-                "guild_id": None,
-                "created_at": None,
-                "url": None,
-                "roles": [],
-                "guild": None  # Will not save this one
-                }
-                
+        default_global = {
+            "stolemoji": {},
+            "guildbanks": [],
+            "on": False
+        }
+
         self.config.register_global(**default_global)
 
     @commands.group()
-    async def stealemoji(self, ctx: commands.Context):
+    async def stealemoji(self, ctx: RedContext):
         """
         Base command for this cog. Check help for the commands list.
         """
@@ -53,106 +51,106 @@ class StealEmoji:
     @stealemoji.command(name="collect")
     async def se_collect(self, ctx):
         """Toggles whether emoji's are collected or not"""
-        currSetting = await self.config.on()
-        await self.config.on.set(not currSetting)
-        await ctx.send("Collection is now "+str(not currSetting))
-        
+        curr_setting = await self.config.on()
+        await self.config.on.set(not curr_setting)
+        await ctx.send("Collection is now " + str(not curr_setting))
+
+    @stealemoji.command(name="bank")
+    async def se_bank(self, ctx):
+        """Add current server as emoji bank"""
+        await ctx.send("This will upload custom emojis to this server\n"
+                       "Are you sure you want to make the current server an emoji bank? (y/n)")
+
+        def check(m):
+            return m.content.upper() in ["Y", "YES", "N", "NO"] and m.channel == ctx.channel and m.author == ctx.author
+
+        msg = await self.bot.wait_for('message', check=check)
+
+        if msg.content in ["N", "NO"]:
+            await ctx.send("Cancelled")
+            return
+
+        async with self.config.guildbanks() as guildbanks:
+            guildbanks.append(ctx.guild.id)
+
+        await ctx.send("This server has been added as an emoji bank")
+
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         """Event handler for reaction watching"""
-        if not reaction.custom_emoji():
+        if not reaction.custom_emoji:
+            print("Not a custom emoji")
             return
-        
+
         if not (await self.config.on()):
+            print("Collecting is off")
             return
-        
+
         emoji = reaction.emoji
         if emoji in self.bot.emojis:
+            print("Emoji already in bot.emojis")
             return
-        
+
         # This is now a custom emoji that the bot doesn't have access to, time to steal it
         # First, do I have an available guildbank?
-        
-        
+
         guildbank = None
         banklist = await self.config.guildbanks()
-        for guild in banklist:
-            if len(guild.emojis)<50:
+        for guild_id in banklist:
+            guild = self.bot.get_guild(guild_id)
+            if len(guild.emojis) < 50:
                 guildbank = guild
                 break
-        
-        if not guildbank:
+
+        if guildbank is None:
+            print("No guildbank to store emoji")
             # Eventually make a new banklist
             return
-            
-        # Next, have I saved this emoji before (in self.bot.emojis should've done this)
-        
+
+        # Next, have I saved this emoji before (because uploaded emoji != orignal emoji)
+
         stolemojis = await self.config.stolemoji()
-        
+
         if emoji.id in stolemojis:
+            print("Emoji has already been stolen")
             return
-        
+
         # Alright, time to steal it for real
-        path = urlparse(emoji.url).path
-        ext = os.path.splitext(path)[1]
-        urllib.urlretrieve(emoji.url, emoji.name+ext)
-        
+        # path = urlparse(emoji.url).path
+        # ext = os.path.splitext(path)[1]
+
+        async with aiohttp.ClientSession() as session:
+            img = await fetch_img(session, emoji.url)
+
+        # path = data_manager.cog_data_path(cog_instance=self) / (emoji.name+ext)
+
+        # with path.open("wb") as f:
+        # f.write(img)
+        # urllib.urlretrieve(emoji.url, emoji.name+ext)
+
         try:
-            await guildbank.create_custom_emoji(name=emoji.name,image=emoji.url,reason="Stole from "+str(user))
-        except Forbidden as e:
+            await guildbank.create_custom_emoji(name=emoji.name, image=img, reason="Stole from " + str(user))
+        except discord.Forbidden as e:
+            print("PermissionError - no permission to add emojis")
             raise PermissionError("No permission to add emojis") from e
-        except HTTPException:
-            pass  # Unhandled error
-            
+        except discord.HTTPException as e:
+            print("HTTPException exception")
+            raise e  # Unhandled error
+
         # If you get this far, YOU DID IT
-        
-        owner = await self.bot.application_info()
-        owner = owner.owner
-        await owner.send("Just added emoji "+str(emoji)+" to server "+str(guildbank))
-        
-        
-        
-        
-    # async def 
-    
-    
-    # async def on_raw_reaction_add(self, emoji: discord.PartialReactionEmoji,
-                                  # message_id: int, channel_id: int, user_id: int):
-        # """
-        # Event handler for long term reaction watching.
 
-        # :param discord.PartialReactionEmoji emoji:
-        # :param int message_id:
-        # :param int channel_id:
-        # :param int user_id:
-        # :return:
-        # """
-        # if emoji.is_custom_emoji():
-            # emoji_id = emoji.id
-        # else:
-            # return
-        
-        # has_reactrestrict, combos = await self.has_reactrestrict_combo(message_id)
+        save_dict = self.default_stolemoji.copy()
+        e_dict = vars(emoji)
 
-        # if not has_reactrestrict:
-            # return
+        for k in e_dict:
+            if k in save_dict:
+                save_dict[k] = e_dict[k]
 
-        # try:
-            # member = self._get_member(channel_id, user_id)
-        # except LookupError:
-            # return
+        save_dict["guildbank"] = guildbank.id
 
-        # if member.bot:
-            # return
+        async with self.config.stolemoji() as stolemoji:
+            stolemoji[emoji.id] = save_dict
 
-        # try:
-            # roles = [self._get_role(member.guild, c.role_id) for c in combos]
-        # except LookupError:
-            # return
-
-        # for apprrole in roles:
-            # if apprrole in member.roles:
-                # return
-                
-        # message = await self._get_message_from_channel(channel_id, message_id)
-        # await message.remove_reaction(emoji, member)
-        
+        # Enable the below if you want to get notified when it works
+        # owner = await self.bot.application_info()
+        # owner = owner.owner
+        # await owner.send("Just added emoji "+str(emoji)+" to server "+str(guildbank))

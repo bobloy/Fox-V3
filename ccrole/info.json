@@ -1,9 +1,10 @@
 {
-	"AUTHOR" : "Bobloy",
-	"INSTALL_MSG" : "Thank you for installing Custom Commands w/ Roles",
-	"NAME" : "CCRole",
-	"SHORT" : "Creates commands that adjust roles",
-	"DESCRIPTION" : "Creates custom commands to adjust roles and send custom messages",
-	"TAGS" : ["fox", "bobloy", "utilities", "tools", "roles"],
-	"HIDDEN" : false
+    "author" : ["Bobloy"],
+    "bot_version" : [3,0,0],
+    "description" : "[Incomplete] Creates custom commands to adjust roles and send custom messages",
+    "hidden" : false,
+    "install_msg" : "Thank you for installing Custom Commands w/ Roles.",
+    "requirements" : [],
+    "short" : "[Incomplete] Creates commands that adjust roles",
+    "tags" : ["fox", "bobloy", "utility", "tools", "roles"]
 }

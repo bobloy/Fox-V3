@@ -27,10 +27,7 @@ class Fight:
 
     def __init__(self, bot):
         self.bot = bot
-        # self.path = "data/Fox-Cogs/fight/"
-        # self.file_path = "data/Fox-Cogs/fight/fight.json"
-        # self.the_data = dataIO.load_json(self.file_path)
-        self.config = Config.get_conf(self, identifier=49564952847684)
+        self.config = Config.get_conf(self, identifier=49564952847684, force_registration=True)
         default_global = {  
                 "srtracker": {},
                 "win": None,
@@ -89,11 +86,6 @@ class Fight:
         self.config.register_guild(**default_guild)
         
       
-
-# ************************v3 Shit************************  
- 
-#    def check(m):    #Check Message from author
-#            return m.author == ctx.author and m.channel == ctx.channel
 
 # ************************Fight command group start************************
 
@@ -1150,7 +1142,7 @@ class Fight:
         
     #**************** Attempt 2, borrow from Squid*******
 
-    async def on_raw_reaction_add(self, emoji: discord.PartialReactionEmoji,
+    async def on_raw_reaction_add(self, emoji: discord.PartialEmoji,
                                   message_id: int, channel_id: int, user_id: int):
         """
         Event handler for long term reaction watching.
