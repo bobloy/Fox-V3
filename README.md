@@ -6,6 +6,7 @@ Cog Function
 | --- | --- | --- | 
 | ccrole | **Beta** | <details><summary>Create custom commands that also assign roles</summary>May have some bugs, please create an issue if you find any</details> |
 | chatter | **Alpha** | <details><summary>Chat-bot trained to talk like your guild</summary>Missing some key features, but currently functional</details> |
+| coglint | **Incomplete** | <details><summary>Error check code in python syntax posted to discord</summary>Still conceptual, no idea if it'll work</details> |
 | fight | **Incomplete** | <details><summary>Organize bracket tournaments within discord</summary>Still in-progress, a massive project</details> |
 | flag | **Incomplete** | <details><summary>Create temporary marks on users that expire after specified time</summary>Not yet ported to v3</details> |
 | hangman | **Alpha** | <details><summary>Play a game of hangman</summary>Some visual glitches and needs more customization</details> |
