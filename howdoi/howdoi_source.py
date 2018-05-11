@@ -13,25 +13,26 @@ import glob
 import os
 import random
 import re
+import sys
+
 import requests
 import requests_cache
-import sys
-from . import __version__
-
 from pygments import highlight
-from pygments.lexers import guess_lexer, get_lexer_by_name
 from pygments.formatters.terminal import TerminalFormatter
+from pygments.lexers import guess_lexer, get_lexer_by_name
 from pygments.util import ClassNotFound
-
 from pyquery import PyQuery as pq
 from requests.exceptions import ConnectionError
 from requests.exceptions import SSLError
+
+from . import __version__
 
 # Handle imports for Python 2 and 3
 if sys.version < '3':
     import codecs
     from urllib import quote as url_quote
     from urllib import getproxies
+
 
     # Handling Unicode: http://stackoverflow.com/a/6633040/305414
     def u(x):
@@ -40,9 +41,9 @@ else:
     from urllib.request import getproxies
     from urllib.parse import quote as url_quote
 
+
     def u(x):
         return x
-
 
 if os.getenv('HOWDOI_DISABLE_SSL'):  # Set http instead of https
     SCHEME = 'http://'
@@ -59,7 +60,7 @@ USER_AGENTS = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:11.0) Gecko/2010
                ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/536.5 (KHTML, like Gecko) '
                 'Chrome/19.0.1084.46 Safari/536.5'),
                ('Mozilla/5.0 (Windows; Windows NT 6.1) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.46'
-                'Safari/536.5'), )
+                'Safari/536.5'),)
 SEARCH_URLS = {
     'bing': SCHEME + 'www.bing.com/search?q=site:{0}%20{1}',
     'google': SCHEME + 'www.google.com/search?q=site:{0}%20{1}'
@@ -109,7 +110,7 @@ def _extract_links_from_bing(html):
 
 def _extract_links_from_google(html):
     return [a.attrib['href'] for a in html('.l')] or \
-        [a.attrib['href'] for a in html('.r')('a')]
+           [a.attrib['href'] for a in html('.r')('a')]
 
 
 def _extract_links(html, search_engine):
