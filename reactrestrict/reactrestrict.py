@@ -2,10 +2,11 @@ import asyncio
 from typing import List, Union
 
 import discord
-from discord.ext import commands
+
 
 from redbot.core import Config
 from redbot.core.bot import Red
+from redbot.core import commands
 
 
 class ReactRestrictCombo:
@@ -79,10 +80,6 @@ class ReactRestrict:
     async def add_reactrestrict(self, message_id: int, role: discord.Role):
         """
         Adds a react|role combo.
-
-        :param int message_id:
-        :param str or int emoji:
-        :param discord.Role role:
         """
         # is_custom = True
         # if isinstance(emoji, str):
@@ -177,10 +174,6 @@ class ReactRestrict:
             -> Union[discord.Message, None]:
         """
         Tries to find a message by ID in the current guild context.
-
-        :param ctx:
-        :param message_id:
-        :return:
         """
         channel = self.bot.get_channel(channel_id)
         try:

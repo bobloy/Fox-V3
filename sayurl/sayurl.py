@@ -1,7 +1,7 @@
 import aiohttp
 import html2text
-from discord.ext import commands
-from redbot.core import Config, RedContext
+
+from redbot.core import Config
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
 
@@ -28,7 +28,7 @@ class SayUrl:
         self.config.register_guild(**default_guild)
 
     @commands.command()
-    async def sayurl(self, ctx: RedContext, url):
+    async def sayurl(self, ctx: commands.Context, url):
         """
         Converts a URL to something readable
 

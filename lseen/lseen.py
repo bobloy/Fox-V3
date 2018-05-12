@@ -2,9 +2,10 @@ from datetime import datetime
 
 import dateutil.parser
 import discord
-from discord.ext import commands
-from redbot.core import Config, RedContext
+
+from redbot.core import Config
 from redbot.core.bot import Red
+from redbot.core import commands
 
 
 class LastSeen:
@@ -37,13 +38,13 @@ class LastSeen:
         return d
 
     @commands.group(aliases=['setlseen'], name='lseenset')
-    async def lset(self, ctx: RedContext):
+    async def lset(self, ctx: commands.Context):
         """Change settings for lseen"""
         if ctx.invoked_subcommand is None:
             await ctx.send_help()
 
     @lset.command(name="toggle")
-    async def lset_toggle(self, ctx: RedContext):
+    async def lset_toggle(self, ctx: commands.Context):
         """Toggles tracking seen for this server"""
         enabled = not await self.config.guild(ctx.guild).enabled()
         await self.config.guild(ctx.guild).enabled.set(
@@ -54,7 +55,7 @@ class LastSeen:
                 "Enabled" if enabled else "Disabled"))
 
     @commands.command(aliases=['lastseen'])
-    async def lseen(self, ctx: RedContext, member: discord.Member):
+    async def lseen(self, ctx: commands.Context, member: discord.Member):
         """
         Just says the time the user was last seen
 

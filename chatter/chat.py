@@ -2,8 +2,9 @@ import asyncio
 from datetime import datetime, timedelta
 
 import discord
-from discord.ext import commands
+
 from redbot.core import Config
+from redbot.core import commands
 
 from chatter.chatterbot import ChatBot
 from chatter.chatterbot.trainers import ListTrainer
@@ -75,7 +76,7 @@ class Chatter:
         return True
 
     @commands.group()
-    async def chatter(self, ctx: RedContext):
+    async def chatter(self, ctx: commands.Context):
         """
         Base command for this cog. Check help for the commands list.
         """
@@ -83,7 +84,7 @@ class Chatter:
             await ctx.send_help()
 
     @chatter.command()
-    async def age(self, ctx: RedContext, days: int):
+    async def age(self, ctx: commands.Context, days: int):
         """
         Sets the number of days to look back
         Will train on 1 day otherwise

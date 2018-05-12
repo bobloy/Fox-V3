@@ -4,7 +4,7 @@ import math
 # from typing import Union
 
 import discord
-from discord.ext import commands
+
 
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.chat_formatting import box

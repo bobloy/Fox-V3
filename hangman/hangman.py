@@ -2,8 +2,9 @@ from collections import defaultdict
 from random import randint
 
 import discord
-from discord.ext import commands
+
 from redbot.core import Config, checks
+from redbot.core import commands
 from redbot.core.data_manager import cog_data_path, load_basic_configuration
 
 
@@ -245,7 +246,7 @@ class Hangman:
 
         await self._reprintgame(message)
 
-    async def _on_react(self, reaction, user):
+    async def on_react(self, reaction, user):
         """ Thanks to flapjack reactpoll for guidelines
             https://github.com/flapjax/FlapJack-Cogs/blob/master/reactpoll/reactpoll.py"""
 
@@ -331,8 +332,3 @@ class Hangman:
         await self._reactmessage_menu(message)
         await self._checkdone(channel)
 
-
-def setup(bot):
-    n = Hangman(bot)
-    bot.add_cog(n)
-    bot.add_listener(n._on_react, "on_reaction_add")

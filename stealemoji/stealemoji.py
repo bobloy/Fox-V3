@@ -1,9 +1,8 @@
 import aiohttp
 
 import discord
-from discord.ext import commands
 
-from redbot.core import Config, RedContext
+from redbot.core import Config, commands
 from redbot.core.bot import Red
 
 
@@ -41,7 +40,7 @@ class StealEmoji:
         self.config.register_global(**default_global)
 
     @commands.group()
-    async def stealemoji(self, ctx: RedContext):
+    async def stealemoji(self, ctx: commands.Context):
         """
         Base command for this cog. Check help for the commands list.
         """

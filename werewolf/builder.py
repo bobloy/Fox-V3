@@ -3,9 +3,11 @@ from collections import defaultdict
 from random import choice
 
 import discord
-from discord.ext import commands
+
 
 # Import all roles here
+from redbot.core import commands
+
 from werewolf.roles.seer import Seer
 from werewolf.roles.vanillawerewolf import VanillaWerewolf
 from werewolf.roles.villager import Villager

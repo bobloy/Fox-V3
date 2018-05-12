@@ -1,10 +1,11 @@
 import discord
-from discord.ext import commands
-from redbot.core import Config, checks, RedContext
+
+from redbot.core import Config, checks
 
 from redbot.core.bot import Red
 
 from pylint import epylint as lint
+from redbot.core import commands
 from redbot.core.data_manager import cog_data_path
 
 
@@ -32,7 +33,7 @@ class CogLint:
         self.config.register_guild(**default_guild)
 
     @commands.command()
-    async def autolint(self, ctx: RedContext):
+    async def autolint(self, ctx: commands.Context):
         """Toggles automatically linting code"""
         curr = await self.config.lint()
 
@@ -41,7 +42,7 @@ class CogLint:
         await ctx.send("Autolinting is now set to {}".format(not curr))
 
     @commands.command()
-    async def lint(self, ctx: RedContext, *, code):
+    async def lint(self, ctx: commands.Context, *, code):
         """Lint python code
 
         Toggle autolinting with `[p]autolint`
