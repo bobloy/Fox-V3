@@ -10,7 +10,7 @@
   "description": "Convert any website into text and post it in chat",
   "hidden": true,
   "install_msg": "Thank you for installing SayUrl",
-  "requirements": [],
+  "requirements": ["html2text"],
   "short": "Convert URL to text",
   "tags": [
     "bobloy",
