@@ -225,7 +225,7 @@ class TwitterTrainer(Trainer):
 
             for word in tweet_words:
                 # If the word contains only letters with a length from 4 to 9
-                if word.isalpha() and len(word) > 3 and len(word) <= 9:
+                if word.isalpha() and 3 < len(word) <= 9:
                     words.add(word)
 
         return words
