@@ -1,4 +1,4 @@
-import discord
+from discord.utils import get
 
 from redbot.core import Config, checks, commands
 
@@ -21,10 +21,15 @@ class ForceMention:
 
     @checks.admin_or_permissions(manage_roles=True)
     @commands.command()
-    async def forcemention(self, ctx: commands.Context, role: discord.Role):
+    async def forcemention(self, ctx: commands.Context, role: str):
         """
        Mentions that role, regardless if it's unmentionable
        """
+        role = get(ctx.guild.roles, name=role)
+        if role is None:
+            await ctx.maybe_send_embed("Couldn't find role with that name")
+            return
+
         if not role.mentionable:
             await role.edit(mentionable=True)
             await ctx.send(role.mention)
