@@ -17,6 +17,7 @@ Cog Function
 | sayurl | **Alpha** | <details><summary>Convert any URL into text and post to discord</summary>No error checking and pretty spammy</details> |
 | secrethitler | **Incomplete** | <details><summary>Play the Secret Hitler game</summary>Concept, no work done yet</details> |
 | stealemoji | **Alpha** | <details><summary>Steals any custom emoji it sees in a reaction</summary>Some planned upgrades for server generation</details> |
+| timerole | **Alpha** | <details><summary>Add roles to members after specified time on the server</summary>Upgraded from V2, please report any bugs</details> |
 | werewolf | **Alpha** | <details><summary>Play the classic party game Werewolf within discord</summary>Another massive project currently being developed, will be fully customizable</details> |
 
 
