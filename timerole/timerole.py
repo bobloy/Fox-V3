@@ -2,9 +2,7 @@ import asyncio
 from datetime import timedelta, datetime
 
 import discord
-
 from redbot.core import Config, checks, commands
-
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
 
@@ -50,7 +48,7 @@ class Timerole:
         if requiredroles:
             to_set['required'] = [r.id for r in requiredroles]
 
-        await self.config.guild(guild).roles.set_raw(role.id, to_set)
+        await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
         await ctx.send("Time Role for {0} set to {1} days".format(role.name, days))
 
     @timerole.command()
@@ -66,35 +64,51 @@ class Timerole:
         """Removes a role from being added after specified time"""
         guild = ctx.guild
 
-        await self.config.guild(guild).roles.set_raw(role.id, None)
+        await self.config.guild(guild).roles.set_raw(role.id, value=None)
         await ctx.send("{0} will no longer be applied".format(role.name))
+
+    @timerole.command()
+    async def list(self, ctx: commands.Context):
+        """Lists all currently setup timeroles"""
+        guild = ctx.guild
+
+        role_dict = await self.config.guild(guild).roles()
+        out = ""
+        for r_id, r_data in role_dict.items():
+            if r_data is not None:
+                role = discord.utils.get(guild.roles, id=int(r_id))
+                r_roles = []
+                if role is None:
+                    role = r_id
+                if 'required' in r_data:
+                    r_roles = [str(discord.utils.get(guild.roles, id=int(new_id))) for new_id in r_data['required']]
+                out += "{} || {} days || requires: {}\n".format(str(role), r_data['days'], r_roles)
+        await ctx.maybe_send_embed(out)
 
     async def timerole_update(self):
         for guild in self.bot.guilds:
-            print("In server {}".format(guild.name))
             addlist = []
 
-            role_list = await self.config.guild(guild).roles()
-            if not any(role for role in role_list):  # No roles
-                print("No roles")
+            role_dict = await self.config.guild(guild).roles()
+            if not any(role_data for role_data in role_dict.values()):  # No roles
                 continue
 
             for member in guild.members:
                 has_roles = [r.id for r in member.roles]
 
-                get_roles = [rID for rID in role_list if rID is not None]
+                get_roles = [int(rID) for rID, r_data in role_dict.items() if r_data is not None]
 
                 check_roles = set(get_roles) - set(has_roles)
 
                 for role_id in check_roles:
                     # Check for required role
-                    if 'required' in role_list[role_id]:
-                        if not set(role_list[role_id]['required']) & set(has_roles):
+                    if 'required' in role_dict[str(role_id)]:
+                        if not set(role_dict[str(role_id)]['required']) & set(has_roles):
                             # Doesn't have required role
                             continue
 
                     if member.joined_at + timedelta(
-                            days=role_list[role_id]['days']) <= datetime.today():
+                            days=role_dict[str(role_id)]['days']) <= datetime.today():
                         # Qualifies
                         addlist.append((member, role_id))
 
