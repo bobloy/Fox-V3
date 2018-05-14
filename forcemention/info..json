@@ -1,0 +1,19 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Mentions roles that are unmentionable",
+  "hidden": true,
+  "install_msg": "Thank you for installing ForceMention! Get started with `[p]forcemention`",
+  "requirements": [],
+  "short": "Mention unmentionables",
+  "tags": [
+    "bobloy",
+    "utils"
+  ]
+}

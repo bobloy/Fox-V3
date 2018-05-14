@@ -9,6 +9,7 @@ Cog Function
 | coglint | **Alpha** | <details><summary>Error check code in python syntax posted to discord</summary>Works, but probably needs more turning to work for cogs</details> |
 | fight | **Incomplete** | <details><summary>Organize bracket tournaments within discord</summary>Still in-progress, a massive project</details> |
 | flag | **Incomplete** | <details><summary>Create temporary marks on users that expire after specified time</summary>Not yet ported to v3</details> |
+| forcemention | **Alpha** | <details><summary>Mentions unmentionable roles</summary>Very simple cog, mention doesn't persist</details> |
 | hangman | **Alpha** | <details><summary>Play a game of hangman</summary>Some visual glitches and needs more customization</details> |
 | howdoi | **Incomplete** | <details><summary>Create temporary marks on users that expire after specified time</summary>Not yet ported to v3</details> |
 | leaver | **Incomplete** | <details><summary>Send a message in a channel when a user leaves the server</summary>Not yet ported to v3</details> |
