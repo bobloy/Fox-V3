@@ -2,10 +2,8 @@ from collections import defaultdict
 from random import randint
 
 import discord
-
-from redbot.core import Config, checks
-from redbot.core import commands
-from redbot.core.data_manager import cog_data_path, load_basic_configuration
+from redbot.core import Config, checks, commands
+from redbot.core.data_manager import cog_data_path
 
 
 class Hangman:
@@ -26,7 +24,7 @@ class Hangman:
             lambda: {"running": False, "hangman": 0, "guesses": [], "trackmessage": False, "answer": ''})
         self.path = str(cog_data_path(self)).replace('\\', '/')
 
-        self.answer_path = self.path+"/bundled_data/hanganswers.txt"
+        self.answer_path = self.path + "/bundled_data/hanganswers.txt"
 
         self.winbool = defaultdict(lambda: False)
 
@@ -331,4 +329,3 @@ class Hangman:
 
         await self._reactmessage_menu(message)
         await self._checkdone(channel)
-
