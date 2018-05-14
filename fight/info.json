@@ -2,7 +2,7 @@
     "author" : ["Bobloy"],
 	"bot_version" : [3,0,0],
     "description" : "[Incomplete] Cog to organize tournaments within Discord",
-    "hidden" : false,
+    "hidden" : true,
     "install_msg" : "Thank you for installing Fight. Run with [p]fight or [p]fightset",
 	"requirements" : [],
     "short" : "[Incomplete] Cog to organize tournaments",
