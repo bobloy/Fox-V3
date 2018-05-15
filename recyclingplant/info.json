@@ -10,9 +10,9 @@
   ],
   "description": "Apply for a job at the recycling plant! Sort out the garbage!",
   "hidden": false,
-  "install_msg": "Thank you for installing LoveCalculator. Stary recycling today!",
+  "install_msg": "Thank you for installing RecyclingPlant. Start recycling today with `[p]recyclingplant`",
   "requirements": [],
-  "short": "ply for a job at the recycling plant!",
+  "short": "Apply for a job at the recycling plant!",
   "tags": [
     "bobloy",
     "environment",

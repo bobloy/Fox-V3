@@ -18,7 +18,7 @@ class RecyclingPlant:
         with open(self.junk_path) as json_data:
             self.junk = json.load(json_data)
 
-    @commands.command()
+    @commands.command(aliases=["recycle"])
     async def recyclingplant(self, ctx: commands.Context):
         """Apply for a job at the recycling plant!"""
         x = 0
