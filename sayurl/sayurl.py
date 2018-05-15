@@ -1,7 +1,7 @@
 import aiohttp
 import html2text
 
-from redbot.core import Config
+from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
 
