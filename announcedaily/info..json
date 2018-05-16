@@ -7,11 +7,11 @@
     0,
     0
   ],
-  "description": "Cog Template",
+  "description": "Send daily announcements to all servers at a specified times",
   "hidden": true,
-  "install_msg": "Thank you for installing MyCog",
+  "install_msg": "Thank you for installing AnnounceDaily! Get started with `[p]help AnnounceDaily`",
   "requirements": [],
-  "short": "Cog Template",
+  "short": "Send daily announcements",
   "tags": [
     "bobloy"
   ]
