@@ -7,12 +7,16 @@
     0,
     0
   ],
-  "description": "Cog Template",
+  "description": "Send Text2Speech messages as an uploaded mp3",
   "hidden": true,
-  "install_msg": "Thank you for installing MyCog",
-  "requirements": [],
-  "short": "Cog Template",
+  "install_msg": "Thank you for installing TTS. Get started with `[p]tts`",
+  "requirements": [
+    "gTTS"
+  ],
+  "short": "Send TTS messages as uploaded mp3",
   "tags": [
-    "bobloy"
+    "bobloy",
+    "utils",
+    "audio"
   ]
 }
