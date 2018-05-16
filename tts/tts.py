@@ -28,8 +28,7 @@ class TTS:
        
        Extra information goes here
        """
-        tts = gTTS(text)
         mp3_fp = io.BytesIO()
+        tts = gTTS(text, 'en')
         tts.write_to_fp(mp3_fp)
-
-        await ctx.send("Here's  your text", file=discord.File(mp3_fp, "text.mp3"))
+        await ctx.send(file=discord.File(mp3_fp.getvalue(), "text.mp3"))
