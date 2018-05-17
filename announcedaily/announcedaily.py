@@ -188,7 +188,7 @@ class AnnounceDaily:
         await self.config.time.set({'hour': h, 'minute': m, 'second': s})
 
         await ctx.send("Announcements time has been set to {}::{}::{} every day\n"
-                       "Changes will apply after next announcement".format(h, m, s))
+                       "Changes will apply after next announcement or reload".format(h, m, s))
 
     async def send_announcements(self):
         messages = await self._get_msgs()
@@ -235,7 +235,7 @@ class AnnounceDaily:
             print("Sleeping for {} seconds".format((midnight - datetime.now()).seconds))
             await asyncio.sleep((midnight - datetime.now()).seconds)
 
-            if self is not self.bot.get_cog("Timerole"):
+            if self is not self.bot.get_cog("AnnounceDaily"):
                 return
             print("Pre-announce")
             await self.send_announcements()
