@@ -223,18 +223,21 @@ class AnnounceDaily:
                 await channel.send(choice)
 
     async def check_day(self):
-        while self is self.bot.get_cog("Timerole"):
+        print("Out of start")
+        while self is self.bot.get_cog("AnnounceDaily"):
+            print("Start")
             tomorrow = datetime.now() + timedelta(days=1)
             time = await self.config.time()
             h, m, s = time['hour'], time['minute'], time['second']
             midnight = datetime(year=tomorrow.year, month=tomorrow.month,
                                 day=tomorrow.day, hour=h, minute=m, second=s)
 
+            print("Sleeping for {} seconds".format((midnight - datetime.now()).seconds))
             await asyncio.sleep((midnight - datetime.now()).seconds)
 
             if self is not self.bot.get_cog("Timerole"):
                 return
-
+            print("Pre-announce")
             await self.send_announcements()
 
             await asyncio.sleep(3)
