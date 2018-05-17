@@ -1,12 +1,9 @@
-import asyncio
 from typing import List, Union
 
 import discord
-
-
 from redbot.core import Config
-from redbot.core.bot import Red
 from redbot.core import commands
+from redbot.core.bot import Red
 
 
 class ReactRestrictCombo:
@@ -16,8 +13,8 @@ class ReactRestrictCombo:
 
     def __eq__(self, other: "ReactRestrictCombo"):
         return (
-            self.message_id == other.message_id and
-            self.role_id == other.role_id
+                self.message_id == other.message_id and
+                self.role_id == other.role_id
         )
 
     def to_json(self):
@@ -83,7 +80,7 @@ class ReactRestrict:
         """
         # is_custom = True
         # if isinstance(emoji, str):
-            # is_custom = False
+        # is_custom = False
 
         combo = ReactRestrictCombo(message_id, role.id)
 
@@ -95,10 +92,10 @@ class ReactRestrict:
 
     async def remove_react(self, message_id: int, role: discord.Role):
         """
-        Removes a given reaction.
+        Removes a given reaction
 
-        :param int message_id:
-        :param str or int emoji:
+        :param message_id:
+        :param role:
         :return:
         """
         current_combos = await self.combo_list()
@@ -109,14 +106,13 @@ class ReactRestrict:
         if to_keep != current_combos:
             await self.set_combo_list(to_keep)
 
-    async def has_reactrestrict_combo(self, message_id: int)\
+    async def has_reactrestrict_combo(self, message_id: int) \
             -> (bool, List[ReactRestrictCombo]):
         """
-        Determines if there is an existing role combo for a given message
+         Determines if there is an existing role combo for a given message
         and emoji ID.
 
-        :param int message_id:
-        :param str or int emoji:
+        :param message_id:
         :return:
         """
         if not await self.is_registered(message_id):
@@ -169,8 +165,8 @@ class ReactRestrict:
             raise LookupError("No role found.")
 
         return role
-    
-    async def _get_message_from_channel(self, channel_id: int, message_id: int)\
+
+    async def _get_message_from_channel(self, channel_id: int, message_id: int) \
             -> Union[discord.Message, None]:
         """
         Tries to find a message by ID in the current guild context.
@@ -180,12 +176,12 @@ class ReactRestrict:
             return await channel.get_message(message_id)
         except discord.NotFound:
             pass
-        except AttributeError: # VoiceChannel object has no attribute 'get_message'
+        except AttributeError:  # VoiceChannel object has no attribute 'get_message'
             pass
 
         return None
-        
-    async def _get_message(self, ctx: commands.Context, message_id: int)\
+
+    async def _get_message(self, ctx: commands.Context, message_id: int) \
             -> Union[discord.Message, None]:
         """
         Tries to find a message by ID in the current guild context.
@@ -199,12 +195,10 @@ class ReactRestrict:
                 return await channel.get_message(message_id)
             except discord.NotFound:
                 pass
-            except AttributeError: # VoiceChannel object has no attribute 'get_message'
+            except AttributeError:  # VoiceChannel object has no attribute 'get_message'
                 pass
             except discord.Forbidden:  # No access to channel, skip
                 pass
-                
-                
 
         return None
 
@@ -228,18 +222,18 @@ class ReactRestrict:
             return
 
         # try:
-            # emoji, actual_emoji = await self._wait_for_emoji(ctx)
+        #     emoji, actual_emoji = await self._wait_for_emoji(ctx)
         # except asyncio.TimeoutError:
-            # await ctx.send("You didn't respond in time, please redo this command.")
-            # return
-
+        #     await ctx.send("You didn't respond in time, please redo this command.")
+        #     return
+        #
         # try:
-            # await message.add_reaction(actual_emoji)
+        #     await message.add_reaction(actual_emoji)
         # except discord.HTTPException:
-            # await ctx.send("I can't add that emoji because I'm not in the guild that"
-                           # " owns it.")
-            # return
-
+        #     await ctx.send("I can't add that emoji because I'm not in the guild that"
+        #                    " owns it.")
+        #     return
+        #
         # noinspection PyTypeChecker
         await self.add_reactrestrict(message_id, role)
 
@@ -251,10 +245,10 @@ class ReactRestrict:
         Removes role associated with a given reaction.
         """
         # try:
-            # emoji, actual_emoji = await self._wait_for_emoji(ctx)
+        #     emoji, actual_emoji = await self._wait_for_emoji(ctx)
         # except asyncio.TimeoutError:
-            # await ctx.send("You didn't respond in time, please redo this command.")
-            # return
+        #     await ctx.send("You didn't respond in time, please redo this command.")
+        #     return
 
         # noinspection PyTypeChecker
         await self.remove_react(message_id, role)
@@ -298,50 +292,50 @@ class ReactRestrict:
         for apprrole in roles:
             if apprrole in member.roles:
                 return
-                
+
         message = await self._get_message_from_channel(channel_id, message_id)
         await message.remove_reaction(emoji, member)
-        
-        # try:
-            # await member.add_roles(*roles)
-        # except discord.Forbidden:
-            # pass
 
+    #     try:
+    #         await member.add_roles(*roles)
+    #     except discord.Forbidden:
+    #         pass
+    #
     # async def on_raw_reaction_remove(self, emoji: discord.PartialReactionEmoji,
-                                     # message_id: int, channel_id: int, user_id: int):
-        # """
-        # Event handler for long term reaction watching.
-
-        # :param discord.PartialReactionEmoji emoji:
-        # :param int message_id:
-        # :param int channel_id:
-        # :param int user_id:
-        # :return:
-        # """
-        # if emoji.is_custom_emoji():
-            # emoji_id = emoji.id
-        # else:
-            # emoji_id = emoji.name
-
-        # has_reactrestrict, combos = await self.has_reactrestrict_combo(message_id, emoji_id)
-
-        # if not has_reactrestrict:
-            # return
-
-        # try:
-            # member = self._get_member(channel_id, user_id)
-        # except LookupError:
-            # return
-
-        # if member.bot:
-            # return
-
-        # try:
-            # roles = [self._get_role(member.guild, c.role_id) for c in combos]
-        # except LookupError:
-            # return
-
-        # try:
-            # await member.remove_roles(*roles)
-        # except discord.Forbidden:
-            # pass
+    #                                  message_id: int, channel_id: int, user_id: int):
+    #     """
+    #     Event handler for long term reaction watching.
+    #
+    #     :param discord.PartialReactionEmoji emoji:
+    #     :param int message_id:
+    #     :param int channel_id:
+    #     :param int user_id:
+    #     :return:
+    #     """
+    #     if emoji.is_custom_emoji():
+    #         emoji_id = emoji.id
+    #     else:
+    #         emoji_id = emoji.name
+    #
+    #     has_reactrestrict, combos = await self.has_reactrestrict_combo(message_id, emoji_id)
+    #
+    #     if not has_reactrestrict:
+    #         return
+    #
+    #     try:
+    #         member = self._get_member(channel_id, user_id)
+    #     except LookupError:
+    #         return
+    #
+    #     if member.bot:
+    #         return
+    #
+    #     try:
+    #         roles = [self._get_role(member.guild, c.role_id) for c in combos]
+    #     except LookupError:
+    #         return
+    #
+    #     try:
+    #         await member.remove_roles(*roles)
+    #     except discord.Forbidden:
+    #         pass

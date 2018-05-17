@@ -2,13 +2,11 @@ import asyncio
 from datetime import datetime, timedelta
 
 import discord
-
 from redbot.core import Config
 from redbot.core import commands
 
 from chatter.chatterbot import ChatBot
 from chatter.chatterbot.trainers import ListTrainer
-
 
 
 class Chatter:
@@ -99,7 +97,8 @@ class Chatter:
         Backup your training data to a json for later use
         """
         await ctx.send("Backing up data, this may take a while")
-        future = await self.loop.run_in_executor(None, self.chatbot.trainer.export_for_training, './{}.json'.format(backupname))
+        future = await self.loop.run_in_executor(None, self.chatbot.trainer.export_for_training,
+                                                 './{}.json'.format(backupname))
 
         if future:
             await ctx.send("Backup successful!")
@@ -141,7 +140,6 @@ class Chatter:
         """
         author = message.author
         channel = message.channel
-
 
         if message.author.id != self.bot.user.id:
             to_strip = "@" + author.guild.me.display_name + " "
