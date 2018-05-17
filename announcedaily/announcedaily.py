@@ -223,9 +223,7 @@ class AnnounceDaily:
                 await channel.send(choice)
 
     async def check_day(self):
-        print("Out of start")
         while self is self.bot.get_cog("AnnounceDaily"):
-            print("Start")
             tomorrow = datetime.now() + timedelta(days=1)
             time = await self.config.time()
             h, m, s = time['hour'], time['minute'], time['second']
@@ -236,8 +234,9 @@ class AnnounceDaily:
             await asyncio.sleep((midnight - datetime.now()).seconds)
 
             if self is not self.bot.get_cog("AnnounceDaily"):
+                print("Announce canceled, cog has been lost")
                 return
-            print("Pre-announce")
+
             await self.send_announcements()
 
             await asyncio.sleep(3)
