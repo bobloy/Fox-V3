@@ -32,8 +32,7 @@ class SayUrl:
         """
         Converts a URL to something readable
 
-        :param url:
-        :return:
+        Works better on smaller websites
         """
 
         h = html2text.HTML2Text()

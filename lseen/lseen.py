@@ -58,8 +58,6 @@ class LastSeen:
     async def lseen(self, ctx: commands.Context, member: discord.Member):
         """
         Just says the time the user was last seen
-
-        :param member:
         """
 
         if member.status != self.offline_status:

@@ -120,8 +120,6 @@ async def parse_code(code, game):
             digits += 1
             continue
 
-
-
         try:
             idx = int(built)
         except ValueError:
@@ -145,7 +143,6 @@ async def parse_code(code, game):
             decode.append(choice(options)(game))
 
         built = ""
-
 
     return decode
 
