@@ -1,0 +1,18 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Cog Template",
+  "hidden": true,
+  "install_msg": "Thank you for installing MyCog",
+  "requirements": [],
+  "short": "Cog Template",
+  "tags": [
+    "bobloy"
+  ]
+}
