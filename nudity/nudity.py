@@ -2,15 +2,14 @@ from datetime import datetime
 
 import dateutil.parser
 import discord
-
 from redbot.core import Config
-from redbot.core.bot import Red
 from redbot.core import commands
+from redbot.core.bot import Red
 
 
-class LastSeen:
+class Nudity:
     """
-    Report when a user was last seen online
+    V3 Cog Template
     """
 
     online_status = discord.Status.online

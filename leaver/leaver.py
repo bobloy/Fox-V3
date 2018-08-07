@@ -1,10 +1,7 @@
 import discord
-import os
-from datetime import datetime
 
-
-from .utils.dataIO import dataIO
-from .utils import checks
+from redbot.core import Config, checks, commands
+from redbot.core.commands import Context
 
 
 class Leaver:
@@ -12,67 +9,32 @@ class Leaver:
 
     def __init__(self, bot):
         self.bot = bot
-        self.path = "data/Fox-Cogs/leaver"
-        self.file_path = "data/Fox-Cogs/leaver/leaver.json"
-        self.the_data = dataIO.load_json(self.file_path)
+        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
+        default_guild = {
+            "channel": ''
+        }
 
-    def save_data(self):
-        """Saves the json"""
-        dataIO.save_json(self.file_path, self.the_data)
+        self.config.register_guild(**default_guild)
 
-    @commands.group(aliases=['setleaver'], pass_context=True, no_pm=True)
+    @commands.group(aliases=['setleaver'])
     @checks.mod_or_permissions(administrator=True)
     async def leaverset(self, ctx):
         """Adjust leaver settings"""
-        
-        server = ctx.message.server
-        if server.id not in self.the_data:
-            self.the_data[server.id] = {}
-            self.save_data()
-
-        
         if ctx.invoked_subcommand is None:
-            await self.bot.send_cmd_help(ctx)
+            await ctx.send_help()
 
-    @leaverset.command(pass_context=True, no_pm=True)
-    async def channel(self, ctx):
-        server = ctx.message.server
-        if 'CHANNEL' not in self.the_data[server.id]:
-            self.the_data[server.id]['CHANNEL'] = ''
-        
+    @leaverset.command()
+    async def channel(self, ctx: Context):
+        guild = ctx.guild
+        await self.config.guild(guild).channel.set(ctx.channel.id)
+        await ctx.send("Channel set to " + ctx.channel.name)
 
-        self.the_data[server.id]['CHANNEL'] = ctx.message.channel.id
-        self.save_data()
-        await self.bot.say("Channel set to "+ctx.message.channel.name)
+    async def when_leave(self, member: discord.Member):
+        server = member.guild
+        channel = await self.config.guild(server).channel()
 
-    async def when_leave(self, member):
-        server = member.server
-        if server.id in self.the_data:
-            await self.bot.send_message(server.get_channel(self.the_data[server.id]['CHANNEL']),
-                                        str(member) + "(*" + str(member.nick) +"*) has left the server!")
+        if channel != '':
+            channel = server.get_channel(channel)
+            await channel.send(str(member) + "(*" + str(member.nick) + "*) has left the server!")
         else:
-            await self.bot.send_message(server.default_channel.id, str(member) + " (*" + str(member.nick) +"*) has left the server!")
-
-
-def check_folders():
-    if not os.path.exists("data/Fox-Cogs"):
-        print("Creating data/Fox-Cogs folder...")
-        os.makedirs("data/Fox-Cogs")
-
-    if not os.path.exists("data/Fox-Cogs/leaver"):
-        print("Creating data/Fox-Cogs/leaver folder...")
-        os.makedirs("data/Fox-Cogs/leaver")
-
-
-def check_files():
-    if not dataIO.is_valid_json("data/Fox-Cogs/leaver/leaver.json"):
-        dataIO.save_json("data/Fox-Cogs/leaver/leaver.json", {})
-
-
-def setup(bot):
-    check_folders()
-    check_files()
-    q = Leaver(bot)
-    bot.add_listener(q.when_leave, "on_member_remove")
-    bot.add_cog(q)
-    
+            pass
