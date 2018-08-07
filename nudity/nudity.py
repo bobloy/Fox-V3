@@ -19,17 +19,12 @@ class Nudity:
     def __init__(self, bot: Red):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
-        default_global = {}
+
         default_guild = {
             "enabled": True
         }
-        default_member = {
-            "seen": None
-        }
 
-        self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
-        self.config.register_member(**default_member)
 
     @staticmethod
     def get_date_time(s):

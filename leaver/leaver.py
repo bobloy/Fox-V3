@@ -5,7 +5,9 @@ from redbot.core.commands import Context
 
 
 class Leaver:
-    """Creates a goodbye message when people leave"""
+    """
+    Creates a goodbye message when people leave
+    """
 
     def __init__(self, bot):
         self.bot = bot
@@ -29,12 +31,12 @@ class Leaver:
         await self.config.guild(guild).channel.set(ctx.channel.id)
         await ctx.send("Channel set to " + ctx.channel.name)
 
-    async def when_leave(self, member: discord.Member):
-        server = member.guild
-        channel = await self.config.guild(server).channel()
+    async def on_member_remove(self, member: discord.Member):
+        guild = member.guild
+        channel = await self.config.guild(guild).channel()
 
         if channel != '':
-            channel = server.get_channel(channel)
+            channel = guild.get_channel(channel)
             await channel.send(str(member) + "(*" + str(member.nick) + "*) has left the server!")
         else:
             pass
