@@ -3,9 +3,9 @@ from __future__ import unicode_literals
 import logging
 
 from . import utils
-from .input import InputAdapter
-from .output import OutputAdapter
-from .storage import StorageAdapter
+from chatter.chatterbot.input import InputAdapter
+from chatter.chatterbot.output import OutputAdapter
+from chatter.chatterbot.storage import StorageAdapter
 
 
 class ChatBot(object):
@@ -14,7 +14,7 @@ class ChatBot(object):
     """
 
     def __init__(self, name, **kwargs):
-        from .logic import MultiLogicAdapter
+        from chatter.chatterbot.logic import MultiLogicAdapter
 
         self.name = name
         kwargs['name'] = name

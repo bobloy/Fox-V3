@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from .output_adapter import OutputAdapter
+from chatter.chatterbot.output import OutputAdapter
 
 
 class TerminalAdapter(OutputAdapter):
