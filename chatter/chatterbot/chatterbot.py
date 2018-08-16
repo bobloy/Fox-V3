@@ -33,9 +33,9 @@ class ChatBot(object):
         output_adapter = kwargs.get('output_adapter', 'chatter.chatterbot.output.OutputAdapter')
 
         # Check that each adapter is a valid subclass of it's respective parent
-        utils.validate_adapter_class(storage_adapter, StorageAdapter)
-        utils.validate_adapter_class(input_adapter, InputAdapter)
-        utils.validate_adapter_class(output_adapter, OutputAdapter)
+        # utils.validate_adapter_class(storage_adapter, StorageAdapter)
+        # utils.validate_adapter_class(input_adapter, InputAdapter)
+        # utils.validate_adapter_class(output_adapter, OutputAdapter)
 
         self.logic = MultiLogicAdapter(**kwargs)
         self.storage = utils.initialize_class(storage_adapter, **kwargs)
