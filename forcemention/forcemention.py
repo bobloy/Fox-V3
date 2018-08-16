@@ -7,7 +7,7 @@ from redbot.core.bot import Red
 
 class ForceMention:
     """
-    V3 Cog Template
+    Mention the unmentionables
     """
 
     def __init__(self, bot: Red):
@@ -21,7 +21,7 @@ class ForceMention:
 
     @checks.admin_or_permissions(manage_roles=True)
     @commands.command()
-    async def forcemention(self, ctx: commands.Context, role: str, *, message):
+    async def forcemention(self, ctx: commands.Context, role: str, *, message=None):
         """
        Mentions that role, regardless if it's unmentionable
        """
