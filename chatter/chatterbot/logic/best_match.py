@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from .logic_adapter import LogicAdapter
+from chatter.chatterbot.logic import LogicAdapter
 
 
 class BestMatch(LogicAdapter):
