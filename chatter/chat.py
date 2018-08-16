@@ -10,6 +10,7 @@ from chatter.chatterbot import ChatBot
 from chatter.chatterbot.trainers import ListTrainer
 from redbot.core.data_manager import cog_data_path
 
+
 class Chatter:
     """
     This cog trains a chatbot that will talk like members of your Guild
@@ -29,7 +30,7 @@ class Chatter:
         self.chatbot = ChatBot(
             "ChatterBot",
             storage_adapter='chatter.chatterbot.storage.SQLStorageAdapter',
-            database=data_path
+            database=str(data_path)
         )
         self.chatbot.set_trainer(ListTrainer)
 
