@@ -3,9 +3,6 @@ from __future__ import unicode_literals
 import logging
 
 from chatter.chatterbot import utils
-from chatter.chatterbot.input import InputAdapter
-from chatter.chatterbot.output import OutputAdapter
-from chatter.chatterbot.storage import StorageAdapter
 
 
 class ChatBot(object):

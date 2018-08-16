@@ -1,6 +1,6 @@
-from .input_adapter import InputAdapter
 from .gitter import Gitter
 from .hipchat import HipChat
+from .input_adapter import InputAdapter
 from .mailgun import Mailgun
 from .microsoft import Microsoft
 from .terminal import TerminalAdapter

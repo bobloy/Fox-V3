@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 import discord
 from redbot.core import Config
 from redbot.core import commands
+from redbot.core.data_manager import cog_data_path
 
 from chatter.chatterbot import ChatBot
 from chatter.chatterbot.trainers import ListTrainer
-from redbot.core.data_manager import cog_data_path
 
 
 class Chatter:
