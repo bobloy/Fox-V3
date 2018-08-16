@@ -21,7 +21,7 @@ class ForceMention:
 
     @checks.admin_or_permissions(manage_roles=True)
     @commands.command()
-    async def forcemention(self, ctx: commands.Context, role: str, *, message=None):
+    async def forcemention(self, ctx: commands.Context, role: str, *, message=''):
         """
        Mentions that role, regardless if it's unmentionable
        """
@@ -35,4 +35,4 @@ class ForceMention:
             await ctx.send("{}\n{}".format(role_obj.mention, message))
             await role_obj.edit(mentionable=False)
         else:
-            await ctx.send(role_obj.mention)
+            await ctx.send("{}\n{}".format(role_obj.mention, message))

@@ -1,7 +1,8 @@
 from datetime import datetime
 
-import dateutil.parser
 import discord
+import nude
+from nude import Nude
 from redbot.core import Config
 from redbot.core import commands
 from redbot.core.bot import Red
@@ -21,65 +22,24 @@ class Nudity:
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
 
         default_guild = {
-            "enabled": True
+            "enabled": False
         }
 
         self.config.register_guild(**default_guild)
 
-    @staticmethod
-    def get_date_time(s):
-        d = dateutil.parser.parse(s)
-        return d
+    @commands.command(aliases=['togglenudity'], name='nudity')
+    async def nudity(self, ctx: commands.Context):
+        """Toggle nude-checking on or off"""
+        is_on = await self.config.guild(ctx.guild).enabled()
+        await self.config.guild(ctx.guild).enabled.set(not is_on)
+        await ctx.send("Nude checking is now set to {}".format(not is_on))
 
-    @commands.group(aliases=['setlseen'], name='lseenset')
-    async def lset(self, ctx: commands.Context):
-        """Change settings for lseen"""
-        if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+    async def on_message(self, message: discord.Message):
+        is_on = await self.config.guild(message.guild).enabled()
+        if not is_on:
+            return
 
-    @lset.command(name="toggle")
-    async def lset_toggle(self, ctx: commands.Context):
-        """Toggles tracking seen for this server"""
-        enabled = not await self.config.guild(ctx.guild).enabled()
-        await self.config.guild(ctx.guild).enabled.set(
-            enabled)
+        if not message.attachments:
+            return
 
-        await ctx.send(
-            "Seen for this server is now {}".format(
-                "Enabled" if enabled else "Disabled"))
 
-    @commands.command(aliases=['lastseen'])
-    async def lseen(self, ctx: commands.Context, member: discord.Member):
-        """
-        Just says the time the user was last seen
-        """
-
-        if member.status != self.offline_status:
-            last_seen = datetime.utcnow()
-        else:
-            last_seen = await self.config.member(member).seen()
-            if last_seen is None:
-                await ctx.send(embed=discord.Embed(description="I've never seen this user"))
-                return
-            last_seen = self.get_date_time(last_seen)
-
-        # embed = discord.Embed(
-        #     description="{} was last seen at this date and time".format(member.display_name),
-        #     timestamp=self.get_date_time(last_seen))
-
-        embed = discord.Embed(timestamp=last_seen)
-        await ctx.send(embed=embed)
-
-    # async def on_socket_raw_receive(self, data):
-    #     try:
-    #         if type(data) == str:
-    #             raw = json.loads(data)
-    #             print(data)
-    #     except:
-    #         print(data)
-
-    async def on_member_update(self, before: discord.Member, after: discord.Member):
-        if before.status != self.offline_status and after.status == self.offline_status:
-            if not await self.config.guild(before.guild).enabled():
-                return
-            await self.config.member(before).seen.set(datetime.utcnow().isoformat())
