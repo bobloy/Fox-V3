@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from . import utils
+from chatter.chatterbot import utils
 from chatter.chatterbot.input import InputAdapter
 from chatter.chatterbot.output import OutputAdapter
 from chatter.chatterbot.storage import StorageAdapter
@@ -139,7 +139,7 @@ class ChatBot(object):
         """
         Learn that the statement provided is a valid response.
         """
-        from .conversation import Response
+        from chatter.chatterbot.conversation import Response
 
         if previous_statement:
             statement.add_response(
