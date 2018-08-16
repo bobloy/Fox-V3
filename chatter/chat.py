@@ -1,4 +1,5 @@
 import asyncio
+import pathlib
 from datetime import datetime, timedelta
 
 import discord
@@ -7,7 +8,7 @@ from redbot.core import commands
 
 from chatter.chatterbot import ChatBot
 from chatter.chatterbot.trainers import ListTrainer
-
+from redbot.core.data_manager import cog_data_path
 
 class Chatter:
     """
@@ -22,11 +23,13 @@ class Chatter:
             "whitelist": None,
             "days": 1
         }
+        path: pathlib.Path = cog_data_path(self)
+        data_path = path / ("database.sqlite3")
 
         self.chatbot = ChatBot(
             "ChatterBot",
             storage_adapter='chatter.chatterbot.storage.SQLStorageAdapter',
-            database='./database.sqlite3'
+            database=data_path
         )
         self.chatbot.set_trainer(ListTrainer)
 
