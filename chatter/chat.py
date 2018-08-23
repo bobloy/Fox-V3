@@ -137,16 +137,21 @@ class Chatter:
         else:
             await ctx.send("Error occurred :(")
 
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         """
         Credit to https://github.com/Twentysix26/26-Cogs/blob/master/cleverbot/cleverbot.py
         for on_message recognition of @bot
         """
         author = message.author
-        channel = message.channel
+        try:
+            guild: discord.Guild = message.guild
+        except AttributeError:  # Not a guild message
+            return
 
-        if message.author.id != self.bot.user.id:
-            to_strip = "@" + author.guild.me.display_name + " "
+        channel: discord.TextChannel = message.channel
+
+        if author.id != self.bot.user.id:
+            to_strip = "@" + guild.me.display_name + " "
             text = message.clean_content
             if not text.startswith(to_strip):
                 return
