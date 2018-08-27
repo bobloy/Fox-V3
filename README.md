@@ -11,7 +11,7 @@ Cog Function
 | flag | **Alpha** | <details><summary>Create temporary marks on users that expire after specified time</summary>Ported, will not import old data. Please report bugs</details> |
 | forcemention | **Alpha** | <details><summary>Mentions unmentionable roles</summary>Very simple cog, mention doesn't persist</details> |
 | hangman | **Alpha** | <details><summary>Play a game of hangman</summary>Some visual glitches and needs more customization</details> |
-| howdoi | **Incomplete** | <details><summary>Create temporary marks on users that expire after specified time</summary>Not yet ported to v3</details> |
+| howdoi | **Incomplete** | <details><summary>Ask coding questions and get results from StackExchange</summary>Not yet functional</details> |
 | leaver | **Alpha** | <details><summary>Send a message in a channel when a user leaves the server</summary>Just released, please report bugs</details> |
 | lseen | **Alpha** | <details><summary>Track when a member was last online</summary>Alpha release, please report bugs</details> |
 | reactrestrict | **Alpha** | <details><summary>Removes reactions by role per channel</summary>A bit clunky, but functional</details> |
