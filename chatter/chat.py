@@ -8,6 +8,7 @@ from redbot.core import commands
 from redbot.core.data_manager import cog_data_path
 
 from chatter.chatterbot import ChatBot
+from chatter.chatterbot.comparisons import levenshtein_distance
 from chatter.chatterbot.trainers import ListTrainer
 
 
@@ -30,7 +31,8 @@ class Chatter:
         self.chatbot = ChatBot(
             "ChatterBot",
             storage_adapter='chatter.chatterbot.storage.SQLStorageAdapter',
-            database=str(data_path)
+            database=str(data_path),
+            statement_comparison_function=levenshtein_distance
         )
         self.chatbot.set_trainer(ListTrainer)
 
@@ -45,21 +47,42 @@ class Chatter:
         Currently takes a stupid long time
         Returns a list of text
         """
-        out = []
+        out = [[]]
         after = datetime.today() - timedelta(days=(await self.config.guild(ctx.guild).days()))
+
+        def new_message(msg, sent, out_in):
+            if sent is None:
+                return False
+
+            if len(out_in) < 2:
+                return False
+
+            return msg.created_at - sent >= timedelta(hours=3)  # This should be configurable perhaps
 
         for channel in ctx.guild.text_channels:
             if in_channel:
                 channel = in_channel
             await ctx.send("Gathering {}".format(channel.mention))
             user = None
+            i = 0
+            send_time = None
             try:
+
                 async for message in channel.history(limit=None, reverse=True, after=after):
+                    # if message.author.bot:  # Skip bot messages
+                    #     continue
+                    if new_message(message, send_time, out[i]):
+                        out.append([])
+                        i += 1
+                        user = None
+                    else:
+                        send_time = message.created_at + timedelta(seconds=1)
                     if user == message.author:
-                        out[-1] += "\n" + message.clean_content
+                        out[i][-1] += "\n" + message.clean_content
                     else:
                         user = message.author
-                        out.append(message.clean_content)
+                        out[i].append(message.clean_content)
+
             except discord.Forbidden:
                 pass
             except discord.HTTPException:
@@ -72,7 +95,8 @@ class Chatter:
 
     def _train(self, data):
         try:
-            self.chatbot.train(data)
+            for convo in data:
+                self.chatbot.train(convo)
         except:
             return False
         return True
@@ -159,7 +183,7 @@ class Chatter:
             async with channel.typing():
                 future = await self.loop.run_in_executor(None, self.chatbot.get_response, text)
 
-                if future:
+                if future and str(future):
                     await channel.send(str(future))
                 else:
                     await channel.send(':thinking:')
