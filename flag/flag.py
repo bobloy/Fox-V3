@@ -42,7 +42,7 @@ class Flag:
         Extra information goes here
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @flagset.command(name="expire")
     async def flagset_expire(self, ctx: commands.Context, days: int):

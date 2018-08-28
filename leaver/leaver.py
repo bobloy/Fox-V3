@@ -23,7 +23,7 @@ class Leaver:
     async def leaverset(self, ctx):
         """Adjust leaver settings"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @leaverset.command()
     async def channel(self, ctx: Context):

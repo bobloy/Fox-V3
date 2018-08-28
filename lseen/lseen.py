@@ -41,7 +41,7 @@ class LastSeen:
     async def lset(self, ctx: commands.Context):
         """Change settings for lseen"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @lset.command(name="toggle")
     async def lset_toggle(self, ctx: commands.Context):

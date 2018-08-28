@@ -208,7 +208,7 @@ class ReactRestrict:
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @reactrestrict.command()
     async def add(self, ctx: commands.Context, message_id: int, *, role: discord.Role):

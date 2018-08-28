@@ -53,7 +53,7 @@ class Werewolf:
         Base command to adjust settings. Check help for command list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @commands.guild_only()
     @wwset.command(name="list")
@@ -136,7 +136,7 @@ class Werewolf:
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @commands.guild_only()
     @ww.command(name="new")

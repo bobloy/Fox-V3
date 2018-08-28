@@ -127,8 +127,8 @@ class Hangman:
     @checks.mod_or_permissions(administrator=True)
     async def hangset(self, ctx):
         """Adjust hangman settings"""
-        if not ctx.invoked_subcommand:
-            await ctx.send_help()
+        if ctx.invoked_subcommand is None:
+            pass
 
     @hangset.command(pass_context=True)
     async def face(self, ctx: commands.Context, theface):

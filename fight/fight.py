@@ -103,7 +103,7 @@ class Fight:
             await ctx.send("Current tournament ID: " + await self._activefight(ctx))
 
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
             # await ctx.send("I can do stuff!")
 
     @fight.command(name="join")
@@ -199,7 +199,7 @@ class Fight:
     async def fadmin(self, ctx):
         """Admin command for managing the current tournament"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
             
     @fadmin.command(name="score")
     async def fadmin_score(self, ctx: commands.Context, mID, score1, score2):
@@ -257,7 +257,7 @@ class Fight:
             # self.save_data()
 
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
         # await ctx.send("I can do stuff!")
     
     @fightset.command(name="emoji")
@@ -549,7 +549,7 @@ class Fight:
     async def fightset_guild(self, ctx):
         """Adjust guild wide settings"""
         if ctx.invoked_subcommand is None or isinstance(ctx.invoked_subcommand, commands.Group):
-            await ctx.send_help()
+            pass
     
     @fightset_guild.command(name="selfreport")
     async def fightset_guild_selfreport(self, ctx):

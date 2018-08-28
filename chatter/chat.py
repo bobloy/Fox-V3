@@ -101,13 +101,13 @@ class Chatter:
             return False
         return True
 
-    @commands.group()
+    @commands.group(invoke_without_command=False)
     async def chatter(self, ctx: commands.Context):
         """
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @chatter.command()
     async def age(self, ctx: commands.Context, days: int):
