@@ -7,7 +7,7 @@ from redbot.core.bot import Red
 
 class ForceMention:
     """
-    V3 Cog Template
+    Mention the unmentionables
     """
 
     def __init__(self, bot: Red):
@@ -21,18 +21,18 @@ class ForceMention:
 
     @checks.admin_or_permissions(manage_roles=True)
     @commands.command()
-    async def forcemention(self, ctx: commands.Context, role: str):
+    async def forcemention(self, ctx: commands.Context, role: str, *, message=''):
         """
        Mentions that role, regardless if it's unmentionable
        """
-        role = get(ctx.guild.roles, name=role)
-        if role is None:
-            await ctx.maybe_send_embed("Couldn't find role with that name")
+        role_obj = get(ctx.guild.roles, name=role)
+        if role_obj is None:
+            await ctx.maybe_send_embed("Couldn't find role named {}".format(role))
             return
 
-        if not role.mentionable:
-            await role.edit(mentionable=True)
-            await ctx.send(role.mention)
-            await role.edit(mentionable=False)
+        if not role_obj.mentionable:
+            await role_obj.edit(mentionable=True)
+            await ctx.send("{}\n{}".format(role_obj.mention, message))
+            await role_obj.edit(mentionable=False)
         else:
-            await ctx.send(role.mention)
+            await ctx.send("{}\n{}".format(role_obj.mention, message))

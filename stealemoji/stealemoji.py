@@ -45,7 +45,7 @@ class StealEmoji:
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @stealemoji.command(name="collect")
     async def se_collect(self, ctx):
@@ -58,7 +58,7 @@ class StealEmoji:
     async def se_bank(self, ctx):
         """Add current server as emoji bank"""
         await ctx.send("This will upload custom emojis to this server\n"
-                       "Are you sure you want to make the current server an emoji bank? (y/n)")
+                       "Are you sure you want to make the current server an emoji bank? (y//n)")
 
         def check(m):
             return m.content.upper() in ["Y", "YES", "N", "NO"] and m.channel == ctx.channel and m.author == ctx.author

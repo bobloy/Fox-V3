@@ -2,10 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from . import utils
-from .input import InputAdapter
-from .output import OutputAdapter
-from .storage import StorageAdapter
+from chatter.chatterbot import utils
 
 
 class ChatBot(object):
@@ -14,7 +11,7 @@ class ChatBot(object):
     """
 
     def __init__(self, name, **kwargs):
-        from .logic import MultiLogicAdapter
+        from chatter.chatterbot.logic import MultiLogicAdapter
 
         self.name = name
         kwargs['name'] = name
@@ -33,9 +30,9 @@ class ChatBot(object):
         output_adapter = kwargs.get('output_adapter', 'chatter.chatterbot.output.OutputAdapter')
 
         # Check that each adapter is a valid subclass of it's respective parent
-        utils.validate_adapter_class(storage_adapter, StorageAdapter)
-        utils.validate_adapter_class(input_adapter, InputAdapter)
-        utils.validate_adapter_class(output_adapter, OutputAdapter)
+        # utils.validate_adapter_class(storage_adapter, StorageAdapter)
+        # utils.validate_adapter_class(input_adapter, InputAdapter)
+        # utils.validate_adapter_class(output_adapter, OutputAdapter)
 
         self.logic = MultiLogicAdapter(**kwargs)
         self.storage = utils.initialize_class(storage_adapter, **kwargs)
@@ -139,7 +136,7 @@ class ChatBot(object):
         """
         Learn that the statement provided is a valid response.
         """
-        from .conversation import Response
+        from chatter.chatterbot.conversation import Response
 
         if previous_statement:
             statement.add_response(

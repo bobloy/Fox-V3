@@ -37,7 +37,7 @@ class Timerole:
     async def timerole(self, ctx):
         """Adjust timerole settings"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @timerole.command()
     async def addrole(self, ctx: commands.Context, role: discord.Role, days: int, *requiredroles: discord.Role):

@@ -33,7 +33,7 @@ class Werewolf:
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
     
     @ww.command()
     async def new(self, ctx, game_code):
