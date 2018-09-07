@@ -58,7 +58,7 @@ class RPSLS:
             await ctx.maybe_send_embed("Invalid Choice")
             return
 
-        bot_choice = random.choice(self.weaknesses)
+        bot_choice = random.choice(list(self.weaknesses.keys()))
         bot_emote = self.get_emote(bot_choice)
         message = '{} vs. {}, who will win?'.format(player_emote, bot_emote)
         em = discord.Embed(description=message, color=discord.Color.blue())
