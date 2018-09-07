@@ -320,11 +320,8 @@ class Hangman:
 
     def _make_say(self, guild):
         c_say = "Guess this: " + str(self._hideanswer(guild)) + "\n"
-
         c_say += "Used Letters: " + str(self._guesslist(guild)) + "\n"
-
         c_say += self.hanglist[guild][self.the_data[guild]["hangman"]] + "\n"
-
         c_say += self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z"
 
         return c_say
