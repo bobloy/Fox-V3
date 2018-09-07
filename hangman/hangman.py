@@ -132,6 +132,7 @@ class Hangman:
 
     @hangset.command(pass_context=True)
     async def face(self, ctx: commands.Context, theface):
+        """Set the face of the hangman"""
         message = ctx.message
         # Borrowing FlapJack's emoji validation
         # (https://github.com/flapjax/FlapJack-Cogs/blob/master/smartreact/smartreact.py)
