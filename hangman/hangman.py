@@ -16,6 +16,7 @@ class Hangman:
         self.config = Config.get_conf(self, identifier=1049711010310997110)
         default_guild = {
             "theface": ':thinking:',
+            "emojis": True,
         }
 
         self.config.register_guild(**default_guild)
@@ -127,7 +128,7 @@ class Hangman:
     async def hangset(self, ctx):
         """Adjust hangman settings"""
         if not ctx.invoked_subcommand:
-            await ctx.send_help()
+            pass
 
     @hangset.command(pass_context=True)
     async def face(self, ctx: commands.Context, theface):
@@ -147,6 +148,14 @@ class Hangman:
         await self.config.guild(ctx.guild).theface.set(theface)
         await self._update_hanglist()
         await ctx.send("Face has been updated!")
+
+    @hangset.command(pass_context=True)
+    async def toggleemoji(self, ctx: commands.Context):
+        """Toggles whether to automatically react with the alphabet"""
+
+        current = await self.config.guild(ctx.guild).emojis()
+        await self.config.guild(ctx.guild).emojis.set(not current)
+        await ctx.send("Emoji Letter reactions have been set to {}".format(not current))
 
     @commands.command(aliases=['hang'], pass_context=True)
     async def hangman(self, ctx, guess: str = None):
@@ -252,7 +261,7 @@ class Hangman:
             return
 
         if user == self.bot.user:
-            return  # Don't remove bot's own reactions
+            return  # Don't react to bot's own reactions
         message = reaction.message
         emoji = reaction.emoji
 
@@ -271,12 +280,18 @@ class Hangman:
 
     async def _reactmessage_menu(self, message):
         """React with menu options"""
+        if not await self.config.guild(message.guild).emojis():
+            return
+
         await message.clear_reactions()
 
         await message.add_reaction(self.navigate[0])
         await message.add_reaction(self.navigate[-1])
 
     async def _reactmessage_am(self, message):
+        if not await self.config.guild(message.guild).emojis():
+            return
+
         await message.clear_reactions()
 
         for x in range(len(self.letters)):
@@ -286,6 +301,8 @@ class Hangman:
         await message.add_reaction(self.navigate[-1])
 
     async def _reactmessage_nz(self, message):
+        if not await self.config.guild(message.guild).emojis():
+            return
         await message.clear_reactions()
 
         for x in range(len(self.letters)):
