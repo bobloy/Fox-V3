@@ -10,7 +10,7 @@ from redbot.core import commands
 
 class LastSeen:
     """
-    V3 Cog Template
+    Report when a user was last seen online
     """
 
     online_status = discord.Status.online
@@ -41,7 +41,7 @@ class LastSeen:
     async def lset(self, ctx: commands.Context):
         """Change settings for lseen"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @lset.command(name="toggle")
     async def lset_toggle(self, ctx: commands.Context):
@@ -58,8 +58,6 @@ class LastSeen:
     async def lseen(self, ctx: commands.Context, member: discord.Member):
         """
         Just says the time the user was last seen
-
-        :param member:
         """
 
         if member.status != self.offline_status:

@@ -1,7 +1,7 @@
 import aiohttp
 import html2text
 
-from redbot.core import Config
+from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
 
@@ -32,8 +32,7 @@ class SayUrl:
         """
         Converts a URL to something readable
 
-        :param url:
-        :return:
+        Works better on smaller websites
         """
 
         h = html2text.HTML2Text()

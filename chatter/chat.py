@@ -1,14 +1,16 @@
 import asyncio
+import pathlib
 from datetime import datetime, timedelta
 
 import discord
-
 from redbot.core import Config
 from redbot.core import commands
+from redbot.core.data_manager import cog_data_path
 
 from chatter.chatterbot import ChatBot
+from chatter.chatterbot.comparisons import levenshtein_distance
+from chatter.chatterbot.response_selection import get_first_response
 from chatter.chatterbot.trainers import ListTrainer
-
 
 
 class Chatter:
@@ -24,11 +26,23 @@ class Chatter:
             "whitelist": None,
             "days": 1
         }
+        path: pathlib.Path = cog_data_path(self)
+        data_path = path / ("database.sqlite3")
 
         self.chatbot = ChatBot(
             "ChatterBot",
             storage_adapter='chatter.chatterbot.storage.SQLStorageAdapter',
-            database='./database.sqlite3'
+            database=str(data_path),
+            statement_comparison_function=levenshtein_distance,
+            response_selection_method=get_first_response,
+            logic_adapters=[
+                'chatter.chatterbot.logic.BestMatch',
+                {
+                    'import_path': 'chatter.chatterbot.logic.LowConfidenceAdapter',
+                    'threshold': 0.65,
+                    'default_response': ':thinking:'
+                }
+            ]
         )
         self.chatbot.set_trainer(ListTrainer)
 
@@ -43,21 +57,42 @@ class Chatter:
         Currently takes a stupid long time
         Returns a list of text
         """
-        out = []
+        out = [[]]
         after = datetime.today() - timedelta(days=(await self.config.guild(ctx.guild).days()))
+
+        def new_message(msg, sent, out_in):
+            if sent is None:
+                return False
+
+            if len(out_in) < 2:
+                return False
+
+            return msg.created_at - sent >= timedelta(hours=3)  # This should be configurable perhaps
 
         for channel in ctx.guild.text_channels:
             if in_channel:
                 channel = in_channel
             await ctx.send("Gathering {}".format(channel.mention))
             user = None
+            i = 0
+            send_time = None
             try:
+
                 async for message in channel.history(limit=None, reverse=True, after=after):
+                    # if message.author.bot:  # Skip bot messages
+                    #     continue
+                    if new_message(message, send_time, out[i]):
+                        out.append([])
+                        i += 1
+                        user = None
+                    else:
+                        send_time = message.created_at + timedelta(seconds=1)
                     if user == message.author:
-                        out[-1] += "\n" + message.clean_content
+                        out[i][-1] += "\n" + message.clean_content
                     else:
                         user = message.author
-                        out.append(message.clean_content)
+                        out[i].append(message.clean_content)
+
             except discord.Forbidden:
                 pass
             except discord.HTTPException:
@@ -70,18 +105,19 @@ class Chatter:
 
     def _train(self, data):
         try:
-            self.chatbot.train(data)
+            for convo in data:
+                self.chatbot.train(convo)
         except:
             return False
         return True
 
-    @commands.group()
+    @commands.group(invoke_without_command=False)
     async def chatter(self, ctx: commands.Context):
         """
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @chatter.command()
     async def age(self, ctx: commands.Context, days: int):
@@ -99,7 +135,8 @@ class Chatter:
         Backup your training data to a json for later use
         """
         await ctx.send("Backing up data, this may take a while")
-        future = await self.loop.run_in_executor(None, self.chatbot.trainer.export_for_training, './{}.json'.format(backupname))
+        future = await self.loop.run_in_executor(None, self.chatbot.trainer.export_for_training,
+                                                 './{}.json'.format(backupname))
 
         if future:
             await ctx.send("Backup successful!")
@@ -134,17 +171,21 @@ class Chatter:
         else:
             await ctx.send("Error occurred :(")
 
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         """
         Credit to https://github.com/Twentysix26/26-Cogs/blob/master/cleverbot/cleverbot.py
         for on_message recognition of @bot
         """
         author = message.author
-        channel = message.channel
+        try:
+            guild: discord.Guild = message.guild
+        except AttributeError:  # Not a guild message
+            return
 
+        channel: discord.TextChannel = message.channel
 
-        if message.author.id != self.bot.user.id:
-            to_strip = "@" + author.guild.me.display_name + " "
+        if author.id != self.bot.user.id:
+            to_strip = "@" + guild.me.display_name + " "
             text = message.clean_content
             if not text.startswith(to_strip):
                 return
@@ -152,7 +193,7 @@ class Chatter:
             async with channel.typing():
                 future = await self.loop.run_in_executor(None, self.chatbot.get_response, text)
 
-                if future:
+                if future and str(future):
                     await channel.send(str(future))
                 else:
                     await channel.send(':thinking:')

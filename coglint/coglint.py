@@ -1,11 +1,8 @@
 import discord
-
-from redbot.core import Config, checks
-
-from redbot.core.bot import Red
-
 from pylint import epylint as lint
+from redbot.core import Config
 from redbot.core import commands
+from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
 
 

@@ -16,7 +16,6 @@ class Seer(Role):
     description = "A mystic in search of answers in a chaotic town.\n" \
                   "Calls upon the cosmos to discern those of Lycan blood"
 
-
     def __init__(self, game):
         super().__init__(game)
         # self.game = game
