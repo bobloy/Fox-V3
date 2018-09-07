@@ -13,16 +13,16 @@ class SCP:
         """Look up SCP articles.
 
         Warning: Some of them may be too creepy or gruesome.
-        Reminder: You must specify a number between 1 and 3999.
+        Reminder: You must specify a number between 1 and 4999.
         """
 
         # Thanks Shigbeard and Redjumpman for helping me!
 
-        if 0 < num <= 3999:
+        if 0 < num <= 4999:
             msg = "http://www.scp-wiki.net/scp-{:03}".format(num)
             c = discord.Color.green()
         else:
-            msg = "You must specify a number between 1 and 3999."
+            msg = "You must specify a number between 1 and 4999."
             c = discord.Color.red()
 
         if ctx.embed_requested():

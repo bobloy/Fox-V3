@@ -1,7 +1,7 @@
 import codecs as c
 
 import discord
-from discord.ext import commands
+from redbot.core import commands
 
 
 class Unicode:
@@ -11,13 +11,13 @@ class Unicode:
         self.bot = bot
 
     @commands.group(name='unicode', pass_context=True)
-    async def unicode(self, context):
+    async def unicode(self, ctx):
         """Encode/Decode a Unicode character."""
-        if context.invoked_subcommand is None:
-            await self.bot.send_cmd_help(context)
+        if ctx.invoked_subcommand is None:
+            pass
 
     @unicode.command()
-    async def decode(self, character):
+    async def decode(self, ctx: commands.Context, character):
         """Decode a Unicode character."""
         try:
             data = 'U+{:04X}'.format(ord(character[0]))
@@ -26,10 +26,10 @@ class Unicode:
             data = '<unknown>'
             color = discord.Color.red()
         em = discord.Embed(title=character, description=data, color=color)
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
 
     @unicode.command()
-    async def encode(self, character):
+    async def encode(self, ctx:commands.Context, character):
         """Encode an Unicode character."""
         try:
             if character[:2] == '\\u':
@@ -46,8 +46,4 @@ class Unicode:
             data = '<unknown>'
             color = discord.Color.red()
         em = discord.Embed(title=character, description=data, color=color)
-        await self.bot.say(embed=em)
-
-
-def setup(bot):
-    bot.add_cog(Unicode(bot))
+        await ctx.send(embed=em)
