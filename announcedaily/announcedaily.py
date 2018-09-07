@@ -3,15 +3,14 @@ import random
 from datetime import datetime, timedelta
 
 import discord
-
 from redbot.core import Config, checks, commands
-
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.chat_formatting import pagify, box
 
 DEFAULT_MESSAGES = [
-    # "Example message. Uncomment and overwrite to use"
+    # "Example message. Uncomment and overwrite to use",
+    # "Example message 2. Each message is in quotes and separated by a comma"
 ]
 
 
@@ -52,13 +51,13 @@ class AnnounceDaily:
         Do `[p]help annd <subcommand>` for more details
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @commands.command()
     @checks.guildowner()
     @commands.guild_only()
     async def runannounce(self, ctx: commands.Context):
-        """Trigger the daily announcement"""
+        """Manually run the daily announcement"""
 
         await self.send_announcements()
         await ctx.send("Success")
@@ -174,13 +173,13 @@ class AnnounceDaily:
             await ctx.send("Successfully removed {}".format(filename))
 
     @_ad.command()
-    async def settime(self, ctx: commands.Context, minutes: int):
+    async def settime(self, ctx: commands.Context, minutes_from_now: int):
         """
         Set the daily announcement time
 
         It will first announce at the time you provided, then it will repeat every 24 hours
         """
-        ann_time = datetime.now() + timedelta(minutes=minutes)
+        ann_time = datetime.now() + timedelta(minutes=minutes_from_now)
 
         h = ann_time.hour
         m = ann_time.minute
@@ -188,7 +187,7 @@ class AnnounceDaily:
         await self.config.time.set({'hour': h, 'minute': m, 'second': s})
 
         await ctx.send("Announcements time has been set to {}::{}::{} every day\n"
-                       "Changes will apply after next announcement or reload".format(h, m, s))
+                       "**Changes will apply after next scheduled announcement or reload**".format(h, m, s))
 
     async def send_announcements(self):
         messages = await self._get_msgs()
