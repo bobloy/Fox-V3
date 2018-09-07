@@ -2,8 +2,7 @@ from collections import defaultdict
 from random import randint
 
 import discord
-from redbot.core import Config, checks
-from redbot.core import commands
+from redbot.core import Config, checks, commands
 from redbot.core.data_manager import cog_data_path
 
 
@@ -17,6 +16,7 @@ class Hangman:
         self.config = Config.get_conf(self, identifier=1049711010310997110)
         default_guild = {
             "theface": ':thinking:',
+            "emojis": True,
         }
 
         self.config.register_guild(**default_guild)
@@ -132,6 +132,7 @@ class Hangman:
 
     @hangset.command(pass_context=True)
     async def face(self, ctx: commands.Context, theface):
+        """Set the face of the hangman"""
         message = ctx.message
         # Borrowing FlapJack's emoji validation
         # (https://github.com/flapjax/FlapJack-Cogs/blob/master/smartreact/smartreact.py)
@@ -148,6 +149,14 @@ class Hangman:
         await self.config.guild(ctx.guild).theface.set(theface)
         await self._update_hanglist()
         await ctx.send("Face has been updated!")
+
+    @hangset.command(pass_context=True)
+    async def toggleemoji(self, ctx: commands.Context):
+        """Toggles whether to automatically react with the alphabet"""
+
+        current = await self.config.guild(ctx.guild).emojis()
+        await self.config.guild(ctx.guild).emojis.set(not current)
+        await ctx.send("Emoji Letter reactions have been set to {}".format(not current))
 
     @commands.command(aliases=['hang'], pass_context=True)
     async def hangman(self, ctx, guess: str = None):
@@ -253,7 +262,7 @@ class Hangman:
             return
 
         if user == self.bot.user:
-            return  # Don't remove bot's own reactions
+            return  # Don't react to bot's own reactions
         message = reaction.message
         emoji = reaction.emoji
 
@@ -270,15 +279,27 @@ class Hangman:
             if str(emoji) == self.navigate[-1]:
                 await self._reactmessage_nz(message)
 
+    async def _try_clear_reactions(self, message):
+        try:
+            await message.clear_reactions()
+        except discord.Forbidden:
+            pass
+
     async def _reactmessage_menu(self, message):
         """React with menu options"""
-        await message.clear_reactions()
+        if not await self.config.guild(message.guild).emojis():
+            return
+
+        await self._try_clear_reactions(message)
 
         await message.add_reaction(self.navigate[0])
         await message.add_reaction(self.navigate[-1])
 
     async def _reactmessage_am(self, message):
-        await message.clear_reactions()
+        if not await self.config.guild(message.guild).emojis():
+            return
+
+        await self._try_clear_reactions(message)
 
         for x in range(len(self.letters)):
             if x in [i for i, b in enumerate("ABCDEFGHIJKLM") if b not in self._guesslist(message.guild)]:
@@ -287,7 +308,10 @@ class Hangman:
         await message.add_reaction(self.navigate[-1])
 
     async def _reactmessage_nz(self, message):
-        await message.clear_reactions()
+        if not await self.config.guild(message.guild).emojis():
+            return
+
+        await self._try_clear_reactions(message)
 
         for x in range(len(self.letters)):
             if x in [i for i, b in enumerate("NOPQRSTUVWXYZ") if b not in self._guesslist(message.guild)]:
@@ -297,11 +321,8 @@ class Hangman:
 
     def _make_say(self, guild):
         c_say = "Guess this: " + str(self._hideanswer(guild)) + "\n"
-
         c_say += "Used Letters: " + str(self._guesslist(guild)) + "\n"
-
         c_say += self.hanglist[guild][self.the_data[guild]["hangman"]] + "\n"
-
         c_say += self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z"
 
         return c_say
