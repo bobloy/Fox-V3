@@ -278,12 +278,18 @@ class Hangman:
             if str(emoji) == self.navigate[-1]:
                 await self._reactmessage_nz(message)
 
+    async def _try_clear_reactions(self, message):
+        try:
+            await message.clear_reactions()
+        except discord.Forbidden:
+            pass
+
     async def _reactmessage_menu(self, message):
         """React with menu options"""
         if not await self.config.guild(message.guild).emojis():
             return
 
-        await message.clear_reactions()
+        await self._try_clear_reactions(message)
 
         await message.add_reaction(self.navigate[0])
         await message.add_reaction(self.navigate[-1])
@@ -292,7 +298,7 @@ class Hangman:
         if not await self.config.guild(message.guild).emojis():
             return
 
-        await message.clear_reactions()
+        await self._try_clear_reactions(message)
 
         for x in range(len(self.letters)):
             if x in [i for i, b in enumerate("ABCDEFGHIJKLM") if b not in self._guesslist(message.guild)]:
@@ -303,7 +309,8 @@ class Hangman:
     async def _reactmessage_nz(self, message):
         if not await self.config.guild(message.guild).emojis():
             return
-        await message.clear_reactions()
+
+        await self._try_clear_reactions(message)
 
         for x in range(len(self.letters)):
             if x in [i for i, b in enumerate("NOPQRSTUVWXYZ") if b not in self._guesslist(message.guild)]:
