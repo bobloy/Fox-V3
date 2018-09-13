@@ -1,0 +1,22 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Assign roles to be exclusive, preventing other roles from being added",
+  "hidden": false,
+  "install_msg": "Thank you for installing ExclusiveRole. Get started with `[p]help ExclusiveRole`",
+  "requirements": [],
+  "short": "Set roles to be exclusive",
+  "tags": [
+    "fox",
+    "bobloy",
+    "utility",
+    "tools",
+    "roles"
+  ]
+}
