@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from redbot.core import Config, checks, commands
 
@@ -12,12 +14,12 @@ class ExclusiveRole:
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9999114111108101)
         default_guild = {
-            "role_set": set()
+            "role_list": []
         }
 
         self.config.register_guild(**default_guild)
 
-    @commands.group(no_pm=True)
+    @commands.group(no_pm=True, aliases=["exclusiverole"])
     async def exclusive(self, ctx):
         """Base command for managing exclusive roles"""
 
@@ -32,8 +34,8 @@ class ExclusiveRole:
             await ctx.send("That role is already exclusive")
             return
 
-        async with self.config.guild(ctx.guild).role_set() as rs:
-            rs.add(role.id)
+        async with self.config.guild(ctx.guild).role_list() as rl:
+            rl.append(role.id)
 
         await self.check_guild(ctx.guild)
 
@@ -47,13 +49,13 @@ class ExclusiveRole:
             await ctx.send("That role is not exclusive")
             return
 
-        async with self.config.guild(ctx.guild).role_set() as rs:
-            rs.remove(role.id)
+        async with self.config.guild(ctx.guild).role_list() as rl:
+            rl.remove(role.id)
 
         await ctx.send("Exclusive role removed")
 
     async def check_guild(self, guild: discord.Guild):
-        role_set = await self.config.guild(guild).role_set()
+        role_set = set(await self.config.guild(guild).role_list())
         for member in guild.members:
             try:
                 await self.remove_non_exclusive_roles(member, role_set=role_set)
@@ -62,22 +64,25 @@ class ExclusiveRole:
 
     async def remove_non_exclusive_roles(self, member: discord.Member, role_set=None):
         if role_set is None:
-            role_set = await self.config.guild(member.guild).role_set()
+            role_set = set(await self.config.guild(member.guild).role_list())
 
         member_set = set([role.id for role in member.roles])
-        to_remove = member_set - role_set
+        to_remove = (member_set - role_set) - {member.guild.default_role.id}
 
         if to_remove and member_set & role_set:
-            await member.remove_roles(*to_remove, "Exclusive roles")
+            to_remove = [discord.utils.get(member.guild.roles, id=id) for id in to_remove]
+            await member.remove_roles(*to_remove, reason="Exclusive roles")
 
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.roles == after.roles:
             return
 
-        role_set = await self.config.guild(after.guild).role_set()
+        await asyncio.sleep(1)
+
+        role_set = set(await self.config.guild(after.guild).role_list())
         member_set = set([role.id for role in after.roles])
 
-        if role_set & member_set and member_set - role_set:
+        if role_set & member_set:
             try:
                 await self.remove_non_exclusive_roles(after, role_set=role_set)
             except discord.Forbidden:
