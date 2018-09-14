@@ -1,8 +1,14 @@
+import pathlib
+from typing import List
+
 from redbot.cogs.trivia import LOG
 from redbot.cogs.trivia.trivia import InvalidListError, Trivia
 from redbot.core import Config, checks
 from redbot.core import commands
 from redbot.core.bot import Red
+from redbot.core.data_manager import cog_data_path
+from redbot.core.utils import box
+
 from .audiosession import AudioSession
 
 
@@ -15,8 +21,9 @@ class AudioTrivia(Trivia):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
+        self.audio = None
 
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     @commands.guild_only()
     async def audiotrivia(self, ctx: commands.Context, *categories: str):
         """Start trivia session on the specified category.
@@ -24,9 +31,18 @@ class AudioTrivia(Trivia):
                 You may list multiple categories, in which case the trivia will involve
                 questions from all of them.
                 """
-        if not categories:
+        if not categories and ctx.invoked_subcommand is None:
             await ctx.send_help()
             return
+
+        if self.audio is None:
+            self.audio = self.bot.get_cog("Audio")
+
+        if self.audio is None:
+            await ctx.send("Audio is not loaded. Load it and try again")
+            return
+
+
         categories = [c.lower() for c in categories]
         session = self._get_trivia_session(ctx.channel)
         if session is not None:
@@ -41,7 +57,7 @@ class AudioTrivia(Trivia):
                 dict_ = self.get_trivia_list(category)
             except FileNotFoundError:
                 await ctx.send(
-                    "Invalid category `{0}`. See `{1}trivia list`"
+                    "Invalid category `{0}`. See `{1}audiotrivia list`"
                     " for a list of trivia categories."
                     "".format(category, ctx.prefix)
                 )
@@ -69,3 +85,21 @@ class AudioTrivia(Trivia):
         session = AudioSession.start(ctx, trivia_dict, settings)
         self.trivia_sessions.append(session)
         LOG.debug("New audio trivia session; #%s in %d", ctx.channel, ctx.guild.id)
+
+    @audiotrivia.command(name="list")
+    @commands.guild_only()
+    async def audiotrivia_list(self, ctx: commands.Context):
+        """List available trivia categories."""
+        lists = set(p.stem for p in self._audio_lists())
+
+        msg = box("**Available trivia lists**\n\n{}".format(", ".join(sorted(lists))))
+        if len(msg) > 1000:
+            await ctx.author.send(msg)
+            return
+        await ctx.send(msg)
+
+    def _audio_lists(self) -> List[pathlib.Path]:
+        print(cog_data_path(self))
+        personal_lists = [p.resolve() for p in cog_data_path(self).glob("*.yaml")]
+
+        return personal_lists
