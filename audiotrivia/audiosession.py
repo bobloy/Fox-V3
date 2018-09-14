@@ -38,7 +38,10 @@ class AudioSession(TriviaSession):
             await self.ctx.send(msg)
             print(question)
 
-            await self.audio.play(ctx=self.ctx, query=question)
+            # await self.ctx.invoke(self.audio.play(ctx=self.ctx, query=question))
+            await self.ctx.invoke(self.audio.play, query=question)
+
+            print("after audio.play")
 
             continue_ = await self.wait_for_answer(answers, delay, timeout)
             if continue_ is False:
@@ -49,3 +52,7 @@ class AudioSession(TriviaSession):
         else:
             await self.ctx.send("There are no more questions!")
             await self.end_game()
+
+    async def end_game(self):
+        await super().end_game()
+        await self.ctx.invoke(self.audio.disconnect)

@@ -2,6 +2,7 @@ import pathlib
 from typing import List
 
 import yaml
+from redbot.cogs.audio import Audio
 from redbot.cogs.trivia import LOG
 from redbot.cogs.trivia.trivia import InvalidListError, Trivia
 from redbot.core import commands
@@ -22,6 +23,13 @@ class AudioTrivia(Trivia):
         super().__init__()
         self.bot = bot
         self.audio = None
+
+    # @commands.command()
+    # @commands.is_owner()
+    # async def testit(self, ctx: commands.Context):
+    #     self.audio: Audio = self.bot.get_cog("Audio")
+    #     await ctx.invoke(self.audio.play, query="https://www.youtube.com/watch?v=FrceWR4XnVU")
+    #     print("done")
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
