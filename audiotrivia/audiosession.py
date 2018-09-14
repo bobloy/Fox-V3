@@ -13,6 +13,13 @@ class AudioSession(TriviaSession):
 
         self.audio = audio_cog
 
+    @classmethod
+    def start(cls, ctx, question_list, settings, audio_cog: Audio = None):
+        session = cls(ctx, question_list, settings, audio_cog)
+        loop = ctx.bot.loop
+        session._task = loop.create_task(session.run())
+        return session
+
     async def run(self):
         """Run the audio trivia session.
 
@@ -29,7 +36,9 @@ class AudioSession(TriviaSession):
             self.count += 1
             msg = "**Question number {}!**\n\nName this audio!".format(self.count)
             await self.ctx.send(msg)
-            await self.audio.play(self.ctx, question)
+            print(question)
+
+            await self.audio.play(ctx=self.ctx, query=question)
 
             continue_ = await self.wait_for_answer(answers, delay, timeout)
             if continue_ is False:
@@ -40,7 +49,3 @@ class AudioSession(TriviaSession):
         else:
             await self.ctx.send("There are no more questions!")
             await self.end_game()
-
-
-
-

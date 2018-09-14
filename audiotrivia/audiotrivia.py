@@ -1,9 +1,9 @@
 import pathlib
 from typing import List
 
+import yaml
 from redbot.cogs.trivia import LOG
 from redbot.cogs.trivia.trivia import InvalidListError, Trivia
-from redbot.core import Config, checks
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
@@ -42,7 +42,6 @@ class AudioTrivia(Trivia):
             await ctx.send("Audio is not loaded. Load it and try again")
             return
 
-
         categories = [c.lower() for c in categories]
         session = self._get_trivia_session(ctx.channel)
         if session is not None:
@@ -54,7 +53,7 @@ class AudioTrivia(Trivia):
             # We reverse the categories so that the first list's config takes
             # priority over the others.
             try:
-                dict_ = self.get_trivia_list(category)
+                dict_ = self.get_audio_list(category)
             except FileNotFoundError:
                 await ctx.send(
                     "Invalid category `{0}`. See `{1}audiotrivia list`"
@@ -82,7 +81,7 @@ class AudioTrivia(Trivia):
         if config and settings["allow_override"]:
             settings.update(config)
         settings["lists"] = dict(zip(categories, reversed(authors)))
-        session = AudioSession.start(ctx, trivia_dict, settings)
+        session = AudioSession.start(ctx, trivia_dict, settings, self.audio)
         self.trivia_sessions.append(session)
         LOG.debug("New audio trivia session; #%s in %d", ctx.channel, ctx.guild.id)
 
@@ -98,8 +97,40 @@ class AudioTrivia(Trivia):
             return
         await ctx.send(msg)
 
+    def get_audio_list(self, category: str) -> dict:
+        """Get the audiotrivia list corresponding to the given category.
+
+        Parameters
+        ----------
+        category : str
+            The desired category. Case sensitive.
+
+        Returns
+        -------
+        `dict`
+            A dict mapping questions (`str`) to answers (`list` of `str`).
+
+        """
+        try:
+            path = next(p for p in self._audio_lists() if p.stem == category)
+        except StopIteration:
+            raise FileNotFoundError("Could not find the `{}` category.".format(category))
+
+        with path.open(encoding="utf-8") as file:
+            try:
+                dict_ = yaml.load(file)
+            except yaml.error.YAMLError as exc:
+                raise InvalidListError("YAML parsing failed.") from exc
+            else:
+                return dict_
+
     def _audio_lists(self) -> List[pathlib.Path]:
-        print(cog_data_path(self))
         personal_lists = [p.resolve() for p in cog_data_path(self).glob("*.yaml")]
 
-        return personal_lists
+        return personal_lists + get_core_lists()
+
+
+def get_core_lists() -> List[pathlib.Path]:
+    """Return a list of paths for all trivia lists packaged with the bot."""
+    core_lists_path = pathlib.Path(__file__).parent.resolve() / "data/lists"
+    return list(core_lists_path.glob("*.yaml"))
