@@ -1,6 +1,8 @@
+import datetime
 import pathlib
 from typing import List
 
+import lavalink
 import yaml
 from redbot.cogs.audio import Audio
 from redbot.cogs.trivia import LOG
@@ -24,12 +26,12 @@ class AudioTrivia(Trivia):
         self.bot = bot
         self.audio = None
 
-    # @commands.command()
-    # @commands.is_owner()
-    # async def testit(self, ctx: commands.Context):
-    #     self.audio: Audio = self.bot.get_cog("Audio")
-    #     await ctx.invoke(self.audio.play, query="https://www.youtube.com/watch?v=FrceWR4XnVU")
-    #     print("done")
+    @commands.command()
+    @commands.is_owner()
+    async def testit(self, ctx: commands.Context):
+        self.audio: Audio = self.bot.get_cog("Audio")
+        await ctx.invoke(self.audio.play, query="https://www.youtube.com/watch?v=FrceWR4XnVU")
+        print("done")
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
@@ -55,6 +57,29 @@ class AudioTrivia(Trivia):
         if session is not None:
             await ctx.send("There is already an ongoing trivia session in this channel.")
             return
+
+        if not Audio._player_check(ctx):
+            try:
+                if not ctx.author.voice.channel.permissions_for(ctx.me).connect or Audio._userlimit(
+                        ctx.author.voice.channel
+                ):
+                    return await ctx.send("I don't have permission to connect to your channel."
+                                          )
+                await lavalink.connect(ctx.author.voice.channel)
+                lavaplayer = lavalink.get_player(ctx.guild.id)
+                lavaplayer.store("connect", datetime.datetime.utcnow())
+            except AttributeError:
+                return await ctx.send("Connect to a voice channel first.")
+
+        lavaplayer = lavalink.get_player(ctx.guild.id)
+        lavaplayer.store("channel", ctx.channel.id)  # What's this for? I dunno
+        lavaplayer.store("guild", ctx.guild.id)
+
+        if (
+                not ctx.author.voice or ctx.author.voice.channel != lavaplayer.channel
+        ):
+            return await ctx.send("You must be in the voice channel to use the audiotrivia command.")
+
         trivia_dict = {}
         authors = []
         for category in reversed(categories):
@@ -89,7 +114,7 @@ class AudioTrivia(Trivia):
         if config and settings["allow_override"]:
             settings.update(config)
         settings["lists"] = dict(zip(categories, reversed(authors)))
-        session = AudioSession.start(ctx, trivia_dict, settings, self.audio)
+        session = AudioSession.start(ctx=ctx, question_list=trivia_dict, settings=settings, player=lavaplayer)
         self.trivia_sessions.append(session)
         LOG.debug("New audio trivia session; #%s in %d", ctx.channel, ctx.guild.id)
 
