@@ -60,4 +60,4 @@ class AudioSession(TriviaSession):
 
     async def end_game(self):
         await super().end_game()
-        await self.ctx.invoke(self.player.disconnect)
+        await self.player.disconnect()

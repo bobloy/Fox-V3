@@ -7,7 +7,7 @@ import yaml
 from redbot.cogs.audio import Audio
 from redbot.cogs.trivia import LOG
 from redbot.cogs.trivia.trivia import InvalidListError, Trivia
-from redbot.core import commands
+from redbot.core import commands, Config
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils import box
@@ -25,6 +25,12 @@ class AudioTrivia(Trivia):
         super().__init__()
         self.bot = bot
         self.audio = None
+        self.audioconf = Config.get_conf(self, identifier=651171001051118411410511810597, force_registration=True)
+
+        self.audioconf.register_guild(
+            delay=30.0,
+            repeat=True
+        )  # Todo: Repeat songs shorter than the delay (csgo sound effects for example)
 
     @commands.command()
     @commands.is_owner()
