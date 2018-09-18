@@ -34,6 +34,8 @@ class AudioSession(TriviaSession):
             async with self.ctx.typing():
                 await asyncio.sleep(3)
             self.count += 1
+            await self.player.stop()
+
             msg = "**Question number {}!**\n\nName this audio!".format(self.count)
             await self.ctx.send(msg)
             # print("Audio question: {}".format(question))
@@ -44,7 +46,16 @@ class AudioSession(TriviaSession):
             # await self.ctx.invoke(self.player.play, query=question)
             query = question.strip("<>")
             tracks = await self.player.get_tracks(query)
-            self.player.add(self.ctx.author, tracks[0])
+            seconds = tracks[0].length / 1000
+
+            if self.settings["repeat"] and seconds < delay:
+                tot_length = seconds + 0
+                while tot_length < delay:
+                    self.player.add(self.ctx.author, tracks[0])
+                    tot_length += seconds
+            else:
+                self.player.add(self.ctx.author, tracks[0])
+
             if not self.player.current:
                 await self.player.play()
 

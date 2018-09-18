@@ -7,10 +7,10 @@ import yaml
 from redbot.cogs.audio import Audio
 from redbot.cogs.trivia import LOG
 from redbot.cogs.trivia.trivia import InvalidListError, Trivia
-from redbot.core import commands, Config
+from redbot.core import commands, Config, checks
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
-from redbot.core.utils import box
+from redbot.core.utils.chat_formatting import box
 
 from .audiosession import AudioSession
 
@@ -30,14 +30,40 @@ class AudioTrivia(Trivia):
         self.audioconf.register_guild(
             delay=30.0,
             repeat=True
-        )  # Todo: Repeat songs shorter than the delay (csgo sound effects for example)
+        )
 
-    @commands.command()
-    @commands.is_owner()
-    async def testit(self, ctx: commands.Context):
-        self.audio: Audio = self.bot.get_cog("Audio")
-        await ctx.invoke(self.audio.play, query="https://www.youtube.com/watch?v=FrceWR4XnVU")
-        print("done")
+    @commands.group()
+    @commands.guild_only()
+    @checks.mod_or_permissions(administrator=True)
+    async def atriviaset(self, ctx: commands.Context):
+        """Manage Audio Trivia settings."""
+        audioset = self.audioconf.guild(ctx.guild)
+        settings_dict = await audioset.all()
+        msg = box(
+            "**Audio settings**\n"
+            "Answer time limit: {delay} seconds\n"
+            "Repeat Short Audio: {repeat}"
+            "".format(**settings_dict),
+            lang="py",
+        )
+        await ctx.send(msg)
+
+    @atriviaset.command(name="delay")
+    async def atriviaset_delay(self, ctx: commands.Context, seconds: float):
+        """Set the maximum seconds permitted to answer a question."""
+        if seconds < 4.0:
+            await ctx.send("Must be at least 4 seconds.")
+            return
+        settings = self.audioconf.guild(ctx.guild)
+        await settings.delay.set(seconds)
+        await ctx.send("Done. Maximum seconds to answer set to {}.".format(seconds))
+
+    @atriviaset.command(name="repeat")
+    async def atriviaset_repeat(self, ctx: commands.Context, true_or_false: bool):
+        """Set whether or not short audio will be repeated"""
+        settings = self.audioconf.guild(ctx.guild)
+        await settings.repeat.set(true_or_false)
+        await ctx.send("Done. Repeating short audio is now set to {}.".format(true_or_false))
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
@@ -116,11 +142,15 @@ class AudioTrivia(Trivia):
             )
             return
         settings = await self.conf.guild(ctx.guild).all()
+        audiosettings = await self.audioconf.guild(ctx.guild).all()
         config = trivia_dict.pop("CONFIG", None)
         if config and settings["allow_override"]:
             settings.update(config)
         settings["lists"] = dict(zip(categories, reversed(authors)))
-        session = AudioSession.start(ctx=ctx, question_list=trivia_dict, settings=settings, player=lavaplayer)
+
+        # Delay in audiosettings overwrites delay in settings
+        combined_settings = {**settings, **audiosettings}
+        session = AudioSession.start(ctx=ctx, question_list=trivia_dict, settings=combined_settings, player=lavaplayer)
         self.trivia_sessions.append(session)
         LOG.debug("New audio trivia session; #%s in %d", ctx.channel, ctx.guild.id)
 
