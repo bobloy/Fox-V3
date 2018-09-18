@@ -71,18 +71,10 @@ class LastSeen:
 
         # embed = discord.Embed(
         #     description="{} was last seen at this date and time".format(member.display_name),
-        #     timestamp=self.get_date_time(last_seen))
+        #     timestamp=last_seen)
 
         embed = discord.Embed(timestamp=last_seen)
         await ctx.send(embed=embed)
-
-    # async def on_socket_raw_receive(self, data):
-    #     try:
-    #         if type(data) == str:
-    #             raw = json.loads(data)
-    #             print(data)
-    #     except:
-    #         print(data)
 
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.status != self.offline_status and after.status == self.offline_status:
