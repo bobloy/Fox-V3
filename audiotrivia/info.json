@@ -1,0 +1,20 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Start an Audio Trivia game",
+  "hidden": false,
+  "install_msg": "Thank you for installing Audio trivia! Get started with `[p]help AudioTrivia`",
+  "requirements": [],
+  "short": "Start an Audio Trivia game",
+  "tags": [
+    "fox",
+    "bobloy",
+    "games"
+  ]
+}
