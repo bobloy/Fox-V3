@@ -23,7 +23,8 @@ class CCRole:
 
         self.config.register_guild(**default_guild)
 
-    @commands.group(no_pm=True)
+    @commands.guild_only()
+    @commands.group()
     async def ccrole(self, ctx):
         """Custom commands management with roles
 
