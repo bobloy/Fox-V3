@@ -78,7 +78,7 @@ class AudioTrivia(Trivia):
             return
 
         if self.audio is None:
-            self.audio = self.bot.get_cog("Audio")
+            self.audio: Audio = self.bot.get_cog("Audio")
 
         if self.audio is None:
             await ctx.send("Audio is not loaded. Load it and try again")
@@ -90,9 +90,9 @@ class AudioTrivia(Trivia):
             await ctx.send("There is already an ongoing trivia session in this channel.")
             return
 
-        if not Audio._player_check(ctx):
+        if not self.audio._player_check(ctx):
             try:
-                if not ctx.author.voice.channel.permissions_for(ctx.me).connect or Audio._userlimit(
+                if not ctx.author.voice.channel.permissions_for(ctx.me).connect or self.audio._userlimit(
                         ctx.author.voice.channel
                 ):
                     return await ctx.send("I don't have permission to connect to your channel."
@@ -106,6 +106,8 @@ class AudioTrivia(Trivia):
         lavaplayer = lavalink.get_player(ctx.guild.id)
         lavaplayer.store("channel", ctx.channel.id)  # What's this for? I dunno
         lavaplayer.store("guild", ctx.guild.id)
+
+        await self.audio._data_check(ctx)
 
         if (
                 not ctx.author.voice or ctx.author.voice.channel != lavaplayer.channel
