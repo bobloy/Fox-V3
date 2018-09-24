@@ -1,0 +1,18 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Add expiring flags on members to track warnings or incidents",
+  "hidden": true,
+  "install_msg": "Thank you for installing flask! Get started with `[p]load flask`, then `[p]help Flag`",
+  "requirements": ["quart"],
+  "short": "Run a Flask site to issue commands.",
+  "tags": [
+    "bobloy"
+  ]
+}
