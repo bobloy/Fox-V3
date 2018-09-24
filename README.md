@@ -19,6 +19,7 @@ Cog Function
 | lovecalculator | **Alpha** | <details><summary>Calculate the love between two users</summary>[Snap-Ons] Just updated to V3</details> |
 | lseen | **Alpha** | <details><summary>Track when a member was last online</summary>Alpha release, please report bugs</details> |
 | nudity | **Incomplete** | <details><summary>Checks for NSFW images posted in non-NSFW channels</summary>Library this is based on has a bug, waiting for author to merge my PR</details> |
+| planttycoon | **Alpha** | <details><summary>Grow your own plants!</summary>[Snap-Ons] Updated to V3, likely to contain bugs</details> |
 | qrinvite | **Alpha** | <details><summary>Create a QR code invite for the server</summary>Alpha release, please report any bugs</details> |
 | reactrestrict | **Alpha** | <details><summary>Removes reactions by role per channel</summary>A bit clunky, but functional</details> |
 | recyclingplant | **Alpha** | <details><summary>Work at a recycling plant</summary>[Snap-Ons] Just updated to V3</details> |
