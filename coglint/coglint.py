@@ -8,7 +8,7 @@ from redbot.core.data_manager import cog_data_path
 
 class CogLint:
     """
-    V3 Cog Template
+    Automatically lint code in python codeblocks
     """
 
     def __init__(self, bot: Red):
