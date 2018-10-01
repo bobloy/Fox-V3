@@ -3,9 +3,12 @@ import random
 
 import discord
 from redbot.core import commands
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class RPSLS:
+class RPSLS(Cog):
     """Play Rock Paper Scissors Lizard Spock."""
 
     weaknesses = {

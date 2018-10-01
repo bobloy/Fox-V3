@@ -1,6 +1,7 @@
 import asyncio
 import random
 from datetime import datetime, timedelta
+from typing import Any
 
 import discord
 from redbot.core import Config, checks, commands
@@ -13,8 +14,10 @@ DEFAULT_MESSAGES = [
     # "Example message 2. Each message is in quotes and separated by a comma"
 ]
 
+Cog: Any = getattr(commands, "Cog", object)
 
-class AnnounceDaily:
+
+class AnnounceDaily(Cog):
     """
     Send daily announcements
     """

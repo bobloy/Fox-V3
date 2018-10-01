@@ -4,9 +4,12 @@ import discord
 from gtts import gTTS
 from redbot.core import Config, commands
 from redbot.core.bot import Red
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class TTS:
+class TTS(Cog):
     """
     Send Text-to-Speech messages
     """

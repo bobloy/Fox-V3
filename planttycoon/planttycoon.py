@@ -7,9 +7,12 @@ from random import choice
 import discord
 from redbot.core import commands, Config, bank
 from redbot.core.bot import Red
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Gardener:
+class Gardener(Cog):
     """Gardener class"""
 
     def __init__(self, user: discord.User, config: Config):

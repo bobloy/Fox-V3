@@ -5,9 +5,12 @@ import random
 from redbot.core import bank
 from redbot.core import commands
 from redbot.core.data_manager import cog_data_path
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class RecyclingPlant:
+class RecyclingPlant(Cog):
     """Apply for a job at the recycling plant!"""
 
     def __init__(self, bot):

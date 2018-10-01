@@ -2,9 +2,12 @@ import discord
 
 from redbot.core import Config, checks, commands
 from redbot.core.commands import Context
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Leaver:
+class Leaver(Cog):
     """
     Creates a goodbye message when people leave
     """

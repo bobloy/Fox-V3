@@ -8,9 +8,12 @@ from redbot.core import commands
 from werewolf.builder import GameBuilder, role_from_name, role_from_alignment, role_from_category, role_from_id
 from werewolf.game import Game
 from redbot.core.utils.menus import menu, DEFAULT_CONTROLS
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Werewolf:
+class Werewolf(Cog):
     """
     Base to host werewolf on a guild
     """
