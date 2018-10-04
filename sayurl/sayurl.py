@@ -10,10 +10,9 @@ Cog: Any = getattr(commands, "Cog", object)
 
 
 async def fetch_url(session, url):
-    with aiohttp.Timeout(20):
-        async with session.get(url) as response:
-            assert response.status == 200
-            return await response.text()
+    async with session.get(url) as response:
+        assert response.status == 200
+        return await response.text()
 
 
 class SayUrl(Cog):
