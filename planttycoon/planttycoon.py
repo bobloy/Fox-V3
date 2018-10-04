@@ -23,6 +23,16 @@ class Gardener(Cog):
         self.products = {}
         self.current = {}
 
+    def __str__(self):
+        return "Gardener named {}\n" \
+               "Badges: {}\n" \
+               "Points: {}\n" \
+               "Products: {}\n" \
+               "Current: {}".format(self.user, self.badges, self.points, self.products, self.current)
+
+    def __repr__(self):
+        return "{} - {} - {} - {} - {}".format(self.user, self.badges, self.points, self.products, self.current)
+
     async def _load_config(self):
         self.badges = await self.config.user(self.user).badges()
         self.points = await self.config.user(self.user).points()
@@ -1313,7 +1323,8 @@ class PlantTycoon:
     async def check_degradation(self):
         while 'PlantTycoon' in self.bot.cogs:
             users = await self.config.all_users()
-            for user in users:
+            for user_id in users:
+                user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
                 if gardener.current:
                     degradation = await self._degradation(gardener)
@@ -1327,7 +1338,8 @@ class PlantTycoon:
             now = int(time.time())
             message = None
             users = await self.config.all_users()
-            for user in users:
+            for user_id in users:
+                user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
                 if gardener.current:
                     then = gardener.current['timestamp']
@@ -1353,7 +1365,8 @@ class PlantTycoon:
     async def send_notification(self):
         while 'PlantTycoon' in self.bot.cogs:
             users = await self.config.all_users()
-            for user in users:
+            for user_id in users:
+                user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
                 if gardener.current:
                     health = gardener.current['health']
