@@ -1336,9 +1336,9 @@ class PlantTycoon:
     async def check_completion(self):
         while 'PlantTycoon' in self.bot.cogs:
             now = int(time.time())
-            message = None
             users = await self.config.all_users()
             for user_id in users:
+                message = None
                 user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
                 if gardener.current:
@@ -1352,11 +1352,11 @@ class PlantTycoon:
                         if badge not in gardener.badges:
                             gardener.badges.append(badge)
                         message = 'Your plant made it! ' \
-                                  'You are rewarded with the **{}** badge and you have recieved **{}** Thneeds.'.format(
+                                  'You are rewarded with the **{}** badge and you have received **{}** Thneeds.'.format(
                                     badge, reward)
                     if health < 0:
                         message = 'Your plant died!'
-                if message:
+                if message is not None:
                     await user.send(message)
                     gardener.current = {}
                     await gardener._save_gardener()
