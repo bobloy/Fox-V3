@@ -12,7 +12,7 @@ from typing import Any
 Cog: Any = getattr(commands, "Cog", object)
 
 
-class Gardener(Cog):
+class Gardener:
     """Gardener class"""
 
     def __init__(self, user: discord.User, config: Config):
@@ -84,7 +84,7 @@ async def _withdraw_points(gardener: Gardener, amount):
         return True
 
 
-class PlantTycoon:
+class PlantTycoon(Cog):
     """Grow your own plants! Be sure to take proper care of it."""
 
     def __init__(self, bot: Red):
