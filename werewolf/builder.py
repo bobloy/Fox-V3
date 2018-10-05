@@ -190,7 +190,7 @@ async def encode(roles, rand_roles):
 async def next_group(ctx: commands.Context, pages: list,
                      controls: dict, message: discord.Message, page: int,
                      timeout: float, emoji: str):
-    perms = message.channel.permissions_for(ctx.guild.me)
+    perms = message.channel.permissions_for(ctx.me)
     if perms.manage_messages:  # Can manage messages, so remove react
         try:
             await message.remove_reaction(emoji, ctx.author)
@@ -210,7 +210,7 @@ async def next_group(ctx: commands.Context, pages: list,
 async def prev_group(ctx: commands.Context, pages: list,
                      controls: dict, message: discord.Message, page: int,
                      timeout: float, emoji: str):
-    perms = message.channel.permissions_for(ctx.guild.me)
+    perms = message.channel.permissions_for(ctx.me)
     if perms.manage_messages:  # Can manage messages, so remove react
         try:
             await message.remove_reaction(emoji, ctx.author)
@@ -295,7 +295,7 @@ class GameBuilder:
     async def list_roles(self, ctx: commands.Context, pages: list,
                          controls: dict, message: discord.Message, page: int,
                          timeout: float, emoji: str):
-        perms = message.channel.permissions_for(ctx.guild.me)
+        perms = message.channel.permissions_for(ctx.me)
         if perms.manage_messages:  # Can manage messages, so remove react
             try:
                 await message.remove_reaction(emoji, ctx.author)
@@ -310,7 +310,7 @@ class GameBuilder:
     async def select_page(self, ctx: commands.Context, pages: list,
                           controls: dict, message: discord.Message, page: int,
                           timeout: float, emoji: str):
-        perms = message.channel.permissions_for(ctx.guild.me)
+        perms = message.channel.permissions_for(ctx.me)
         if perms.manage_messages:  # Can manage messages, so remove react
             try:
                 await message.remove_reaction(emoji, ctx.author)
