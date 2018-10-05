@@ -558,18 +558,18 @@ class PlantTycoon(Cog):
                     "badge": "Odd-pod",
                     "reward": 3600
                 },
-                {
-                    "name": "tba",
-                    "article": "a",
-                    "time": 9000,
-                    "rarity": "super-rare",
-                    "image": "tba",
-                    "health": 100,
-                    "degradation": 1.5,
-                    "threshold": 110,
-                    "badge": "Odd-pod",
-                    "reward": 3600
-                },
+                # {
+                #     "name": "tba",
+                #     "article": "a",
+                #     "time": 9000,
+                #     "rarity": "super-rare",
+                #     "image": "tba",
+                #     "health": 100,
+                #     "degradation": 1.5,
+                #     "threshold": 110,
+                #     "badge": "Odd-pod",
+                #     "reward": 3600
+                # },
                 {
                     "name": "Piranha Plant",
                     "article": "a",
@@ -582,18 +582,18 @@ class PlantTycoon(Cog):
                     "badge": "Odd-pod",
                     "reward": 3600
                 },
-                {
-                    "name": "tba",
-                    "article": "a",
-                    "time": 9000,
-                    "rarity": "super-rare",
-                    "image": "tba",
-                    "health": 100,
-                    "degradation": 1.5,
-                    "threshold": 110,
-                    "badge": "Odd-pod",
-                    "reward": 3600
-                },
+                # {
+                #     "name": "tba",
+                #     "article": "a",
+                #     "time": 9000,
+                #     "rarity": "super-rare",
+                #     "image": "tba",
+                #     "health": 100,
+                #     "degradation": 1.5,
+                #     "threshold": 110,
+                #     "badge": "Odd-pod",
+                #     "reward": 3600
+                # },
                 {
                     "name": "Peashooter",
                     "article": "a",
