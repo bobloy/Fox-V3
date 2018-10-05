@@ -1,10 +1,11 @@
+import asyncio
 import os
 import math
 
 # from typing import Union
 
 import discord
-from discord.ext import commands
+from redbot.core import commands
 
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.chat_formatting import box
@@ -102,7 +103,7 @@ class Fight:
             await ctx.send("Current tournament ID: " + await self._activefight(ctx))
 
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
             # await ctx.send("I can do stuff!")
 
     @fight.command(name="join")
@@ -198,10 +199,10 @@ class Fight:
     async def fadmin(self, ctx):
         """Admin command for managing the current tournament"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
             
     @fadmin.command(name="score")
-    async def fadmin_score(self, ctx, mID, score1, score2):
+    async def fadmin_score(self, ctx: commands.Context, mID, score1, score2):
         """Set's the score for matchID and clears disputes"""
         currFight = await self._getcurrentfight(ctx)
         tID = await self._activefight(ctx)
@@ -213,11 +214,11 @@ class Fight:
             await ctx.send("Tournament currently not accepting new players")
             return
 
-        if await self._infight(ctx, tID, user.id):
+        if await self._infight(ctx, tID, ctx.user.id):
             await ctx.send("You are already in this tournament!")
             return
 
-        currFight["PLAYERS"].append(user.id)
+        currFight["PLAYERS"].append(ctx.user.id)
 
         await self._save_fight(ctx, tID, currFight)
 
@@ -256,7 +257,7 @@ class Fight:
             # self.save_data()
 
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
         # await ctx.send("I can do stuff!")
     
     @fightset.command(name="emoji")
@@ -548,7 +549,7 @@ class Fight:
     async def fightset_guild(self, ctx):
         """Adjust guild wide settings"""
         if ctx.invoked_subcommand is None or isinstance(ctx.invoked_subcommand, commands.Group):
-            await ctx.send_help()
+            pass
     
     @fightset_guild.command(name="selfreport")
     async def fightset_guild_selfreport(self, ctx):
@@ -711,11 +712,13 @@ class Fight:
 
     async def _embed_tourney(self, ctx, tID):
         """Prints a pretty embed of the tournament"""
-        await ctx.send("_placeholder Todo")
+        #_placeholder Todo
+        pass
 
     async def _comparescores(self):
         """Checks user submitted scores for inconsistancies"""
-        await ctx.send("_comparescores Todo")
+        # _comparescores Todo
+        pass
 
     async def _parseuser(self, guild: discord.Guild, tID, userid):
         """Finds user in the tournament"""
@@ -821,8 +824,8 @@ class Fight:
         """Reports a win for member in match"""
         theT = await self._getfight(guild, tID)
 
-        if member.id not in theT["PLAYERS"]:  # Shouldn't happen
-            return False
+        # if member.id not in theT["PLAYERS"]:  # Shouldn't happen
+        #     return False
 
         if theT["RULES"]["TYPE"] == 0:
             return await self._rr_report_dispute(guild, tID, mID)
@@ -833,13 +836,16 @@ class Fight:
        
 # **********************Single Elimination***************************
     async def _elim_setup(self, tID):
-        await ctx.send("Elim setup todo")
+        # ToDo Elim setup
+        pass
 
     async def _elim_start(self, tID):
-        await ctx.send("Elim start todo")
+        # ToDo Elim start
+        pass
 
     async def _elim_update(self, matchID):
-        await ctx.send("Elim update todo")
+        # ToDo Elim update
+        pass
 
 # **********************Round-Robin**********************************
 

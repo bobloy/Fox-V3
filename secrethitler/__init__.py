@@ -1,4 +1,4 @@
-from .werewolf import Werewolf
+from .secrethitler import Werewolf
 
 
 def setup(bot):

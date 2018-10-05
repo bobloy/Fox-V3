@@ -2,14 +2,18 @@ from datetime import datetime
 
 import dateutil.parser
 import discord
-from discord.ext import commands
-from redbot.core import Config, RedContext
+
+from redbot.core import Config
 from redbot.core.bot import Red
+from redbot.core import commands
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class LastSeen:
+class LastSeen(Cog):
     """
-    V3 Cog Template
+    Report when a user was last seen online
     """
 
     online_status = discord.Status.online
@@ -37,13 +41,13 @@ class LastSeen:
         return d
 
     @commands.group(aliases=['setlseen'], name='lseenset')
-    async def lset(self, ctx: RedContext):
+    async def lset(self, ctx: commands.Context):
         """Change settings for lseen"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @lset.command(name="toggle")
-    async def lset_toggle(self, ctx: RedContext):
+    async def lset_toggle(self, ctx: commands.Context):
         """Toggles tracking seen for this server"""
         enabled = not await self.config.guild(ctx.guild).enabled()
         await self.config.guild(ctx.guild).enabled.set(
@@ -54,11 +58,9 @@ class LastSeen:
                 "Enabled" if enabled else "Disabled"))
 
     @commands.command(aliases=['lastseen'])
-    async def lseen(self, ctx: RedContext, member: discord.Member):
+    async def lseen(self, ctx: commands.Context, member: discord.Member):
         """
         Just says the time the user was last seen
-
-        :param member:
         """
 
         if member.status != self.offline_status:
@@ -72,18 +74,10 @@ class LastSeen:
 
         # embed = discord.Embed(
         #     description="{} was last seen at this date and time".format(member.display_name),
-        #     timestamp=self.get_date_time(last_seen))
+        #     timestamp=last_seen)
 
         embed = discord.Embed(timestamp=last_seen)
         await ctx.send(embed=embed)
-
-    # async def on_socket_raw_receive(self, data):
-    #     try:
-    #         if type(data) == str:
-    #             raw = json.loads(data)
-    #             print(data)
-    #     except:
-    #         print(data)
 
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.status != self.offline_status and after.status == self.offline_status:

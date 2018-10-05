@@ -183,7 +183,7 @@ class SQLStorageAdapter(StorageAdapter):
                     if isinstance(_filter, list):
                         if len(_filter) == 0:
                             _query = _response_query.filter(
-                                Statement.in_response_to == None  # NOQA Here must use == instead of is
+                                Statement.in_response_to is None  # NOQA Here must use == instead of is
                             )
                         else:
                             for f in _filter:
@@ -193,7 +193,7 @@ class SQLStorageAdapter(StorageAdapter):
                         if fp == 'in_response_to__contains':
                             _query = _response_query.join(Response).filter(Response.text == _filter)
                         else:
-                            _query = _response_query.filter(Statement.in_response_to == None)  # NOQA
+                            _query = _response_query.filter(Statement.in_response_to is None)  # NOQA
                 else:
                     if _query:
                         _query = _query.filter(Response.statement_text.like('%' + _filter + '%'))

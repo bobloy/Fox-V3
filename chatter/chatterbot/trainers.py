@@ -2,8 +2,8 @@ import logging
 import os
 import sys
 
-from . import utils
-from .conversation import Statement, Response
+from chatter.chatterbot import utils
+from chatter.chatterbot.conversation import Statement, Response
 
 
 class Trainer(object):
@@ -127,7 +127,7 @@ class ChatterBotCorpusTrainer(Trainer):
 
     def __init__(self, storage, **kwargs):
         super(ChatterBotCorpusTrainer, self).__init__(storage, **kwargs)
-        from .corpus import Corpus
+        from chatter.chatterbot.corpus import Corpus
 
         self.corpus = Corpus()
 
@@ -225,7 +225,7 @@ class TwitterTrainer(Trainer):
 
             for word in tweet_words:
                 # If the word contains only letters with a length from 4 to 9
-                if word.isalpha() and len(word) > 3 and len(word) <= 9:
+                if word.isalpha() and 3 < len(word) <= 9:
                     words.add(word)
 
         return words

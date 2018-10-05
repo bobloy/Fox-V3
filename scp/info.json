@@ -1,0 +1,20 @@
+{
+  "author": [
+    "Bobloy",
+    "SnappyDragon"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Look up SCP articles. Warning: Some of them may be too creepy or gruesome.",
+  "hidden": false,
+  "install_msg": "You are now connected to the SCP database. You may now proceed to access the data using `[p]load scp`, then `[p]help SCP`",
+  "requirements": [],
+  "short": "Look up SCP articles.",
+  "tags": [
+    "bobloy",
+    "gruesom"
+  ]
+}

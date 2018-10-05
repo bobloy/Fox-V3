@@ -3,7 +3,7 @@ import random
 from typing import List, Any, Dict, Set, Union
 
 import discord
-from redbot.core import RedContext
+from redbot.core import commands
 
 from werewolf.builder import parse_code
 from werewolf.player import Player
@@ -83,7 +83,7 @@ class Game:
     #     for c_data in self.p_channels.values():
     #         asyncio.ensure_future(c_data["channel"].delete("Werewolf game-over"))
 
-    async def setup(self, ctx: RedContext):
+    async def setup(self, ctx: commands.Context):
         """
         Runs the initial setup
 
@@ -680,7 +680,7 @@ class Game:
     async def get_day_target(self, target_id, source=None):
         return self.players[target_id]  # ToDo check source
 
-    async def set_code(self, ctx: RedContext, game_code):
+    async def set_code(self, ctx: commands.Context, game_code):
         if game_code is not None:
             self.game_code = game_code
         await ctx.send("Code has been set")

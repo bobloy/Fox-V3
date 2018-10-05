@@ -3,13 +3,15 @@ from collections import defaultdict
 from random import choice
 
 import discord
+
+
 # Import all roles here
-from redbot.core import RedContext
-from redbot.core.utils.menus import menu, prev_page, next_page, close_menu
+from redbot.core import commands
 
 from werewolf.roles.seer import Seer
 from werewolf.roles.vanillawerewolf import VanillaWerewolf
 from werewolf.roles.villager import Villager
+from redbot.core.utils.menus import menu, prev_page, next_page, close_menu
 
 # All roles in this list for iterating
 
@@ -185,7 +187,7 @@ async def encode(roles, rand_roles):
     return out_code
 
 
-async def next_group(ctx: RedContext, pages: list,
+async def next_group(ctx: commands.Context, pages: list,
                      controls: dict, message: discord.Message, page: int,
                      timeout: float, emoji: str):
     perms = message.channel.permissions_for(ctx.guild.me)
@@ -205,7 +207,7 @@ async def next_group(ctx: RedContext, pages: list,
                       page=page, timeout=timeout)
 
 
-async def prev_group(ctx: RedContext, pages: list,
+async def prev_group(ctx: commands.Context, pages: list,
                      controls: dict, message: discord.Message, page: int,
                      timeout: float, emoji: str):
     perms = message.channel.permissions_for(ctx.guild.me)
@@ -272,7 +274,7 @@ class GameBuilder:
         self.rand_roles = []
         setup()
 
-    async def build_game(self, ctx: RedContext):
+    async def build_game(self, ctx: commands.Context):
         new_controls = {
             '⏪': prev_group,
             "⬅": prev_page,
@@ -290,7 +292,7 @@ class GameBuilder:
         out = await encode(self.code, self.rand_roles)
         return out
 
-    async def list_roles(self, ctx: RedContext, pages: list,
+    async def list_roles(self, ctx: commands.Context, pages: list,
                          controls: dict, message: discord.Message, page: int,
                          timeout: float, emoji: str):
         perms = message.channel.permissions_for(ctx.guild.me)
@@ -305,7 +307,7 @@ class GameBuilder:
         return await menu(ctx, pages, controls, message=message,
                           page=page, timeout=timeout)
 
-    async def select_page(self, ctx: RedContext, pages: list,
+    async def select_page(self, ctx: commands.Context, pages: list,
                           controls: dict, message: discord.Message, page: int,
                           timeout: float, emoji: str):
         perms = message.channel.permissions_for(ctx.guild.me)

@@ -1,13 +1,16 @@
 import asyncio
 import re
+from typing import Any
 
 import discord
-from discord.ext import commands
 from redbot.core import Config, checks
+from redbot.core import commands
 from redbot.core.utils.chat_formatting import pagify, box
 
+Cog: Any = getattr(commands, "Cog", object)
 
-class CCRole:
+
+class CCRole(Cog):
     """
     Custom commands
     Creates commands used to display text and adjust roles
@@ -23,13 +26,14 @@ class CCRole:
 
         self.config.register_guild(**default_guild)
 
-    @commands.group(no_pm=True)
+    @commands.guild_only()
+    @commands.group()
     async def ccrole(self, ctx):
         """Custom commands management with roles
 
         Highly customizable custom commands with role management."""
         if not ctx.invoked_subcommand:
-            await ctx.send_help()
+            pass
 
     @ccrole.command(name="add")
     @checks.mod_or_permissions(administrator=True)
@@ -105,7 +109,7 @@ class CCRole:
                 return
 
         # Selfrole
-        await ctx.send('Is this a targeted command?(yes/no)\nNo will make this a selfrole command')
+        await ctx.send('Is this a targeted command?(yes//no)\nNo will make this a selfrole command')
 
         try:
             answer = await self.bot.wait_for('message', timeout=120, check=check)
@@ -190,7 +194,7 @@ class CCRole:
         """Shows custom commands list"""
         guild = ctx.guild
         cmd_list = await self.config.guild(guild).cmdlist()
-        cmd_list = {k: v for k,v in cmd_list.items() if v}
+        cmd_list = {k: v for k, v in cmd_list.items() if v}
         if not cmd_list:
             await ctx.send(
                 "There are no custom commands in this server. Use `{}ccrole add` to start adding some.".format(

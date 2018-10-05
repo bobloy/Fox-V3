@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from chatter.chatterbot.conversation import Statement
-from .best_match import BestMatch
+from chatter.chatterbot.logic import BestMatch
 
 
 class LowConfidenceAdapter(BestMatch):
