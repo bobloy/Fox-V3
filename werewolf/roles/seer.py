@@ -1,3 +1,4 @@
+from werewolf.night_powers import pick_target
 from werewolf.role import Role
 
 
@@ -61,7 +62,7 @@ class Seer(Role):
             return
         self.see_target = None
         await self.game.generate_targets(self.player.member)
-        await self.player.send_dm("**Pick a target to see tonight**\n")
+        await self.player.send_dm("**Pick a target to see tonight**")
 
     async def _at_night_end(self, data=None):
         if self.see_target is None:
@@ -83,19 +84,7 @@ class Seer(Role):
 
     async def choose(self, ctx, data):
         """Handle night actions"""
-        if not self.player.alive:  # FixMe: Game handles this?
-            await self.player.send_dm("You're already dead!")
-            return
+        await super().choose(ctx, data)
 
-        target_id = int(data)
-        try:
-            target = self.game.players[target_id]
-        except IndexError:
-            target = None
-
-        if target is None:
-            await ctx.send("Not a valid ID")
-            return
-
-        self.see_target = target_id
+        self.see_target, target = await pick_target(self, ctx, data)
         await ctx.send("**You will attempt to see the role of {} tonight...**".format(target.member.display_name))

@@ -392,4 +392,3 @@ class Werewolf(Cog):
                 return False, None, None, None, None
 
         return True, role, category, channel, log_channel
-
