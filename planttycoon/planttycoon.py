@@ -89,9 +89,6 @@ class PlantTycoon(Cog):
 
     def __init__(self, bot: Red):
         self.bot = bot
-        #
-        # Loading all data
-        #
         self.config = Config.get_conf(self, identifier=80108971101168412199111111110)
 
         default_user = {
@@ -574,7 +571,7 @@ class PlantTycoon(Cog):
                     "reward": 3600
                 },
                 {
-                    "name": "Pirahna Plant",
+                    "name": "Piranha Plant",
                     "article": "a",
                     "time": 9000,
                     "rarity": "super-rare",
@@ -610,11 +607,11 @@ class PlantTycoon(Cog):
                     "reward": 3600
                 },
                 {
-                    "name": "tba",
+                    "name": "Eldergleam Tree",
                     "article": "a",
                     "time": 10800,
                     "rarity": "epic",
-                    "image": "tba",
+                    "image": "https://i.imgur.com/pnZYKZc.jpg",
                     "health": 100,
                     "degradation": 2,
                     "threshold": 110,
