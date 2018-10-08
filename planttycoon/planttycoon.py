@@ -1040,32 +1040,33 @@ class PlantTycoon(Cog):
             #
             # Event Plant Check start
             #
+            plant_options = []
 
             if month == 1:
-                self.plants["plants"].append(self.plants["event"]["January"])
+                plant_options.append(self.plants["event"]["January"])
             elif month == 2:
-                self.plants["plants"].append(self.plants["event"]["February"])
+                plant_options.append(self.plants["event"]["February"])
             elif month == 3:
-                self.plants["plants"].append(self.plants["event"]["March"])
+                plant_options.append(self.plants["event"]["March"])
             elif month == 4:
-                self.plants["plants"].append(self.plants["event"]["April"])
+                plant_options.append(self.plants["event"]["April"])
             elif month == 10:
-                self.plants["plants"].append(self.plants["event"]["October"])
+                plant_options.append(self.plants["event"]["October"])
             elif month == 11:
-                self.plants["plants"].append(self.plants["event"]["November"])
+                plant_options.append(self.plants["event"]["November"])
             elif month == 12:
-                self.plants["plants"].append(self.plants["event"]["December"])
-            else:
-                self.plants["plants"].append({})
+                plant_options.append(self.plants["event"]["December"])
+
+            plant_options.append(self.plants["plants"])
 
             #
             # Event Plant Check end
             #
 
-            plant = choice(self.plants["plants"])
+            plant = choice(plant_options)
             plant["timestamp"] = int(time.time())
-            index = len(self.plants["plants"]) - 1
-            del [self.plants["plants"][index]]
+            # index = len(self.plants["plants"]) - 1
+            # del [self.plants["plants"][index]]
             message = (
                 "During one of your many heroic adventures, you came across a mysterious bag that said "
                 '"pick one". To your surprise it had all kinds of different seeds in them. '
