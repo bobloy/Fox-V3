@@ -1040,7 +1040,7 @@ class PlantTycoon(Cog):
             #
             # Event Plant Check start
             #
-            plant_options = []
+            plant_options = self.plants["plants"]
 
             if month == 1:
                 plant_options.append(self.plants["event"]["January"])
@@ -1057,7 +1057,6 @@ class PlantTycoon(Cog):
             elif month == 12:
                 plant_options.append(self.plants["event"]["December"])
 
-            plant_options.append(self.plants["plants"])
 
             #
             # Event Plant Check end
