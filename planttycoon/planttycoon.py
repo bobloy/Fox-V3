@@ -24,14 +24,18 @@ class Gardener:
         self.current = {}
 
     def __str__(self):
-        return "Gardener named {}\n" \
-               "Badges: {}\n" \
-               "Points: {}\n" \
-               "Products: {}\n" \
-               "Current: {}".format(self.user, self.badges, self.points, self.products, self.current)
+        return (
+            "Gardener named {}\n"
+            "Badges: {}\n"
+            "Points: {}\n"
+            "Products: {}\n"
+            "Current: {}".format(self.user, self.badges, self.points, self.products, self.current)
+        )
 
     def __repr__(self):
-        return "{} - {} - {} - {} - {}".format(self.user, self.badges, self.points, self.products, self.current)
+        return "{} - {} - {} - {} - {}".format(
+            self.user, self.badges, self.points, self.products, self.current
+        )
 
     async def _load_config(self):
         self.badges = await self.config.user(self.user).badges()
@@ -51,7 +55,7 @@ async def _die_in(gardener, degradation):
     # Calculating how much time in minutes remains until the plant's health hits 0
     #
 
-    return int(gardener.current['health'] / degradation.degradation)
+    return int(gardener.current["health"] / degradation.degradation)
 
 
 async def _grow_time(gardener):
@@ -60,8 +64,8 @@ async def _grow_time(gardener):
     #
 
     now = int(time.time())
-    then = gardener.current['timestamp']
-    return (gardener.current['time'] - (now - then)) / 60
+    then = gardener.current["timestamp"]
+    return (gardener.current["time"] - (now - then)) / 60
 
 
 async def _send_message(channel, message):
@@ -90,12 +94,7 @@ class PlantTycoon(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=80108971101168412199111111110)
 
-        default_user = {
-            'badges': [],
-            'points': 0,
-            'products': {},
-            'current': {}
-        }
+        default_user = {"badges": [], "points": 0, "products": {}, "current": {}}
 
         self.config.register_user(**default_user)
 
@@ -111,7 +110,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Dandelion",
@@ -123,7 +122,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Daisy",
@@ -135,7 +134,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Chrysanthemum",
@@ -147,7 +146,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Pansy",
@@ -159,7 +158,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Lavender",
@@ -171,7 +170,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Lily",
@@ -183,7 +182,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Petunia",
@@ -195,7 +194,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Sunflower",
@@ -207,7 +206,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Daffodil",
@@ -219,7 +218,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Clover",
@@ -231,7 +230,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Tulip",
@@ -243,7 +242,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Rose",
@@ -255,7 +254,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Aster",
@@ -267,7 +266,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Aloe Vera",
@@ -279,7 +278,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Orchid",
@@ -291,7 +290,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.625,
                     "threshold": 110,
                     "badge": "Flower Power",
-                    "reward": 600
+                    "reward": 600,
                 },
                 {
                     "name": "Dragon Fruit Plant",
@@ -303,7 +302,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Mango Tree",
@@ -315,7 +314,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Lychee Tree",
@@ -327,7 +326,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Durian Tree",
@@ -339,7 +338,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Fig Tree",
@@ -351,7 +350,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Jack Fruit Tree",
@@ -363,7 +362,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Prickly Pear Plant",
@@ -375,7 +374,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Pineapple Plant",
@@ -387,7 +386,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Citron Tree",
@@ -399,7 +398,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Cherimoya Tree",
@@ -411,7 +410,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Mangosteen Tree",
@@ -423,7 +422,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Guava Tree",
@@ -435,7 +434,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Orange Tree",
@@ -447,7 +446,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Apple Tree",
@@ -459,7 +458,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Sapodilla Tree",
@@ -471,7 +470,7 @@ class PlantTycoon(Cog):
                     "degradation": 0.75,
                     "threshold": 110,
                     "badge": "Fruit Brute",
-                    "reward": 1200
+                    "reward": 1200,
                 },
                 {
                     "name": "Franklin Tree",
@@ -483,7 +482,7 @@ class PlantTycoon(Cog):
                     "degradation": 1,
                     "threshold": 110,
                     "badge": "Sporadic",
-                    "reward": 2400
+                    "reward": 2400,
                 },
                 {
                     "name": "Parrot's Beak",
@@ -495,7 +494,7 @@ class PlantTycoon(Cog):
                     "degradation": 1,
                     "threshold": 110,
                     "badge": "Sporadic",
-                    "reward": 2400
+                    "reward": 2400,
                 },
                 {
                     "name": "Koki'o",
@@ -507,7 +506,7 @@ class PlantTycoon(Cog):
                     "degradation": 1,
                     "threshold": 110,
                     "badge": "Sporadic",
-                    "reward": 2400
+                    "reward": 2400,
                 },
                 {
                     "name": "Jade Vine",
@@ -519,7 +518,7 @@ class PlantTycoon(Cog):
                     "degradation": 1,
                     "threshold": 110,
                     "badge": "Sporadic",
-                    "reward": 2400
+                    "reward": 2400,
                 },
                 {
                     "name": "Venus Fly Trap",
@@ -531,7 +530,7 @@ class PlantTycoon(Cog):
                     "degradation": 1,
                     "threshold": 110,
                     "badge": "Sporadic",
-                    "reward": 2400
+                    "reward": 2400,
                 },
                 {
                     "name": "Chocolate Cosmos",
@@ -543,7 +542,7 @@ class PlantTycoon(Cog):
                     "degradation": 1,
                     "threshold": 110,
                     "badge": "Sporadic",
-                    "reward": 2400
+                    "reward": 2400,
                 },
                 {
                     "name": "Pizza Plant",
@@ -555,7 +554,7 @@ class PlantTycoon(Cog):
                     "degradation": 1,
                     "threshold": 110,
                     "badge": "Odd-pod",
-                    "reward": 3600
+                    "reward": 3600,
                 },
                 # {
                 #     "name": "tba",
@@ -579,7 +578,7 @@ class PlantTycoon(Cog):
                     "degradation": 1.5,
                     "threshold": 110,
                     "badge": "Odd-pod",
-                    "reward": 3600
+                    "reward": 3600,
                 },
                 # {
                 #     "name": "tba",
@@ -603,7 +602,7 @@ class PlantTycoon(Cog):
                     "degradation": 1.5,
                     "threshold": 110,
                     "badge": "Odd-pod",
-                    "reward": 3600
+                    "reward": 3600,
                 },
                 {
                     "name": "Eldergleam Tree",
@@ -615,7 +614,7 @@ class PlantTycoon(Cog):
                     "degradation": 2,
                     "threshold": 110,
                     "badge": "Greenfingers",
-                    "reward": 5400
+                    "reward": 5400,
                 },
                 {
                     "name": "Pikmin",
@@ -627,7 +626,7 @@ class PlantTycoon(Cog):
                     "degradation": 2,
                     "threshold": 110,
                     "badge": "Greenfingers",
-                    "reward": 5400
+                    "reward": 5400,
                 },
                 {
                     "name": "Flora Colossus",
@@ -639,7 +638,7 @@ class PlantTycoon(Cog):
                     "degradation": 2,
                     "threshold": 110,
                     "badge": "Greenfingers",
-                    "reward": 5400
+                    "reward": 5400,
                 },
                 {
                     "name": "Plantera Bulb",
@@ -651,7 +650,7 @@ class PlantTycoon(Cog):
                     "degradation": 2,
                     "threshold": 110,
                     "badge": "Greenfingers",
-                    "reward": 5400
+                    "reward": 5400,
                 },
                 {
                     "name": "Chorus Tree",
@@ -663,7 +662,7 @@ class PlantTycoon(Cog):
                     "degradation": 2,
                     "threshold": 110,
                     "badge": "Greenfingers",
-                    "reward": 5400
+                    "reward": 5400,
                 },
                 {
                     "name": "Money Tree",
@@ -675,7 +674,7 @@ class PlantTycoon(Cog):
                     "degradation": 3,
                     "threshold": 110,
                     "badge": "Nobel Peas Prize",
-                    "reward": 10800
+                    "reward": 10800,
                 },
                 {
                     "name": "Truffula Tree",
@@ -687,7 +686,7 @@ class PlantTycoon(Cog):
                     "degradation": 3,
                     "threshold": 110,
                     "badge": "Nobel Peas Prize",
-                    "reward": 10800
+                    "reward": 10800,
                 },
                 {
                     "name": "Whomping Willow",
@@ -699,8 +698,8 @@ class PlantTycoon(Cog):
                     "degradation": 3,
                     "threshold": 110,
                     "badge": "Nobel Peas Prize",
-                    "reward": 10800
-                }
+                    "reward": 10800,
+                },
             ],
             "event": {
                 "January": {
@@ -713,7 +712,7 @@ class PlantTycoon(Cog):
                     "degradation": 9,
                     "threshold": 110,
                     "badge": "Annualsary",
-                    "reward": 21600
+                    "reward": 21600,
                 },
                 "February": {
                     "name": "Chocolate Rose",
@@ -725,7 +724,7 @@ class PlantTycoon(Cog):
                     "degradation": 9,
                     "threshold": 110,
                     "badge": "Annualsary",
-                    "reward": 21600
+                    "reward": 21600,
                 },
                 "March": {
                     "name": "Shamrock",
@@ -737,7 +736,7 @@ class PlantTycoon(Cog):
                     "degradation": 9,
                     "threshold": 110,
                     "badge": "Annualsary",
-                    "reward": 21600
+                    "reward": 21600,
                 },
                 "April": {
                     "name": "Easter Egg Eggplant",
@@ -749,7 +748,7 @@ class PlantTycoon(Cog):
                     "degradation": 9,
                     "threshold": 110,
                     "badge": "Annualsary",
-                    "reward": 21600
+                    "reward": 21600,
                 },
                 "October": {
                     "name": "Jack O' Lantern",
@@ -761,7 +760,7 @@ class PlantTycoon(Cog):
                     "degradation": 9,
                     "threshold": 110,
                     "badge": "Annualsary",
-                    "reward": 21600
+                    "reward": 21600,
                 },
                 "November": {
                     "name": "Mayflower",
@@ -773,7 +772,7 @@ class PlantTycoon(Cog):
                     "degradation": 9,
                     "threshold": 110,
                     "badge": "Annualsary",
-                    "reward": 21600
+                    "reward": 21600,
                 },
                 "December": {
                     "name": "Holly",
@@ -785,9 +784,9 @@ class PlantTycoon(Cog):
                     "degradation": 9,
                     "threshold": 110,
                     "badge": "Annualsary",
-                    "reward": 21600
-                }
-            }
+                    "reward": 21600,
+                },
+            },
         }
 
         self.products = {
@@ -797,7 +796,7 @@ class PlantTycoon(Cog):
                 "damage": 45,
                 "modifier": 0,
                 "category": "water",
-                "uses": 1
+                "uses": 1,
             },
             "manure": {
                 "cost": 20,
@@ -805,7 +804,7 @@ class PlantTycoon(Cog):
                 "damage": 55,
                 "modifier": -0.035,
                 "category": "fertilizer",
-                "uses": 1
+                "uses": 1,
             },
             "vermicompost": {
                 "cost": 35,
@@ -813,7 +812,7 @@ class PlantTycoon(Cog):
                 "damage": 60,
                 "modifier": -0.5,
                 "category": "fertilizer",
-                "uses": 1
+                "uses": 1,
             },
             "nitrates": {
                 "cost": 70,
@@ -821,7 +820,7 @@ class PlantTycoon(Cog):
                 "damage": 75,
                 "modifier": -0.08,
                 "category": "fertilizer",
-                "uses": 1
+                "uses": 1,
             },
             "pruner": {
                 "cost": 500,
@@ -829,8 +828,8 @@ class PlantTycoon(Cog):
                 "damage": 90,
                 "modifier": -0.065,
                 "category": "tool",
-                "uses": 10
-            }
+                "uses": 10,
+            },
         }
 
         self.defaults = {
@@ -841,19 +840,11 @@ class PlantTycoon(Cog):
                 "pruning": 20,
                 "pesticide": 25,
                 "growing": 5,
-                "damage": 25
+                "damage": 25,
             },
-            "timers": {
-                "degradation": 1,
-                "completion": 1,
-                "notification": 5
-            },
-            "degradation": {
-                "base_degradation": 1.5
-            },
-            "notification": {
-                "max_health": 50
-            }
+            "timers": {"degradation": 1, "completion": 1, "notification": 5},
+            "degradation": {"base_degradation": 1.5},
+            "notification": {"max_health": 50},
         }
 
         self.badges = {
@@ -864,7 +855,7 @@ class PlantTycoon(Cog):
                 "Odd-pod": {},
                 "Greenfingers": {},
                 "Nobel Peas Prize": {},
-                "Annualsary": {}
+                "Annualsary": {},
             }
         }
 
@@ -872,7 +863,7 @@ class PlantTycoon(Cog):
             "messages": [
                 "The soil seems dry, maybe you could give your plant some water?",
                 "Your plant seems a bit droopy. I would give it some fertilizer if I were you.",
-                "Your plant seems a bit too overgrown. You should probably trim it a bit."
+                "Your plant seems a bit too overgrown. You should probably trim it a bit.",
             ]
         }
 
@@ -907,14 +898,22 @@ class PlantTycoon(Cog):
         #
 
         modifiers = sum(
-            [self.products[product]['modifier'] for product in gardener.products if gardener.products[product] > 0])
+            [
+                self.products[product]["modifier"]
+                for product in gardener.products
+                if gardener.products[product] > 0
+            ]
+        )
 
-        degradation = (100 / (gardener.current['time'] / 60) * (
-                self.defaults['degradation']['base_degradation'] + gardener.current['degradation'])) + modifiers
+        degradation = (
+            100
+            / (gardener.current["time"] / 60)
+            * (self.defaults["degradation"]["base_degradation"] + gardener.current["degradation"])
+        ) + modifiers
 
-        d = collections.namedtuple('degradation', 'degradation time modifiers')
+        d = collections.namedtuple("degradation", "degradation time modifiers")
 
-        return d(degradation=degradation, time=gardener.current['time'], modifiers=modifiers)
+        return d(degradation=degradation, time=gardener.current["time"], modifiers=modifiers)
 
     # async def _get_member(self, user_id):
     #
@@ -942,10 +941,10 @@ class PlantTycoon(Cog):
 
         product = product.lower()
         product_category = product_category.lower()
-        if product in self.products and self.products[product]['category'] == product_category:
+        if product in self.products and self.products[product]["category"] == product_category:
             if product in gardener.products:
                 if gardener.products[product] > 0:
-                    gardener.current['health'] += self.products[product]['health']
+                    gardener.current["health"] += self.products[product]["health"]
                     gardener.products[product] -= 1
                     if gardener.products[product] == 0:
                         del gardener.products[product.lower()]
@@ -956,25 +955,27 @@ class PlantTycoon(Cog):
                     # elif product_category == "tool":
                     else:
                         emoji = ":scissors:"
-                    message = 'Your plant got some health back! {}'.format(emoji)
-                    if gardener.current['health'] > gardener.current['threshold']:
-                        gardener.current['health'] -= self.products[product]['damage']
-                        if product_category == 'tool':
-                            damage_msg = 'You used {} too many times!'.format(product)
+                    message = "Your plant got some health back! {}".format(emoji)
+                    if gardener.current["health"] > gardener.current["threshold"]:
+                        gardener.current["health"] -= self.products[product]["damage"]
+                        if product_category == "tool":
+                            damage_msg = "You used {} too many times!".format(product)
                         else:
-                            damage_msg = 'You gave too much of {}.'.format(product)
-                        message = '{} Your plant lost some health. :wilted_rose:'.format(damage_msg)
-                    gardener.points += self.defaults['points']['add_health']
+                            damage_msg = "You gave too much of {}.".format(product)
+                        message = "{} Your plant lost some health. :wilted_rose:".format(
+                            damage_msg
+                        )
+                    gardener.points += self.defaults["points"]["add_health"]
                     await gardener.save_gardener()
                 else:
-                    message = 'You have no {}. Go buy some!'.format(product)
+                    message = "You have no {}. Go buy some!".format(product)
             else:
-                if product_category == 'tool':
-                    message = 'You have don\'t have a {}. Go buy one!'.format(product)
+                if product_category == "tool":
+                    message = "You have don't have a {}. Go buy one!".format(product)
                 else:
-                    message = 'You have no {}. Go buy some!'.format(product)
+                    message = "You have no {}. Go buy some!".format(product)
         else:
-            message = 'Are you sure you are using {}?'.format(product_category)
+            message = "Are you sure you are using {}?".format(product_category)
 
         if product_category == "water":
             emcolor = discord.Color.blue()
@@ -987,14 +988,14 @@ class PlantTycoon(Cog):
         em = discord.Embed(description=message, color=emcolor)
         await channel.send(embed=em)
 
-    @commands.group(name='gardening', autohelp=False)
+    @commands.group(name="gardening", autohelp=False)
     async def _gardening(self, ctx: commands.Context):
         """Gardening commands."""
         if ctx.invoked_subcommand is None:
             prefix = ctx.prefix
 
-            title = '**Welcome to Plant Tycoon.**\n'
-            description = ''''Grow your own plant. Be sure to take proper care of yours.\n
+            title = "**Welcome to Plant Tycoon.**\n"
+            description = """'Grow your own plant. Be sure to take proper care of yours.\n
             If it successfully grows, you get a reward.\n
             As you nurture your plant, you gain Thneeds which can be exchanged for credits.\n\n
             **Commands**\n\n
@@ -1008,15 +1009,18 @@ class PlantTycoon(Cog):
             ``{0}shovel``: Shovel your plant out.\n
             ``{0}water``: Water your plant.\n
             ``{0}fertilize``: Fertilize the soil.\n
-            ``{0}prune``: Prune your plant.\n'''
+            ``{0}prune``: Prune your plant.\n"""
 
-            em = discord.Embed(title=title, description=description.format(prefix), color=discord.Color.green())
-            em.set_thumbnail(url='https://image.prntscr.com/image/AW7GuFIBSeyEgkR2W3SeiQ.png')
+            em = discord.Embed(
+                title=title, description=description.format(prefix), color=discord.Color.green()
+            )
+            em.set_thumbnail(url="https://image.prntscr.com/image/AW7GuFIBSeyEgkR2W3SeiQ.png")
             em.set_footer(
-                text='This cog was made by SnappyDragon18 and PaddoInWonderland. Inspired by The Lorax (2012).')
+                text="This cog was made by SnappyDragon18 and PaddoInWonderland. Inspired by The Lorax (2012)."
+            )
             await ctx.send(embed=em)
 
-    @_gardening.command(name='seed')
+    @_gardening.command(name="seed")
     async def _seed(self, ctx: commands.Context):
         """Plant a seed inside the earth."""
         author = ctx.author
@@ -1038,54 +1042,59 @@ class PlantTycoon(Cog):
             #
 
             if month == 1:
-                self.plants['plants'].append(self.plants['event']['January'])
+                self.plants["plants"].append(self.plants["event"]["January"])
             elif month == 2:
-                self.plants['plants'].append(self.plants['event']['February'])
+                self.plants["plants"].append(self.plants["event"]["February"])
             elif month == 3:
-                self.plants['plants'].append(self.plants['event']['March'])
+                self.plants["plants"].append(self.plants["event"]["March"])
             elif month == 4:
-                self.plants['plants'].append(self.plants['event']['April'])
+                self.plants["plants"].append(self.plants["event"]["April"])
             elif month == 10:
-                self.plants['plants'].append(self.plants['event']['October'])
+                self.plants["plants"].append(self.plants["event"]["October"])
             elif month == 11:
-                self.plants['plants'].append(self.plants['event']['November'])
+                self.plants["plants"].append(self.plants["event"]["November"])
             elif month == 12:
-                self.plants['plants'].append(self.plants['event']['December'])
+                self.plants["plants"].append(self.plants["event"]["December"])
             else:
-                self.plants['plants'].append({})
+                self.plants["plants"].append({})
 
             #
             # Event Plant Check end
             #
 
-            plant = choice(self.plants['plants'])
-            plant['timestamp'] = int(time.time())
-            index = len(self.plants['plants']) - 1
-            del [self.plants['plants'][index]]
-            message = 'During one of your many heroic adventures, you came across a mysterious bag that said ' \
-                      '"pick one". To your surprise it had all kinds of different seeds in them. ' \
-                      'And now that you\'re home, you want to plant it. ' \
-                      'You went to a local farmer to identify the seed, and the farmer ' \
-                      'said it was {} **{} ({})** seed.\n\n' \
-                      'Take good care of your seed and water it frequently. ' \
-                      'Once it blooms, something nice might come from it. ' \
-                      'If it dies, however, you will get nothing.'.format(plant['article'], plant['name'],
-                                                                          plant['rarity'])
-            if 'water' not in gardener.products:
-                gardener.products['water'] = 0
-            gardener.products['water'] += 5
+            plant = choice(self.plants["plants"])
+            plant["timestamp"] = int(time.time())
+            index = len(self.plants["plants"]) - 1
+            del [self.plants["plants"][index]]
+            message = (
+                "During one of your many heroic adventures, you came across a mysterious bag that said "
+                '"pick one". To your surprise it had all kinds of different seeds in them. '
+                "And now that you're home, you want to plant it. "
+                "You went to a local farmer to identify the seed, and the farmer "
+                "said it was {} **{} ({})** seed.\n\n"
+                "Take good care of your seed and water it frequently. "
+                "Once it blooms, something nice might come from it. "
+                "If it dies, however, you will get nothing.".format(
+                    plant["article"], plant["name"], plant["rarity"]
+                )
+            )
+            if "water" not in gardener.products:
+                gardener.products["water"] = 0
+            gardener.products["water"] += 5
             gardener.current = plant
             await gardener.save_gardener()
 
             em = discord.Embed(description=message, color=discord.Color.green())
         else:
             plant = gardener.current
-            message = 'You\'re already growing {} **{}**, silly.'.format(plant['article'], plant['name'])
+            message = "You're already growing {} **{}**, silly.".format(
+                plant["article"], plant["name"]
+            )
             em = discord.Embed(description=message, color=discord.Color.green())
 
         await ctx.send(embed=em)
 
-    @_gardening.command(name='profile')
+    @_gardening.command(name="profile")
     async def _profile(self, ctx: commands.Context, *, member: discord.Member = None):
         """Check your gardening profile."""
         if member:
@@ -1096,125 +1105,149 @@ class PlantTycoon(Cog):
         gardener = await self._gardener(author)
         em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
         avatar = author.avatar_url if author.avatar else author.default_avatar_url
-        em.set_author(name='Gardening profile of {}'.format(author.name), icon_url=avatar)
-        em.add_field(name='**Thneeds**', value=str(gardener.points))
+        em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
+        em.add_field(name="**Thneeds**", value=str(gardener.points))
         if not gardener.current:
-            em.add_field(name='**Currently growing**', value='None')
+            em.add_field(name="**Currently growing**", value="None")
         else:
-            em.set_thumbnail(url=gardener.current['image'])
-            em.add_field(name='**Currently growing**',
-                         value='{0} ({1:.2f}%)'.format(gardener.current['name'], gardener.current['health']))
+            em.set_thumbnail(url=gardener.current["image"])
+            em.add_field(
+                name="**Currently growing**",
+                value="{0} ({1:.2f}%)".format(
+                    gardener.current["name"], gardener.current["health"]
+                ),
+            )
         if not gardener.badges:
-            em.add_field(name='**Badges**', value='None')
+            em.add_field(name="**Badges**", value="None")
         else:
-            badges = ''
+            badges = ""
             for badge in gardener.badges:
-                badges += '{}\n'.format(badge.capitalize())
-            em.add_field(name='**Badges**', value=badges)
+                badges += "{}\n".format(badge.capitalize())
+            em.add_field(name="**Badges**", value=badges)
         if not gardener.products:
-            em.add_field(name='**Products**', value='None')
+            em.add_field(name="**Products**", value="None")
         else:
-            products = ''
+            products = ""
             for product in gardener.products:
-                products += '{} ({}) {}\n'.format(product.capitalize(),
-                                                  gardener.products[product] / self.products[product.lower()][
-                                                      'uses'], self.products[product]['modifier'])
-            em.add_field(name='**Products**', value=products)
+                products += "{} ({}) {}\n".format(
+                    product.capitalize(),
+                    gardener.products[product] / self.products[product.lower()]["uses"],
+                    self.products[product]["modifier"],
+                )
+            em.add_field(name="**Products**", value=products)
         if gardener.current:
             degradation = await self._degradation(gardener)
             die_in = await _die_in(gardener, degradation)
             to_grow = await _grow_time(gardener)
             em.set_footer(
-                text='Total degradation: {0:.2f}% / {1} min (100 / ({2} / 60) * (BaseDegr {3:.2f} + PlantDegr {4:.2f}))'
-                     ' + ModDegr {5:.2f}) Your plant will die in {6} minutes '
-                     'and {7:.1f} minutes to go for flowering.'.format(
-                        degradation.degradation, self.defaults['timers']['degradation'], degradation.time,
-                        self.defaults['degradation']['base_degradation'], gardener.current['degradation'],
-                        degradation.modifiers, die_in, to_grow))
+                text="Total degradation: {0:.2f}% / {1} min (100 / ({2} / 60) * (BaseDegr {3:.2f} + PlantDegr {4:.2f}))"
+                " + ModDegr {5:.2f}) Your plant will die in {6} minutes "
+                "and {7:.1f} minutes to go for flowering.".format(
+                    degradation.degradation,
+                    self.defaults["timers"]["degradation"],
+                    degradation.time,
+                    self.defaults["degradation"]["base_degradation"],
+                    gardener.current["degradation"],
+                    degradation.modifiers,
+                    die_in,
+                    to_grow,
+                )
+            )
         await ctx.send(embed=em)
 
-    @_gardening.command(name='plants')
+    @_gardening.command(name="plants")
     async def _plants(self, ctx):
         """Look at the list of the available plants."""
-        tick = ''
-        tock = ''
+        tick = ""
+        tock = ""
         tick_tock = 0
-        for plant in self.plants['plants']:
+        for plant in self.plants["plants"]:
             if tick_tock == 0:
-                tick += '**{}**\n'.format(plant['name'])
+                tick += "**{}**\n".format(plant["name"])
                 tick_tock = 1
             else:
-                tock += '**{}**\n'.format(plant['name'])
+                tock += "**{}**\n".format(plant["name"])
                 tick_tock = 0
-        em = discord.Embed(title='All plants that are growable', color=discord.Color.green())
-        em.add_field(name='\a', value=tick)
-        em.add_field(name='\a', value=tock)
+        em = discord.Embed(title="All plants that are growable", color=discord.Color.green())
+        em.add_field(name="\a", value=tick)
+        em.add_field(name="\a", value=tock)
         await ctx.send(embed=em)
 
-    @_gardening.command(name='plant')
+    @_gardening.command(name="plant")
     async def _plant(self, ctx: commands.Context, *plant):
         """Look at the details of a plant."""
-        plant = ' '.join(plant)
+        plant = " ".join(plant)
         t = False
-        for p in self.plants['plants']:
-            if p['name'].lower() == plant.lower():
+        for p in self.plants["plants"]:
+            if p["name"].lower() == plant.lower():
                 plant = p
                 t = True
                 break
         if t:
-            em = discord.Embed(title='Plant statistics of {}'.format(plant['name']), color=discord.Color.green())
-            em.set_thumbnail(url=plant['image'])
-            em.add_field(name='**Name**', value=plant['name'])
-            em.add_field(name='**Rarity**', value=plant['rarity'].capitalize())
-            em.add_field(name='**Grow Time**', value='{0:.1f} minutes'.format(plant['time'] / 60))
-            em.add_field(name='**Damage Threshold**', value='{}%'.format(plant['threshold']))
-            em.add_field(name='**Badge**', value=plant['badge'])
-            em.add_field(name='**Reward**', value='{} τ'.format(plant['reward']))
+            em = discord.Embed(
+                title="Plant statistics of {}".format(plant["name"]), color=discord.Color.green()
+            )
+            em.set_thumbnail(url=plant["image"])
+            em.add_field(name="**Name**", value=plant["name"])
+            em.add_field(name="**Rarity**", value=plant["rarity"].capitalize())
+            em.add_field(name="**Grow Time**", value="{0:.1f} minutes".format(plant["time"] / 60))
+            em.add_field(name="**Damage Threshold**", value="{}%".format(plant["threshold"]))
+            em.add_field(name="**Badge**", value=plant["badge"])
+            em.add_field(name="**Reward**", value="{} τ".format(plant["reward"]))
         else:
-            message = 'What plant?'
+            message = "What plant?"
             em = discord.Embed(description=message, color=discord.Color.red())
             await ctx.send_help()
         await ctx.send(embed=em)
 
-    @_gardening.command(name='state')
+    @_gardening.command(name="state")
     async def _state(self, ctx):
         """Check the state of your plant."""
         author = ctx.author
         gardener = await self._gardener(author)
         if not gardener.current:
-            message = 'You\'re currently not growing a plant.'
+            message = "You're currently not growing a plant."
             em_color = discord.Color.red()
         else:
             plant = gardener.current
             degradation = await self._degradation(gardener)
             die_in = await _die_in(gardener, degradation)
             to_grow = await _grow_time(gardener)
-            message = 'You\'re growing {0} **{1}**. ' \
-                      'Its health is **{2:.2f}%** and still has to grow for **{3:.1f}** minutes. ' \
-                      'It is losing **{4:.2f}%** per minute and will die in **{5:.1f}** minutes.'.format(
-                        plant['article'],
-                        plant['name'],
-                        plant['health'],
-                        to_grow,
-                        degradation.degradation,
-                        die_in)
+            message = (
+                "You're growing {0} **{1}**. "
+                "Its health is **{2:.2f}%** and still has to grow for **{3:.1f}** minutes. "
+                "It is losing **{4:.2f}%** per minute and will die in **{5:.1f}** minutes.".format(
+                    plant["article"],
+                    plant["name"],
+                    plant["health"],
+                    to_grow,
+                    degradation.degradation,
+                    die_in,
+                )
+            )
             em_color = discord.Color.green()
         em = discord.Embed(description=message, color=em_color)
         await ctx.send(embed=em)
 
-    @_gardening.command(name='buy')
+    @_gardening.command(name="buy")
     async def _buy(self, ctx, product=None, amount: int = 1):
         """Buy gardening supplies."""
         author = ctx.author
         if product is None:
-            em = discord.Embed(title='All gardening supplies that you can buy:',
-                               color=discord.Color.green())
+            em = discord.Embed(
+                title="All gardening supplies that you can buy:", color=discord.Color.green()
+            )
             for product in self.products:
-                em.add_field(name='**{}**'.format(product.capitalize()),
-                             value='Cost: {} τ\n+{} health\n-{}% damage\nUses: {}\nCategory: {}'.format(
-                                 self.products[product]['cost'], self.products[product]['health'],
-                                 self.products[product]['damage'], self.products[product]['uses'],
-                                 self.products[product]['category']))
+                em.add_field(
+                    name="**{}**".format(product.capitalize()),
+                    value="Cost: {} τ\n+{} health\n-{}% damage\nUses: {}\nCategory: {}".format(
+                        self.products[product]["cost"],
+                        self.products[product]["health"],
+                        self.products[product]["damage"],
+                        self.products[product]["uses"],
+                        self.products[product]["category"],
+                    ),
+                )
             await ctx.send(embed=em)
         else:
             if amount <= 0:
@@ -1222,24 +1255,27 @@ class PlantTycoon(Cog):
             else:
                 gardener = await self._gardener(author)
                 if product.lower() in self.products and amount > 0:
-                    cost = self.products[product.lower()]['cost'] * amount
+                    cost = self.products[product.lower()]["cost"] * amount
                     withdraw_points = await _withdraw_points(gardener, cost)
                     if withdraw_points:
                         if product.lower() not in gardener.products:
                             gardener.products[product.lower()] = 0
                         gardener.products[product.lower()] += amount
-                        gardener.products[product.lower()] += amount * self.products[product.lower()]['uses']
+                        gardener.products[product.lower()] += (
+                            amount * self.products[product.lower()]["uses"]
+                        )
                         await gardener.save_gardener()
-                        message = 'You bought {}.'.format(product.lower())
+                        message = "You bought {}.".format(product.lower())
                     else:
-                        message = 'You don\'t have enough Thneeds. You have {}, but need {}.'.format(
-                            gardener.points, self.products[product.lower()]['cost'] * amount)
+                        message = "You don't have enough Thneeds. You have {}, but need {}.".format(
+                            gardener.points, self.products[product.lower()]["cost"] * amount
+                        )
                 else:
-                    message = 'I don\'t have this product.'
+                    message = "I don't have this product."
             em = discord.Embed(description=message, color=discord.Color.green())
             await ctx.send(embed=em)
 
-    @_gardening.command(name='convert')
+    @_gardening.command(name="convert")
     async def _convert(self, ctx: commands.Context, amount: int):
         """Exchange Thneeds for credits."""
         author = ctx.author
@@ -1251,25 +1287,26 @@ class PlantTycoon(Cog):
             plural = "s"
         if withdraw_points:
             await bank.deposit_credits(author, amount)
-            message = '{} Thneed{} successfully exchanged for credits.'.format(amount, plural)
+            message = "{} Thneed{} successfully exchanged for credits.".format(amount, plural)
             await gardener.save_gardener()
         else:
-            message = 'You don\'t have enough Thneed{}. ' \
-                      'You have {}, but need {}.'.format(plural, gardener.points, amount)
+            message = "You don't have enough Thneed{}. " "You have {}, but need {}.".format(
+                plural, gardener.points, amount
+            )
 
         em = discord.Embed(description=message, color=discord.Color.green())
         await ctx.send(embed=em)
 
-    @commands.command(name='shovel')
+    @commands.command(name="shovel")
     async def _shovel(self, ctx: commands.Context):
         """Shovel your plant out."""
         author = ctx.author
         gardener = await self._gardener(author)
         if not gardener.current:
-            message = 'You\'re currently not growing a plant.'
+            message = "You're currently not growing a plant."
         else:
             gardener.current = {}
-            message = 'You sucessfuly shovelled your plant out.'
+            message = "You sucessfuly shovelled your plant out."
             if gardener.points < 0:
                 gardener.points = 0
             await gardener.save_gardener()
@@ -1277,61 +1314,61 @@ class PlantTycoon(Cog):
         em = discord.Embed(description=message, color=discord.Color.dark_grey())
         await ctx.send(embed=em)
 
-    @commands.command(name='water')
+    @commands.command(name="water")
     async def _water(self, ctx):
         """Water your plant."""
         author = ctx.author
         channel = ctx.channel
         gardener = await self._gardener(author)
-        product = 'water'
-        product_category = 'water'
+        product = "water"
+        product_category = "water"
         if not gardener.current:
-            message = 'You\'re currently not growing a plant.'
+            message = "You're currently not growing a plant."
             await _send_message(channel, message)
         else:
             await self._add_health(channel, gardener, product, product_category)
 
-    @commands.command(name='fertilize')
+    @commands.command(name="fertilize")
     async def _fertilize(self, ctx, fertilizer):
         """Fertilize the soil."""
         gardener = await self._gardener(ctx.author)
         channel = ctx.channel
         product = fertilizer
-        product_category = 'fertilizer'
+        product_category = "fertilizer"
         if not gardener.current:
-            message = 'You\'re currently not growing a plant.'
+            message = "You're currently not growing a plant."
             await _send_message(channel, message)
         else:
             await self._add_health(channel, gardener, product, product_category)
 
-    @commands.command(name='prune')
+    @commands.command(name="prune")
     async def _prune(self, ctx):
         """Prune your plant."""
         gardener = await self._gardener(ctx.author)
         channel = ctx.channel
-        product = 'pruner'
-        product_category = 'tool'
+        product = "pruner"
+        product_category = "tool"
         if not gardener.current:
-            message = 'You\'re currently not growing a plant.'
+            message = "You're currently not growing a plant."
             await _send_message(channel, message)
         else:
             await self._add_health(channel, gardener, product, product_category)
 
     async def check_degradation(self):
-        while 'PlantTycoon' in self.bot.cogs:
+        while "PlantTycoon" in self.bot.cogs:
             users = await self.config.all_users()
             for user_id in users:
                 user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
                 if gardener.current:
                     degradation = await self._degradation(gardener)
-                    gardener.current['health'] -= degradation.degradation
-                    gardener.points += self.defaults['points']['growing']
+                    gardener.current["health"] -= degradation.degradation
+                    gardener.points += self.defaults["points"]["growing"]
                     await gardener.save_gardener()
-            await asyncio.sleep(self.defaults['timers']['degradation'] * 60)
+            await asyncio.sleep(self.defaults["timers"]["degradation"] * 60)
 
     async def check_completion(self):
-        while 'PlantTycoon' in self.bot.cogs:
+        while "PlantTycoon" in self.bot.cogs:
             now = int(time.time())
             users = await self.config.all_users()
             for user_id in users:
@@ -1339,38 +1376,41 @@ class PlantTycoon(Cog):
                 user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
                 if gardener.current:
-                    then = gardener.current['timestamp']
-                    health = gardener.current['health']
-                    grow_time = gardener.current['time']
-                    badge = gardener.current['badge']
-                    reward = gardener.current['reward']
+                    then = gardener.current["timestamp"]
+                    health = gardener.current["health"]
+                    grow_time = gardener.current["time"]
+                    badge = gardener.current["badge"]
+                    reward = gardener.current["reward"]
                     if (now - then) > grow_time:
                         gardener.points += reward
                         if badge not in gardener.badges:
                             gardener.badges.append(badge)
-                        message = 'Your plant made it! ' \
-                                  'You are rewarded with the **{}** badge and you have received **{}** Thneeds.'.format(
-                                    badge, reward)
+                        message = (
+                            "Your plant made it! "
+                            "You are rewarded with the **{}** badge and you have received **{}** Thneeds.".format(
+                                badge, reward
+                            )
+                        )
                     if health < 0:
-                        message = 'Your plant died!'
+                        message = "Your plant died!"
                 if message is not None:
                     await user.send(message)
                     gardener.current = {}
                     await gardener.save_gardener()
-            await asyncio.sleep(self.defaults['timers']['completion'] * 60)
+            await asyncio.sleep(self.defaults["timers"]["completion"] * 60)
 
     async def send_notification(self):
-        while 'PlantTycoon' in self.bot.cogs:
+        while "PlantTycoon" in self.bot.cogs:
             users = await self.config.all_users()
             for user_id in users:
                 user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
                 if gardener.current:
-                    health = gardener.current['health']
-                    if health < self.defaults['notification']['max_health']:
-                        message = choice(self.notifications['messages'])
+                    health = gardener.current["health"]
+                    if health < self.defaults["notification"]["max_health"]:
+                        message = choice(self.notifications["messages"])
                         await user.send(message)
-            await asyncio.sleep(self.defaults['timers']['notification'] * 60)
+            await asyncio.sleep(self.defaults["timers"]["notification"] * 60)
 
     def __unload(self):
         self.completion_task.cancel()
