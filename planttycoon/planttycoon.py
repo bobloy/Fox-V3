@@ -1298,6 +1298,7 @@ class PlantTycoon(Cog):
         em = discord.Embed(description=message, color=discord.Color.green())
         await ctx.send(embed=em)
 
+    @commands.cooldown(1, 60 * 10, commands.BucketType.user)
     @commands.command(name="shovel")
     async def _shovel(self, ctx: commands.Context):
         """Shovel your plant out."""
