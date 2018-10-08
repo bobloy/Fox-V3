@@ -39,7 +39,7 @@ class Gardener:
         self.products = await self.config.user(self.user).products()
         self.current = await self.config.user(self.user).current()
 
-    async def _save_gardener(self):
+    async def save_gardener(self):
         await self.config.user(self.user).badges.set(self.badges)
         await self.config.user(self.user).points.set(self.points)
         await self.config.user(self.user).products.set(self.products)
@@ -76,8 +76,7 @@ async def _withdraw_points(gardener: Gardener, amount):
     # Substract points from the gardener
     #
 
-    points = gardener.points
-    if (points - amount) < 0:
+    if (gardener.points - amount) < 0:
         return False
     else:
         gardener.points -= amount
@@ -966,7 +965,7 @@ class PlantTycoon(Cog):
                             damage_msg = 'You gave too much of {}.'.format(product)
                         message = '{} Your plant lost some health. :wilted_rose:'.format(damage_msg)
                     gardener.points += self.defaults['points']['add_health']
-                    await gardener._save_gardener()
+                    await gardener.save_gardener()
                 else:
                     message = 'You have no {}. Go buy some!'.format(product)
             else:
@@ -1076,7 +1075,7 @@ class PlantTycoon(Cog):
                 gardener.products['water'] = 0
             gardener.products['water'] += 5
             gardener.current = plant
-            await gardener._save_gardener()
+            await gardener.save_gardener()
 
             em = discord.Embed(description=message, color=discord.Color.green())
         else:
@@ -1230,7 +1229,7 @@ class PlantTycoon(Cog):
                             gardener.products[product.lower()] = 0
                         gardener.products[product.lower()] += amount
                         gardener.products[product.lower()] += amount * self.products[product.lower()]['uses']
-                        await gardener._save_gardener()
+                        await gardener.save_gardener()
                         message = 'You bought {}.'.format(product.lower())
                     else:
                         message = 'You don\'t have enough Thneeds. You have {}, but need {}.'.format(
@@ -1253,6 +1252,7 @@ class PlantTycoon(Cog):
         if withdraw_points:
             await bank.deposit_credits(author, amount)
             message = '{} Thneed{} successfully exchanged for credits.'.format(amount, plural)
+            await gardener.save_gardener()
         else:
             message = 'You don\'t have enough Thneed{}. ' \
                       'You have {}, but need {}.'.format(plural, gardener.points, amount)
@@ -1272,7 +1272,7 @@ class PlantTycoon(Cog):
             message = 'You sucessfuly shovelled your plant out.'
             if gardener.points < 0:
                 gardener.points = 0
-            await gardener._save_gardener()
+            await gardener.save_gardener()
 
         em = discord.Embed(description=message, color=discord.Color.dark_grey())
         await ctx.send(embed=em)
@@ -1327,7 +1327,7 @@ class PlantTycoon(Cog):
                     degradation = await self._degradation(gardener)
                     gardener.current['health'] -= degradation.degradation
                     gardener.points += self.defaults['points']['growing']
-                    await gardener._save_gardener()
+                    await gardener.save_gardener()
             await asyncio.sleep(self.defaults['timers']['degradation'] * 60)
 
     async def check_completion(self):
@@ -1356,7 +1356,7 @@ class PlantTycoon(Cog):
                 if message is not None:
                     await user.send(message)
                     gardener.current = {}
-                    await gardener._save_gardener()
+                    await gardener.save_gardener()
             await asyncio.sleep(self.defaults['timers']['completion'] * 60)
 
     async def send_notification(self):
