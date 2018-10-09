@@ -1,0 +1,23 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Secret Hitler Game",
+  "hidden": true,
+  "install_msg": "Thank you for installing SecretHitler! Get started with `[p]load secrethitler`",
+  "requirements": [],
+  "short": "Secret Hitler Game",
+  "tags": [
+    "hitler",
+    "secret",
+    "party",
+    "fun",
+    "game",
+    "bobloy"
+  ]
+}
