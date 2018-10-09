@@ -9,7 +9,7 @@
   ],
   "description": "Apply roles based on the # of days on server",
   "hidden": false,
-  "install_msg": "Thank you for installing timerole. Configure with [p]timerole",
+  "install_msg": "Thank you for installing timerole.\nGet started with `[p]load timerole`. Configure with [p]timerole",
   "requirements": [],
   "short": "Apply roles after # of days",
   "tags": [

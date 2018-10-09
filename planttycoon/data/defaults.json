@@ -1,0 +1,22 @@
+{
+  "points": {
+    "buy": 5,
+    "add_health": 5,
+    "fertilize": 10,
+    "pruning": 20,
+    "pesticide": 25,
+    "growing": 5,
+    "damage": 25
+  },
+  "timers": {
+    "degradation": 1,
+    "completion": 1,
+    "notification": 5
+  },
+  "degradation": {
+    "base_degradation": 1.5
+  },
+  "notification": {
+    "max_health": 50
+  }
+}

@@ -8,8 +8,8 @@
     0
   ],
   "description": "Keep track of when users were last seen online",
-  "hidden": true,
-  "install_msg": "Thank you for installing LastSeen. Get started with `[p]help LastSeen`",
+  "hidden": false,
+  "install_msg": "Thank you for installing LastSeen. Get started with `[p]load lseen`, then `[p]help LastSeen`",
   "requirements": ["python-dateutil"],
   "short": "Last seen tracker",
   "tags": [

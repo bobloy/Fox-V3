@@ -4,6 +4,9 @@ import discord
 
 from redbot.core import Config, commands
 from redbot.core.bot import Red
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
 async def fetch_img(session, url):
@@ -13,7 +16,7 @@ async def fetch_img(session, url):
             return await response.read()
 
 
-class StealEmoji:
+class StealEmoji(Cog):
     """
     This cog steals emojis and creates servers for them
     """

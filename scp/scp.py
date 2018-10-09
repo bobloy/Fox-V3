@@ -1,8 +1,11 @@
 import discord
 from redbot.core import commands
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class SCP:
+class SCP(Cog):
     """Look up SCP articles. Warning: Some of them may be too creepy or gruesome."""
 
     def __init__(self, bot):

@@ -2,9 +2,12 @@ import codecs as c
 
 import discord
 from redbot.core import commands
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Unicode:
+class Unicode(Cog):
     """Encode/Decode Unicode characters!"""
 
     def __init__(self, bot):

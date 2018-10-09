@@ -8,8 +8,8 @@
     0
   ],
   "description": "Add expiring flags on members to track warnings or incidents",
-  "hidden": true,
-  "install_msg": "Thank you for installing Flag! Get started with `[p]help Flag`",
+  "hidden": false,
+  "install_msg": "Thank you for installing Flag! Get started with `[p]load flag` and `[p]help Flag`",
   "requirements": [],
   "short": "Add expiring flags to members",
   "tags": [

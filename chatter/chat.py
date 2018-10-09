@@ -11,9 +11,12 @@ from chatter.chatterbot import ChatBot
 from chatter.chatterbot.comparisons import levenshtein_distance
 from chatter.chatterbot.response_selection import get_first_response
 from chatter.chatterbot.trainers import ListTrainer
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Chatter:
+class Chatter(Cog):
     """
     This cog trains a chatbot that will talk like members of your Guild
     """

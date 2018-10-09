@@ -5,9 +5,12 @@ import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Timerole:
+class Timerole(Cog):
     """Add roles to users based on time on server"""
 
     def __init__(self, bot: Red):

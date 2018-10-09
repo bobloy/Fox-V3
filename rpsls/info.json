@@ -10,7 +10,7 @@
   ],
   "description": "Play Rock Papers Scissor Lizard Spock by Sam Kass in Discord!",
   "hidden": false,
-  "install_msg": "Thank you for installing RPSLP. Get started with `[p]rpsls`",
+  "install_msg": "Thank you for installing RPSLP. Get started with `[p]load rpsls`, then `[p]rpsls`",
   "requirements": [],
   "short": "Play Rock Papers Scissor Lizard Spock in Discord!",
   "tags": [

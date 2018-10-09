@@ -318,7 +318,7 @@ class GameBuilder:
                 pass
 
         if page >= len(ROLE_LIST):
-            self.rand_roles.append(CATEGORY_COUNT[page-len(ROLE_LIST)])
+            self.rand_roles.append(CATEGORY_COUNT[page - len(ROLE_LIST)])
         else:
             self.code.append(page)
 

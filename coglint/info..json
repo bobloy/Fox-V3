@@ -9,7 +9,7 @@
   ],
   "description": "Lint python code posted in chat",
   "hidden": true,
-  "install_msg": "Thank you for installing CogLint",
+  "install_msg": "Thank you for installing CogLint! Get started with `[p]load coglint` and `[p]help CogLint`",
   "requirements": [],
   "short": "Python cog linter",
   "tags": [

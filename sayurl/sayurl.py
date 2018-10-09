@@ -4,16 +4,18 @@ import html2text
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
 async def fetch_url(session, url):
-    with aiohttp.Timeout(20):
-        async with session.get(url) as response:
-            assert response.status == 200
-            return await response.text()
+    async with session.get(url) as response:
+        assert response.status == 200
+        return await response.text()
 
 
-class SayUrl:
+class SayUrl(Cog):
     """
     V3 Cog Template
     """

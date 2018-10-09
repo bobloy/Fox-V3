@@ -6,9 +6,12 @@ import discord
 from redbot.core import Config
 from redbot.core.bot import Red
 from redbot.core import commands
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class LastSeen:
+class LastSeen(Cog):
     """
     Report when a user was last seen online
     """

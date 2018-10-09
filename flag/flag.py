@@ -4,9 +4,12 @@ import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Flag:
+class Flag(Cog):
     """
     Set expiring flags on members
     """

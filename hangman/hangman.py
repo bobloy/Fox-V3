@@ -4,9 +4,12 @@ from random import randint
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.data_manager import cog_data_path
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Hangman:
+class Hangman(Cog):
     """Lets anyone play a game of hangman with custom phrases"""
     navigate = "🔼🔽"
     letters = "🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿"

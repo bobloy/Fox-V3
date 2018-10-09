@@ -29,7 +29,7 @@ class AudioTrivia(Trivia):
 
         self.audioconf.register_guild(
             delay=30.0,
-            repeat=True
+            repeat=True,
         )
 
     @commands.group()
@@ -89,6 +89,11 @@ class AudioTrivia(Trivia):
         if session is not None:
             await ctx.send("There is already an ongoing trivia session in this channel.")
             return
+
+        status = await self.audio.config.status()
+
+        if status:
+            await ctx.send("I recommend disabling audio status with `{}audioset status`".format(ctx.prefix))
 
         if not self.audio._player_check(ctx):
             try:

@@ -2,9 +2,12 @@ import aiohttp
 import discord
 from bs4 import BeautifulSoup
 from redbot.core import commands
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class LoveCalculator:
+class LoveCalculator(Cog):
     """Calculate the love percentage for two users!"""
 
     def __init__(self, bot):
