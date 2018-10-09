@@ -1,5 +1,5 @@
-from .best_match import BestMatch
 from .logic_adapter import LogicAdapter
+from .best_match import BestMatch
 from .low_confidence import LowConfidenceAdapter
 from .mathematical_evaluation import MathematicalEvaluation
 from .multi_adapter import MultiLogicAdapter

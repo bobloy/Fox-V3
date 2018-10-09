@@ -46,7 +46,7 @@ def validate_adapter_class(validate_class, adapter_class):
 
     :raises: Adapter.InvalidAdapterTypeException
     """
-    from .adapters import Adapter
+    from chatter.chatterbot.adapters import Adapter
 
     # If a dictionary was passed in, check if it has an import_path attribute
     if isinstance(validate_class, dict):

@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from collections import Counter
 
 from chatter.chatterbot import utils
-from .logic_adapter import LogicAdapter
+from chatter.chatterbot.logic import LogicAdapter
 
 
 class MultiLogicAdapter(LogicAdapter):

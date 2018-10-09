@@ -31,8 +31,8 @@ class Howdoi:
         """Adjust howdoi settings
         Settings are reset on reload"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
-
+            pass
+    
     @howdoiset.command(pass_context=True, name="answers")
     async def howdoiset_answers(self, ctx, num_answers: int = 1):
         """Adjust number of answers provided.

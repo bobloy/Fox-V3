@@ -1,15 +1,19 @@
 import discord
-from discord.ext import commands
+
 from redbot.core import Config, checks
 
 from redbot.core.bot import Red
+from redbot.core import commands
 
 from werewolf.builder import GameBuilder, role_from_name, role_from_alignment, role_from_category, role_from_id
 from werewolf.game import Game
 from redbot.core.utils.menus import menu, DEFAULT_CONTROLS
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Werewolf:
+class Werewolf(Cog):
     """
     Base to host werewolf on a guild
     """
@@ -52,7 +56,7 @@ class Werewolf:
         Base command to adjust settings. Check help for command list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @commands.guild_only()
     @wwset.command(name="list")
@@ -135,7 +139,7 @@ class Werewolf:
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @commands.guild_only()
     @ww.command(name="new")
@@ -388,4 +392,3 @@ class Werewolf:
                 return False, None, None, None, None
 
         return True, role, category, channel, log_channel
-

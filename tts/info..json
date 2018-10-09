@@ -1,0 +1,22 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Send Text2Speech messages as an uploaded mp3",
+  "hidden": true,
+  "install_msg": "Thank you for installing TTS. Get started with `[p]load tts`, then `[p]help TTS`",
+  "requirements": [
+    "gTTS"
+  ],
+  "short": "Send TTS messages as uploaded mp3",
+  "tags": [
+    "bobloy",
+    "utils",
+    "audio"
+  ]
+}

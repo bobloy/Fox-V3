@@ -1,19 +1,21 @@
 import aiohttp
 import html2text
-from discord.ext import commands
-from redbot.core import Config, RedContext
+
+from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
 async def fetch_url(session, url):
-    with aiohttp.Timeout(20):
-        async with session.get(url) as response:
-            assert response.status == 200
-            return await response.text()
+    async with session.get(url) as response:
+        assert response.status == 200
+        return await response.text()
 
 
-class SayUrl:
+class SayUrl(Cog):
     """
     V3 Cog Template
     """
@@ -28,12 +30,11 @@ class SayUrl:
         self.config.register_guild(**default_guild)
 
     @commands.command()
-    async def sayurl(self, ctx: RedContext, url):
+    async def sayurl(self, ctx: commands.Context, url):
         """
         Converts a URL to something readable
 
-        :param url:
-        :return:
+        Works better on smaller websites
         """
 
         h = html2text.HTML2Text()

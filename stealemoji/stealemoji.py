@@ -1,10 +1,12 @@
 import aiohttp
 
 import discord
-from discord.ext import commands
 
-from redbot.core import Config, RedContext
+from redbot.core import Config, commands
 from redbot.core.bot import Red
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
 async def fetch_img(session, url):
@@ -14,7 +16,7 @@ async def fetch_img(session, url):
             return await response.read()
 
 
-class StealEmoji:
+class StealEmoji(Cog):
     """
     This cog steals emojis and creates servers for them
     """
@@ -41,12 +43,12 @@ class StealEmoji:
         self.config.register_global(**default_global)
 
     @commands.group()
-    async def stealemoji(self, ctx: RedContext):
+    async def stealemoji(self, ctx: commands.Context):
         """
         Base command for this cog. Check help for the commands list.
         """
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
 
     @stealemoji.command(name="collect")
     async def se_collect(self, ctx):
@@ -59,7 +61,7 @@ class StealEmoji:
     async def se_bank(self, ctx):
         """Add current server as emoji bank"""
         await ctx.send("This will upload custom emojis to this server\n"
-                       "Are you sure you want to make the current server an emoji bank? (y/n)")
+                       "Are you sure you want to make the current server an emoji bank? (y//n)")
 
         def check(m):
             return m.content.upper() in ["Y", "YES", "N", "NO"] and m.channel == ctx.channel and m.author == ctx.author

@@ -1,17 +1,23 @@
 import asyncio
 import random
+from typing import List, Any, Dict, Set, Union
 
 import discord
-from discord.ext import commands
+from redbot.core import commands
 
 from werewolf.builder import parse_code
 from werewolf.player import Player
+from werewolf.role import Role
+from werewolf.votegroup import VoteGroup
 
 
 class Game:
     """
     Base class to run a single game of Werewolf
     """
+    vote_groups: Dict[str, VoteGroup]
+    roles: List[Role]
+    players: List[Player]
 
     default_secret_channel = {
         "channel": None,
