@@ -12,9 +12,14 @@ from redbot.core.utils.chat_formatting import pagify
 # from typing import Union
 
 # 0 - Robin, 1 - Single, 2 - Double, 3 - Triple, 4 - Guarantee, 5 - Compass
-T_TYPES = {0: "Round Robin", 1: "Single Elimination",
-           2: "Double Elimination", 3: "Triple Elimination",
-           4: "3 Game Guarantee", 5: "Compass Draw"}
+T_TYPES = {
+    0: "Round Robin",
+    1: "Single Elimination",
+    2: "Double Elimination",
+    3: "Triple Elimination",
+    4: "3 Game Guarantee",
+    5: "Compass Draw",
+}
 
 
 class Fight:
@@ -30,7 +35,7 @@ class Fight:
             "loss": None,
             "lossu": None,
             "dispute": None,
-            "disputeu": None
+            "disputeu": None,
         }
         default_guild = {
             "current": None,
@@ -39,13 +44,9 @@ class Fight:
                 "selfreport": True,
                 "reportchnnl": None,
                 "announcechnnl": None,
-                "admin": None
+                "admin": None,
             },
-            "emoji": {
-                "nums": [],
-                "undo": None,
-                "appr": None
-            }
+            "emoji": {"nums": [], "undo": None, "appr": None},
         }
         self.default_tourney = {
             "PLAYERS": [],
@@ -53,30 +54,19 @@ class Fight:
             "RULES": {"BESTOF": 1, "BESTOFFINAL": 1, "TYPE": 0},
             "TYPEDATA": {},
             "OPEN": False,
-            "WINNER": None
+            "WINNER": None,
         }
         self.default_match = {
             "TEAM1": [],
             "TEAM2": [],
             "SCORE1": None,
             "SCORE2": None,
-            "USERSCORE1": {
-                "SCORE1": None,
-                "SCORE2": None
-            },
-            "USERSCORE2": {
-                "SCORE1": None,
-                "SCORE2": None
-            },
+            "USERSCORE1": {"SCORE1": None, "SCORE2": None},
+            "USERSCORE2": {"SCORE1": None, "SCORE2": None},
             "WINNER": None,
-            "DISPUTE": False
+            "DISPUTE": False,
         }
-        self.default_tracker = {
-            "TID": None,
-            "MID": None,
-            "RID": None,
-            "GUILDID": None
-        }
+        self.default_tracker = {"TID": None, "MID": None, "RID": None, "GUILDID": None}
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
 
@@ -187,7 +177,7 @@ class Fight:
         """Admin command for managing the current tournament"""
         if ctx.invoked_subcommand is None:
             pass
-            
+
     @fadmin.command(name="score")
     async def fadmin_score(self, ctx, m_id, score1, score2):
         """Set's the score for matchID and clears disputes"""
@@ -201,7 +191,7 @@ class Fight:
 
     # **********************Fightset command group start*********************
 
-    @commands.group(aliases=['setfight'])
+    @commands.group(aliases=["setfight"])
     @commands.guild_only()
     @checks.mod_or_permissions(administrator=True)
     async def fightset(self, ctx):
@@ -209,7 +199,7 @@ class Fight:
         if ctx.invoked_subcommand is None:
             pass
         # await ctx.send("I can do stuff!")
-    
+
     @fightset.command(name="emoji")
     async def fightset_emoji(self, ctx):
         """Set the global reaction emojis for reporting matches"""
@@ -228,8 +218,9 @@ class Fight:
             try:
                 await message.add_reaction(actual_emoji)
             except discord.HTTPException:
-                await ctx.send("I can't add that emoji because I'm not in the guild that"
-                               " owns it.")
+                await ctx.send(
+                    "I can't add that emoji because I'm not in the guild that" " owns it."
+                )
                 return
 
             if need == "reporting a win":
@@ -415,20 +406,25 @@ class Fight:
             return
 
         if (await self._get_announcechnnl(ctx.guild)) is None:  # Announcechnnl not setup
-            await ctx.send("Announcement channel has not been configured, see `[p]fightset guild announce`")
+            await ctx.send(
+                "Announcement channel has not been configured, see `[p]fightset guild announce`"
+            )
             return
 
         if (await self._get_reportchnnl(ctx.guild)) is None:  # Reportchnnl not setup
-            await ctx.send("Self-Report channel has not been configured, see `[p]fightset guild report`")
+            await ctx.send(
+                "Self-Report channel has not been configured, see `[p]fightset guild report`"
+            )
             return
 
         if curr_fight["TYPEDATA"]:  # Empty dicionary {} resolves to False
             await ctx.send(
                 "Looks like this tournament has already started.\nDo you want to delete all match data and restart? "
-                "(yes/no)")
+                "(yes/no)"
+            )
 
             try:
-                answer = await self.bot.wait_for('message', check=check, timeout=120)
+                answer = await self.bot.wait_for("message", check=check, timeout=120)
             except asyncio.TimeoutError:
                 await ctx.send("Cancelled due to timeout")
                 return
@@ -454,8 +450,9 @@ class Fight:
         Type: 0 (Round Robin)"""
         # guild = ctx.message.guild
         # currServ = self.the_data[guild.id]
-        t_id = str(len(await self.config.guild(
-            ctx.guild).tourneys()))  # Can just be len without +1, tourney 0 makes len 1, tourney 1 makes len 2, etc
+        t_id = str(
+            len(await self.config.guild(ctx.guild).tourneys())
+        )  # Can just be len without +1, tourney 0 makes len 1, tourney 1 makes len 2, etc
 
         # currServ["CURRENT"] = t_id
         curr_fight = self.default_tourney.copy()
@@ -465,7 +462,9 @@ class Fight:
 
         await ctx.send("Tournament has been created!\n\n" + str(curr_fight))
 
-        await ctx.send("Adjust settings as necessary, then open the tournament with [p]fightset open")
+        await ctx.send(
+            "Adjust settings as necessary, then open the tournament with [p]fightset open"
+        )
 
     @fightset.command(name="stop")
     async def fightset_stop(self, ctx):
@@ -483,10 +482,13 @@ class Fight:
         # currServ = self.the_data[guild.id]
 
         await ctx.send(
-            "Current fight ID is " + str(await self.config.guild(ctx.guild).current()) + "\nOkay to stop? (yes/no)")
+            "Current fight ID is "
+            + str(await self.config.guild(ctx.guild).current())
+            + "\nOkay to stop? (yes/no)"
+        )
 
         try:
-            answer = await self.bot.wait_for('message', check=check, timeout=120)
+            answer = await self.bot.wait_for("message", check=check, timeout=120)
         except asyncio.TimeoutError:
             await ctx.send("Cancelled due to timeout")
             return
@@ -506,7 +508,7 @@ class Fight:
         """Adjust guild wide settings"""
         if ctx.invoked_subcommand is None or isinstance(ctx.invoked_subcommand, commands.Group):
             pass
-    
+
     @fightset_guild.command(name="selfreport")
     async def fightset_guild_selfreport(self, ctx):
         """Toggles the ability to self-report scores for all tournaments"""
@@ -524,7 +526,7 @@ class Fight:
 
         await self.config.guild(ctx.guild).settings.reportchnnl.set(channel.id)
 
-        channel = (await self._get_reportchnnl(ctx.guild))
+        channel = await self._get_reportchnnl(ctx.guild)
         await ctx.send("Self-Reporting Channel is now set to: " + channel.mention)
 
     @fightset_guild.command(name="announce")
@@ -535,7 +537,7 @@ class Fight:
 
         await self.config.guild(ctx.guild).settings.announcechnnl.set(channel.id)
 
-        channel = (await self._get_announcechnnl(ctx.guild))
+        channel = await self._get_announcechnnl(ctx.guild)
         await ctx.send("Announcement Channel is now set to: " + channel.mention)
 
     @fightset_guild.command(name="setadmin")
@@ -600,19 +602,23 @@ class Fight:
         :return:
         """
         if messagetext:
-            message = await ctx.send("Please react to this message with the reaction you"
-                                     " would like for " + messagetext + ", you have 20 seconds to"
-                                                                        " respond.")
+            message = await ctx.send(
+                "Please react to this message with the reaction you"
+                " would like for " + messagetext + ", you have 20 seconds to"
+                " respond."
+            )
         else:
-            message = await ctx.send("Please react to this message with the reaction you"
-                                     " would like, you have 20 seconds to"
-                                     " respond.")
+            message = await ctx.send(
+                "Please react to this message with the reaction you"
+                " would like, you have 20 seconds to"
+                " respond."
+            )
 
         def _wait_check(react, user):
             msg = react.message
             return msg.id == message.id and user.id == ctx.author.id
 
-        reaction, _ = await ctx.bot.wait_for('reaction_add', check=_wait_check, timeout=20)
+        reaction, _ = await ctx.bot.wait_for("reaction_add", check=_wait_check, timeout=20)
 
         try:
             ret = reaction.emoji.id
@@ -668,7 +674,7 @@ class Fight:
 
     async def _embed_tourney(self, ctx, t_id):
         """Prints a pretty embed of the tournament"""
-        #_placeholder Todo
+        # _placeholder Todo
         pass
 
     async def _comparescores(self, ctx):
@@ -846,19 +852,30 @@ class Fight:
         for m_id in the_round:
             if not await self._rr_matchover(guild, t_id, m_id):
                 match = the_fight["TYPEDATA"]["MATCHES"][m_id]
-                if ((match["USERSCORE1"]["SCORE1"] == math.ceil(the_fight["RULES"]["BESTOF"] / 2)) !=
-                        (match["USERSCORE1"]["SCORE2"] == math.ceil(the_fight["RULES"]["BESTOF"] / 2)) and
-                        (match["USERSCORE2"]["SCORE1"] == math.ceil(the_fight["RULES"]["BESTOF"] / 2)) !=
-                        (match["USERSCORE2"]["SCORE2"] == math.ceil(the_fight["RULES"]["BESTOF"] / 2)) and
-                        (match["USERSCORE1"]["SCORE1"] == match["USERSCORE2"]["SCORE1"]) and
-                        (match["USERSCORE1"]["SCORE2"] == match["USERSCORE2"]["SCORE2"])):
+                if (
+                    (match["USERSCORE1"]["SCORE1"] == math.ceil(the_fight["RULES"]["BESTOF"] / 2))
+                    != (
+                        match["USERSCORE1"]["SCORE2"]
+                        == math.ceil(the_fight["RULES"]["BESTOF"] / 2)
+                    )
+                    and (
+                        match["USERSCORE2"]["SCORE1"]
+                        == math.ceil(the_fight["RULES"]["BESTOF"] / 2)
+                    )
+                    != (
+                        match["USERSCORE2"]["SCORE2"]
+                        == math.ceil(the_fight["RULES"]["BESTOF"] / 2)
+                    )
+                    and (match["USERSCORE1"]["SCORE1"] == match["USERSCORE2"]["SCORE1"])
+                    and (match["USERSCORE1"]["SCORE2"] == match["USERSCORE2"]["SCORE2"])
+                ):
 
-                    the_fight["TYPEDATA"]["MATCHES"][m_id]["SCORE1"] = \
-                        the_fight["TYPEDATA"]["MATCHES"][m_id]["USERSCORE1"][
-                            "SCORE1"]
-                    the_fight["TYPEDATA"]["MATCHES"][m_id]["SCORE1"] = \
-                        the_fight["TYPEDATA"]["MATCHES"][m_id]["USERSCORE2"][
-                            "SCORE2"]
+                    the_fight["TYPEDATA"]["MATCHES"][m_id]["SCORE1"] = the_fight["TYPEDATA"][
+                        "MATCHES"
+                    ][m_id]["USERSCORE1"]["SCORE1"]
+                    the_fight["TYPEDATA"]["MATCHES"][m_id]["SCORE1"] = the_fight["TYPEDATA"][
+                        "MATCHES"
+                    ][m_id]["USERSCORE2"]["SCORE2"]
                     await self._save_fight(None, t_id, the_fight)
                 else:
                     await self._rr_report_dispute(guild, t_id, m_id)
@@ -871,8 +888,9 @@ class Fight:
         for rnd in schedule:
             for mID in rnd:
                 teamnum = await self._rr_matchperms(guild, t_id, userid, mID)
-                if teamnum and not await self._rr_matchover(guild, t_id,
-                                                            mID):  # User is in this match, check if it's done yet
+                if teamnum and not await self._rr_matchover(
+                    guild, t_id, mID
+                ):  # User is in this match, check if it's done yet
                     return mID
 
         return False  # All matches done or not in tourney
@@ -881,8 +899,9 @@ class Fight:
         the_fight = await self._getfight(guild, t_id)
         match = the_fight["TYPEDATA"]["MATCHES"][m_id]
 
-        if ((match["SCORE1"] == math.ceil(the_fight["RULES"]["BESTOF"] / 2)) !=
-                (match["SCORE2"] == math.ceil(the_fight["RULES"]["BESTOF"] / 2))):
+        if (match["SCORE1"] == math.ceil(the_fight["RULES"]["BESTOF"] / 2)) != (
+            match["SCORE2"] == math.ceil(the_fight["RULES"]["BESTOF"] / 2)
+        ):
             return True
 
         return False
@@ -949,11 +968,17 @@ class Fight:
 
             mention1 = ", ".join(team1)
             mention2 = ", ".join(team2)
-            outembed = discord.Embed(title="Match ID: " + m_id, color=0x0000bf)
+            outembed = discord.Embed(title="Match ID: " + m_id, color=0x0000BF)
             outembed.add_field(name="Team 1", value=mention1, inline=False)
             outembed.add_field(name="Team 2", value=mention2, inline=False)
-            outembed.set_footer(text=(await self._get_win_str()) + " Report Win || " + (
-                await self._get_loss_str()) + " Report Loss || " + (await self._get_dispute_str()) + " Dispute Result")
+            outembed.set_footer(
+                text=(await self._get_win_str())
+                + " Report Win || "
+                + (await self._get_loss_str())
+                + " Report Loss || "
+                + (await self._get_dispute_str())
+                + " Dispute Result"
+            )
 
             if channel:
                 message = await channel.send(embed=outembed)
@@ -1044,11 +1069,34 @@ class Fight:
         s = []  # Schedule list
         out_id = {}  # Matches
 
-        first_id = ["A", "B", "C", "D", "E", "F",
-                    "G", "H", "I", "J", "K", "L",
-                    "M", "N", "O", "P", "Q", "R",
-                    "S", "T", "U", "V", "W", "X",
-                    "Y", "Z"]  # God dammit this could've been a string
+        first_id = [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I",
+            "J",
+            "K",
+            "L",
+            "M",
+            "N",
+            "O",
+            "P",
+            "Q",
+            "R",
+            "S",
+            "T",
+            "U",
+            "V",
+            "W",
+            "X",
+            "Y",
+            "Z",
+        ]  # God dammit this could've been a string
 
         if len(inlist) % 2 == 1:
             inlist = inlist + ["BYE"]
@@ -1105,8 +1153,9 @@ class Fight:
 
     # **************** Attempt 2, borrow from Squid*******
 
-    async def on_raw_reaction_add(self, emoji: discord.PartialEmoji,
-                                  message_id: int, channel_id: int, user_id: int):
+    async def on_raw_reaction_add(
+        self, emoji: discord.PartialEmoji, message_id: int, channel_id: int, user_id: int
+    ):
         """
         Event handler for long term reaction watching.
         :param discord.PartialReactionEmoji emoji:
@@ -1132,7 +1181,7 @@ class Fight:
             return
 
         if tracker["MID"] != (await self._parseuser(guild, tracker["TID"], member.id)):
-            message = (await self._get_message_from_id(guild, message_id))
+            message = await self._get_message_from_id(guild, message_id)
             await message.remove_reaction(emoji, member)
             return
 
@@ -1144,7 +1193,11 @@ class Fight:
         else:
             emoji_id = emoji.name
 
-        wld = [(await self.config.win()), (await self.config.loss()), (await self.config.dispute())]
+        wld = [
+            (await self.config.win()),
+            (await self.config.loss()),
+            (await self.config.dispute()),
+        ]
         if emoji_id not in wld:  # Not sure if this works # It does
             await message.remove_reaction(emoji, member)
             return
