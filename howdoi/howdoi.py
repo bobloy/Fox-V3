@@ -21,7 +21,7 @@ class Howdoi:
             "color": False,
             "num_answers": 1,
             "clear_cache": False,
-            "version": False
+            "version": False,
         }
 
         self.config.register_global(**default_global)
@@ -32,7 +32,7 @@ class Howdoi:
         Settings are reset on reload"""
         if ctx.invoked_subcommand is None:
             pass
-    
+
     @howdoiset.command(pass_context=True, name="answers")
     async def howdoiset_answers(self, ctx, num_answers: int = 1):
         """Adjust number of answers provided.
