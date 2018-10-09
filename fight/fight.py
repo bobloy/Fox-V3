@@ -828,7 +828,7 @@ class Fight:
             the_fight["TYPEDATA"]["MATCHES"][m_id]["USERSCORE2"]["SCORE1"] = score1
             the_fight["TYPEDATA"]["MATCHES"][m_id]["USERSCORE2"]["SCORE2"] = score2
 
-        await self._save_fight(ctx, t_id, the_fight)
+        await self._save_fight(None, t_id, the_fight)
 
     async def _rr_report_dispute(self, guild: discord.Guild, t_id, m_id):
         """Reports a disputed match"""
@@ -836,7 +836,7 @@ class Fight:
 
         the_fight["TYPEDATA"]["MATCHES"][m_id]["DISPUTE"] = True
 
-        await self._save_fight(ctx, t_id, the_fight)
+        await self._save_fight(None, t_id, the_fight)
 
     async def _rr_finalize(self, guild: discord.Guild, t_id):
         """Applies scores to all non-disputed matches"""
@@ -859,7 +859,7 @@ class Fight:
                     the_fight["TYPEDATA"]["MATCHES"][m_id]["SCORE1"] = \
                         the_fight["TYPEDATA"]["MATCHES"][m_id]["USERSCORE2"][
                             "SCORE2"]
-                    await self._save_fight(ctx, t_id, the_fight)
+                    await self._save_fight(None, t_id, the_fight)
                 else:
                     await self._rr_report_dispute(guild, t_id, m_id)
 
