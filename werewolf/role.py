@@ -46,6 +46,12 @@ class Role:
         "You win by testing the game\n"
         "Lynch players during the day with `[p]ww vote <ID>`"
     )
+    description = (
+        "This is the basic role\n"
+        "All roles are based on this Class\n"
+        "Has no special significance"
+    )
+    icon_url = None  # Adding a URL here will enable a thumbnail of the role
 
     def __init__(self, game):
         self.game = game
@@ -64,6 +70,9 @@ class Role:
             (self._at_night_end, 0),
             (self._at_visit, 0)
         ]
+
+    def __repr__(self):
+        return self.__class__.__name__
 
     async def on_event(self, event, data):
         """
@@ -101,14 +110,14 @@ class Role:
         Interaction for powerful access of role
         Unlikely to be able to deceive this
         """
-        return "Default"
+        return "Role"
 
     async def see_role(self, source=None):
         """
         Interaction for investigative roles.
         More common to be able to deceive this action
         """
-        return "Role"
+        return "Default"
 
     async def _at_game_start(self, data=None):
         if self.channel_id:
@@ -144,7 +153,7 @@ class Role:
         """
         Called when someone is trying to kill you!
         Can you do anything about it?
-        self.alive is now set to False, set to True to stay alive
+        self.player.alive is now set to False, set to True to stay alive
         """
         pass
 

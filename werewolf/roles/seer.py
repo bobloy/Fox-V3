@@ -1,8 +1,9 @@
+from werewolf.night_powers import pick_target
 from werewolf.role import Role
 
 
 class Seer(Role):
-    rand_choice = False  # Determines if it can be picked as a random role (False for unusually disruptive roles)
+    rand_choice = True  # Determines if it can be picked as a random role (False for unusually disruptive roles)
     category = [1, 2]  # List of enrolled categories (listed above)
     alignment = 1  # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""  # Empty for no private channel
@@ -13,6 +14,8 @@ class Seer(Role):
         "Lynch players during the day with `[p]ww vote <ID>`\n"
         "Check for werewolves at night with `[p]ww choose <ID>`"
     )
+    description = "A mystic in search of answers in a chaotic town.\n" \
+                  "Calls upon the cosmos to discern those of Lycan blood"
 
     def __init__(self, game):
         super().__init__(game)
@@ -29,32 +32,9 @@ class Seer(Role):
             (self._at_hang, 0),
             (self._at_day_end, 0),
             (self._at_night_start, 2),
-            (self._at_night_end, 4)
+            (self._at_night_end, 4),
+            (self._at_visit, 0)
         ]
-
-    # async def on_event(self, event, data):
-    #     """
-    #     See Game class for event guide
-    #     """
-    #
-    #     await self.action_list[event][0](data)
-    #
-    #
-    # async def assign_player(self, player):
-    #     """
-    #     Give this role a player
-    #     Can be used after the game has started  (Cult, Mason, other role swap)
-    #     """
-    #
-    #     player.role = self
-    #     self.player = player
-    #
-    # async def get_alignment(self, source=None):
-    #     """
-    #     Interaction for power access of team (Village, Werewolf, Other)
-    #     Unlikely to be able to deceive this
-    #     """
-    #     return self.alignment
 
     async def see_alignment(self, source=None):
         """
@@ -77,34 +57,23 @@ class Seer(Role):
         """
         return "Villager"
 
-    # async def _at_game_start(self, data=None):
-    #     pass
-    #
-    # async def _at_day_start(self, data=None):
-    #     pass
-    #
-    # async def _at_voted(self, target=None):
-    #     pass
-    #
-    # async def _at_kill(self, target=None):
-    #     pass
-    #
-    # async def _at_hang(self, target=None):
-    #     pass
-    #
-    # async def _at_day_end(self):
-    #     pass
-
     async def _at_night_start(self, data=None):
+        if not self.player.alive:
+            return
+        self.see_target = None
         await self.game.generate_targets(self.player.member)
-        await self.player.send_dm("{}\n**Pick a target to see tonight**\n")
+        await self.player.send_dm("**Pick a target to see tonight**")
 
     async def _at_night_end(self, data=None):
-        target = await self.game.visit(self.see_target)
+        if self.see_target is None:
+            if self.player.alive:
+                await self.player.send_dm("You will not use your powers tonight...")
+            return
+        target = await self.game.visit(self.see_target, self.player)
 
         alignment = None
         if target:
-            alignment = await target.see_alignment(self.player)
+            alignment = await target.role.see_alignment(self.player)
 
         if alignment == "Werewolf":
             out = "Your insight reveals this player to be a **Werewolf!**"
@@ -113,35 +82,9 @@ class Seer(Role):
 
         await self.player.send_dm(out)
 
-    # async def _at_visit(self, data=None):
-    #     pass
-    #
-    # async def kill(self, source):
-    #     """
-    #     Called when someone is trying to kill you!
-    #     Can you do anything about it?
-    #     self.alive is now set to False, set to True to stay alive
-    #     """
-    #     pass
-    #
-    # async def visit(self, source):
-    #     """
-    #     Called whenever a night action targets you
-    #     Source is the player who visited you
-    #     """
-    #     pass
-
     async def choose(self, ctx, data):
         """Handle night actions"""
-        target_id = int(data)
-        try:
-            target = self.game.players[target_id]
-        except IndexError:
-            target = None
+        await super().choose(ctx, data)
 
-        if target is None:
-            await ctx.send("Not a valid ID")
-            return
-
-        self.see_target = target_id
+        self.see_target, target = await pick_target(self, ctx, data)
         await ctx.send("**You will attempt to see the role of {} tonight...**".format(target.member.display_name))

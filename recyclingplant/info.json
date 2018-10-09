@@ -1,0 +1,21 @@
+{
+  "author": [
+    "Bobloy",
+    "SnappyDragon"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Apply for a job at the recycling plant! Sort out the garbage!",
+  "hidden": false,
+  "install_msg": "Thank you for installing RecyclingPlant. Start recycling today with `[p]load recyclingplant`, then `[p]recyclingplant`",
+  "requirements": [],
+  "short": "Apply for a job at the recycling plant!",
+  "tags": [
+    "bobloy",
+    "environment",
+    "games"
+  ]
+}

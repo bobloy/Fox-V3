@@ -1,9 +1,20 @@
 {
-	"AUTHOR": "Bobloy",
-	"INSTALL_MSG": "Thank you for installing leaver",
-	"NAME": "Leaver",
-	"SHORT": "Sends message on leave",
-	"DESCRIPTION": "Keeps track of when people leave the server, and posts a message notifying",
-	"TAGS": ["fox", "bobloy", "utilities", "tools", "tool"],
-	"HIDDEN": false
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Keeps track of when people leave the server, and posts a message notifying",
+  "hidden": false,
+  "install_msg": "Thank you for installing Leaver. Get started with `[p]load leaver`, then `[p]help Leaver`",
+  "requirements": [],
+  "short": "Send message on leave",
+  "tags": [
+    "bobloy",
+    "utils",
+    "tools"
+  ]
 }

@@ -1,0 +1,42 @@
+{
+  "water": {
+    "cost": 5,
+    "health": 10,
+    "damage": 45,
+    "modifier": 0,
+    "category": "water",
+    "uses": 1
+  },
+  "manure": {
+    "cost": 20,
+    "health": 20,
+    "damage": 55,
+    "modifier": -0.035,
+    "category": "fertilizer",
+    "uses": 1
+  },
+  "vermicompost": {
+    "cost": 35,
+    "health": 30,
+    "damage": 60,
+    "modifier": -0.5,
+    "category": "fertilizer",
+    "uses": 1
+  },
+  "nitrates": {
+    "cost": 70,
+    "health": 60,
+    "damage": 75,
+    "modifier": -0.08,
+    "category": "fertilizer",
+    "uses": 1
+  },
+  "pruner": {
+    "cost": 500,
+    "health": 40,
+    "damage": 90,
+    "modifier": -0.065,
+    "category": "tool",
+    "uses": 10
+  }
+}

@@ -94,7 +94,7 @@ class Fight:
             await ctx.send("Current tournament ID: " + await self._activefight(ctx))
 
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
+            pass
             # await ctx.send("I can do stuff!")
 
     @fight.command(name="join")
@@ -186,8 +186,8 @@ class Fight:
     async def fadmin(self, ctx):
         """Admin command for managing the current tournament"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
-
+            pass
+            
     @fadmin.command(name="score")
     async def fadmin_score(self, ctx, m_id, score1, score2):
         """Set's the score for matchID and clears disputes"""
@@ -207,8 +207,9 @@ class Fight:
     async def fightset(self, ctx):
         """Admin command for starting or managing tournaments"""
         if ctx.invoked_subcommand is None:
-            await ctx.send_help()
-
+            pass
+        # await ctx.send("I can do stuff!")
+    
     @fightset.command(name="emoji")
     async def fightset_emoji(self, ctx):
         """Set the global reaction emojis for reporting matches"""
@@ -504,8 +505,8 @@ class Fight:
     async def fightset_guild(self, ctx):
         """Adjust guild wide settings"""
         if ctx.invoked_subcommand is None or isinstance(ctx.invoked_subcommand, commands.Group):
-            await ctx.send_help()
-
+            pass
+    
     @fightset_guild.command(name="selfreport")
     async def fightset_guild_selfreport(self, ctx):
         """Toggles the ability to self-report scores for all tournaments"""
@@ -667,11 +668,13 @@ class Fight:
 
     async def _embed_tourney(self, ctx, t_id):
         """Prints a pretty embed of the tournament"""
-        await ctx.send("_embed_tourney Todo")  # ToDo embed tourney
+        #_placeholder Todo
+        pass
 
     async def _comparescores(self, ctx):
         """Checks user submitted scores for inconsistancies"""
-        await ctx.send("_comparescores Todo")  # ToDo compare scores
+        # _comparescores Todo
+        pass
 
     async def _parseuser(self, guild: discord.Guild, t_id, userid):
         """Finds user in the tournament"""
@@ -1102,7 +1105,7 @@ class Fight:
 
     # **************** Attempt 2, borrow from Squid*******
 
-    async def on_raw_reaction_add(self, emoji: discord.PartialReactionEmoji,
+    async def on_raw_reaction_add(self, emoji: discord.PartialEmoji,
                                   message_id: int, channel_id: int, user_id: int):
         """
         Event handler for long term reaction watching.

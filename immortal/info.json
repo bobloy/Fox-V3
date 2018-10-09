@@ -1,9 +1,0 @@
-{
-    "AUTHOR" : "Bobloy",
-    "INSTALL_MSG" : "Thank you for installing Immortal Family Cog",
-    "NAME" : "Immortal",
-    "SHORT" : "Cog for a specific server, will not work on other servers",
-    "DESCRIPTION" : "Cog specifically for the Immortal Family discord server. I do not recommend installing it",
-    "TAGS" : ["fox", "bobloy", "utilities", "tools", "utility", "tool"],
-    "HIDDEN" : false
-}
