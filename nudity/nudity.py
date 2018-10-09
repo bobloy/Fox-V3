@@ -17,14 +17,11 @@ class Nudity:
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
 
-        default_guild = {
-            "enabled": False,
-            "channel_id": None
-        }
+        default_guild = {"enabled": False, "channel_id": None}
 
         self.config.register_guild(**default_guild)
 
-    @commands.command(aliases=['togglenudity'], name='nudity')
+    @commands.command(aliases=["togglenudity"], name="nudity")
     async def nudity(self, ctx: commands.Context):
         """Toggle nude-checking on or off"""
         is_on = await self.config.guild(ctx.guild).enabled()
@@ -73,7 +70,9 @@ class Nudity:
         if nsfw_channel is None:
             return
         else:
-            await nsfw_channel.send("NSFW Image from {}".format(message.channel.mention), file=image)
+            await nsfw_channel.send(
+                "NSFW Image from {}".format(message.channel.mention), file=image
+            )
 
     async def on_message(self, message: discord.Message):
         if not message.attachments:
@@ -114,6 +113,7 @@ class Nudity:
         else:
             print("Is not nude")
             await message.add_reaction("✅")
+
 
 # async def fetch_img(session, url):
 #     with aiohttp.Timeout(10):
