@@ -1,13 +1,16 @@
 import asyncio
 import re
+from typing import Any
 
 import discord
 from redbot.core import Config, checks
 from redbot.core import commands
 from redbot.core.utils.chat_formatting import pagify, box
 
+Cog: Any = getattr(commands, "Cog", object)
 
-class CCRole:
+
+class CCRole(Cog):
     """
     Custom commands
     Creates commands used to display text and adjust roles
@@ -23,7 +26,8 @@ class CCRole:
 
         self.config.register_guild(**default_guild)
 
-    @commands.group(no_pm=True)
+    @commands.guild_only()
+    @commands.group()
     async def ccrole(self, ctx):
         """Custom commands management with roles
 

@@ -4,6 +4,9 @@ import discord
 from redbot.core import Config
 from redbot.core import commands
 from redbot.core.bot import Red
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
 class ReactRestrictCombo:
@@ -31,7 +34,7 @@ class ReactRestrictCombo:
         )
 
 
-class ReactRestrict:
+class ReactRestrict(Cog):
     """
     Prevent specific roles from reacting to specific messages
     """

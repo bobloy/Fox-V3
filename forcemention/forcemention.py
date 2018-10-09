@@ -3,9 +3,12 @@ from discord.utils import get
 from redbot.core import Config, checks, commands
 
 from redbot.core.bot import Red
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class ForceMention:
+class ForceMention(Cog):
     """
     Mention the unmentionables
     """

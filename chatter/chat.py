@@ -9,10 +9,14 @@ from redbot.core.data_manager import cog_data_path
 
 from chatter.chatterbot import ChatBot
 from chatter.chatterbot.comparisons import levenshtein_distance
+from chatter.chatterbot.response_selection import get_first_response
 from chatter.chatterbot.trainers import ListTrainer
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Chatter:
+class Chatter(Cog):
     """
     This cog trains a chatbot that will talk like members of your Guild
     """
@@ -32,7 +36,16 @@ class Chatter:
             "ChatterBot",
             storage_adapter='chatter.chatterbot.storage.SQLStorageAdapter',
             database=str(data_path),
-            statement_comparison_function=levenshtein_distance
+            statement_comparison_function=levenshtein_distance,
+            response_selection_method=get_first_response,
+            logic_adapters=[
+                'chatter.chatterbot.logic.BestMatch',
+                {
+                    'import_path': 'chatter.chatterbot.logic.LowConfidenceAdapter',
+                    'threshold': 0.65,
+                    'default_response': ':thinking:'
+                }
+            ]
         )
         self.chatbot.set_trainer(ListTrainer)
 

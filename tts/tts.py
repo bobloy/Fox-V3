@@ -4,11 +4,14 @@ import discord
 from gtts import gTTS
 from redbot.core import Config, commands
 from redbot.core.bot import Red
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class TTS:
+class TTS(Cog):
     """
-    V3 Cog Template
+    Send Text-to-Speech messages
     """
 
     def __init__(self, bot: Red):
@@ -24,9 +27,7 @@ class TTS:
     @commands.command(aliases=["t2s", "text2"])
     async def tts(self, ctx: commands.Context, *, text: str):
         """
-       My custom cog
-       
-       Extra information goes here
+       Send Text to speech messages as an mp3
        """
         mp3_fp = io.BytesIO()
         tts = gTTS(text, 'en')

@@ -9,10 +9,8 @@
   ],
   "description": "Keep track of when users were last seen online",
   "hidden": true,
-  "install_msg": "Thank you for installing LastSeen. Get started with `[p]help LastSeen`",
-  "requirements": [
-    "nudepy"
-  ],
+  "install_msg": "Thank you for installing Nudity. Get started with `[p]load nudity`, then `[p]help Nudity`",
+  "requirements": ["nudepy"],
   "short": "Last seen tracker",
   "tags": [
     "bobloy",

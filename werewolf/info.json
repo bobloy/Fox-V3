@@ -9,7 +9,7 @@
   ],
   "description": "Customizable Werewolf Game",
   "hidden": false,
-  "install_msg": "Thank you for installing Werewolf! Use [p]wwset to run inital setup",
+  "install_msg": "Thank you for installing Werewolf! Get started with `[p]load werewolf`\n Use `[p]wwset` to run inital setup",
   "requirements": [],
   "short": "Werewolf Game",
   "tags": [

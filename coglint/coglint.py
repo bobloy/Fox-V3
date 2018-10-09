@@ -4,11 +4,14 @@ from redbot.core import Config
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class CogLint:
+class CogLint(Cog):
     """
-    V3 Cog Template
+    Automatically lint code in python codeblocks
     """
 
     def __init__(self, bot: Red):

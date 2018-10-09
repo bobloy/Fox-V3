@@ -4,9 +4,12 @@ import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
+from typing import Any
+
+Cog: Any = getattr(commands, "Cog", object)
 
 
-class Flag:
+class Flag(Cog):
     """
     Set expiring flags on members
     """
@@ -25,6 +28,7 @@ class Flag:
         self.config.register_guild(**default_guild)
 
     @checks.is_owner()
+    @commands.guild_only()
     @commands.command()
     async def clearallflag(self, ctx: commands.Context):
         """Clears all flags for all members in this server"""
@@ -70,7 +74,7 @@ class Flag:
             'expireday': 0
         }
 
-    # ************************Flag command group start************************
+    @commands.guild_only()
     @checks.mod_or_permissions(manage_roles=True)
     @commands.command()
     async def flag(self, ctx: commands.Context, member: discord.Member, *, reason):
@@ -107,8 +111,9 @@ class Flag:
         else:
             await ctx.send("This member has no flags.. somehow..")
 
+    @commands.guild_only()
     @checks.mod_or_permissions(manage_roles=True)
-    @commands.command(pass_context=True, no_pm=True, aliases=['flagclear'])
+    @commands.command(aliases=['flagclear'])
     async def clearflag(self, ctx: commands.Context, member: discord.Member):
         """Clears flags for a member"""
         guild = ctx.guild
@@ -118,7 +123,8 @@ class Flag:
 
         await ctx.send("Success!")
 
-    @commands.command(pass_context=True, no_pm=True, aliases=['flaglist'])
+    @commands.guild_only()
+    @commands.command(aliases=['flaglist'])
     async def listflag(self, ctx: commands.Context, member: discord.Member):
         """Lists flags for a member"""
         server = ctx.guild
@@ -131,7 +137,8 @@ class Flag:
         else:
             await ctx.send("This member has no flags!")
 
-    @commands.command(pass_context=True, no_pm=True, aliases=['flagall'])
+    @commands.guild_only()
+    @commands.command(aliases=['flagall'])
     async def allflag(self, ctx: commands.Context):
         """Lists all flags for the server"""
         guild = ctx.guild
