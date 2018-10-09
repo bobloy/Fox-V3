@@ -1,4 +1,3 @@
-
 from redbot.core import commands
 
 
@@ -9,7 +8,7 @@ class SecretHitler:
 
     def __init__(self, bot):
         self.bot = bot
-    
+
     @commands.group()
     async def secrethitler(self, ctx: commands.Context):
         """
