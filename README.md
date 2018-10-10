@@ -34,7 +34,23 @@ Cog Function
 | unicode | **Alpha** | <details><summary>Encode and Decode unicode characters</summary>[Snap-Ons] Just updated to V3</details> |
 | werewolf | **Pre-Alpha** | <details><summary>Play the classic party game Werewolf within discord</summary>Another massive project currently being developed, will be fully customizable</details> |
 
-
 Check out my V2 cogs at [Fox-Cogs v2](https://github.com/bobloy/Fox-Cogs)
 
+# Installation
+### Recommended - Built-in Downloader
+```
+[p]repo add Fox https://github.com/bobloy/Fox-V3
+[p]cog install Fox <cogname>
+[p]load <cogname>
+```
+
+# Contact
 Get support on the [Third Party Cog Server](https://discord.gg/GET4DVk)
+
+Feel free to @ me in the #support_othercogs channel
+
+Discord: Bobloy#6513
+
+# Credits
+
+Huge thanks to all the helpful people in #coding on the [discord support server](https://discord.gg/red)
