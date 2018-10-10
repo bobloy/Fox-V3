@@ -1260,7 +1260,8 @@ class PlantTycoon(Cog):
                     if withdraw_points:
                         if product.lower() not in gardener.products:
                             gardener.products[product.lower()] = 0
-                        gardener.products[product.lower()] += amount
+                        # gardener.products[product.lower()] += amount
+                        # Only add it once
                         gardener.products[product.lower()] += (
                             amount * self.products[product.lower()]["uses"]
                         )
