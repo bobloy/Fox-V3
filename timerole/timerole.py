@@ -17,10 +17,7 @@ class Timerole(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {
-            'announce': None,
-            'roles': {}
-        }
+        default_guild = {"announce": None, "roles": {}}
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
@@ -43,13 +40,15 @@ class Timerole(Cog):
             pass
 
     @timerole.command()
-    async def addrole(self, ctx: commands.Context, role: discord.Role, days: int, *requiredroles: discord.Role):
+    async def addrole(
+        self, ctx: commands.Context, role: discord.Role, days: int, *requiredroles: discord.Role
+    ):
         """Add a role to be added after specified time on server"""
         guild = ctx.guild
 
-        to_set = {'days': days}
+        to_set = {"days": days}
         if requiredroles:
-            to_set['required'] = [r.id for r in requiredroles]
+            to_set["required"] = [r.id for r in requiredroles]
 
         await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
         await ctx.send("Time Role for {0} set to {1} days".format(role.name, days))
@@ -83,9 +82,12 @@ class Timerole(Cog):
                 r_roles = []
                 if role is None:
                     role = r_id
-                if 'required' in r_data:
-                    r_roles = [str(discord.utils.get(guild.roles, id=int(new_id))) for new_id in r_data['required']]
-                out += "{} || {} days || requires: {}\n".format(str(role), r_data['days'], r_roles)
+                if "required" in r_data:
+                    r_roles = [
+                        str(discord.utils.get(guild.roles, id=int(new_id)))
+                        for new_id in r_data["required"]
+                    ]
+                out += "{} || {} days || requires: {}\n".format(str(role), r_data["days"], r_roles)
         await ctx.maybe_send_embed(out)
 
     async def timerole_update(self):
@@ -105,13 +107,15 @@ class Timerole(Cog):
 
                 for role_id in check_roles:
                     # Check for required role
-                    if 'required' in role_dict[str(role_id)]:
-                        if not set(role_dict[str(role_id)]['required']) & set(has_roles):
+                    if "required" in role_dict[str(role_id)]:
+                        if not set(role_dict[str(role_id)]["required"]) & set(has_roles):
                             # Doesn't have required role
                             continue
 
-                    if member.joined_at + timedelta(
-                            days=role_dict[str(role_id)]['days']) <= datetime.today():
+                    if (
+                        member.joined_at + timedelta(days=role_dict[str(role_id)]["days"])
+                        <= datetime.today()
+                    ):
                         # Qualifies
                         addlist.append((member, role_id))
 
@@ -128,15 +132,20 @@ class Timerole(Cog):
 
             if channel is not None and results:
                 await channel.send(title)
-                for page in pagify(
-                        results, shorten_by=50):
+                for page in pagify(results, shorten_by=50):
                     await channel.send(page)
 
     async def check_day(self):
         while self is self.bot.get_cog("Timerole"):
             tomorrow = datetime.now() + timedelta(days=1)
-            midnight = datetime(year=tomorrow.year, month=tomorrow.month,
-                                day=tomorrow.day, hour=0, minute=0, second=0)
+            midnight = datetime(
+                year=tomorrow.year,
+                month=tomorrow.month,
+                day=tomorrow.day,
+                hour=0,
+                minute=0,
+                second=0,
+            )
 
             await asyncio.sleep((midnight - datetime.now()).seconds)
 

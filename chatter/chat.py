@@ -25,27 +25,24 @@ class Chatter(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6710497116116101114)
         default_global = {}
-        default_guild = {
-            "whitelist": None,
-            "days": 1
-        }
+        default_guild = {"whitelist": None, "days": 1}
         path: pathlib.Path = cog_data_path(self)
         data_path = path / ("database.sqlite3")
 
         self.chatbot = ChatBot(
             "ChatterBot",
-            storage_adapter='chatter.chatterbot.storage.SQLStorageAdapter',
+            storage_adapter="chatter.chatterbot.storage.SQLStorageAdapter",
             database=str(data_path),
             statement_comparison_function=levenshtein_distance,
             response_selection_method=get_first_response,
             logic_adapters=[
-                'chatter.chatterbot.logic.BestMatch',
+                "chatter.chatterbot.logic.BestMatch",
                 {
-                    'import_path': 'chatter.chatterbot.logic.LowConfidenceAdapter',
-                    'threshold': 0.65,
-                    'default_response': ':thinking:'
-                }
-            ]
+                    "import_path": "chatter.chatterbot.logic.LowConfidenceAdapter",
+                    "threshold": 0.65,
+                    "default_response": ":thinking:",
+                },
+            ],
         )
         self.chatbot.set_trainer(ListTrainer)
 
@@ -70,7 +67,9 @@ class Chatter(Cog):
             if len(out_in) < 2:
                 return False
 
-            return msg.created_at - sent >= timedelta(hours=3)  # This should be configurable perhaps
+            return msg.created_at - sent >= timedelta(
+                hours=3
+            )  # This should be configurable perhaps
 
         for channel in ctx.guild.text_channels:
             if in_channel:
@@ -138,8 +137,9 @@ class Chatter(Cog):
         Backup your training data to a json for later use
         """
         await ctx.send("Backing up data, this may take a while")
-        future = await self.loop.run_in_executor(None, self.chatbot.trainer.export_for_training,
-                                                 './{}.json'.format(backupname))
+        future = await self.loop.run_in_executor(
+            None, self.chatbot.trainer.export_for_training, "./{}.json".format(backupname)
+        )
 
         if future:
             await ctx.send("Backup successful!")
@@ -158,7 +158,9 @@ class Chatter(Cog):
             await ctx.send("Failed to gather training data")
             return
 
-        await ctx.send("Gather successful! Training begins now\n(**This will take a long time, be patient**)")
+        await ctx.send(
+            "Gather successful! Training begins now\n(**This will take a long time, be patient**)"
+        )
         embed = discord.Embed(title="Loading")
         embed.set_image(url="http://www.loop.universaleverything.com/animations/1295.gif")
         temp_message = await ctx.send(embed=embed)
@@ -199,4 +201,4 @@ class Chatter(Cog):
                 if future and str(future):
                     await channel.send(str(future))
                 else:
-                    await channel.send(':thinking:')
+                    await channel.send(":thinking:")

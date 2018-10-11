@@ -10,10 +10,9 @@ Cog: Any = getattr(commands, "Cog", object)
 
 
 async def fetch_img(session, url):
-    with aiohttp.Timeout(10):
-        async with session.get(url) as response:
-            assert response.status == 200
-            return await response.read()
+    async with session.get(url) as response:
+        assert response.status == 200
+        return await response.read()
 
 
 class StealEmoji(Cog):
@@ -28,17 +27,13 @@ class StealEmoji(Cog):
         "managed": False,
         "guild_id": None,
         "url": None,
-        "animated": False
+        "animated": False,
     }
 
     def __init__(self, red: Red):
         self.bot = red
         self.config = Config.get_conf(self, identifier=11511610197108101109111106105)
-        default_global = {
-            "stolemoji": {},
-            "guildbanks": [],
-            "on": False
-        }
+        default_global = {"stolemoji": {}, "guildbanks": [], "on": False}
 
         self.config.register_global(**default_global)
 
@@ -60,13 +55,19 @@ class StealEmoji(Cog):
     @stealemoji.command(name="bank")
     async def se_bank(self, ctx):
         """Add current server as emoji bank"""
-        await ctx.send("This will upload custom emojis to this server\n"
-                       "Are you sure you want to make the current server an emoji bank? (y//n)")
+        await ctx.send(
+            "This will upload custom emojis to this server\n"
+            "Are you sure you want to make the current server an emoji bank? (y//n)"
+        )
 
         def check(m):
-            return m.content.upper() in ["Y", "YES", "N", "NO"] and m.channel == ctx.channel and m.author == ctx.author
+            return (
+                m.content.upper() in ["Y", "YES", "N", "NO"]
+                and m.channel == ctx.channel
+                and m.author == ctx.author
+            )
 
-        msg = await self.bot.wait_for('message', check=check)
+        msg = await self.bot.wait_for("message", check=check)
 
         if msg.content in ["N", "NO"]:
             await ctx.send("Cancelled")
@@ -130,7 +131,9 @@ class StealEmoji(Cog):
         # urllib.urlretrieve(emoji.url, emoji.name+ext)
 
         try:
-            await guildbank.create_custom_emoji(name=emoji.name, image=img, reason="Stole from " + str(user))
+            await guildbank.create_custom_emoji(
+                name=emoji.name, image=img, reason="Stole from " + str(user)
+            )
         except discord.Forbidden as e:
             print("PermissionError - no permission to add emojis")
             raise PermissionError("No permission to add emojis") from e

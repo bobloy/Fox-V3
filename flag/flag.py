@@ -18,11 +18,7 @@ class Flag(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {
-            "days": 31,
-            "dm": True,
-            "flags": {}
-        }
+        default_guild = {"days": 31, "dm": True, "flags": {}}
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
@@ -67,12 +63,7 @@ class Flag(Cog):
 
     @staticmethod
     def _flag_template():
-        return {
-            'reason': "",
-            'expireyear': 0,
-            'expiremonth': 0,
-            'expireday': 0
-        }
+        return {"reason": "", "expireyear": 0, "expiremonth": 0, "expireday": 0}
 
     @commands.guild_only()
     @checks.mod_or_permissions(manage_roles=True)
@@ -90,10 +81,10 @@ class Flag(Cog):
         expiredate = date.today()
         expiredate += timedelta(days=await self.config.guild(guild).days())
 
-        flag['reason'] = reason
-        flag['expireyear'] = expiredate.year
-        flag['expiremonth'] = expiredate.month
-        flag['expireday'] = expiredate.day
+        flag["reason"] = reason
+        flag["expireyear"] = expiredate.year
+        flag["expiremonth"] = expiredate.month
+        flag["expireday"] = expiredate.day
 
         # flags = await self.config.guild(guild).flags.get_raw(str(member.id), default=[])
         # flags.append(flag)
@@ -113,7 +104,7 @@ class Flag(Cog):
 
     @commands.guild_only()
     @checks.mod_or_permissions(manage_roles=True)
-    @commands.command(aliases=['flagclear'])
+    @commands.command(aliases=["flagclear"])
     async def clearflag(self, ctx: commands.Context, member: discord.Member):
         """Clears flags for a member"""
         guild = ctx.guild
@@ -124,7 +115,7 @@ class Flag(Cog):
         await ctx.send("Success!")
 
     @commands.guild_only()
-    @commands.command(aliases=['flaglist'])
+    @commands.command(aliases=["flaglist"])
     async def listflag(self, ctx: commands.Context, member: discord.Member):
         """Lists flags for a member"""
         server = ctx.guild
@@ -138,7 +129,7 @@ class Flag(Cog):
             await ctx.send("This member has no flags!")
 
     @commands.guild_only()
-    @commands.command(aliases=['flagall'])
+    @commands.command(aliases=["flagall"])
     async def allflag(self, ctx: commands.Context):
         """Lists all flags for the server"""
         guild = ctx.guild
@@ -162,12 +153,18 @@ class Flag(Cog):
         """Returns a pretty embed of flags on a member"""
         flags = await self.config.guild(member.guild).flags.get_raw(str(member.id), default=[])
 
-        embed = discord.Embed(title="Flags for " + member.display_name,
-                              description="User has {} active flags".format(len(flags)), color=0x804040)
+        embed = discord.Embed(
+            title="Flags for " + member.display_name,
+            description="User has {} active flags".format(len(flags)),
+            color=0x804040,
+        )
         for flag in flags:
-            embed.add_field(name="Reason: " + flag['reason'],
-                            value="Expires on " + str(date(flag['expireyear'], flag['expiremonth'], flag['expireday'])),
-                            inline=True)
+            embed.add_field(
+                name="Reason: " + flag["reason"],
+                value="Expires on "
+                + str(date(flag["expireyear"], flag["expiremonth"], flag["expireday"])),
+                inline=True,
+            )
 
         embed.set_thumbnail(url=member.avatar_url)
 
@@ -183,7 +180,9 @@ class Flag(Cog):
             x = 0
             while x < len(flags):
                 flag = flags[x]
-                if date.today() >= date(flag['expireyear'], flag['expiremonth'], flag['expireday']):
+                if date.today() >= date(
+                    flag["expireyear"], flag["expiremonth"], flag["expireday"]
+                ):
                     del flags[x]
                 else:
                     x += 1

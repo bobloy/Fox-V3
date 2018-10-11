@@ -15,13 +15,11 @@ class Leaver(Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
-        default_guild = {
-            "channel": ''
-        }
+        default_guild = {"channel": ""}
 
         self.config.register_guild(**default_guild)
 
-    @commands.group(aliases=['setleaver'])
+    @commands.group(aliases=["setleaver"])
     @checks.mod_or_permissions(administrator=True)
     async def leaverset(self, ctx):
         """Adjust leaver settings"""
@@ -38,7 +36,7 @@ class Leaver(Cog):
         guild = member.guild
         channel = await self.config.guild(guild).channel()
 
-        if channel != '':
+        if channel != "":
             channel = guild.get_channel(channel)
             await channel.send(str(member) + "(*" + str(member.nick) + "*) has left the server!")
         else:

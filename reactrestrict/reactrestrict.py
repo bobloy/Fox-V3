@@ -15,23 +15,14 @@ class ReactRestrictCombo:
         self.role_id = role_id
 
     def __eq__(self, other: "ReactRestrictCombo"):
-        return (
-                self.message_id == other.message_id and
-                self.role_id == other.role_id
-        )
+        return self.message_id == other.message_id and self.role_id == other.role_id
 
     def to_json(self):
-        return {
-            'message_id': self.message_id,
-            'role_id': self.role_id
-        }
+        return {"message_id": self.message_id, "role_id": self.role_id}
 
     @classmethod
     def from_json(cls, data):
-        return cls(
-            data['message_id'],
-            data['role_id']
-        )
+        return cls(data["message_id"], data["role_id"])
 
 
 class ReactRestrict(Cog):
@@ -41,11 +32,10 @@ class ReactRestrict(Cog):
 
     def __init__(self, red: Red):
         self.bot = red
-        self.config = Config.get_conf(self, 8210197991168210111511611410599116,
-                                      force_registration=True)
-        self.config.register_global(
-            registered_combos=[]
+        self.config = Config.get_conf(
+            self, 8210197991168210111511611410599116, force_registration=True
         )
+        self.config.register_global(registered_combos=[])
 
     async def combo_list(self) -> List[ReactRestrictCombo]:
         """
@@ -74,8 +64,7 @@ class ReactRestrict(Cog):
         :param message_id:
         :return:
         """
-        return any(message_id == combo.message_id
-                   for combo in await self.combo_list())
+        return any(message_id == combo.message_id for combo in await self.combo_list())
 
     async def add_reactrestrict(self, message_id: int, role: discord.Role):
         """
@@ -103,14 +92,14 @@ class ReactRestrict(Cog):
         """
         current_combos = await self.combo_list()
 
-        to_keep = [c for c in current_combos
-                   if not (c.message_id == message_id and c.role_id == role.id)]
+        to_keep = [
+            c for c in current_combos if not (c.message_id == message_id and c.role_id == role.id)
+        ]
 
         if to_keep != current_combos:
             await self.set_combo_list(to_keep)
 
-    async def has_reactrestrict_combo(self, message_id: int) \
-            -> (bool, List[ReactRestrictCombo]):
+    async def has_reactrestrict_combo(self, message_id: int) -> (bool, List[ReactRestrictCombo]):
         """
          Determines if there is an existing role combo for a given message
         and emoji ID.
@@ -123,8 +112,7 @@ class ReactRestrict(Cog):
 
         combos = await self.combo_list()
 
-        ret = [c for c in combos
-               if c.message_id == message_id]
+        ret = [c for c in combos if c.message_id == message_id]
 
         return len(ret) > 0, ret
 
@@ -169,8 +157,9 @@ class ReactRestrict(Cog):
 
         return role
 
-    async def _get_message_from_channel(self, channel_id: int, message_id: int) \
-            -> Union[discord.Message, None]:
+    async def _get_message_from_channel(
+        self, channel_id: int, message_id: int
+    ) -> Union[discord.Message, None]:
         """
         Tries to find a message by ID in the current guild context.
         """
@@ -184,8 +173,9 @@ class ReactRestrict(Cog):
 
         return None
 
-    async def _get_message(self, ctx: commands.Context, message_id: int) \
-            -> Union[discord.Message, None]:
+    async def _get_message(
+        self, ctx: commands.Context, message_id: int
+    ) -> Union[discord.Message, None]:
         """
         Tries to find a message by ID in the current guild context.
 
@@ -258,8 +248,9 @@ class ReactRestrict(Cog):
 
         await ctx.send("Reaction removed.")
 
-    async def on_raw_reaction_add(self, emoji: discord.PartialEmoji,
-                                  message_id: int, channel_id: int, user_id: int):
+    async def on_raw_reaction_add(
+        self, emoji: discord.PartialEmoji, message_id: int, channel_id: int, user_id: int
+    ):
         """
         Event handler for long term reaction watching.
 

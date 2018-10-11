@@ -30,6 +30,6 @@ class TTS(Cog):
        Send Text to speech messages as an mp3
        """
         mp3_fp = io.BytesIO()
-        tts = gTTS(text, 'en')
+        tts = gTTS(text, "en")
         tts.write_to_fp(mp3_fp)
         await ctx.send(file=discord.File(mp3_fp.getvalue(), "text.mp3"))

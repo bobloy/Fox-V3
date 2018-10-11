@@ -28,11 +28,7 @@ class Dad(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6897100, force_registration=True)
 
-        default_guild = {
-            "enabled": False,
-            "nickname": False,
-            "cooldown": 240
-        }
+        default_guild = {"enabled": False, "nickname": False, "cooldown": 240}
 
         self.config.register_guild(**default_guild)
 
@@ -40,14 +36,16 @@ class Dad(Cog):
 
     @commands.command()
     async def dadjoke(self, ctx: commands.Context):
-        headers = {"User-Agent": "FoxV3 (https://github.com/bobloy/Fox-V3)",
-                   "Accept": "application/json"}
+        headers = {
+            "User-Agent": "FoxV3 (https://github.com/bobloy/Fox-V3)",
+            "Accept": "application/json",
+        }
 
         async with aiohttp.ClientSession(headers=headers) as session:
-            joke = await fetch_url(session, 'https://icanhazdadjoke.com/')
+            joke = await fetch_url(session, "https://icanhazdadjoke.com/")
 
         em = discord.Embed()
-        em.set_image(url="https://icanhazdadjoke.com/j/{}.png".format(joke['id']))
+        em.set_image(url="https://icanhazdadjoke.com/j/{}.png".format(joke["id"]))
 
         await ctx.send(embed=em)
 
@@ -57,21 +55,21 @@ class Dad(Cog):
         """Dad joke superhub"""
         pass
 
-    @dad.command(name='toggle')
+    @dad.command(name="toggle")
     async def dad_toggle(self, ctx: commands.Context):
         """Toggle automatic dad jokes on or off"""
         is_on = await self.config.guild(ctx.guild).enabled()
         await self.config.guild(ctx.guild).enabled.set(not is_on)
         await ctx.send("Auto dad jokes are now set to {}".format(not is_on))
 
-    @dad.command(name='nickname')
+    @dad.command(name="nickname")
     async def dad_nickname(self, ctx: commands.Context):
         """Toggle nicknaming"""
         is_on = await self.config.guild(ctx.guild).nickname()
         await self.config.guild(ctx.guild).nickname.set(not is_on)
         await ctx.send("Nicknaming is now set to {}".format(not is_on))
 
-    @dad.command(name='cooldown')
+    @dad.command(name="cooldown")
     async def dad_cooldown(self, ctx: commands.Context, cooldown: int):
         """Set the auto-joke cooldown"""
 
@@ -93,7 +91,7 @@ class Dad(Cog):
 
         lower = message.clean_content.lower()
         lower_split = lower.split()
-        if len(lower_split)==0:
+        if len(lower_split) == 0:
             return
 
         if lower_split[0] == "i'm" and len(lower_split) >= 2:
@@ -109,4 +107,6 @@ class Dad(Cog):
 
             await message.channel.send("Hi {}, I'm {}!".format(out, guild.me.display_name))
 
-            self.cooldown[guild.id] = datetime.now() + timedelta(seconds=(await guild_config.cooldown()))
+            self.cooldown[guild.id] = datetime.now() + timedelta(
+                seconds=(await guild_config.cooldown())
+            )

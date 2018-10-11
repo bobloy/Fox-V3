@@ -27,7 +27,13 @@ class QRInvite(Cog):
         self.config.register_guild(**default_guild)
 
     @commands.command()
-    async def qrinvite(self, ctx: commands.Context, invite: str = None, colorized: bool = False, image_url: str = None):
+    async def qrinvite(
+        self,
+        ctx: commands.Context,
+        invite: str = None,
+        colorized: bool = False,
+        image_url: str = None,
+    ):
         """
         Create a custom QR code invite for this server
         """
@@ -48,10 +54,13 @@ class QRInvite(Cog):
 
         if image_url == "":  # Still
             await ctx.send(
-                "Could not get an image, please provide one. *(`{}help qrinvite` for details)*".format(ctx.prefix))
+                "Could not get an image, please provide one. *(`{}help qrinvite` for details)*".format(
+                    ctx.prefix
+                )
+            )
             return
 
-        extension = pathlib.Path(image_url).parts[-1].replace('.', '?').split('?')[1]
+        extension = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
 
         path: pathlib.Path = cog_data_path(self)
         image_path = path / (ctx.guild.icon + "." + extension)
@@ -67,8 +76,13 @@ class QRInvite(Cog):
         else:
             new_path = str(image_path)
 
-        myqr.run(invite, picture=new_path, save_name=ctx.guild.icon + "_qrcode.png",
-                 save_dir=str(cog_data_path(self)), colorized=colorized, )
+        myqr.run(
+            invite,
+            picture=new_path,
+            save_name=ctx.guild.icon + "_qrcode.png",
+            save_dir=str(cog_data_path(self)),
+            colorized=colorized,
+        )
 
         png_path: pathlib.Path = path / (ctx.guild.icon + "_qrcode.png")
         with png_path.open("rb") as png_fp:
@@ -79,7 +93,7 @@ def convert_png(path):
     im = Image.open(path)
     im.load()
     alpha = im.split()[-1]
-    im = im.convert('RGB').convert('P', palette=Image.ADAPTIVE, colors=255)
+    im = im.convert("RGB").convert("P", palette=Image.ADAPTIVE, colors=255)
     mask = Image.eval(alpha, lambda a: 255 if a <= 128 else 0)
     im.paste(255, mask)
     new_path = path.replace(".webp", ".png")

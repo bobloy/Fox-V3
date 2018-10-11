@@ -24,7 +24,7 @@ class ForceMention(Cog):
 
     @checks.admin_or_permissions(manage_roles=True)
     @commands.command()
-    async def forcemention(self, ctx: commands.Context, role: str, *, message=''):
+    async def forcemention(self, ctx: commands.Context, role: str, *, message=""):
         """
        Mentions that role, regardless if it's unmentionable
        """

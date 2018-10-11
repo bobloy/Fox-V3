@@ -16,9 +16,7 @@ class ExclusiveRole(Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9999114111108101)
-        default_guild = {
-            "role_list": []
-        }
+        default_guild = {"role_list": []}
 
         self.config.register_guild(**default_guild)
 

@@ -48,7 +48,7 @@ class SayUrl(Cog):
         h.single_line_break = True
         h.mark_code = True
         h.wrap_links = True
-        h.ul_item_mark = '-'
+        h.ul_item_mark = "-"
 
         async with aiohttp.ClientSession() as session:
             site = await fetch_url(session, url)

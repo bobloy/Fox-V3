@@ -25,12 +25,11 @@ class AudioTrivia(Trivia):
         super().__init__()
         self.bot = bot
         self.audio = None
-        self.audioconf = Config.get_conf(self, identifier=651171001051118411410511810597, force_registration=True)
-
-        self.audioconf.register_guild(
-            delay=30.0,
-            repeat=True,
+        self.audioconf = Config.get_conf(
+            self, identifier=651171001051118411410511810597, force_registration=True
         )
+
+        self.audioconf.register_guild(delay=30.0, repeat=True)
 
     @commands.group()
     @commands.guild_only()
@@ -93,15 +92,16 @@ class AudioTrivia(Trivia):
         status = await self.audio.config.status()
 
         if status:
-            await ctx.send("I recommend disabling audio status with `{}audioset status`".format(ctx.prefix))
+            await ctx.send(
+                "I recommend disabling audio status with `{}audioset status`".format(ctx.prefix)
+            )
 
         if not self.audio._player_check(ctx):
             try:
-                if not ctx.author.voice.channel.permissions_for(ctx.me).connect or self.audio._userlimit(
-                        ctx.author.voice.channel
-                ):
-                    return await ctx.send("I don't have permission to connect to your channel."
-                                          )
+                if not ctx.author.voice.channel.permissions_for(
+                    ctx.me
+                ).connect or self.audio._userlimit(ctx.author.voice.channel):
+                    return await ctx.send("I don't have permission to connect to your channel.")
                 await lavalink.connect(ctx.author.voice.channel)
                 lavaplayer = lavalink.get_player(ctx.guild.id)
                 lavaplayer.store("connect", datetime.datetime.utcnow())
@@ -114,10 +114,10 @@ class AudioTrivia(Trivia):
 
         await self.audio._data_check(ctx)
 
-        if (
-                not ctx.author.voice or ctx.author.voice.channel != lavaplayer.channel
-        ):
-            return await ctx.send("You must be in the voice channel to use the audiotrivia command.")
+        if not ctx.author.voice or ctx.author.voice.channel != lavaplayer.channel:
+            return await ctx.send(
+                "You must be in the voice channel to use the audiotrivia command."
+            )
 
         trivia_dict = {}
         authors = []
@@ -157,7 +157,9 @@ class AudioTrivia(Trivia):
 
         # Delay in audiosettings overwrites delay in settings
         combined_settings = {**settings, **audiosettings}
-        session = AudioSession.start(ctx=ctx, question_list=trivia_dict, settings=combined_settings, player=lavaplayer)
+        session = AudioSession.start(
+            ctx=ctx, question_list=trivia_dict, settings=combined_settings, player=lavaplayer
+        )
         self.trivia_sessions.append(session)
         LOG.debug("New audio trivia session; #%s in %d", ctx.channel, ctx.guild.id)
 
