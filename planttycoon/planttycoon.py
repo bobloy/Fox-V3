@@ -971,7 +971,7 @@ class PlantTycoon(Cog):
                     message = "You have no {}. Go buy some!".format(product)
             else:
                 if product_category == "tool":
-                    message = "You have don't have a {}. Go buy one!".format(product)
+                    message = "You don't have a {}. Go buy one!".format(product)
                 else:
                     message = "You have no {}. Go buy some!".format(product)
         else:
@@ -1307,7 +1307,7 @@ class PlantTycoon(Cog):
             message = "You're currently not growing a plant."
         else:
             gardener.current = {}
-            message = "You sucessfuly shovelled your plant out."
+            message = "You successfully shovelled your plant out."
             if gardener.points < 0:
                 gardener.points = 0
             await gardener.save_gardener()
