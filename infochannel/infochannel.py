@@ -1,7 +1,7 @@
 from typing import Any
 
 import discord
-from redbot.core import Config, commands
+from redbot.core import Config, commands, checks
 from redbot.core.bot import Red
 
 Cog: Any = getattr(commands, "Cog", object)
@@ -30,6 +30,7 @@ class InfoChannel(Cog):
         self.config.register_guild(**default_guild)
 
     @commands.command()
+    @checks.admin()
     async def infochannel(self, ctx: commands.Context):
         """
         Toggle info channel for this server
