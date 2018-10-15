@@ -15,6 +15,19 @@ async def fetch_img(session, url):
         return await response.read()
 
 
+async def check_guild(guild, emoji):
+    if len(guild.emojis) >= 100:
+        return False
+
+    if len(guild.emojis) < 50:
+        return True
+
+    if emoji.animated:
+        return sum(e.animated for e in guild.emojis) < 50
+    else:
+        return sum(not e.animated for e in guild.emojis) < 50
+
+
 class StealEmoji(Cog):
     """
     This cog steals emojis and creates servers for them
@@ -23,11 +36,11 @@ class StealEmoji(Cog):
     default_stolemoji = {
         "guildbank": None,
         "name": None,
-        "require_colons": False,
-        "managed": False,
+        "require_colons": None,
+        "managed": None,
         "guild_id": None,
         "url": None,
-        "animated": False,
+        "animated": None,
     }
 
     def __init__(self, red: Red):
@@ -55,10 +68,6 @@ class StealEmoji(Cog):
     @stealemoji.command(name="bank")
     async def se_bank(self, ctx):
         """Add current server as emoji bank"""
-        await ctx.send(
-            "This will upload custom emojis to this server\n"
-            "Are you sure you want to make the current server an emoji bank? (y//n)"
-        )
 
         def check(m):
             return (
@@ -67,16 +76,35 @@ class StealEmoji(Cog):
                 and m.author == ctx.author
             )
 
+        already_a_guildbank = ctx.guild.id in (await self.config.guildbanks())
+
+        if already_a_guildbank:
+            await ctx.send(
+                "This is already an emoji bank\n"
+                "Are you sure you want to remove the current server from the emoji bank list? (y/n)"
+            )
+        else:
+            await ctx.send(
+                "This will upload custom emojis to this server\n"
+                "Are you sure you want to make the current server an emoji bank? (y/n)"
+            )
+
         msg = await self.bot.wait_for("message", check=check)
 
-        if msg.content in ["N", "NO"]:
+        if msg.content.upper() in ["N", "NO"]:
             await ctx.send("Cancelled")
             return
 
         async with self.config.guildbanks() as guildbanks:
-            guildbanks.append(ctx.guild.id)
+            if already_a_guildbank:
+                guildbanks.remove(ctx.guild.id)
+            else:
+                guildbanks.append(ctx.guild.id)
 
-        await ctx.send("This server has been added as an emoji bank")
+        if already_a_guildbank:
+            await ctx.send("This server has been removed from being an emoji bank")
+        else:
+            await ctx.send("This server has been added to be an emoji bank")
 
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         """Event handler for reaction watching"""
@@ -88,7 +116,7 @@ class StealEmoji(Cog):
             print("Collecting is off")
             return
 
-        emoji = reaction.emoji
+        emoji: discord.Emoji = reaction.emoji
         if emoji in self.bot.emojis:
             print("Emoji already in bot.emojis")
             return
@@ -99,8 +127,9 @@ class StealEmoji(Cog):
         guildbank = None
         banklist = await self.config.guildbanks()
         for guild_id in banklist:
-            guild = self.bot.get_guild(guild_id)
-            if len(guild.emojis) < 50:
+            guild: discord.Guild = self.bot.get_guild(guild_id)
+            # if len(guild.emojis) < 50:
+            if await check_guild(guild, emoji):
                 guildbank = guild
                 break
 
@@ -144,11 +173,14 @@ class StealEmoji(Cog):
         # If you get this far, YOU DID IT
 
         save_dict = self.default_stolemoji.copy()
-        e_dict = vars(emoji)
+        e_attr_list = [a for a in dir(emoji) if not a.startswith("__")]
 
-        for k in e_dict:
-            if k in save_dict:
-                save_dict[k] = e_dict[k]
+        for k in save_dict.keys():
+            save_dict[k] = getattr(emoji, k, None)
+
+        # for k in e_attr_list:
+        #     if k in save_dict:
+        #         save_dict[k] = getattr(emoji, k, None)
 
         save_dict["guildbank"] = guildbank.id
 
