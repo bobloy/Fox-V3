@@ -16,7 +16,8 @@ Cog Function
 | forcemention | **Alpha** | <details><summary>Mentions unmentionable roles</summary>Very simple cog, mention doesn't persist</details> |
 | hangman | **Alpha** | <details><summary>Play a game of hangman</summary>Some visual glitches and needs more customization</details> |
 | howdoi | **Incomplete** | <details><summary>Ask coding questions and get results from StackExchange</summary>Not yet functional</details> |
-| leaver | **Alpha** | <details><summary>Send a message in a channel when a user leaves the server</summary>Just released, please report bugs</details> |
+| leaver | **Beta** | <details><summary>Send a message in a channel when a user leaves the server</summary>Seems to be functional, please report any bugs or suggestions</details> |
+| infochannel | **Alpha** | <details><summary>Create a channel to display server info</summary>Just released, please report bugs</details> |
 | lovecalculator | **Alpha** | <details><summary>Calculate the love between two users</summary>[Snap-Ons] Just updated to V3</details> |
 | lseen | **Alpha** | <details><summary>Track when a member was last online</summary>Alpha release, please report bugs</details> |
 | nudity | **Incomplete** | <details><summary>Checks for NSFW images posted in non-NSFW channels</summary>Library this is based on has a bug, waiting for author to merge my PR</details> |
