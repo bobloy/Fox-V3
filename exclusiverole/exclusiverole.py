@@ -9,8 +9,7 @@ Cog: Any = getattr(commands, "Cog", object)
 
 class ExclusiveRole(Cog):
     """
-    Custom commands
-    Creates commands used to display text and adjust roles
+    Create roles that prevent all other roles from being added
     """
 
     def __init__(self, bot):
