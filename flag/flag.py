@@ -86,6 +86,8 @@ class Flag(Cog):
         # await self.config.guild(guild).flags.set_raw(str(member.id), value=flags)
 
         async with self.config.guild(guild).flags() as flags:
+            if str(member.id) not in flags:
+                flags[str(member.id)] = []
             flags[str(member.id)].append(flag)
 
         outembed = await self._list_flags(member)
@@ -93,7 +95,10 @@ class Flag(Cog):
         if outembed:
             await ctx.send(embed=outembed)
             if await self.config.guild(guild).dm():
-                await member.send(embed=outembed)
+                try:
+                    await member.send(embed=outembed)
+                except discord.Forbidden:
+                    await ctx.send("DM-ing user failed")
         else:
             await ctx.send("This member has no flags.. somehow..")
 
