@@ -299,7 +299,7 @@ class Werewolf(Cog):
         Find custom roles by name, alignment, category, or ID
         """
         if ctx.invoked_subcommand is None or ctx.invoked_subcommand == self.ww_search:
-            await ctx.send_help()
+            pass
 
     @ww_search.command(name="name")
     async def ww_search_name(self, ctx: commands.Context, *, name):
