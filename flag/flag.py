@@ -72,19 +72,14 @@ class Flag(Cog):
         """Flag a member"""
         guild = ctx.guild
         await self._check_flags(guild)
-        # clashroyale = self.bot.get_cog('clashroyale')
-        # if clashroyale is None:
-        # await ctx.send("Requires clashroyale cog installed")
-        # return
 
         flag = self._flag_template()
-        expiredate = date.today()
-        expiredate += timedelta(days=await self.config.guild(guild).days())
+        expire_date = date.today() + timedelta(days=await self.config.guild(guild).days())
 
         flag["reason"] = reason
-        flag["expireyear"] = expiredate.year
-        flag["expiremonth"] = expiredate.month
-        flag["expireday"] = expiredate.day
+        flag["expireyear"] = expire_date.year
+        flag["expiremonth"] = expire_date.month
+        flag["expireday"] = expire_date.day
 
         # flags = await self.config.guild(guild).flags.get_raw(str(member.id), default=[])
         # flags.append(flag)
