@@ -343,7 +343,10 @@ class Hangman(Cog):
         c_say = "Guess this: " + str(self._hideanswer(guild)) + "\n"
         c_say += "Used Letters: " + str(self._guesslist(guild)) + "\n"
         c_say += self.hanglist[guild][self.the_data[guild]["hangman"]] + "\n"
-        c_say += self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z"
+        if await self.config.guild(guild).emojis():
+            c_say += "{} for A-M, {} for N-Z".format(self.navigate[0], self.navigate[-1])
+        else:
+            c_say += "React with {} - {} to guess".format(self.letters[0], self.letters[-1])
 
         return c_say
 
