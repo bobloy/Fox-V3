@@ -152,6 +152,10 @@ class Chatter(Cog):
         Trains the bot based on language in this guild
         """
 
+        await ctx.send("Warning: The cog may use significant RAM or CPU if trained on large data sets.\n"
+                       "Additionally, large sets will use more disk space to save the trained data.\n\n"
+                       "If you experience issues, clear your trained data and train again on a smaller scope.")
+
         conversation = await self._get_conversation(ctx, channel)
 
         if not conversation:
