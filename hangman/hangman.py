@@ -151,7 +151,14 @@ class Hangman(Cog):
         # Borrowing FlapJack's emoji validation
         # (https://github.com/flapjax/FlapJack-Cogs/blob/master/smartreact/smartreact.py)
         if theface[:2] == "<:":
-            theface = [r for r in self.bot.emojis if r.id == theface.split(":")[2][:-1]][0]
+            # theface = [r for r in self.bot.emojis if r.id == theface.split(":")[2][:-1]][0]
+            # print(theface)
+            # print(theface.split(":")[2][:-1])
+            theface = self.bot.get_emoji(int(theface.split(":")[2][:-1]))
+
+        if theface is None:
+            await ctx.send("I could not find that emoji")
+            return
 
         try:
             # Use the face as reaction to see if it's valid (THANKS FLAPJACK <3)
@@ -160,7 +167,7 @@ class Hangman(Cog):
             await ctx.send("That's not an emoji I recognize.")
             return
 
-        await self.config.guild(ctx.guild).theface.set(theface)
+        await self.config.guild(ctx.guild).theface.set(str(theface))
         await self._update_hanglist()
         await ctx.send("Face has been updated!")
 
@@ -339,7 +346,7 @@ class Hangman(Cog):
 
         await message.add_reaction(self.navigate[0])
 
-    def _make_say(self, guild):
+    async def _make_say(self, guild):
         c_say = "Guess this: " + str(self._hideanswer(guild)) + "\n"
         c_say += "Used Letters: " + str(self._guesslist(guild)) + "\n"
         c_say += self.hanglist[guild][self.the_data[guild]["hangman"]] + "\n"
@@ -354,7 +361,7 @@ class Hangman(Cog):
         if message.guild not in self.hanglist:
             await self._update_hanglist()
 
-        c_say = self._make_say(message.guild)
+        c_say = await self._make_say(message.guild)
 
         await message.edit(content=c_say)
         self.the_data[message.guild]["trackmessage"] = message.id
@@ -366,7 +373,7 @@ class Hangman(Cog):
         if channel.guild not in self.hanglist:
             await self._update_hanglist()
 
-        c_say = self._make_say(channel.guild)
+        c_say = await self._make_say(channel.guild)
 
         message = await channel.send(c_say)
 
