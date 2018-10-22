@@ -28,6 +28,7 @@ class Leaver(Cog):
 
     @leaverset.command()
     async def channel(self, ctx: Context):
+        """Choose the channel to send leave messages to"""
         guild = ctx.guild
         await self.config.guild(guild).channel.set(ctx.channel.id)
         await ctx.send("Channel set to " + ctx.channel.name)
