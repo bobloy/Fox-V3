@@ -10,7 +10,6 @@
   "description": "Mentions roles that are unmentionable",
   "hidden": false,
   "install_msg": "Thank you for installing ForceMention! Get started with `[p]load forcemention`, then `[p]forcemention`",
-  "requirements": [],
   "short": "Mention unmentionables",
   "tags": [
     "bobloy",
