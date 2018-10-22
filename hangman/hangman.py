@@ -151,9 +151,6 @@ class Hangman(Cog):
         # Borrowing FlapJack's emoji validation
         # (https://github.com/flapjax/FlapJack-Cogs/blob/master/smartreact/smartreact.py)
         if theface[:2] == "<:":
-            # theface = [r for r in self.bot.emojis if r.id == theface.split(":")[2][:-1]][0]
-            # print(theface)
-            # print(theface.split(":")[2][:-1])
             theface = self.bot.get_emoji(int(theface.split(":")[2][:-1]))
 
         if theface is None:
