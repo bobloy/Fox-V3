@@ -137,14 +137,14 @@ class Hangman(Cog):
                     HANGMAN""",
             )
 
-    @commands.group(aliases=["sethang"], pass_context=True)
+    @commands.group(aliases=["sethang"])
     @checks.mod_or_permissions(administrator=True)
     async def hangset(self, ctx):
         """Adjust hangman settings"""
         if ctx.invoked_subcommand is None:
             pass
 
-    @hangset.command(pass_context=True)
+    @hangset.command()
     async def face(self, ctx: commands.Context, theface):
         """Set the face of the hangman"""
         message = ctx.message
@@ -164,7 +164,7 @@ class Hangman(Cog):
         await self._update_hanglist()
         await ctx.send("Face has been updated!")
 
-    @hangset.command(pass_context=True)
+    @hangset.command()
     async def toggleemoji(self, ctx: commands.Context):
         """Toggles whether to automatically react with the alphabet"""
 
@@ -172,7 +172,7 @@ class Hangman(Cog):
         await self.config.guild(ctx.guild).emojis.set(not current)
         await ctx.send("Emoji Letter reactions have been set to {}".format(not current))
 
-    @commands.command(aliases=["hang"], pass_context=True)
+    @commands.command(aliases=["hang"])
     async def hangman(self, ctx, guess: str = None):
         """Play a game of hangman against the bot!"""
         if guess is None:
