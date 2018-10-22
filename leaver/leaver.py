@@ -1,6 +1,7 @@
 import discord
 
 from redbot.core import Config, checks, commands
+from redbot.core.bot import Red
 from redbot.core.commands import Context
 from typing import Any
 
@@ -12,7 +13,7 @@ class Leaver(Cog):
     Creates a goodbye message when people leave
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: Red):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_guild = {"channel": ""}
@@ -39,6 +40,10 @@ class Leaver(Cog):
 
         if channel != "":
             channel = guild.get_channel(channel)
-            await channel.send(str(member) + "(*" + str(member.nick) + "*) has left the server!")
+            out = "{}{} has left the server".format(member, member.nick if member.nick is not None else "")
+            if await self.bot.embed_requested(channel, member):
+                await channel.send(embed=discord.Embed(description=out, color=self.bot.color))
+            else:
+                await channel.send(out)
         else:
             pass
