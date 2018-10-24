@@ -35,7 +35,11 @@ class BanGame(Cog):
         do_ban = not self.config.guild(ctx.guild).do_ban()
         await self.config.guild(ctx.guild).do_ban.set(do_ban)
 
-        await ctx.send("Members will now be {} for playing a banned game".format("Banned" if do_ban else "Kicked"))
+        await ctx.send(
+            "Members will now be {} for playing a banned game".format(
+                "Banned" if do_ban else "Kicked"
+            )
+        )
 
     @bangame.command(name="add")
     @checks.mod_or_permissions(administrator=True)

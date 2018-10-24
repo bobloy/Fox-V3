@@ -7,15 +7,14 @@
     0,
     0
   ],
-  "description": "Assign roles to be exclusive, preventing other roles from being added",
+  "description": "Kick or ban members that play a banned game",
   "hidden": false,
-  "install_msg": "Thank you for installing ExclusiveRole. Get started with `[p]load exclusiverole` and `[p]help ExclusiveRole`",
-  "short": "Set roles to be exclusive",
+  "install_msg": "Thank you for installing BanGame. Get started with `[p]load bangame` and `[p]help BanGame`",
+  "short": "Ban games",
   "tags": [
     "fox",
     "bobloy",
     "utility",
-    "tools",
-    "roles"
+    "tools"
   ]
 }
