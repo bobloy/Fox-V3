@@ -4,7 +4,7 @@ import random
 
 from redbot.core import bank
 from redbot.core import commands
-from redbot.core.data_manager import cog_data_path
+from redbot.core.data_manager import cog_data_path, bundled_data_path
 from typing import Any
 
 Cog: Any = getattr(commands, "Cog", object)
@@ -15,8 +15,11 @@ class RecyclingPlant(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.path = str(cog_data_path(self)).replace("\\", "/")
-        self.junk_path = self.path + "/bundled_data/junk.json"
+        # self.path = str(cog_data_path(self)).replace("\\", "/")
+        # self.junk_path = self.path + "/bundled_data/junk.json"
+        self.path = str(bundled_data_path(self)).replace("\\", "/")
+        print(self.path)
+        self.junk_path = self.path + "/junk.json"
 
         with open(self.junk_path) as json_data:
             self.junk = json.load(json_data)
