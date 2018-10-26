@@ -14,13 +14,11 @@ class RecyclingPlant(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-
-        self.junk_path = bundled_data_path(self) / "junk.json"
-
         self.junk = None
 
     def load_junk(self):
-        with self.junk_path.open() as json_data:
+        junk_path = bundled_data_path(self) / "junk.json"
+        with junk_path.open() as json_data:
             self.junk = json.load(json_data)
 
     @commands.command(aliases=["recycle"])
