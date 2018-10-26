@@ -116,7 +116,7 @@ class CCRole(Cog):
 
         # Selfrole
         await ctx.send(
-            "Is this a targeted command?(yes//no)\nNo will make this a selfrole command"
+            "Is this a targeted command?(yes/no)\nNo will make this a selfrole command"
         )
 
         try:

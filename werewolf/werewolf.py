@@ -41,6 +41,11 @@ class Werewolf(Cog):
 
     @commands.command()
     async def buildgame(self, ctx: commands.Context):
+        """
+        Create game codes to run custom games.
+
+        Pick the roles or randomized roles you want to include in a game
+        """
         gb = GameBuilder()
         code = await gb.build_game(ctx)
 
@@ -92,7 +97,7 @@ class Werewolf(Cog):
 
     @commands.guild_only()
     @wwset.command(name="category")
-    async def wwset_category(self, ctx: commands.Context, category_id=None):
+    async def wwset_category(self, ctx: commands.Context, category_id: int=None):
         """
         Assign the channel category
         """
@@ -294,7 +299,7 @@ class Werewolf(Cog):
         Find custom roles by name, alignment, category, or ID
         """
         if ctx.invoked_subcommand is None or ctx.invoked_subcommand == self.ww_search:
-            await ctx.send_help()
+            pass
 
     @ww_search.command(name="name")
     async def ww_search_name(self, ctx: commands.Context, *, name):

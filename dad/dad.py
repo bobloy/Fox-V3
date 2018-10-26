@@ -28,7 +28,7 @@ class Dad(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6897100, force_registration=True)
 
-        default_guild = {"enabled": False, "nickname": False, "cooldown": 240}
+        default_guild = {"enabled": True, "nickname": False, "cooldown": 240}
 
         self.config.register_guild(**default_guild)
 

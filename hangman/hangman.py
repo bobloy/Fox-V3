@@ -137,21 +137,25 @@ class Hangman(Cog):
                     HANGMAN""",
             )
 
-    @commands.group(aliases=["sethang"], pass_context=True)
+    @commands.group(aliases=["sethang"])
     @checks.mod_or_permissions(administrator=True)
     async def hangset(self, ctx):
         """Adjust hangman settings"""
         if ctx.invoked_subcommand is None:
             pass
 
-    @hangset.command(pass_context=True)
+    @hangset.command()
     async def face(self, ctx: commands.Context, theface):
         """Set the face of the hangman"""
         message = ctx.message
         # Borrowing FlapJack's emoji validation
         # (https://github.com/flapjax/FlapJack-Cogs/blob/master/smartreact/smartreact.py)
         if theface[:2] == "<:":
-            theface = [r for r in self.bot.emojis if r.id == theface.split(":")[2][:-1]][0]
+            theface = self.bot.get_emoji(int(theface.split(":")[2][:-1]))
+
+        if theface is None:
+            await ctx.send("I could not find that emoji")
+            return
 
         try:
             # Use the face as reaction to see if it's valid (THANKS FLAPJACK <3)
@@ -160,11 +164,11 @@ class Hangman(Cog):
             await ctx.send("That's not an emoji I recognize.")
             return
 
-        await self.config.guild(ctx.guild).theface.set(theface)
+        await self.config.guild(ctx.guild).theface.set(str(theface))
         await self._update_hanglist()
         await ctx.send("Face has been updated!")
 
-    @hangset.command(pass_context=True)
+    @hangset.command()
     async def toggleemoji(self, ctx: commands.Context):
         """Toggles whether to automatically react with the alphabet"""
 
@@ -172,7 +176,7 @@ class Hangman(Cog):
         await self.config.guild(ctx.guild).emojis.set(not current)
         await ctx.send("Emoji Letter reactions have been set to {}".format(not current))
 
-    @commands.command(aliases=["hang"], pass_context=True)
+    @commands.command(aliases=["hang"])
     async def hangman(self, ctx, guess: str = None):
         """Play a game of hangman against the bot!"""
         if guess is None:
@@ -339,11 +343,14 @@ class Hangman(Cog):
 
         await message.add_reaction(self.navigate[0])
 
-    def _make_say(self, guild):
+    async def _make_say(self, guild):
         c_say = "Guess this: " + str(self._hideanswer(guild)) + "\n"
         c_say += "Used Letters: " + str(self._guesslist(guild)) + "\n"
         c_say += self.hanglist[guild][self.the_data[guild]["hangman"]] + "\n"
-        c_say += self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z"
+        if await self.config.guild(guild).emojis():
+            c_say += "{} for A-M, {} for N-Z".format(self.navigate[0], self.navigate[-1])
+        else:
+            c_say += "React with {} - {} to guess".format(self.letters[0], self.letters[-1])
 
         return c_say
 
@@ -351,7 +358,7 @@ class Hangman(Cog):
         if message.guild not in self.hanglist:
             await self._update_hanglist()
 
-        c_say = self._make_say(message.guild)
+        c_say = await self._make_say(message.guild)
 
         await message.edit(content=c_say)
         self.the_data[message.guild]["trackmessage"] = message.id
@@ -363,7 +370,7 @@ class Hangman(Cog):
         if channel.guild not in self.hanglist:
             await self._update_hanglist()
 
-        c_say = self._make_say(channel.guild)
+        c_say = await self._make_say(channel.guild)
 
         message = await channel.send(c_say)
 

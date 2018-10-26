@@ -14,7 +14,7 @@ Cog: Any = getattr(commands, "Cog", object)
 
 class QRInvite(Cog):
     """
-    V3 Cog Template
+    Create custom QR codes for server invites
     """
 
     def __init__(self, bot: Red):

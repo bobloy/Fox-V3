@@ -140,7 +140,7 @@ class AnnounceDaily(Cog):
     @_ad.command()
     async def listimg(self, ctx: commands.Context):
         """
-        List all registered announcement immages
+        List all registered announcement images
         """
         images = await self.config.images()
         for page in pagify("\n".join(images)):
@@ -192,7 +192,7 @@ class AnnounceDaily(Cog):
         await self.config.time.set({"hour": h, "minute": m, "second": s})
 
         await ctx.send(
-            "Announcements time has been set to {}::{}::{} every day\n"
+            "Announcement time has been set to {}::{}::{} every day\n"
             "**Changes will apply after next scheduled announcement or reload**".format(h, m, s)
         )
 
@@ -229,7 +229,7 @@ class AnnounceDaily(Cog):
                 await channel.send(choice)
 
     async def check_day(self):
-        while self is self.bot.get_cog("AnnounceDaily"):
+        while True:
             tomorrow = datetime.now() + timedelta(days=1)
             time = await self.config.time()
             h, m, s = time["hour"], time["minute"], time["second"]

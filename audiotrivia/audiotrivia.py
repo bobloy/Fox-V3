@@ -17,8 +17,8 @@ from .audiosession import AudioSession
 
 class AudioTrivia(Trivia):
     """
-    Custom commands
-    Creates commands used to display text and adjust roles
+    Upgrade to the Trivia cog that enables audio trivia
+    Replaces the Trivia cog
     """
 
     def __init__(self, bot: Red):
@@ -90,10 +90,16 @@ class AudioTrivia(Trivia):
             return
 
         status = await self.audio.config.status()
+        notify = await self.audio.config.notify()
 
         if status:
             await ctx.send(
-                "I recommend disabling audio status with `{}audioset status`".format(ctx.prefix)
+                "It is recommended to disable audio status with `{}audioset status`".format(ctx.prefix)
+            )
+
+        if notify:
+            await ctx.send(
+                "It is recommended to disable audio notify with `{}audioset notify`".format(ctx.prefix)
             )
 
         if not self.audio._player_check(ctx):
@@ -110,7 +116,6 @@ class AudioTrivia(Trivia):
 
         lavaplayer = lavalink.get_player(ctx.guild.id)
         lavaplayer.store("channel", ctx.channel.id)  # What's this for? I dunno
-        lavaplayer.store("guild", ctx.guild.id)
 
         await self.audio._data_check(ctx)
 

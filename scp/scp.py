@@ -28,7 +28,7 @@ class SCP(Cog):
             msg = "You must specify a number between 1 and 4999."
             c = discord.Color.red()
 
-        if ctx.embed_requested():
+        if await ctx.embed_requested():
             await ctx.send(embed=discord.Embed(description=msg, color=c))
         else:
             await ctx.maybe_send_embed(msg)
@@ -94,7 +94,7 @@ class SCP(Cog):
 
             em = discord.Embed(title=ttl, description=msg, color=c)
 
-        if ctx.embed_requested():
+        if await ctx.embed_requested():
             await ctx.send(embed=em)
         else:
             await ctx.maybe_send_embed(msg)
@@ -118,7 +118,7 @@ class SCP(Cog):
 
             em = discord.Embed(title=ttl, description=msg, color=c)
 
-        if ctx.embed_requested():
+        if await ctx.embed_requested():
             await ctx.send(embed=em)
         else:
             await ctx.maybe_send_embed(msg)

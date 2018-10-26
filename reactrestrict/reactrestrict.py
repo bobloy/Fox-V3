@@ -206,8 +206,7 @@ class ReactRestrict(Cog):
     @reactrestrict.command()
     async def add(self, ctx: commands.Context, message_id: int, *, role: discord.Role):
         """
-        Adds a reaction|role combination to a registered message, don't use
-        quotes for the role name.
+        Adds a reaction|role combination to a registered message, don't use quotes for the role name.
         """
         message = await self._get_message(ctx, message_id)
         if message is None:

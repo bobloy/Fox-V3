@@ -379,7 +379,7 @@
       "rarity": "rare",
       "image": "http://i.imgur.com/hoh17hp.jpg",
       "health": 100,
-      "degradation": 1,
+      "degradation": 1.5,
       "threshold": 110,
       "badge": "Sporadic",
       "reward": 2400
@@ -391,7 +391,7 @@
       "rarity": "rare",
       "image": "http://i.imgur.com/lhSjfQY.jpg",
       "health": 100,
-      "degradation": 1,
+      "degradation": 1.5,
       "threshold": 110,
       "badge": "Sporadic",
       "reward": 2400
@@ -403,7 +403,7 @@
       "rarity": "rare",
       "image": "http://i.imgur.com/Dhw9ync.jpg",
       "health": 100,
-      "degradation": 1,
+      "degradation": 1.5,
       "threshold": 110,
       "badge": "Sporadic",
       "reward": 2400
@@ -415,7 +415,7 @@
       "rarity": "rare",
       "image": "http://i.imgur.com/h4fJo2R.jpg",
       "health": 100,
-      "degradation": 1,
+      "degradation": 1.5,
       "threshold": 110,
       "badge": "Sporadic",
       "reward": 2400
@@ -427,7 +427,7 @@
       "rarity": "rare",
       "image": "http://i.imgur.com/NoSdxXh.jpg",
       "health": 100,
-      "degradation": 1,
+      "degradation": 1.5,
       "threshold": 110,
       "badge": "Sporadic",
       "reward": 2400
@@ -439,7 +439,7 @@
       "rarity": "rare",
       "image": "http://i.imgur.com/4ArSekX.jpg",
       "health": 100,
-      "degradation": 1,
+      "degradation": 1.5,
       "threshold": 110,
       "badge": "Sporadic",
       "reward": 2400
@@ -451,43 +451,19 @@
       "rarity": "super-rare",
       "image": "http://i.imgur.com/ASZXr7C.png",
       "health": 100,
-      "degradation": 1,
+      "degradation": 2,
       "threshold": 110,
       "badge": "Odd-pod",
       "reward": 3600
     },
     {
-      "name": "tba",
-      "article": "a",
-      "time": 9000,
-      "rarity": "super-rare",
-      "image": "tba",
-      "health": 100,
-      "degradation": 1.5,
-      "threshold": 110,
-      "badge": "Odd-pod",
-      "reward": 3600
-    },
-    {
-      "name": "Pirahna Plant",
+      "name": "Piranha Plant",
       "article": "a",
       "time": 9000,
       "rarity": "super-rare",
       "image": "http://i.imgur.com/c03i9W7.jpg",
       "health": 100,
-      "degradation": 1.5,
-      "threshold": 110,
-      "badge": "Odd-pod",
-      "reward": 3600
-    },
-    {
-      "name": "tba",
-      "article": "a",
-      "time": 9000,
-      "rarity": "super-rare",
-      "image": "tba",
-      "health": 100,
-      "degradation": 1.5,
+      "degradation": 2,
       "threshold": 110,
       "badge": "Odd-pod",
       "reward": 3600
@@ -499,19 +475,19 @@
       "rarity": "super-rare",
       "image": "https://i.imgur.com/Vo4v2Ry.png",
       "health": 100,
-      "degradation": 1.5,
+      "degradation": 2,
       "threshold": 110,
       "badge": "Odd-pod",
       "reward": 3600
     },
     {
-      "name": "tba",
+      "name": "Eldergleam Tree",
       "article": "a",
       "time": 10800,
       "rarity": "epic",
-      "image": "tba",
+      "image": "https://i.imgur.com/pnZYKZc.jpg",
       "health": 100,
-      "degradation": 2,
+      "degradation": 2.5,
       "threshold": 110,
       "badge": "Greenfingers",
       "reward": 5400
@@ -523,7 +499,7 @@
       "rarity": "epic",
       "image": "http://i.imgur.com/sizf7hE.png",
       "health": 100,
-      "degradation": 2,
+      "degradation": 2.5,
       "threshold": 110,
       "badge": "Greenfingers",
       "reward": 5400
@@ -535,7 +511,7 @@
       "rarity": "epic",
       "image": "http://i.imgur.com/9f5QzaW.jpg",
       "health": 100,
-      "degradation": 2,
+      "degradation": 2.5,
       "threshold": 110,
       "badge": "Greenfingers",
       "reward": 5400
@@ -547,7 +523,7 @@
       "rarity": "epic",
       "image": "https://i.imgur.com/ExqLLHO.png",
       "health": 100,
-      "degradation": 2,
+      "degradation": 2.5,
       "threshold": 110,
       "badge": "Greenfingers",
       "reward": 5400
@@ -559,7 +535,7 @@
       "rarity": "epic",
       "image": "https://i.imgur.com/tv2B72j.png",
       "health": 100,
-      "degradation": 2,
+      "degradation": 2.5,
       "threshold": 110,
       "badge": "Greenfingers",
       "reward": 5400
@@ -571,7 +547,7 @@
       "rarity": "legendary",
       "image": "http://i.imgur.com/MIJQDLL.jpg",
       "health": 100,
-      "degradation": 3,
+      "degradation": 8,
       "threshold": 110,
       "badge": "Nobel Peas Prize",
       "reward": 10800
@@ -583,7 +559,7 @@
       "rarity": "legendary",
       "image": "http://i.imgur.com/cFSmaHH.png",
       "health": 100,
-      "degradation": 3,
+      "degradation": 8,
       "threshold": 110,
       "badge": "Nobel Peas Prize",
       "reward": 10800
@@ -595,7 +571,7 @@
       "rarity": "legendary",
       "image": "http://i.imgur.com/Ibwm2xY.jpg",
       "health": 100,
-      "degradation": 3,
+      "degradation": 8,
       "threshold": 110,
       "badge": "Nobel Peas Prize",
       "reward": 10800
