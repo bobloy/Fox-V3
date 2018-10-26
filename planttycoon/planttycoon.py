@@ -884,7 +884,7 @@ class PlantTycoon(Cog):
     async def _gardener(self, user: discord.User) -> Gardener:
 
         #
-        # This function returns an individual gardener namedtuple
+        # This function returns a Gardener object for the user
         #
 
         g = Gardener(user, self.config)

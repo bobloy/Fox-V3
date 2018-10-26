@@ -1,11 +1,10 @@
 import asyncio
 import json
 import random
-
-from redbot.core import bank
-from redbot.core import commands
-from redbot.core.data_manager import cog_data_path
 from typing import Any
+
+from redbot.core import bank, commands
+from redbot.core.data_manager import bundled_data_path
 
 Cog: Any = getattr(commands, "Cog", object)
 
@@ -15,15 +14,19 @@ class RecyclingPlant(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.path = str(cog_data_path(self)).replace("\\", "/")
-        self.junk_path = self.path + "/bundled_data/junk.json"
+        self.junk = None
 
-        with open(self.junk_path) as json_data:
+    def load_junk(self):
+        junk_path = bundled_data_path(self) / "junk.json"
+        with junk_path.open() as json_data:
             self.junk = json.load(json_data)
 
     @commands.command(aliases=["recycle"])
     async def recyclingplant(self, ctx: commands.Context):
         """Apply for a job at the recycling plant!"""
+        if self.junk is None:
+            self.load_junk()
+
         x = 0
         reward = 0
         await ctx.send(
@@ -84,6 +87,6 @@ class RecyclingPlant(Cog):
                 await bank.deposit_credits(ctx.author, reward)
             await ctx.send(
                 "{} been given **{} {}s** for your services.".format(
-                    ctx.author.display_name, reward, bank.get_currency_name(ctx.guild)
+                    ctx.author.display_name, reward, await bank.get_currency_name(ctx.guild)
                 )
             )
