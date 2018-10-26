@@ -1,0 +1,416 @@
+I used to be an adventurer like you. Then I took an arrow in the knee...
+Let me guess... someone stole your sweetroll.
+Citizen.
+Disrespect the law, and you disrespect me.
+What do you need?
+Trouble?
+What is it?
+No lollygaggin'.
+Staying safe I hope.
+Everything all right?
+Could sure use a warm bed right about now...
+I'd be a lot warmer and a lot happier with a bellyful of mead...
+I mostly deal with petty thievery and drunken brawls. Been too long since we've had a good bandit raid.
+What is it? Dragons?
+Watch the skies, traveler.
+My cousin's out fighting dragons, and what do I get? Guard duty.
+Gotta keep my eyes open. Damn dragons could swoop down at any time.
+Fear not. Come dragon or giant, we'll be ready.
+They say Ulfric Stormcloak murdered the High King... with his voice! Shouted him apart!
+No matter what else happens, the guards will always be grateful for everything you've done.
+Yes, Dovahkiin? How can I help you?
+Whatever you need, Dragonborn. Just say the word.
+Helgen... destroyed by a dragon. Hard to believe, isn't it?
+I fear the night. Because the werewolves and vampires don't.
+Bit late to be wandering around, isn't it?
+Only burglars and vampires creep around after dark. So which are you?
+You hear that? I swear, there's something out there. In the dark.
+I hope you're finding the city in proper order, thane.
+I trust the day's found you well, thane.
+How do you do, thane?
+They say Helgen got hit by a dragon. One of those horrors comes here, we'll be ready.
+Brigands I can handle, but this talk of dragons? World's gone mad, I say.
+Everything's in order.
+Just a few more hours and I can crawl under some furs...
+Jarl's been looking for someone who ain't superstitious though. Be lookin' for a fool if you ask me.
+It's bad luck to talk about that place.
+You should talk to the Jarl up in Dragonsreach, lend any aid you can.
+Stormcloaks, Imperials, dragons. Ain't no matter to me what I kill. Let them come.
+Guard might get nervous, a man approaches with his weapon drawn...
+Sheathe those claws, Khajiit.
+You come up to me, fists raised? You looking for a beating?
+Whoa, whoa, whoa! Watch the magic!
+Go cast your fancy magic someplace else.
+By all I hold sacred... that's a Shout! Like the Graybeards on their mountain!
+By the Gods! What manner of power is that?
+It is the power of old! The Voice of the Dragonborn!
+The Thu'um! He summons the Thu'um!
+I need to ask you to stop. That... shouting... is making people nervous.
+Well. I'll let it slide this time. But you'd be smart to take that off. Someone might get the wrong idea.
+Hmm. I still don't like it, but I guess I'll overlook it. This time.
+I find your wolfish grin... unsettling.
+Is that... fur? Coming out of your ears?
+Uch. Been tending your hounds? You smell like a wet dog.
+Werewolf!
+It's a werewolf! To arms! To arms!
+Vampire! Burn it!
+Vampire! To arms!
+Wait... I know you.
+What is it, Argonian?
+Stay out of trouble, Argonian.
+Stay out of trouble, lizard.
+Staying out of trouble, kinsman?
+How can I help a brother Nord?
+Stay out of trouble, Nord.
+Don't cross me, Elf.
+Stay out of trouble, Elf.
+What is it, Elf?
+Stay out of trouble, Khajiit.
+What is it, Khajiit?
+What do you want... cat?
+Sheathe those claws, Khajiit
+Stay out of trouble, Redguard.
+What is it, Redguard?
+Stay out of trouble, Imperial.
+What is it, Imperial?
+Stay out of trouble, Orc.
+What is it, Orc?
+Pigsticker like that's not going to get you far. Best visit the blacksmith.
+That iron sword's pretty undependable. You should try steel.
+Iron sword, huh? What are you killing, butterflies?
+Favor a steel sword, do ya? Good choice for slashing or stabbing.
+Why the Elven blade, hmm? Nord steel not good enough for you?
+Aye, now that there's a beautiful sword. Like a sliver of midnight.
+Takes a fair bit of strength to carry a greatsword like that. But can you use it?
+Some advice, friend. That armor won't offer much protection in a real fight.
+You wear the armor of a brigand. Best not cause any trouble on my watch.
+Fancy the leather armor, huh? Something to be said for going light.
+That's fine scale armor you've got on there. Shiny.
+That's good armor you've got there, friend. Iron, solid and true.
+Hmph. You wear that armor well. Iron may be simple, but it'll stop enough to keep you in the fight.
+You wear the armor of a mercenary. Now that's the life.
+Aye, now that's some fine armor. Good old-fashioned steel.
+Fine armor you've got there. Dwarven make, am I right?
+Ah, steel plate. Now that's a solid choice of armor.
+Orcish armor, hmm? Had me a set of that once. Ugly and strong, like those that forged it.
+Ebony armor. By Ysmir, 'tis a wondrous sight.
+Is your armor made of... dragon bones? By the gods, what I wouldn't do for a set of that.
+Is your armor made of... dragon scales? By the gods, what I wouldn't do for a set of that.
+You come talking to me wearing Imperial armor? You got stew for brains?
+That's some fine Imperial armor you've got there.
+For your sake, I hope your took that armor from a dead Imperial scout...
+Judging by your armor, I'd say you're an Imperial scout. If so, well met.
+That armor... Are you one of the Emperor's protectors? Can't say I envy you that job.
+That armor... Are you one of the Emperor's protectors? Not very good at your job, are you?
+You wear that Stormcloak armor well, friend.
+That Stormcloak armor's getting on my nerves...
+You wear the armor of the bear, my friend. A fine choice.
+You dare strut around here, wearing that filthy Stormcloak hide?
+Ugh. That armor stinks of death. You been grave robbing?
+You wear the garb of a true Nord. I salute you.
+You wield... Azura's Star? How... how can such a thing be possible?
+By Shor, is that... is that Azura's Star? How did you come to possess such a rare treasure?
+Ah, Aegisbane. Sigil of Clan Shatter-Shield. But didn't that get stolen awhile back? Hmph. Must be rememberin' wrong.
+That hammer... Why that's Aegisbane, heirloom of Clan Shatter-Shield! Last I heard, it was stolen by a couple of swindlers. Alain and... Muiri. Yeah.
+No.. get that accursed mace away from me...
+That mace... get it away from me. Get it away...
+Who did you have to kill to get that blade?
+That armor... it's like nothing I've ever seen. Like forged midnight...
+Ugh. Your breath is foul. What've you been eating?
+'Tis a wicked axe you wield there, friend. That blade looks sharp enough to cut through a god.
+What manner of staff is that? Such a horror...
+What a foul and unnatural weapon you wield. Never have I seen its like.
+Ah, now that's a fine shield. And not mere Dwarven... is it?
+Your shield... Dwarf-make, is it not? But yet it seems so much... more.
+I know Thieves Guild armor when I see it. You're not fooling anyone.
+Try to hide it all you want. I know you're in the Thieves Guild... and so do the other guards.
+What do you aim to do with that hammer, friend? Knock down a house?
+That is one... big hammer.
+Hey, you mix potions, right? Can you brew me an ale?
+Fancy yourself an alchemist, hmm? Never could get the hang of that.
+Keep your arrows in their quiver, archer.
+Favor the bow, eh? I'm a sword man, myself.
+Hail, summoner. Conjure me up a warm bed, would you?
+Destruction magic's fine, just don't go burning down any buildings.
+Don't suppose you'd enchant my sword? Dull old blade can barely cut butter.
+Best offense is a good defense, am I right?
+You're the one that casts those illusions. Impressive.
+Lightly armored means light on your feet. Smart.
+Go fiddling with any locks around here, we're going to have a real problem.
+You're like me, eh? Don't fancy those clunky two-handed weapons.
+I find your hand in my pocket, I'm going to cut it off.
+I know your kind, always sneaking about.
+I have a lot of respect for the Restoration School. Skyrim could use more healers.
+Hands to yourself, sneak thief.
+Heard about you and your honeyed words...
+Don't think you can barter with me like I'm one of those damned shopkeepers.
+The gods gave you two hands, and you use them both for your weapon. I can respect that.
+The Imperials think us lawless beasts. I am proof of their ignorance.
+The Imperials think we need their laws. Pffft.
+The Empire didn't think we could take the Reach, but here we are.
+We couldn't have taken this city without you, sir.
+Solitude is as glorious as they said it was. Nothing like Falkreath where I grew up.
+It's too bad they executed Roggvir before we got here.
+We won't give up this port to the Imperials without a fight, don't you worry.
+Winterhold belongs to Skyrim, not the Imperials, or the Mages.
+I grew up hearing songs about Eyldi the Bear! She wrestled a storm out of the sky!
+You don't seem to realize there's a war on. What you are is a damn Imperial spy!
+You've got a lot of nerve, walking around here dressed like an Imperial Legionnaire.
+Let's see those Stormcloaks try to break into this canyon.
+This city still reeks with the stench of the Stormcloaks. Makes me sick to my stomach.
+Why we bothered to capture Riften I'll never understand. Just look at this place.
+Now that the Empire's arrived in Riften, we've finally established a launching point into Morrowind... Just in case.
+Seems like capturing Riften is turning out to be more of a hassle than a benefit. But what do I know?
+Dawnstar is the last port of call before Solitude. Damn rebels aren't taking it.
+Don't worry about those Stormcloaks. You're safe from them here. As if they'd want the place anyway.
+Just my luck, stuck in the sticks with this crazy old woman.
+Is that right? Here's how the Legion deals with rebel scum like you.
+What do you think you're doing, walking around dressed like a damn Stormcloak traitor?
+You've come to Dawnstar at a strange time, friend. Seems everyone in this town is having nightmares...
+The people here are still plagued with nightmares. It's... unnatural.
+Dangerous post, Dawnstar. If the bandits don't get you, the animals will.
+Old lady Frida is a grouch, but she sure can whip up a cure for the Rattles fast.
+You should talk to Rustleif. Get some proper steel.
+Outsiders aren't trusted in Markarth. Best keep that in mind.
+This is Markarth, traveler. Safest city in the Reach.
+Can't believe I'm posted here. Even the beds are made of stone.
+Break the law in Markarth, and it's off to Cidhna Mine with you.
+First time in Markarth, traveler? Take my advice. You see anything, don't get involved. The city guard will take care of it.
+See, there you go. Getting involved. Don't ask too many questions in Markarth. Safer for everyone that way.
+You're our favorite kind of traveler, then. The market area is just inside in the gate.
+Head on in. Keep your nose clean, and you won't have any problems with us.
+Caught a case of Rockjoint, once. Bothela at the Hag's Cure fixed me right up.
+Let me guess - you need a drink. It's the Silver-Blood Inn you're looking for.
+You should see that Orc over in Understone Keep, have him forge you some new armor...
+By Shor, you're hauling around a lot of junk. Best stop in at the Arnleif and Sons Trading Company, sell it off.
+Jarl Igmund sits on the Mournful Throne. You can find him in the keep, in the back end of the city inside the mountain.
+You here to see the Jarl? No sudden moves, understand?
+Whole dwarven city underneath the keep. Nchuand-Zel. Best steer clear if you don't want a Steam Centurion carving you up.
+Ah, Vlindrel Hall's a fine home, if you can afford it. The steward in the keep can tell you more.
+So you bought Vlindrel Hall, eh? Wish I could afford a house that nice.
+City's quiet enough now. But when the sun goes down, you best be on your guard.
+Careful. Riften's not the safest place for a nighttime stroll.
+So is it Riften or Rifton? This place has changed its name so many times, I can't even remember.
+You could say the Ratway is the city under the city. Dark, dangerous, and no place for decent folk.
+There's fine steel at the Scorched Hammer, if you fancy a new blade.
+If it's a bed you need, talk to Keerava in the Bee and Barb. She'll set you right.
+Need a drink, you go to the Bee and Barb. Stay out of the Ragged Flagon, Stay out of the Ratway.
+There's an apothecary in town, yeah. But it's down on the lower walkway, so stay sharp if you go down there.
+Welcome to Riften, home of the Thieves Guild. Or so they'd have you believe. It's all lies. They're just thugs... vermin, creeping around the Ratway.
+The Thieves Guild used to run this city. Now they're nothing but braggarts and bullies, rotting to death down in their Ratway...
+If you're looking to settle in Riften, there's a house for sale - Honeyside. See the steward in the keep if you want it.
+Smart thing you did, buying Honeyside. Nice place, and why pay for an inn?
+If you need potions, head over to Angeline's Aromatics.
+I don't abide fancy clothes, but you look like you might. I hear Radiant Raiment has a large selection.
+The Winking Skeever's got warm beds and cold mead. You look like you could use both.
+You can sell off that junk at Bits and Pieces.
+If its arms or armor you need, see Beirand at Castle Dour. Bloody good blacksmith, that one.
+Been up to the Blue Palace? Its a sight to see, even if it is filled with fops...
+The Emperor's cousin Vittoria Vici's getting married soon. The reception is public, anyone in Solitude can attend.
+Proudspire Manor, now there's a fine home. Up for sale, too. If you're interested, talk to the steward, in the keep.
+You own Proudspire Manor, hmm? Beautiful house. At least from the outside.
+If you need potions, you should try Arcadia's Cauldron.
+You look tired, friend. The Bannered Mare has beds for rent.
+The Bannered Mare's got warm beds and cold mead. You look like you could use both.
+Need a blade? You should talk to Adrianne, at the forge.
+Need supplies? See Belethor at his store. Sleazy little man, but he has good stock.
+Be glad you're here in the city, and not out in Riverwood. Those poor sods don't even have a wall.
+I worry about the other settlements in the hold. Unwalled, lightly manned - prime targets for those damned dragons.
+Thinking of settling in? There's a home for sale - Breezehome. You should talk to the steward up in the keep if you're interested.
+You're that one lives in Breezehome, right? Fine place. Almost bought it myself.
+Rorikstead's a nice little hamlet, but a boring post for a guard. If a dragon attacks, well... then it'll be a different story.
+Cause trouble in Whiterun, and I'll haul you into the Dragonsreach dungeon myself.
+You should talk to the Jarl up in Dragonsreach, lend any aid you can.
+The guards in Dragonsreach say you've aided the Jarl. On behalf of Whiterun, I thank you.
+I've seen you helping the Jarl. If only all visitors to Whiterun were as noble.
+You should unload some of that unwanted gear. Head over to Sadri's Used Wares, talk to the Elf.
+We got a nickname for anyone who trifles with us guards here in Windhelm - "Suicide." 
+The Dunmer get their drinks down at the New Gnisis Cornerclub. Why they can't just call it a tavern is beyond me...
+Stay away from the Aretino Residence. That place is cursed.
+My heart goes out to Clan Shatter-Shield. Kin murdered, family warhammer stolen... There's no fairness in all that.
+If it's bed or board you're after, Candlehearth Hall's got both.
+If you need an apothecary, the White Phial has respectable stock.
+By the gods, you're diseased. Get yourself to the White Phial and purchase a remedy, before you infect us all.
+Hjerim is a fine house, and it's up for sale. You should talk to the steward in the keep if you're interested.
+Don't think you'll get special treatment just because you have a house in the city...
+If you're here for sight-seeing, then you've seen the sights. Might as well head somewhere warmer.
+Take care if you go venturing too far from town. That's a bitter wind coming off the Sea of Ghosts.
+Hard to believe I ever complained about Riften being cold...
+Beware of Frostmere Crypt, friend. Heard some bandits are living in the ruins now.
+Giants have been spotted up near Red Road Pass. Best to keep away and avoid it entirely.
+Travel southeast and you'll find an Orc stronghold, up around the old Dushnikh orichalcum mine.
+There's a small skeever den just east of the city, at Reachwater Rock.
+Beware the region northeast, across the river. Forsworn have taken refuge in Broken Tower Redoubt and Red Eagle Redoubt.
+The Forsworn have been spotted to the north, near Bruca's Leap Redoubt.
+Lots of nasty holes in the Reach, and Blind Cliff Cave is one of them. A filthy Hagraven nest, northeast of here.
+There's an evil to the north, friend, and its name is Ragnvald. A tomb like so many in Skyrim, where the dead have found no peace.
+If you journey north, stay well away from Snapleg Cave. Damn Hagravens have infested the place.
+There's a foul presence coming from Darklight Tower, southwest of the city. Some say the place is home to necromancers.
+City got attacked once by those damned bandits, come east across the lake, from Faldar's Tooth. They won't be trying that again.
+Best not to go wandering east of the city. Bandits been seen around Broken Helm Hollow.
+By the gods, a dragon's been sighted just south of the city, flying around Lost Tongue Overlook.
+Talk of strange happenings at Autumnshade Clearing, just north of the lake. My guess? Spriggans.
+If you must venture southwest, stay clear of Volskygge. It's a cursed place, a tomb where the dead still live...
+The road to Whiterun's not safe these days. Lots of travelers just.. disappear, south of Dragon Bridge. Can't find a trace of them.
+Off the coast a ways to the east, you'll find the wreck of the Brinehammer. Never know what treasures may still be aboard.
+You heard of Ravenscar Hollow? Cave on the island to the west. Place is a roost for those foul Hagravens.
+Pinemoon Cave is down to the southwest, but it ain't fit for exploring. There are stories.. Vampires, some say...
+The circle of stones to the southwest? That's Secunda's Kiss. The Giants hold it sacred, so tread carefully.
+Looking to do some hunting? Avoid Brittleshin Pass. It's southeast of here.
+If you're heading east, stay clear of Hillgrund's Tomb. Thing about those old crypts - the dead have trouble staying that way.
+Careful if you cross the river to the east. Old Hajvarr Iron-Hand and his brigands are holed up in that cave, White River Watch.
+You know I saw something near Shimmermist Cave to the northeast. Some sort of creature. Small and wicked, never seen its like before.
+Yesterday, I saw a dragon fly right over the city. Headed northeast. Toward Shearpoint, by the looks of it.
+You hear the news? There's a dragon roosting up on Mount Anthor, to the northwest.
+Tell me you've seen them. Those... things. Small and evil, like something out of a nightmare. They come from Stillborn Cave, to the north. I know it.
+Maybe you've seen masts sticking out of the water to the northeast? That would be the Wreck of the Winter War. Fine vessel, back in its day.
+South of here, and west of the road, lies Cronvangr Cave. Stay away from that cursed place, and the vampires that call it home.
+I've no problem with your kind, Orc. But that stronghold they've got in the southeast? Narzulbur? It's an affront to my people.
+I've no problem with Orcs. But that stronghold they've got in the southeast? Narzulbur? It's an affront to my people.
+Across the river to the northeast lies Yngol Barrow. Stear clear of the foul place, lest the walking dead claim you as their own.
+The Eye of Talos was a fine ship, once. Now it lies wrecked, off an island just north of here.
+Helgen... destroyed by a dragon. Hard to believe, isn't it?
+You have the Jarl's confidence, friend. And so you have mine.
+By the gods, it's true, isn't it? A dragon has attacked Whiterun. How could mere men bring down such a beast?
+I have to wonder... what does the Dragonborn do once he's summoned by the Greybeards? Can the Thu'um be taught, like any skill?
+If those Whiterun guards can take down a dragon, so can we.
+If we killed a dragon once, we can do it again. With your help of course.
+Got to thinking... maybe I'm the Dragonborn, and I just don't know it yet?
+The Greybeards have summoned the Dragonborn to High Hrothgar. Such a thing has not happened for... hundreds of years.
+What could it mean? The return of the Dragonborn? And who among us could possibly hold that honor? And such power?
+By Ysmir, you did it. You killed a dragon.
+There's been talk amongst the guards. That you are... Dragonborn. But such a thing... Surely that's not possible...
+You couldn't possibly be the Dragonborn of legend. Could you?
+For a dragon to attack Kynesgrove... Why? Why there? Is no place safe?
+Have you heard? There's been another dragon attack. Kynesgrove, this time.
+If I'd been on guard at the Thalmor Embassy, wouldn't nobody be disturbing that party.
+Word is Elenwen's furious. Big party at the Thalmor Embassy, and one of the guests went someplace they shouldn't. Caused quite a commotion.
+Thalmor in the Ratway? What's next, Spriggans in the Bee and Barb?
+There was a fight down in The Ratway, but reports are... sketchy. Some say it was Thalmor Agents, others say Thieves Guild. Some say it was both.
+Looks like it's really happening. A peace council, attended by both Ulfric and Tullius, up on High Hrothgar. Maybe there's hope for Skyrim yet.
+The Greybeards have called a peace council, at High Hrothgar. And can you believe it - both Ulfric Stormcloak and General Tullius have agreed to go.
+This truce with the Stormcloaks won't last a fortnight. Bloody savages will kill us while we sleep.
+A truce? With the Imperials? They'll murder us all, first chance they get.
+All hail the Dragonborn!
+The Greybeards have arranged a truce between the Stormcloaks and Imperials. How long can such a thing last?
+I caught a glimpse of that captured dragon. It's.. beautiful. In its own way.
+Is it true what they say? There was a dragon held captive in Whiterun, and you... you released it? By the gods, man, why?
+It was you convinced the Jarl to trap that dragon in the keep. And by Ysmir, it actually worked.
+Releasing a captured dragon? I don't think I'll ever understand that one.
+Trapping a dragon in Dragonsreach. Damn clever idea you had, I have to admit.
+We had that beast contained. And you released it! Why? Why would you do such a thing?
+There's a dragon. Here. In Dragonsreach. And I thought it was just a name.
+In the ancient tongue, you are Dovahkiin - Dragonborn!
+Word is spreading like magefire! The great evil has been vanquished! You have truly saved us all!
+You have vanquished a great evil from Skyrim. You have saved this land... and our very souls.
+What do you need, bard?
+Solitude wouldn't be the same without the Fire Festival. City owes you a debt of gratitude. 
+You're the one that saved the Fire Festival. I remember.
+So you can cast a few spells? Am I supposed to be impressed?
+You're that one from the College. Heard about you.
+Some are saying the Psijic Monks have been seen in Skyrim. They're an ancient order. I had 'em figured for dead.
+The say the college has been snooping around Saarthal. Mages in a burial crypt? No good can come of that...
+One of the guards said he saw a mage appear out of thin air. Claimed it was one of those Psijic monks. Man's been hitting the skooma, I say.
+What business do college mages have in a place like Saarthal anyway? It's a place for Nord dead, not your weird experiments.
+Imagine, blowing up an entire town. Damn college... Winterhold will never be the same.
+You hear the news? Those damn mages blew up Winterhold! Guess it was just a matter of time...
+Word is the College of Mages is back to normal. If there's such a thing for that lot.
+You're that mage from the college, right? Hear things have finally calmed down over there.
+Now I remember - you're that new member of the Companions. So you what - fetch the mead?
+Hail, Companion.
+You've been seen in the company of the Companions. That's an honorable path you're on, friend.
+Honored Companion. How can I assist you?
+I know of your deeds, and am honored to address a member of the Companions.
+I'm telling you, I heard it. Howling. Those werewolf tales are true.
+Uch. Been tending your hounds? You smell like wet dog.
+With respect, Companion, I ask that you muzzle that dog of yours. The howling coming from Jorrvaskr has gotten out of hand.
+If it isn't the slayer of the Glenmoril witches. How can I assist you, Companion?
+Heard about what you did. Killing those foul witches. Well done, Companion.
+Kodlak killed, Jorrvaskr attacked. How could this happen, within the walls of Whiterun?
+Who would dare attack the leader of the Companions? In his own hall? There'll be blood for this, I know it.
+I heard about the attack on Jorrvaskr, and the killing of your honored leader. You have my sympathies, Companion.
+Kodlak White-Mane is in a better place now. For is there any place better than Sovngarde?
+Kodlak White-Mane has been laid to rest, I know. May his soul live forever in the halls of Sovngarde.
+You... you're the Harbinger. Of the Companions. It is my honor to stand before you.
+It's no secret the Aretino boy is doing some ritual, trying to call the Dark Brotherhood. But who's going to stop him? Me? I'll have no part of that.
+That old woman who runs the orphanage has been murdered. Say, didn't I see you coming out of there...?
+You ask me? The brats in the orphanage are better off, now that Grelod is dead.
+Been a murder, over in Riften. Some old lady who runs an orphanage. Those poor children must be heartbroken.
+Psst. Hey, I know who you are. Hail Sithis!
+It ain't true what they say about you and... and the Dark Brotherhood? Is it?
+Now, I know who you are. And... and I know your business... Just, please... These are good folk we got here. Mostly...
+Hey! You're the one who killed Alain Dufont, up in Raldbthar. Oh yeah, word about that got around. Man was a piece of bandit trash, is what I hear.
+I heard you were at the wedding of the Emperor's cousin in Solitude. Gods, that must've been horrible.
+The Emperor's cousin, killed. Right here in Solitude. I feel nothing but shame...
+The cousin of the Emperor was murdered! In Solitude, at her own damn wedding. Not a chance we would have let that happen here.
+Look, that Vici woman had a bodyguard. I know it's terrible she got murdered at her own wedding, but the city guard is hardly to blame...
+You didn't hear this from me, but we've uncovered a plot to kill the Emperor! It gets better. The ringleader? One of the Emperor's own elite guard...
+Seems the Emperor's coming to Skyrim... and one of his protectors was going to have him assassinated. Can't trust anyone these days.
+There was some ruckus over by that weird black door. You weren't involved in that craziness, were you?
+I heard to Gourmet is hiding out somewhere in Skyrim. You know, fella who wrote that cookbook.
+We just received word that somebody tried to kill the Emperor! Turned out to just be his double, but can you imagine if he had succeeded?
+So the Emperor had a decoy. Poor bastard got murdered, too. But then, I guess that was his job...
+Wait, I know you. You went into the Emperor's Tower, just before... before his decoy was murdered...
+They're saying the Dark Brotherhood has been destroyed. Wiped off the face of Tamriel. But that's not entirely true... is it?
+I know who you are, assassin. I guess the rumors about your kind's "extinction" have been... exaggerated.
+The guards have been saying things about you... That you're the one that... Well... They say the Dark Brotherhood... Well. Never mind. Sir.
+The Emperor of Skyrim. Dead. These are dark times my friend - dark times indeed...
+You hear the news? The Emperor has been murdered! Right here, in Skyrim. By the gods, if the Dark Brotherhood can do that, nobody's safe...
+By the gods. The Emperor's been murdered. On his own ship... moored in the inlet. It was... the Dark Brotherhood. There was nothing we could do...
+There are stories about you, and dark tidings in Dawnstar...
+Been lots of people coming and going through that creepy black door. And noises... I'd say it sounds like construction, but that's crazy. Right?
+There are some that say the Dark Brotherhood is back, and stronger than ever. That they've made Dawnstar their home. Tell me - am I wrong?
+You're the one all the guards are talking about. You went into that Sanctuary... wiped out the Dark Brotherhood! Friend, I owe you a drink.
+You know, I could have gone into that Sanctuary, killed all those Dark Brotherhood types. But I was... sick that day.
+You! You're the one who wiped out the Dark Brotherhood! All the guards are talking about it... You're a hero to us all!
+Try to hide it all you want. I know you're in the Thieves Guild... and so do the other guards.
+The Thieves Guild used to run this city. Now they're nothing but braggarts and bullies, rotting to death down in their Ratway...
+Welcome to Riften, home of the Thieves Guild. Or so they'd have you believe. It's all lies. They're just thugs... vermin, creeping around the Ratway.
+Seeing as how Riften is home to the Thieves Guild, maybe we can work something out if you get into trouble with the law. For the right price.
+Ain't no doubt about it. The Thieves Guild is back, and they've got Riften in their grip.
+You know, the law here in Solitude can be a bit... "flexible." So long as you've got the gold. That's the way the Thieves Guild likes it.
+A change has swept into Solitude, like a breeze off the ocean - the Thieves Guild has come...
+We may guard Whiterun, but the Thieves Guild guards us. If you know what I mean.
+The city's changed, friend. The Thieves Guild is on the rise... and they've got a firm foothold here in Whiterun.
+Shirking the law in Windhelm ain't what it use to be. Not with the Thieves Guild running things...
+Maybe you haven't heard, but the Thieves Guild is back. Windhelm is their city now, if you catch my meaning...
+Break the law here in Markarth, and maybe we can work something out. Courtesy of the Thieves Guild.
+Markarth's a different place, now. Do business here, and you do business with the Thieves Guild.
+I know you had some part in Sinding's escape. Don't deny it...
+You... you were talking to that murderous savage. And then he escaped. What are you hiding?
+Thanks for clearing out that Vampire nest. You saved Morthal.
+The Gildergreen will bloom again. All thanks to you.
+The Gildergreen blooms again. All thanks to you.
+By Ysmir, you've helped save the Gildergreen. Words can't express what that means to this city.
+That sapling you recovered means the Gildergreen will live again. Your deed honors the people of Whiterun.
+You did this city a great service by catching that killer. Well done.
+I was this close to catching that killer. I swear it.
+Wonder what kinds of things they've got the Dibella doing, over in the temple. Mostly praying, I reckon...
+You've actually done it. You've found the Sybil of Dibella. You have done Markarth a tremendous service.
+As if Skyrim didn't have enough outsiders. Now we've got mercenaries from Hammerfell struttin' about...
+You see those warriors from Hammerfell? They've got curved swords. Curved. Swords.
+Wonder what it's like for those Thalmor, now that they've been taken down a notch...
+From what I hear, you're the one that gave the Thalmor a black eye. Sure know how to pick your enemies, don't you?
+Thanks again for helping reopen the East Empire Company. Gonna have them import me some of that aged Breton cheese.
+I hear the East Empire Company has reopened, thanks in no small part to you. Well done. All of Skyrim benefits from their trade.
+You've come to Dawnstar at a strange time, friend. Seems everyone in the town is having nightmares...
+No more nightmares. Thank the gods for that.
+The damned nightmares have finally stopped. Don't suppose you'd know anything about that?
+So Madanach was behind those murders. Gods help us.
+Gods damn those Forsworn. So many dead...
+You put those Forsworn down. Good job.
+Your name's been cleared... by Thonar Silver-Blood. Consider yourself lucky.
+With Nurelion gone, I suppose Quintus has taken over business in the White Phial.
+Good thing you did for Nurelion, returning that phial for him before he died. Man was obsessed.
+First Torygg and now Elisif. Damn those Stormcloaks. Let's hope that Erikur fares better than they did.
+We'll protect Erikur as best we're able, but I fear the throne of Solitude is cursed.
+Filthy she-hound Elisif got what she deserved. Let her serve as 'High Queen' of Oblivion, for all I care.
+It is whispered that one of the Daedric Princes himself is behind the murder of Elisif. It would seem even the nobility of Oblivion favors our cause.
+Don't like those eyes you got. They've got a bad hunger to them.
+Heard they're reforming the Dawnguard. Vampire hunters or something, in the old fort near Riften. Might consider joining up myself.
+They say that vampires attacked the Hall of the Vigilant. Burned it to the ground! Never heard of vampires doing anything like that before.
+These vampires are becoming a real menace.
+Where're these vampires coming from? We need to wipe them out before things get worse.
+Dragons breathing fire in the sky. Vampires brazenly attacking people on the street. It's the end of the world I tell you.
+They say if a vampire so much as scratches you, you'll turn into one. That better not be true.
+We need to do something about these vampire attacks."

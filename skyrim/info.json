@@ -1,0 +1,8 @@
+{
+    "author" : ["Zephyrkul (Zephyrkul#1089)"],
+    "install_msg" : "`[p]help Skyrim`",
+    "name" : "Skyrim",
+    "short" : "Say a random line from Skyrim. WARNING: Spoilers for Skyrim.",
+    "description" : "Say a random line from Skyrim\nWARNING: SPOILERS FOR SKYRIM.",
+    "tags" : ["skyrim", "gaming", "fun"]
+}
