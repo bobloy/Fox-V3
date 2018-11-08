@@ -1,5 +1,6 @@
 import aiohttp
 import html2text
+import justext
 
 from redbot.core import Config, commands
 from redbot.core.bot import Red
@@ -55,3 +56,15 @@ class SayUrl(Cog):
 
         for page in pagify(h.handle(site)):
             await ctx.send(page)
+
+        # for paragraph in justext.justext(site, justext.get_stoplist("English")):
+        #     if not paragraph.is_boilerplate:
+        #         await ctx.send(paragraph.text)
+
+        await ctx.tick()
+
+        # paragraphs = justext.justext(response.content, justext.get_stoplist("English"))
+        # for paragraph in paragraphs:
+        #     if not paragraph.is_boilerplate:
+        #         print
+        #         paragraph.text
