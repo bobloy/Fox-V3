@@ -51,6 +51,28 @@ class Gardener:
         await self.config.user(self.user).products.set(self.products)
         await self.config.user(self.user).current.set(self.current)
 
+    async def is_complete(self, now):
+        message = None
+        if self.current:
+            then = self.current["timestamp"]
+            health = self.current["health"]
+            grow_time = self.current["time"]
+            badge = self.current["badge"]
+            reward = self.current["reward"]
+            if (now - then) > grow_time:
+                self.points += reward
+                if badge not in self.badges:
+                    self.badges.append(badge)
+                message = (
+                    "Your plant made it! "
+                    "You are rewarded with the **{}** badge and you have received **{}** Thneeds.".format(
+                        badge, reward
+                    )
+                )
+            if health < 0:
+                message = "Your plant died!"
+        return message
+
 
 async def _die_in(gardener, degradation):
     #
@@ -143,8 +165,8 @@ class PlantTycoon(Cog):
         # Starting loops
         #
 
-        self.completion_task = bot.loop.create_task(self.check_completion())
-        self.degradation_task = bot.loop.create_task(self.check_degradation())
+        self.completion_task = bot.loop.create_task(self.check_completion_loop())
+        # self.degradation_task = bot.loop.create_task(self.check_degradation())
         self.notification_task = bot.loop.create_task(self.send_notification())
 
         #
@@ -175,7 +197,7 @@ class PlantTycoon(Cog):
     async def _degradation(self, gardener: Gardener):
 
         #
-        # Calculating the rate of degradation per check_completion() cycle.
+        # Calculating the rate of degradation per check_completion_loop() cycle.
         #
         if self.products is None:
             await self._load_plants_products()
@@ -350,6 +372,7 @@ class PlantTycoon(Cog):
 
             plant = choice(plant_options)
             plant["timestamp"] = int(time.time())
+            plant["degrade_count"] = 0
             # index = len(self.plants["plants"]) - 1
             # del [self.plants["plants"][index]]
             message = (
@@ -383,12 +406,13 @@ class PlantTycoon(Cog):
     @_gardening.command(name="profile")
     async def _profile(self, ctx: commands.Context, *, member: discord.Member = None):
         """Check your gardening profile."""
-        if member:
+        if member is not None:
             author = member
         else:
             author = ctx.author
 
         gardener = await self._gardener(author)
+        await self._apply_degradation(gardener)
         em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
         avatar = author.avatar_url if author.avatar else author.default_avatar_url
         em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
@@ -496,6 +520,7 @@ class PlantTycoon(Cog):
         """Check the state of your plant."""
         author = ctx.author
         gardener = await self._gardener(author)
+        await self._apply_degradation(gardener)
         if not gardener.current:
             message = "You're currently not growing a plant."
             em_color = discord.Color.red()
@@ -615,6 +640,7 @@ class PlantTycoon(Cog):
         author = ctx.author
         channel = ctx.channel
         gardener = await self._gardener(author)
+        await self._apply_degradation(gardener)
         product = "water"
         product_category = "water"
         if not gardener.current:
@@ -627,6 +653,7 @@ class PlantTycoon(Cog):
     async def _fertilize(self, ctx, fertilizer):
         """Fertilize the soil."""
         gardener = await self._gardener(ctx.author)
+        await self._apply_degradation(gardener)
         channel = ctx.channel
         product = fertilizer
         product_category = "fertilizer"
@@ -640,6 +667,7 @@ class PlantTycoon(Cog):
     async def _prune(self, ctx):
         """Prune your plant."""
         gardener = await self._gardener(ctx.author)
+        await self._apply_degradation(gardener)
         channel = ctx.channel
         product = "pruner"
         product_category = "tool"
@@ -649,50 +677,46 @@ class PlantTycoon(Cog):
         else:
             await self._add_health(channel, gardener, product, product_category)
 
-    async def check_degradation(self):
-        while "PlantTycoon" in self.bot.cogs:
-            users = await self.config.all_users()
-            for user_id in users:
-                user = self.bot.get_user(user_id)
-                gardener = await self._gardener(user)
-                if gardener.current:
-                    degradation = await self._degradation(gardener)
-                    gardener.current["health"] -= degradation.degradation
-                    gardener.points += self.defaults["points"]["growing"]
-                    await gardener.save_gardener()
-            await asyncio.sleep(self.defaults["timers"]["degradation"] * 60)
+    # async def check_degradation(self):
+    #     while "PlantTycoon" in self.bot.cogs:
+    #         users = await self.config.all_users()
+    #         for user_id in users:
+    #             user = self.bot.get_user(user_id)
+    #             gardener = await self._gardener(user)
+    #             await self._apply_degradation(gardener)
+    #         await asyncio.sleep(self.defaults["timers"]["degradation"] * 60)
 
-    async def check_completion(self):
+    async def _apply_degradation(self, gardener):
+        if gardener.current:
+            degradation = await self._degradation(gardener)
+            now = int(time.time())
+            timestamp = gardener.current["timestamp"]
+            degradation_count = (now - timestamp) // (self.defaults["timers"]["degradation"] * 60)
+            degradation_count -= gardener.current["degrade_count"]
+            gardener.current["health"] -= degradation.degradation * degradation_count
+            gardener.points += self.defaults["points"]["growing"] * degradation_count
+            gardener.current["degrade_count"] += degradation_count
+            await gardener.save_gardener()
+
+            await self.check_completion(gardener, now, gardener.user)
+
+    async def check_completion_loop(self):
         while "PlantTycoon" in self.bot.cogs:
             now = int(time.time())
             users = await self.config.all_users()
             for user_id in users:
-                message = None
                 user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
-                if gardener.current:
-                    then = gardener.current["timestamp"]
-                    health = gardener.current["health"]
-                    grow_time = gardener.current["time"]
-                    badge = gardener.current["badge"]
-                    reward = gardener.current["reward"]
-                    if (now - then) > grow_time:
-                        gardener.points += reward
-                        if badge not in gardener.badges:
-                            gardener.badges.append(badge)
-                        message = (
-                            "Your plant made it! "
-                            "You are rewarded with the **{}** badge and you have received **{}** Thneeds.".format(
-                                badge, reward
-                            )
-                        )
-                    if health < 0:
-                        message = "Your plant died!"
-                if message is not None:
-                    await user.send(message)
-                    gardener.current = {}
-                    await gardener.save_gardener()
+                await self._apply_degradation(gardener)
+                await self.check_completion(gardener, now, user)
             await asyncio.sleep(self.defaults["timers"]["completion"] * 60)
+
+    async def check_completion(self, gardener, now, user):
+        message = await gardener.is_complete(now)
+        if message is not None:
+            await user.send(message)
+            gardener.current = {}
+            await gardener.save_gardener()
 
     async def send_notification(self):
         while "PlantTycoon" in self.bot.cogs:
@@ -700,6 +724,7 @@ class PlantTycoon(Cog):
             for user_id in users:
                 user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
+                await self._apply_degradation(gardener)
                 if gardener.current:
                     health = gardener.current["health"]
                     if health < self.defaults["notification"]["max_health"]:
@@ -709,5 +734,5 @@ class PlantTycoon(Cog):
 
     def __unload(self):
         self.completion_task.cancel()
-        self.degradation_task.cancel()
+        # self.degradation_task.cancel()
         self.notification_task.cancel()
