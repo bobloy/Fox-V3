@@ -186,15 +186,15 @@ class Chatter(Cog):
         for on_message recognition of @bot
         """
         author = message.author
-        try:
-            guild: discord.Guild = message.guild
-        except AttributeError:  # Not a guild message
-            return
+        guild: discord.Guild = message.guild
 
         channel: discord.TextChannel = message.channel
 
         if author.id != self.bot.user.id:
-            to_strip = "@" + guild.me.display_name + " "
+            if guild is None:
+                to_strip = "@" + channel.me.display_name + " "
+            else:
+                to_strip = "@" + guild.me.display_name + " "
             text = message.clean_content
             if not text.startswith(to_strip):
                 return
