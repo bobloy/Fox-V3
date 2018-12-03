@@ -55,11 +55,13 @@ class Timerole(Cog):
             to_set["required"] = [r.id for r in requiredroles]
 
         await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
-        await ctx.maybe_send_embed("Time Role for {0} set to {1} days until added".format(role.name, days))
+        await ctx.maybe_send_embed(
+            "Time Role for {0} set to {1} days until added".format(role.name, days)
+        )
 
     @timerole.command()
     async def removerole(
-            self, ctx: commands.Context, role: discord.Role, days: int, *requiredroles: discord.Role
+        self, ctx: commands.Context, role: discord.Role, days: int, *requiredroles: discord.Role
     ):
         """
         Add a role to be removed after specified time on server
@@ -73,7 +75,9 @@ class Timerole(Cog):
             to_set["required"] = [r.id for r in requiredroles]
 
         await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
-        await ctx.maybe_send_embed("Time Role for {0} set to {1} days until removed".format(role.name, days))
+        await ctx.maybe_send_embed(
+            "Time Role for {0} set to {1} days until removed".format(role.name, days)
+        )
 
     @timerole.command()
     async def channel(self, ctx: commands.Context, channel: discord.TextChannel):
@@ -124,14 +128,26 @@ class Timerole(Cog):
             for member in guild.members:
                 has_roles = [r.id for r in member.roles]
 
-                add_roles = [int(rID) for rID, r_data in role_dict.items() if r_data is not None and not r_data["remove"]]
-                remove_roles = [int(rID) for rID, r_data in role_dict.items() if r_data is not None and r_data["remove"]]
+                add_roles = [
+                    int(rID)
+                    for rID, r_data in role_dict.items()
+                    if r_data is not None and not r_data["remove"]
+                ]
+                remove_roles = [
+                    int(rID)
+                    for rID, r_data in role_dict.items()
+                    if r_data is not None and r_data["remove"]
+                ]
 
                 check_add_roles = set(add_roles) - set(has_roles)
                 check_remove_roles = set(remove_roles) & set(has_roles)
 
-                await self.check_required_and_date(addlist, check_add_roles, has_roles, member, role_dict)
-                await self.check_required_and_date(removelist, check_remove_roles, has_roles, member, role_dict)
+                await self.check_required_and_date(
+                    addlist, check_add_roles, has_roles, member, role_dict
+                )
+                await self.check_required_and_date(
+                    removelist, check_remove_roles, has_roles, member, role_dict
+                )
 
             channel = await self.config.guild(guild).announce()
             if channel is not None:
@@ -169,8 +185,8 @@ class Timerole(Cog):
                     continue
 
             if (
-                    member.joined_at + timedelta(days=role_dict[str(role_id)]["days"])
-                    <= datetime.today()
+                member.joined_at + timedelta(days=role_dict[str(role_id)]["days"])
+                <= datetime.today()
             ):
                 # Qualifies
                 role_list.append((member, role_id))
