@@ -109,16 +109,16 @@ class StealEmoji(Cog):
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         """Event handler for reaction watching"""
         if not reaction.custom_emoji:
-            print("Not a custom emoji")
+            # print("Not a custom emoji")
             return
 
         if not (await self.config.on()):
-            print("Collecting is off")
+            # print("Collecting is off")
             return
 
         emoji: discord.Emoji = reaction.emoji
         if emoji in self.bot.emojis:
-            print("Emoji already in bot.emojis")
+            # print("Emoji already in bot.emojis")
             return
 
         # This is now a custom emoji that the bot doesn't have access to, time to steal it
@@ -143,7 +143,7 @@ class StealEmoji(Cog):
         stolemojis = await self.config.stolemoji()
 
         if emoji.id in stolemojis:
-            print("Emoji has already been stolen")
+            # print("Emoji has already been stolen")
             return
 
         # Alright, time to steal it for real
