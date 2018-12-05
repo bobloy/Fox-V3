@@ -210,7 +210,7 @@ class Game:
 
         print("Pre-cycle")
         await asyncio.sleep(1)
-        asyncio.ensure_future(self._cycle())  # Start the loop
+        await asyncio.ensure_future(self._cycle())  # Start the loop
 
     ############START Notify structure############
     async def _cycle(self):
@@ -276,7 +276,7 @@ class Game:
 
         # Need a loop here to wait for trial to end (can_vote?)
         while self.ongoing_vote:
-            asyncio.sleep(5)
+            await asyncio.sleep(5)
 
         if check():
             return
