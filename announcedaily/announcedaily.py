@@ -97,7 +97,7 @@ class AnnounceDaily(Cog):
         if ctx.message.attachments:
             att_ = ctx.message.attachments[0]
             try:
-                h = att_.height
+                att_.height
             except AttributeError:
                 await ctx.send("You must attach an image, no other file will be accepted")
                 return

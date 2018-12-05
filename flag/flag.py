@@ -173,7 +173,7 @@ class Flag(Cog):
     async def _check_flags(self, guild: discord.Guild):
         """Updates and removes expired flags"""
         flag_data = await self.config.guild(guild).flags()
-        flag_d = {}
+        # flag_d = {}
         for memberid, flags in flag_data.items():
             # for member in guild.members:
             # flags = await self.config.guild(guild).flags.get_raw(str(member.id), default=[])
