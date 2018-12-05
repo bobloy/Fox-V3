@@ -391,10 +391,8 @@ class UbuntuCorpusTrainer(Trainer):
             '**', '**', '*.tsv'
         )
 
-        file_kwargs = {}
-
         # Specify the encoding in Python versions 3 and up
-        file_kwargs['encoding'] = 'utf-8'
+        file_kwargs = {'encoding': 'utf-8'}
         # WARNING: This might fail to read a unicode corpus file in Python 2.x
 
         for file in glob.iglob(extracted_corpus_path):

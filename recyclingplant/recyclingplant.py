@@ -64,7 +64,7 @@ class RecyclingPlant(Cog):
                         used["object"]
                     )
                 )
-                reward = reward + 50
+                reward += 50
                 x += 1
             elif answer.content.lower().strip() == opp:
                 await ctx.send(
@@ -72,7 +72,7 @@ class RecyclingPlant(Cog):
                         ctx.author.display_name
                     )
                 )
-                reward = reward - 50
+                reward -= 50
             elif answer.content.lower().strip() == "exit":
                 await ctx.send(
                     "{} has been relived of their duty.".format(ctx.author.display_name)

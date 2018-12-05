@@ -27,7 +27,7 @@ class Chatter(Cog):
         default_global = {}
         default_guild = {"whitelist": None, "days": 1}
         path: pathlib.Path = cog_data_path(self)
-        data_path = path / ("database.sqlite3")
+        data_path = path / "database.sqlite3"
 
         self.chatbot = ChatBot(
             "ChatterBot",

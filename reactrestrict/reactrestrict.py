@@ -139,7 +139,8 @@ class ReactRestrict(Cog):
 
         return member
 
-    def _get_role(self, guild: discord.Guild, role_id: int) -> discord.Role:
+    @staticmethod
+    def _get_role(guild: discord.Guild, role_id: int) -> discord.Role:
         """
         Gets a role object from the given guild with the given ID.
 
