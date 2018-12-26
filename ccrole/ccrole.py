@@ -293,7 +293,7 @@ class CCRole(Cog):
         if cmd["targeted"]:
             try:
                 target = discord.utils.get(
-                    message.guild.members, mention=message.content.split()[1]
+                    message.guild.members, mention=message.content.split(maxsplit=1)[1]
                 )
             except IndexError:  # .split() return list of len<2
                 target = None
