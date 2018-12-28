@@ -412,7 +412,11 @@ class PlantTycoon(Cog):
             author = ctx.author
 
         gardener = await self._gardener(author)
-        await self._apply_degradation(gardener)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            await ctx.send("You blocked me, didn't you?")
+
         em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
         avatar = author.avatar_url if author.avatar else author.default_avatar_url
         em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
@@ -707,16 +711,20 @@ class PlantTycoon(Cog):
             for user_id in users:
                 user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
-                await self._apply_degradation(gardener)
-                await self.check_completion(gardener, now, user)
+                try:
+                    await self._apply_degradation(gardener)
+                    await self.check_completion(gardener, now, user)
+                except discord.Forbidden:
+                    # Couldn't DM the results
+                    pass
             await asyncio.sleep(self.defaults["timers"]["completion"] * 60)
 
     async def check_completion(self, gardener, now, user):
         message = await gardener.is_complete(now)
-        if message is not None:
-            await user.send(message)
+            if message is not None:
             gardener.current = {}
             await gardener.save_gardener()
+            await user.send(message)
 
     async def send_notification(self):
         while "PlantTycoon" in self.bot.cogs:
@@ -729,7 +737,11 @@ class PlantTycoon(Cog):
                     health = gardener.current["health"]
                     if health < self.defaults["notification"]["max_health"]:
                         message = choice(self.notifications["messages"])
-                        await user.send(message)
+                        try:
+                            await user.send(message)
+                        except discord.Forbidden:
+                            # Couldn't DM the results
+                            pass
             await asyncio.sleep(self.defaults["timers"]["notification"] * 60)
 
     def __unload(self):
