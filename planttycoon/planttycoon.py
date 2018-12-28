@@ -415,7 +415,7 @@ class PlantTycoon(Cog):
         try:
             await self._apply_degradation(gardener)
         except discord.Forbidden:
-            await ctx.send("You blocked me, didn't you?")
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
 
         em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
         avatar = author.avatar_url if author.avatar else author.default_avatar_url
@@ -524,7 +524,12 @@ class PlantTycoon(Cog):
         """Check the state of your plant."""
         author = ctx.author
         gardener = await self._gardener(author)
-        await self._apply_degradation(gardener)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
+
         if not gardener.current:
             message = "You're currently not growing a plant."
             em_color = discord.Color.red()
@@ -644,7 +649,11 @@ class PlantTycoon(Cog):
         author = ctx.author
         channel = ctx.channel
         gardener = await self._gardener(author)
-        await self._apply_degradation(gardener)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
         product = "water"
         product_category = "water"
         if not gardener.current:
@@ -657,7 +666,11 @@ class PlantTycoon(Cog):
     async def _fertilize(self, ctx, fertilizer):
         """Fertilize the soil."""
         gardener = await self._gardener(ctx.author)
-        await self._apply_degradation(gardener)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
         channel = ctx.channel
         product = fertilizer
         product_category = "fertilizer"
@@ -671,7 +684,11 @@ class PlantTycoon(Cog):
     async def _prune(self, ctx):
         """Prune your plant."""
         gardener = await self._gardener(ctx.author)
-        await self._apply_degradation(gardener)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
         channel = ctx.channel
         product = "pruner"
         product_category = "tool"
@@ -721,7 +738,7 @@ class PlantTycoon(Cog):
 
     async def check_completion(self, gardener, now, user):
         message = await gardener.is_complete(now)
-            if message is not None:
+        if message is not None:
             gardener.current = {}
             await gardener.save_gardener()
             await user.send(message)
@@ -732,7 +749,12 @@ class PlantTycoon(Cog):
             for user_id in users:
                 user = self.bot.get_user(user_id)
                 gardener = await self._gardener(user)
-                await self._apply_degradation(gardener)
+                try:
+                    await self._apply_degradation(gardener)
+                except discord.Forbidden:
+                    # Couldn't DM the degradation
+                    pass
+
                 if gardener.current:
                     health = gardener.current["health"]
                     if health < self.defaults["notification"]["max_health"]:
