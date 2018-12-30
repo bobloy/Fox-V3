@@ -443,6 +443,8 @@ class PlantTycoon(Cog):
         else:
             products = ""
             for product in gardener.products:
+                if products is None:
+                    continue
                 products += "{} ({}) {}\n".format(
                     product.capitalize(),
                     gardener.products[product] / self.products[product.lower()]["uses"],
@@ -565,15 +567,15 @@ class PlantTycoon(Cog):
             em = discord.Embed(
                 title="All gardening supplies that you can buy:", color=discord.Color.green()
             )
-            for product in self.products:
+            for pd in self.products:
                 em.add_field(
-                    name="**{}**".format(product.capitalize()),
+                    name="**{}**".format(pd.capitalize()),
                     value="Cost: {} τ\n+{} health\n-{}% damage\nUses: {}\nCategory: {}".format(
-                        self.products[product]["cost"],
-                        self.products[product]["health"],
-                        self.products[product]["damage"],
-                        self.products[product]["uses"],
-                        self.products[product]["category"],
+                        self.products[pd]["cost"],
+                        self.products[pd]["health"],
+                        self.products[pd]["damage"],
+                        self.products[pd]["uses"],
+                        self.products[pd]["category"],
                     ),
                 )
             await ctx.send(embed=em)
