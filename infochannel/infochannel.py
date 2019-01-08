@@ -72,9 +72,10 @@ class InfoChannel(Cog):
             await ctx.send("Done!")
 
     async def make_infochannel(self, guild: discord.Guild):
-        category: discord.CategoryChannel = await guild.create_category("────Server Stats────")
+        overwrites = {guild.default_role: discord.PermissionOverwrite(connect=False),
+                      guild.me: discord.PermissionOverwrite(manage_channels=True, connect=True)}
 
-        overwrites = {guild.default_role: discord.PermissionOverwrite(connect=False)}
+        category: discord.CategoryChannel = await guild.create_category("────Server Stats────", overwrites=overwrites)
 
         channel = await guild.create_voice_channel(
             "Placeholder", category=category, reason="InfoChannel make", overwrites=overwrites
