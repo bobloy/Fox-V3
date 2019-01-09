@@ -39,7 +39,7 @@ class Gardener:
             self.user, self.badges, self.points, self.products, self.current
         )
 
-    async def _load_config(self):
+    async def load_config(self):
         self.badges = await self.config.user(self.user).badges()
         self.points = await self.config.user(self.user).points()
         self.products = await self.config.user(self.user).products()
@@ -52,6 +52,7 @@ class Gardener:
         await self.config.user(self.user).current.set(self.current)
 
     async def is_complete(self, now):
+
         message = None
         if self.current:
             then = self.current["timestamp"]
@@ -71,7 +72,11 @@ class Gardener:
                 )
             if health < 0:
                 message = "Your plant died!"
-        return message
+
+        if message is not None:
+            self.current = {}
+            await self.save_gardener()
+            await self.user.send(message)
 
 
 async def _die_in(gardener, degradation):
@@ -184,6 +189,9 @@ class PlantTycoon(Cog):
         with product_path.open() as json_data:
             self.products = json.load(json_data)
 
+        for product in self.products:
+            print("Loaded {}".format(product))
+
     async def _gardener(self, user: discord.User) -> Gardener:
 
         #
@@ -191,7 +199,7 @@ class PlantTycoon(Cog):
         #
 
         g = Gardener(user, self.config)
-        await g._load_config()
+        await g.load_config()
         return g
 
     async def _degradation(self, gardener: Gardener):
@@ -442,13 +450,13 @@ class PlantTycoon(Cog):
             em.add_field(name="**Products**", value="None")
         else:
             products = ""
-            for product in gardener.products:
-                if products is None:
+            for product_name, product_data in gardener.products.items():
+                if self.products[product_name] is None:
                     continue
                 products += "{} ({}) {}\n".format(
-                    product.capitalize(),
-                    gardener.products[product] / self.products[product.lower()]["uses"],
-                    self.products[product]["modifier"],
+                    product_name.capitalize(),
+                    product_data / self.products[product_name]["uses"],
+                    self.products[product_name]["modifier"],
                 )
             em.add_field(name="**Products**", value=products)
         if gardener.current:
@@ -721,7 +729,7 @@ class PlantTycoon(Cog):
             gardener.current["degrade_count"] += degradation_count
             await gardener.save_gardener()
 
-            await self.check_completion(gardener, now, gardener.user)
+            await gardener.is_complete(now)
 
     async def check_completion_loop(self):
         while "PlantTycoon" in self.bot.cogs:
@@ -737,13 +745,6 @@ class PlantTycoon(Cog):
                     # Couldn't DM the results
                     pass
             await asyncio.sleep(self.defaults["timers"]["completion"] * 60)
-
-    async def check_completion(self, gardener, now, user):
-        message = await gardener.is_complete(now)
-        if message is not None:
-            gardener.current = {}
-            await gardener.save_gardener()
-            await user.send(message)
 
     async def send_notification(self):
         while "PlantTycoon" in self.bot.cogs:
