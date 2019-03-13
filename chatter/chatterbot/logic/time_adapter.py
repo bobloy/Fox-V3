@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
-from chatter.chatterbot.logic import LogicAdapter
+from . import LogicAdapter
 
 
 class TimeLogicAdapter(LogicAdapter):
@@ -81,7 +81,7 @@ class TimeLogicAdapter(LogicAdapter):
         return features
 
     def process(self, statement):
-        from chatter.chatterbot.conversation import Statement
+        from ..conversation import Statement
 
         now = datetime.now()
 

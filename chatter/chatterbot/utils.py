@@ -11,8 +11,16 @@ def import_module(dotted_path):
     import importlib
 
     module_parts = dotted_path.split('.')
+    if module_parts[:2] == ["chatter", "chatterbot"]:
+        # An import path starting with chatter.chatterbot means it comes from this
+        # package, and should be imported relatively.
+        package = __package__
+        module_parts = module_parts[2:]
+        module_parts[0] = "." + module_parts[0]
+    else:
+        package = None
     module_path = '.'.join(module_parts[:-1])
-    module = importlib.import_module(module_path)
+    module = importlib.import_module(module_path, package=package)
 
     return getattr(module, module_parts[-1])
 
@@ -46,7 +54,7 @@ def validate_adapter_class(validate_class, adapter_class):
 
     :raises: Adapter.InvalidAdapterTypeException
     """
-    from chatter.chatterbot.adapters import Adapter
+    from .adapters import Adapter
 
     # If a dictionary was passed in, check if it has an import_path attribute
     if isinstance(validate_class, dict):
@@ -128,7 +136,7 @@ def remove_stopwords(tokens, language):
     Stop words are words like "is, the, a, ..."
 
     Be sure to download the required NLTK corpus before calling this function:
-    - from chatter.chatterbot.utils import nltk_download_corpus
+    - from chatterbot.utils import nltk_download_corpus
     - nltk_download_corpus('corpora/stopwords')
     """
     from nltk.corpus import stopwords

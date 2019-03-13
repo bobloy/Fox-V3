@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from chatter.chatterbot.logic import LogicAdapter
+from . import LogicAdapter
 
 
 class SpecificResponseAdapter(LogicAdapter):
@@ -16,7 +16,7 @@ class SpecificResponseAdapter(LogicAdapter):
 
     def __init__(self, **kwargs):
         super(SpecificResponseAdapter, self).__init__(**kwargs)
-        from chatter.chatterbot.conversation import Statement
+        from ..conversation import Statement
 
         self.input_text = kwargs.get('input_text')
 

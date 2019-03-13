@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import json
 
-from chatter.chatterbot.output import OutputAdapter
+from . import OutputAdapter
 
 
 class Microsoft(OutputAdapter):
