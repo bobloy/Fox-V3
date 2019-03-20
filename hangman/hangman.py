@@ -3,7 +3,7 @@ from random import randint
 
 import discord
 from redbot.core import Config, checks, commands
-from redbot.core.data_manager import cog_data_path
+from redbot.core.data_manager import bundled_data_path
 from typing import Any
 
 Cog: Any = getattr(commands, "Cog", object)
@@ -31,9 +31,11 @@ class Hangman(Cog):
                 "answer": "",
             }
         )
-        self.path = str(cog_data_path(self)).replace("\\", "/")
+#         self.path = str(cog_data_path(self)).replace("\\", "/")
 
-        self.answer_path = self.path + "/bundled_data/hanganswers.txt"
+#         self.answer_path = self.path + "/bundled_data/hanganswers.txt"
+
+        self.answer_path = bundled_data_path(self) / "hanganswers.txt"
 
         self.winbool = defaultdict(lambda: False)
 
