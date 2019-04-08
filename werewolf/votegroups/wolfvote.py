@@ -1,6 +1,6 @@
 import random
 
-from werewolf.votegroup import VoteGroup
+from ..votegroup import VoteGroup
 
 
 class WolfVote(VoteGroup):

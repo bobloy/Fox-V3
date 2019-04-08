@@ -92,7 +92,7 @@ class SynsetDistance(Comparator):
         """
         Download required NLTK corpora if they have not already been downloaded.
         """
-        from chatter.chatterbot.utils import nltk_download_corpus
+        from .utils import nltk_download_corpus
 
         nltk_download_corpus('corpora/wordnet')
 
@@ -100,7 +100,7 @@ class SynsetDistance(Comparator):
         """
         Download required NLTK corpora if they have not already been downloaded.
         """
-        from chatter.chatterbot.utils import nltk_download_corpus
+        from .utils import nltk_download_corpus
 
         nltk_download_corpus('tokenizers/punkt')
 
@@ -108,7 +108,7 @@ class SynsetDistance(Comparator):
         """
         Download required NLTK corpora if they have not already been downloaded.
         """
-        from chatter.chatterbot.utils import nltk_download_corpus
+        from .utils import nltk_download_corpus
 
         nltk_download_corpus('corpora/stopwords')
 
@@ -124,7 +124,7 @@ class SynsetDistance(Comparator):
         """
         from nltk.corpus import wordnet
         from nltk import word_tokenize
-        from chatter.chatterbot import utils
+        from . import utils
         import itertools
 
         tokens1 = word_tokenize(statement.text.lower())
@@ -177,7 +177,7 @@ class SentimentComparison(Comparator):
         Download the NLTK vader lexicon for sentiment analysis
         that is required for this algorithm to run.
         """
-        from chatter.chatterbot.utils import nltk_download_corpus
+        from .utils import nltk_download_corpus
 
         nltk_download_corpus('sentiment/vader_lexicon')
 
@@ -252,7 +252,7 @@ class JaccardSimilarity(Comparator):
         Download the NLTK wordnet corpora that is required for this algorithm
         to run only if the corpora has not already been downloaded.
         """
-        from chatter.chatterbot.utils import nltk_download_corpus
+        from .utils import nltk_download_corpus
 
         nltk_download_corpus('corpora/wordnet')
 

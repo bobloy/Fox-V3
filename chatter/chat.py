@@ -7,10 +7,10 @@ from redbot.core import Config
 from redbot.core import commands
 from redbot.core.data_manager import cog_data_path
 
-from chatter.chatterbot import ChatBot
-from chatter.chatterbot.comparisons import levenshtein_distance
-from chatter.chatterbot.response_selection import get_first_response
-from chatter.chatterbot.trainers import ListTrainer
+from .chatterbot import ChatBot
+from .chatterbot.comparisons import levenshtein_distance
+from .chatterbot.response_selection import get_first_response
+from .chatterbot.trainers import ListTrainer
 from typing import Any
 
 Cog: Any = getattr(commands, "Cog", object)

@@ -5,8 +5,8 @@ from redbot.core import Config, checks
 from redbot.core.bot import Red
 from redbot.core import commands
 
-from werewolf.builder import GameBuilder, role_from_name, role_from_alignment, role_from_category, role_from_id
-from werewolf.game import Game
+from .builder import GameBuilder, role_from_name, role_from_alignment, role_from_category, role_from_id
+from .game import Game
 from redbot.core.utils.menus import menu, DEFAULT_CONTROLS
 from typing import Any
 

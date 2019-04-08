@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 import datetime
 
-from chatter.chatterbot.conversation import Statement
-from chatter.chatterbot.input import InputAdapter
+from ..conversation import Statement
+from . import InputAdapter
 
 
 class Mailgun(InputAdapter):
