@@ -6,6 +6,11 @@ from redbot.core.bot import Red
 
 Cog: Any = getattr(commands, "Cog", object)
 
+listener = getattr(commands.Cog, "listener", None)  # Trusty + Sinbad
+if listener is None:
+
+    def listener(name=None):
+        return lambda x: x
 
 class InfoChannel(Cog):
     """
@@ -115,8 +120,10 @@ class InfoChannel(Cog):
 
         await channel.edit(reason="InfoChannel update", name=name)
 
+    @listener()
     async def on_member_join(self, member: discord.Member):
         await self.update_infochannel(member.guild)
 
+    @listener()
     async def on_member_remove(self, member: discord.Member):
         await self.update_infochannel(member.guild)
