@@ -27,9 +27,7 @@ class InfoChannel(Cog):
 
         default_guild = {
             "channel_id": None,
-            "category_id": None,
             "member_count": True,
-            "channel_count": False,
         }
 
         self.config.register_guild(**default_guild)
@@ -80,19 +78,15 @@ class InfoChannel(Cog):
         overwrites = {guild.default_role: discord.PermissionOverwrite(connect=False),
                       guild.me: discord.PermissionOverwrite(manage_channels=True, connect=True)}
 
-        category: discord.CategoryChannel = await guild.create_category("────Server Stats────", overwrites=overwrites)
-
         channel = await guild.create_voice_channel(
-            "Placeholder", category=category, reason="InfoChannel make", overwrites=overwrites
+            "Placeholder", reason="InfoChannel make", overwrites=overwrites
         )
 
         await self.config.guild(guild).channel_id.set(channel.id)
-        await self.config.guild(guild).category_id.set(category.id)
 
         await self.update_infochannel(guild)
 
     async def delete_infochannel(self, guild: discord.Guild, channel: discord.VoiceChannel):
-        await channel.category.delete(reason="InfoChannel delete")
         await channel.delete(reason="InfoChannel delete")
         await self.config.guild(guild).clear()
 
@@ -111,9 +105,6 @@ class InfoChannel(Cog):
         name = ""
         if guild_data["member_count"]:
             name += "Members: {} ".format(guild.member_count)
-
-        if guild_data["channel_count"]:
-            name += "─ Channels: {}".format(len(guild.channels))
 
         if name == "":
             name = "Stats not enabled"
