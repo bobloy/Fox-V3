@@ -276,7 +276,7 @@ class Game:
 
         # Need a loop here to wait for trial to end (can_vote?)
         while self.ongoing_vote:
-            asyncio.sleep(5)
+            await asyncio.sleep(5)
 
         if check():
             return
