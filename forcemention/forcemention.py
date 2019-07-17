@@ -4,6 +4,7 @@ from redbot.core import Config, checks, commands
 
 from redbot.core.bot import Red
 from typing import Any
+import asyncio
 
 Cog: Any = getattr(commands, "Cog", object)
 
@@ -36,6 +37,7 @@ class ForceMention(Cog):
         if not role_obj.mentionable:
             await role_obj.edit(mentionable=True)
             await ctx.send("{}\n{}".format(role_obj.mention, message))
+            await asyncio.sleep(5)
             await role_obj.edit(mentionable=False)
         else:
             await ctx.send("{}\n{}".format(role_obj.mention, message))
