@@ -74,6 +74,7 @@ class LastSeen(Cog):
         embed = discord.Embed(timestamp=last_seen)
         await ctx.send(embed=embed)
 
+    @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.status != self.offline_status and after.status == self.offline_status:
             if not await self.config.guild(before.guild).enabled():
