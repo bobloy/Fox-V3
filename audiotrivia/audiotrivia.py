@@ -90,7 +90,7 @@ class AudioTrivia(Trivia):
             return
 
         status = await self.audio.config.status()
-        notify = await self.audio.config.notify()
+        notify = await self.audio.config.guild(ctx.guild).notify()
 
         if status:
             await ctx.send(
