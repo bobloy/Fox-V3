@@ -89,6 +89,7 @@ class ExclusiveRole(Cog):
             to_remove = [discord.utils.get(member.guild.roles, id=id) for id in to_remove]
             await member.remove_roles(*to_remove, reason="Exclusive roles")
 
+    @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.roles == after.roles:
             return
