@@ -88,9 +88,8 @@ class AudioTrivia(Trivia):
         if session is not None:
             await ctx.send("There is already an ongoing trivia session in this channel.")
             return
-
         status = await self.audio.config.status()
-        notify = await self.audio.config.notify()
+        notify = await self.audio.config.guild(ctx.guild).notify()
 
         if status:
             await ctx.send(
