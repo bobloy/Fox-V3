@@ -248,6 +248,7 @@ class ReactRestrict(Cog):
 
         await ctx.send("Reaction removed.")
 
+    @commands.Cog.listener()
     async def on_raw_reaction_add(
         self, emoji: discord.PartialEmoji, message_id: int, channel_id: int, user_id: int
     ):

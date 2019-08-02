@@ -78,6 +78,7 @@ class StealEmoji(Cog):
 
         await ctx.send("This server has been added as an emoji bank")
 
+    @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         """Event handler for reaction watching"""
         if not reaction.custom_emoji:

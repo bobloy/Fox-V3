@@ -180,6 +180,7 @@ class Chatter(Cog):
         else:
             await ctx.send("Error occurred :(")
 
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         """
         Credit to https://github.com/Twentysix26/26-Cogs/blob/master/cleverbot/cleverbot.py
