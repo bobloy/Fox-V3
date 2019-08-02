@@ -80,7 +80,7 @@ class Chatter(Cog):
             send_time = None
             try:
 
-                async for message in channel.history(limit=None, reverse=True, after=after):
+                async for message in channel.history(limit=None, after=after):
                     # if message.author.bot:  # Skip bot messages
                     #     continue
                     if new_message(message, send_time, out[i]):
