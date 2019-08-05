@@ -276,6 +276,7 @@ class Hangman(Cog):
 
         await self._reprintgame(message)
 
+    @commands.Cog.listener()
     async def on_react(self, reaction, user):
         """ Thanks to flapjack reactpoll for guidelines
             https://github.com/flapjax/FlapJack-Cogs/blob/master/reactpoll/reactpoll.py"""
