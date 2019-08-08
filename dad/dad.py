@@ -105,8 +105,10 @@ class Dad(Cog):
                     out = message.author.mention
             else:
                 out = lower[4:]
-
-            await message.channel.send("Hi {}, I'm {}!".format(out, guild.me.display_name))
+            try:
+                await message.channel.send("Hi {}, I'm {}!".format(out, guild.me.display_name))
+            except discord.HTTPException:
+                return
 
             self.cooldown[guild.id] = datetime.now() + timedelta(
                 seconds=(await guild_config.cooldown())
