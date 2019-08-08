@@ -34,6 +34,7 @@ class Leaver(Cog):
         await self.config.guild(guild).channel.set(ctx.channel.id)
         await ctx.send("Channel set to " + ctx.channel.name)
 
+    @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         guild = member.guild
         channel = await self.config.guild(guild).channel()

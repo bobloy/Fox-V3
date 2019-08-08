@@ -76,6 +76,7 @@ class Dad(Cog):
         await self.config.guild(ctx.guild).cooldown.set(cooldown)
         await ctx.send("Dad joke cooldown is now set to {}".format(cooldown))
 
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         guild: discord.Guild = message.guild
         if guild is None:
