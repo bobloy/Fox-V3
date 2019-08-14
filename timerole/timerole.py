@@ -193,17 +193,8 @@ class Timerole(Cog):
 
     async def check_day(self):
         while self is self.bot.get_cog("Timerole"):
-            tomorrow = datetime.now() + timedelta(days=1)
-            midnight = datetime(
-                year=tomorrow.year,
-                month=tomorrow.month,
-                day=tomorrow.day,
-                hour=0,
-                minute=0,
-                second=0,
-            )
-
-            await asyncio.sleep((midnight - datetime.now()).seconds)
+            print("Hmmmm")
+            await asyncio.sleep(30)
 
             await self.timerole_update()
 
