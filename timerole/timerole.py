@@ -23,6 +23,9 @@ class Timerole(Cog):
         self.config.register_guild(**default_guild)
         self.updating = self.bot.loop.create_task(self.check_day())
 
+    def cog_unload(self):
+        self.updating.cancel()
+
     @commands.command()
     @checks.guildowner()
     @commands.guild_only()
