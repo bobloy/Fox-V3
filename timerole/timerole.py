@@ -194,6 +194,5 @@ class Timerole(Cog):
 
     async def check_day(self):
         while self is self.bot.get_cog("Timerole"):
-            print("Hmmmm")
             await self.timerole_update()
-            await asyncio.sleep(10)
+            await asyncio.sleep(86400)
