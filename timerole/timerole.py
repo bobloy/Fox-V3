@@ -21,6 +21,7 @@ class Timerole(Cog):
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
+        self.updating = self.bot.loop.create_task(self.check_day())
 
     @commands.command()
     @checks.guildowner()
@@ -194,9 +195,5 @@ class Timerole(Cog):
     async def check_day(self):
         while self is self.bot.get_cog("Timerole"):
             print("Hmmmm")
-            await asyncio.sleep(30)
-
             await self.timerole_update()
-
-            await asyncio.sleep(3)
-            # then start loop over again
+            await asyncio.sleep(86400)
