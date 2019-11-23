@@ -50,7 +50,7 @@ class QRInvite(Cog):
             invite = invite.code
 
         if image_url is None:
-            image_url = ctx.guild.icon_url
+            image_url = str(ctx.guild.icon_url)
 
         if image_url == "":  # Still
             await ctx.send(
