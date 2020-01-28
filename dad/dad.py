@@ -95,7 +95,7 @@ class Dad(Cog):
         if len(lower_split) == 0:
             return
 
-        if lower_split[0] == "i'm" and len(lower_split) >= 2:
+        if lower_split[0] == "i'm" or lower_split[0] == "im" and len(lower_split) >= 2:
             if await guild_config.nickname():
                 try:
                     await message.author.edit(nick=lower[4:])
