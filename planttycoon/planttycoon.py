@@ -11,8 +11,6 @@ from redbot.core import commands, Config, bank
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path
 
-Cog: Any = getattr(commands, "Cog", object)
-
 
 class Gardener:
     """Gardener class"""
@@ -116,7 +114,7 @@ async def _withdraw_points(gardener: Gardener, amount):
         return True
 
 
-class PlantTycoon(Cog):
+class PlantTycoon(commands.Cog):
     """Grow your own plants! Be sure to take proper care of it."""
 
     def __init__(self, bot: Red):
@@ -190,7 +188,7 @@ class PlantTycoon(Cog):
             self.products = json.load(json_data)
 
         for product in self.products:
-            print("Loaded {}".format(product))
+            print("PlantTycoon: Loaded {}".format(product))
 
     async def _gardener(self, user: discord.User) -> Gardener:
 
@@ -502,12 +500,14 @@ class PlantTycoon(Cog):
     @_gardening.command(name="plant")
     async def _plant(self, ctx: commands.Context, *, plantname):
         """Look at the details of a plant."""
+        if not plantname:
+            await ctx.send_help()
         if self.plants is None:
             await self._load_plants_products()
         t = False
         plant = None
         for p in self.plants["plants"]:
-            if p["name"].lower() == plantname.lower():
+            if p["name"].lower() == plantname.lower().strip('"'):
                 plant = p
                 t = True
                 break
@@ -524,9 +524,8 @@ class PlantTycoon(Cog):
             em.add_field(name="**Badge**", value=plant["badge"])
             em.add_field(name="**Reward**", value="{} τ".format(plant["reward"]))
         else:
-            message = "What plant?"
+            message = "I can't seem to find that plant."
             em = discord.Embed(description=message, color=discord.Color.red())
-            await ctx.send_help()
         await ctx.send(embed=em)
 
     @_gardening.command(name="state")
@@ -728,7 +727,6 @@ class PlantTycoon(Cog):
             gardener.points += self.defaults["points"]["growing"] * degradation_count
             gardener.current["degrade_count"] += degradation_count
             await gardener.save_gardener()
-
             await gardener.is_complete(now)
 
     async def check_completion_loop(self):
@@ -737,10 +735,14 @@ class PlantTycoon(Cog):
             users = await self.config.all_users()
             for user_id in users:
                 user = self.bot.get_user(user_id)
+                if not user:
+                    continue
                 gardener = await self._gardener(user)
+                if not gardener:
+                    continue
                 try:
                     await self._apply_degradation(gardener)
-                    await self.check_completion(gardener, now, user)
+                    await gardener.is_complete(now)
                 except discord.Forbidden:
                     # Couldn't DM the results
                     pass
@@ -751,7 +753,11 @@ class PlantTycoon(Cog):
             users = await self.config.all_users()
             for user_id in users:
                 user = self.bot.get_user(user_id)
+                if not user:
+                    continue
                 gardener = await self._gardener(user)
+                if not gardener:
+                    continue
                 try:
                     await self._apply_degradation(gardener)
                 except discord.Forbidden:
