@@ -11,6 +11,7 @@ from redbot.core import commands, Config, checks
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.chat_formatting import box
+from redbot.cogs.audio.utils import userlimit
 
 from .audiosession import AudioSession
 
@@ -105,7 +106,7 @@ class AudioTrivia(Trivia):
             try:
                 if not ctx.author.voice.channel.permissions_for(
                     ctx.me
-                ).connect or self.audio._userlimit(ctx.author.voice.channel):
+                ).connect or userlimit(ctx.author.voice.channel):
                     return await ctx.send("I don't have permission to connect to your channel.")
                 await lavalink.connect(ctx.author.voice.channel)
                 lavaplayer = lavalink.get_player(ctx.guild.id)
