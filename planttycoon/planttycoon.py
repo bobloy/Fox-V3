@@ -1,5 +1,6 @@
 import asyncio
 import collections
+import copy
 import datetime
 import json
 import time
@@ -29,7 +30,9 @@ class Gardener:
             "Badges: {}\n"
             "Points: {}\n"
             "Products: {}\n"
-            "Current: {}".format(self.user, self.badges, self.points, self.products, self.current)
+            "Current: {}".format(
+                self.user, self.badges, self.points, self.products, self.current
+            )
         )
 
     def __repr__(self):
@@ -117,7 +120,8 @@ async def _withdraw_points(gardener: Gardener, amount):
 class PlantTycoon(commands.Cog):
     """Grow your own plants! Be sure to take proper care of it."""
 
-    def __init__(self, bot: Red):
+    def __init__(self, bot: Red, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.bot = bot
         self.config = Config.get_conf(self, identifier=80108971101168412199111111110)
 
@@ -184,11 +188,34 @@ class PlantTycoon(commands.Cog):
         with plant_path.open() as json_data:
             self.plants = json.load(json_data)
 
+        await self._load_event_seeds()
+
         with product_path.open() as json_data:
             self.products = json.load(json_data)
 
         for product in self.products:
             print("PlantTycoon: Loaded {}".format(product))
+
+    async def _load_event_seeds(self):
+        self.plants["all_plants"] = copy.deepcopy(self.plants["plants"])
+        plant_options = self.plants["all_plants"]
+
+        d = datetime.date.today()
+        month = d.month
+        if month == 1:
+            plant_options.append(self.plants["event"]["January"])
+        elif month == 2:
+            plant_options.append(self.plants["event"]["February"])
+        elif month == 3:
+            plant_options.append(self.plants["event"]["March"])
+        elif month == 4:
+            plant_options.append(self.plants["event"]["April"])
+        elif month == 10:
+            plant_options.append(self.plants["event"]["October"])
+        elif month == 11:
+            plant_options.append(self.plants["event"]["November"])
+        elif month == 12:
+            plant_options.append(self.plants["event"]["December"])
 
     async def _gardener(self, user: discord.User) -> Gardener:
 
@@ -219,12 +246,17 @@ class PlantTycoon(commands.Cog):
         degradation = (
             100
             / (gardener.current["time"] / 60)
-            * (self.defaults["degradation"]["base_degradation"] + gardener.current["degradation"])
+            * (
+                self.defaults["degradation"]["base_degradation"]
+                + gardener.current["degradation"]
+            )
         ) + modifiers
 
         d = collections.namedtuple("degradation", "degradation time modifiers")
 
-        return d(degradation=degradation, time=gardener.current["time"], modifiers=modifiers)
+        return d(
+            degradation=degradation, time=gardener.current["time"], modifiers=modifiers
+        )
 
     # async def _get_member(self, user_id):
     #
@@ -253,7 +285,10 @@ class PlantTycoon(commands.Cog):
             await self._load_plants_products()
         product = product.lower()
         product_category = product_category.lower()
-        if product in self.products and self.products[product]["category"] == product_category:
+        if (
+            product in self.products
+            and self.products[product]["category"] == product_category
+        ):
             if product in gardener.products:
                 if gardener.products[product] > 0:
                     gardener.current["health"] += self.products[product]["health"]
@@ -324,9 +359,13 @@ class PlantTycoon(commands.Cog):
             ``{0}prune``: Prune your plant.\n"""
 
             em = discord.Embed(
-                title=title, description=description.format(prefix), color=discord.Color.green()
+                title=title,
+                description=description.format(prefix),
+                color=discord.Color.green(),
             )
-            em.set_thumbnail(url="https://image.prntscr.com/image/AW7GuFIBSeyEgkR2W3SeiQ.png")
+            em.set_thumbnail(
+                url="https://image.prntscr.com/image/AW7GuFIBSeyEgkR2W3SeiQ.png"
+            )
             em.set_footer(
                 text="This cog was made by SnappyDragon18 and PaddoInWonderland. Inspired by The Lorax (2012)."
             )
@@ -349,32 +388,7 @@ class PlantTycoon(commands.Cog):
         gardener = await self._gardener(author)
 
         if not gardener.current:
-            d = datetime.date.today()
-            month = d.month
-
-            #
-            # Event Plant Check start
-            #
-            plant_options = self.plants["plants"]
-
-            if month == 1:
-                plant_options.append(self.plants["event"]["January"])
-            elif month == 2:
-                plant_options.append(self.plants["event"]["February"])
-            elif month == 3:
-                plant_options.append(self.plants["event"]["March"])
-            elif month == 4:
-                plant_options.append(self.plants["event"]["April"])
-            elif month == 10:
-                plant_options.append(self.plants["event"]["October"])
-            elif month == 11:
-                plant_options.append(self.plants["event"]["November"])
-            elif month == 12:
-                plant_options.append(self.plants["event"]["December"])
-
-            #
-            # Event Plant Check end
-            #
+            plant_options = self.plants["all_plants"]
 
             plant = choice(plant_options)
             plant["timestamp"] = int(time.time())
@@ -425,7 +439,9 @@ class PlantTycoon(commands.Cog):
 
         em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
         avatar = author.avatar_url if author.avatar else author.default_avatar_url
-        em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
+        em.set_author(
+            name="Gardening profile of {}".format(author.name), icon_url=avatar
+        )
         em.add_field(name="**Thneeds**", value=str(gardener.points))
         if not gardener.current:
             em.add_field(name="**Currently growing**", value="None")
@@ -485,14 +501,16 @@ class PlantTycoon(commands.Cog):
         tick = ""
         tock = ""
         tick_tock = 0
-        for plant in self.plants["plants"]:
+        for plant in self.plants["all_plants"]:
             if tick_tock == 0:
                 tick += "**{}**\n".format(plant["name"])
                 tick_tock = 1
             else:
                 tock += "**{}**\n".format(plant["name"])
                 tick_tock = 0
-        em = discord.Embed(title="All plants that are growable", color=discord.Color.green())
+        em = discord.Embed(
+            title="All plants that are growable", color=discord.Color.green()
+        )
         em.add_field(name="\a", value=tick)
         em.add_field(name="\a", value=tock)
         await ctx.send(embed=em)
@@ -506,7 +524,7 @@ class PlantTycoon(commands.Cog):
             await self._load_plants_products()
         t = False
         plant = None
-        for p in self.plants["plants"]:
+        for p in self.plants["all_plants"]:
             if p["name"].lower() == plantname.lower().strip('"'):
                 plant = p
                 t = True
@@ -514,13 +532,18 @@ class PlantTycoon(commands.Cog):
 
         if t:
             em = discord.Embed(
-                title="Plant statistics of {}".format(plant["name"]), color=discord.Color.green()
+                title="Plant statistics of {}".format(plant["name"]),
+                color=discord.Color.green(),
             )
             em.set_thumbnail(url=plant["image"])
             em.add_field(name="**Name**", value=plant["name"])
             em.add_field(name="**Rarity**", value=plant["rarity"].capitalize())
-            em.add_field(name="**Grow Time**", value="{0:.1f} minutes".format(plant["time"] / 60))
-            em.add_field(name="**Damage Threshold**", value="{}%".format(plant["threshold"]))
+            em.add_field(
+                name="**Grow Time**", value="{0:.1f} minutes".format(plant["time"] / 60)
+            )
+            em.add_field(
+                name="**Damage Threshold**", value="{}%".format(plant["threshold"])
+            )
             em.add_field(name="**Badge**", value=plant["badge"])
             em.add_field(name="**Reward**", value="{} τ".format(plant["reward"]))
         else:
@@ -572,7 +595,8 @@ class PlantTycoon(commands.Cog):
         author = ctx.author
         if product is None:
             em = discord.Embed(
-                title="All gardening supplies that you can buy:", color=discord.Color.green()
+                title="All gardening supplies that you can buy:",
+                color=discord.Color.green(),
             )
             for pd in self.products:
                 em.add_field(
@@ -606,7 +630,8 @@ class PlantTycoon(commands.Cog):
                         message = "You bought {}.".format(product.lower())
                     else:
                         message = "You don't have enough Thneeds. You have {}, but need {}.".format(
-                            gardener.points, self.products[product.lower()]["cost"] * amount
+                            gardener.points,
+                            self.products[product.lower()]["cost"] * amount,
                         )
                 else:
                     message = "I don't have this product."
@@ -625,11 +650,14 @@ class PlantTycoon(commands.Cog):
             plural = "s"
         if withdraw_points:
             await bank.deposit_credits(author, amount)
-            message = "{} Thneed{} successfully exchanged for credits.".format(amount, plural)
+            message = "{} Thneed{} successfully exchanged for credits.".format(
+                amount, plural
+            )
             await gardener.save_gardener()
         else:
-            message = "You don't have enough Thneed{}. " "You have {}, but need {}.".format(
-                plural, gardener.points, amount
+            message = (
+                "You don't have enough Thneed{}. "
+                "You have {}, but need {}.".format(plural, gardener.points, amount)
             )
 
         em = discord.Embed(description=message, color=discord.Color.green())
@@ -721,7 +749,9 @@ class PlantTycoon(commands.Cog):
             degradation = await self._degradation(gardener)
             now = int(time.time())
             timestamp = gardener.current["timestamp"]
-            degradation_count = (now - timestamp) // (self.defaults["timers"]["degradation"] * 60)
+            degradation_count = (now - timestamp) // (
+                self.defaults["timers"]["degradation"] * 60
+            )
             degradation_count -= gardener.current["degrade_count"]
             gardener.current["health"] -= degradation.degradation * degradation_count
             gardener.points += self.defaults["points"]["growing"] * degradation_count
