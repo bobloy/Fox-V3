@@ -43,7 +43,7 @@ class Leaver(Cog):
             channel = guild.get_channel(channel)
             out = "{}{} has left the server".format(member, member.nick if member.nick is not None else "")
             if await self.bot.embed_requested(channel, member):
-                await channel.send(embed=discord.Embed(description=out, color=self.bot.color))
+                await channel.send(embed=discord.Embed(description=out, color=self.bot.get_embed_color(channel)))
             else:
                 await channel.send(out)
         else:
