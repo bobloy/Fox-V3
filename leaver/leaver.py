@@ -15,7 +15,9 @@ class Leaver(Cog):
 
     def __init__(self, bot: Red):
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=9811198108111121, force_registration=True
+        )
         default_guild = {"channel": ""}
 
         self.config.register_guild(**default_guild)
@@ -41,9 +43,15 @@ class Leaver(Cog):
 
         if channel != "":
             channel = guild.get_channel(channel)
-            out = "{}{} has left the server".format(member, member.nick if member.nick is not None else "")
+            out = "{}{} has left the server".format(
+                member, member.nick if member.nick is not None else ""
+            )
             if await self.bot.embed_requested(channel, member):
-                await channel.send(embed=discord.Embed(description=out, color=self.bot.get_embed_color(channel)))
+                await channel.send(
+                    embed=discord.Embed(
+                        description=out, color=(await self.bot.get_embed_color(channel))
+                    )
+                )
             else:
                 await channel.send(out)
         else:
