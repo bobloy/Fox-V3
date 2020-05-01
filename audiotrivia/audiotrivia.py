@@ -153,7 +153,8 @@ class AudioTrivia(Trivia):
                 "The trivia list was parsed successfully, however it appears to be empty!"
             )
             return
-        settings = await self.conf.guild(ctx.guild).all()
+
+        settings = await self.config.guild(ctx.guild).all()
         audiosettings = await self.audioconf.guild(ctx.guild).all()
         config = trivia_dict.pop("CONFIG", None)
         if config and settings["allow_override"]:
@@ -201,7 +202,7 @@ class AudioTrivia(Trivia):
 
         with path.open(encoding="utf-8") as file:
             try:
-                dict_ = yaml.load(file)
+                dict_ = yaml.load(file, Loader=yaml.SafeLoader)
             except yaml.error.YAMLError as exc:
                 raise InvalidListError("YAML parsing failed.") from exc
             else:
