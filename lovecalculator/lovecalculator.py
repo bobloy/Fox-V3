@@ -22,18 +22,19 @@ class LoveCalculator(Cog):
         x = lover.display_name
         y = loved.display_name
 
-        url = "https://www.lovecalculator.com/love.php?name1={}&name2={}".format(
-            x.replace(" ", "+"), y.replace(" ", "+")
-        )
+        url = f"https://www.lovecalculator.com/love.php?name1={x}&name2={y}"
+
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
-                soup_object = BeautifulSoup(await response.text(), "html.parser")
-                try:
-                    description = (
-                        soup_object.find("div", attrs={"class": "result__score"}).get_text().strip()
-                    )
-                except:
-                    description = "Dr. Love is busy right now"
+                resp = await response.text()
+
+        soup_object = BeautifulSoup(resp, "html.parser")
+        try:
+            description = soup_object.find("div", attrs={"class": "result__score"}).get_text().strip()
+            img = soup_object.find("img", attrs={"class": "result__image"})['src']
+        except:
+            description = "Dr. Love is busy right now"
+            img = None
 
         try:
             z = description[:2]
@@ -48,5 +49,5 @@ class LoveCalculator(Cog):
             title = "Dr. Love has left a note for you."
 
         description = emoji + " " + description + " " + emoji
-        em = discord.Embed(title=title, description=description, color=discord.Color.red())
+        em = discord.Embed(title=title, description=description, color=discord.Color.red(), url=img)
         await ctx.send(embed=em)
