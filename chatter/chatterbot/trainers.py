@@ -2,8 +2,8 @@ import logging
 import os
 import sys
 
-from chatter.chatterbot import utils
-from chatter.chatterbot.conversation import Statement, Response
+from . import utils
+from .conversation import Statement, Response
 
 
 class Trainer(object):
@@ -127,7 +127,7 @@ class ChatterBotCorpusTrainer(Trainer):
 
     def __init__(self, storage, **kwargs):
         super(ChatterBotCorpusTrainer, self).__init__(storage, **kwargs)
-        from chatter.chatterbot.corpus import Corpus
+        from .corpus import Corpus
 
         self.corpus = Corpus()
 
@@ -391,10 +391,8 @@ class UbuntuCorpusTrainer(Trainer):
             '**', '**', '*.tsv'
         )
 
-        file_kwargs = {}
-
         # Specify the encoding in Python versions 3 and up
-        file_kwargs['encoding'] = 'utf-8'
+        file_kwargs = {'encoding': 'utf-8'}
         # WARNING: This might fail to read a unicode corpus file in Python 2.x
 
         for file in glob.iglob(extracted_corpus_path):

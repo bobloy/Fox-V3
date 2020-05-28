@@ -9,8 +9,7 @@ Cog: Any = getattr(commands, "Cog", object)
 
 class ExclusiveRole(Cog):
     """
-    Custom commands
-    Creates commands used to display text and adjust roles
+    Create roles that prevent all other roles from being added
     """
 
     def __init__(self, bot):
@@ -20,7 +19,8 @@ class ExclusiveRole(Cog):
 
         self.config.register_guild(**default_guild)
 
-    @commands.group(no_pm=True, aliases=["exclusiverole"])
+    @commands.guild_only()
+    @commands.group(aliases=["exclusiverole"])
     async def exclusive(self, ctx):
         """Base command for managing exclusive roles"""
 
@@ -55,6 +55,21 @@ class ExclusiveRole(Cog):
 
         await ctx.send("Exclusive role removed")
 
+    @exclusive.command(name="list")
+    @checks.mod_or_permissions(administrator=True)
+    async def exclusive_list(self, ctx):
+        """List current exclusive roles"""
+        role_list = await self.config.guild(ctx.guild).role_list()
+        guild: discord.Guild = ctx.guild
+
+        role_list = [guild.get_role(role_id) for role_id in role_list]
+        out = "**Exclusive roles**\n\n"
+
+        for role in role_list:
+            out += "{}\n".format(role)
+
+        await ctx.send(out)
+
     async def check_guild(self, guild: discord.Guild):
         role_set = set(await self.config.guild(guild).role_list())
         for member in guild.members:
@@ -74,6 +89,7 @@ class ExclusiveRole(Cog):
             to_remove = [discord.utils.get(member.guild.roles, id=id) for id in to_remove]
             await member.remove_roles(*to_remove, reason="Exclusive roles")
 
+    @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.roles == after.roles:
             return

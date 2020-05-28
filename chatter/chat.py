@@ -7,10 +7,10 @@ from redbot.core import Config
 from redbot.core import commands
 from redbot.core.data_manager import cog_data_path
 
-from chatter.chatterbot import ChatBot
-from chatter.chatterbot.comparisons import levenshtein_distance
-from chatter.chatterbot.response_selection import get_first_response
-from chatter.chatterbot.trainers import ListTrainer
+from .chatterbot import ChatBot
+from .chatterbot.comparisons import levenshtein_distance
+from .chatterbot.response_selection import get_first_response
+from .chatterbot.trainers import ListTrainer
 from typing import Any
 
 Cog: Any = getattr(commands, "Cog", object)
@@ -27,7 +27,7 @@ class Chatter(Cog):
         default_global = {}
         default_guild = {"whitelist": None, "days": 1}
         path: pathlib.Path = cog_data_path(self)
-        data_path = path / ("database.sqlite3")
+        data_path = path / "database.sqlite3"
 
         self.chatbot = ChatBot(
             "ChatterBot",
@@ -80,7 +80,7 @@ class Chatter(Cog):
             send_time = None
             try:
 
-                async for message in channel.history(limit=None, reverse=True, after=after):
+                async for message in channel.history(limit=None, after=after):
                     # if message.author.bot:  # Skip bot messages
                     #     continue
                     if new_message(message, send_time, out[i]):
@@ -152,6 +152,10 @@ class Chatter(Cog):
         Trains the bot based on language in this guild
         """
 
+        await ctx.send("Warning: The cog may use significant RAM or CPU if trained on large data sets.\n"
+                       "Additionally, large sets will use more disk space to save the trained data.\n\n"
+                       "If you experience issues, clear your trained data and train again on a smaller scope.")
+
         conversation = await self._get_conversation(ctx, channel)
 
         if not conversation:
@@ -176,21 +180,22 @@ class Chatter(Cog):
         else:
             await ctx.send("Error occurred :(")
 
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         """
         Credit to https://github.com/Twentysix26/26-Cogs/blob/master/cleverbot/cleverbot.py
         for on_message recognition of @bot
         """
         author = message.author
-        try:
-            guild: discord.Guild = message.guild
-        except AttributeError:  # Not a guild message
-            return
+        guild: discord.Guild = message.guild
 
         channel: discord.TextChannel = message.channel
 
         if author.id != self.bot.user.id:
-            to_strip = "@" + guild.me.display_name + " "
+            if guild is None:
+                to_strip = "@" + channel.me.display_name + " "
+            else:
+                to_strip = "@" + guild.me.display_name + " "
             text = message.clean_content
             if not text.startswith(to_strip):
                 return

@@ -5,5 +5,5 @@ from .recyclingplant import RecyclingPlant
 
 def setup(bot):
     plant = RecyclingPlant(bot)
-    data_manager.load_bundled_data(plant, __file__)
+    data_manager.bundled_data_path(plant)
     bot.add_cog(plant)

@@ -14,7 +14,7 @@ Cog: Any = getattr(commands, "Cog", object)
 
 class QRInvite(Cog):
     """
-    V3 Cog Template
+    Create custom QR codes for server invites
     """
 
     def __init__(self, bot: Red):
@@ -50,7 +50,7 @@ class QRInvite(Cog):
             invite = invite.code
 
         if image_url is None:
-            image_url = ctx.guild.icon_url
+            image_url = str(ctx.guild.icon_url)
 
         if image_url == "":  # Still
             await ctx.send(
@@ -60,7 +60,7 @@ class QRInvite(Cog):
             )
             return
 
-        extension = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
+        eextention = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
 
         path: pathlib.Path = cog_data_path(self)
         image_path = path / (ctx.guild.icon + "." + extension)

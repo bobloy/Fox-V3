@@ -72,25 +72,22 @@ class Flag(Cog):
         """Flag a member"""
         guild = ctx.guild
         await self._check_flags(guild)
-        # clashroyale = self.bot.get_cog('clashroyale')
-        # if clashroyale is None:
-        # await ctx.send("Requires clashroyale cog installed")
-        # return
 
         flag = self._flag_template()
-        expiredate = date.today()
-        expiredate += timedelta(days=await self.config.guild(guild).days())
+        expire_date = date.today() + timedelta(days=await self.config.guild(guild).days())
 
         flag["reason"] = reason
-        flag["expireyear"] = expiredate.year
-        flag["expiremonth"] = expiredate.month
-        flag["expireday"] = expiredate.day
+        flag["expireyear"] = expire_date.year
+        flag["expiremonth"] = expire_date.month
+        flag["expireday"] = expire_date.day
 
         # flags = await self.config.guild(guild).flags.get_raw(str(member.id), default=[])
         # flags.append(flag)
         # await self.config.guild(guild).flags.set_raw(str(member.id), value=flags)
 
         async with self.config.guild(guild).flags() as flags:
+            if str(member.id) not in flags:
+                flags[str(member.id)] = []
             flags[str(member.id)].append(flag)
 
         outembed = await self._list_flags(member)
@@ -98,7 +95,10 @@ class Flag(Cog):
         if outembed:
             await ctx.send(embed=outembed)
             if await self.config.guild(guild).dm():
-                await member.send(embed=outembed)
+                try:
+                    await member.send(embed=outembed)
+                except discord.Forbidden:
+                    await ctx.send("DM-ing user failed")
         else:
             await ctx.send("This member has no flags.. somehow..")
 
@@ -173,7 +173,7 @@ class Flag(Cog):
     async def _check_flags(self, guild: discord.Guild):
         """Updates and removes expired flags"""
         flag_data = await self.config.guild(guild).flags()
-        flag_d = {}
+        # flag_d = {}
         for memberid, flags in flag_data.items():
             # for member in guild.members:
             # flags = await self.config.guild(guild).flags.get_raw(str(member.id), default=[])

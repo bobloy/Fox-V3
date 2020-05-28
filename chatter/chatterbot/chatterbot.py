@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from chatter.chatterbot import utils
+from . import utils
 
 
 class ChatBot(object):
@@ -11,7 +11,7 @@ class ChatBot(object):
     """
 
     def __init__(self, name, **kwargs):
-        from chatter.chatterbot.logic import MultiLogicAdapter
+        from .logic import MultiLogicAdapter
 
         self.name = name
         kwargs['name'] = name
@@ -136,7 +136,7 @@ class ChatBot(object):
         """
         Learn that the statement provided is a valid response.
         """
-        from chatter.chatterbot.conversation import Response
+        from .conversation import Response
 
         if previous_statement:
             statement.add_response(

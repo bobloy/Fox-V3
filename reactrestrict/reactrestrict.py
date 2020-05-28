@@ -139,7 +139,8 @@ class ReactRestrict(Cog):
 
         return member
 
-    def _get_role(self, guild: discord.Guild, role_id: int) -> discord.Role:
+    @staticmethod
+    def _get_role(guild: discord.Guild, role_id: int) -> discord.Role:
         """
         Gets a role object from the given guild with the given ID.
 
@@ -206,8 +207,7 @@ class ReactRestrict(Cog):
     @reactrestrict.command()
     async def add(self, ctx: commands.Context, message_id: int, *, role: discord.Role):
         """
-        Adds a reaction|role combination to a registered message, don't use
-        quotes for the role name.
+        Adds a reaction|role combination to a registered message, don't use quotes for the role name.
         """
         message = await self._get_message(ctx, message_id)
         if message is None:
@@ -248,6 +248,7 @@ class ReactRestrict(Cog):
 
         await ctx.send("Reaction removed.")
 
+    @commands.Cog.listener()
     async def on_raw_reaction_add(
         self, emoji: discord.PartialEmoji, message_id: int, channel_id: int, user_id: int
     ):

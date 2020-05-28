@@ -116,7 +116,7 @@ class CCRole(Cog):
 
         # Selfrole
         await ctx.send(
-            "Is this a targeted command?(yes//no)\nNo will make this a selfrole command"
+            "Is this a targeted command?(yes/no)\nNo will make this a selfrole command"
         )
 
         try:
@@ -235,7 +235,8 @@ class CCRole(Cog):
             for page in pagify(cmd_list, delims=[" ", "\n"]):
                 await ctx.author.send(box(page))
             await ctx.send("Command list DM'd")
-
+    
+    @commands.Cog.listener()
     async def on_message(self, message):
         if len(message.content) < 2 or message.guild is None:
             return
@@ -293,7 +294,7 @@ class CCRole(Cog):
         if cmd["targeted"]:
             try:
                 target = discord.utils.get(
-                    message.guild.members, mention=message.content.split()[1]
+                    message.guild.members, mention=message.content.split(maxsplit=1)[1]
                 )
             except IndexError:  # .split() return list of len<2
                 target = None

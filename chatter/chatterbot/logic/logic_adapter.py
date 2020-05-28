@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
-from chatter.chatterbot.adapters import Adapter
-from chatter.chatterbot.utils import import_module
+from ..adapters import Adapter
+from ..utils import import_module
 
 
 class LogicAdapter(Adapter):
@@ -18,8 +18,8 @@ class LogicAdapter(Adapter):
 
     def __init__(self, **kwargs):
         super(LogicAdapter, self).__init__(**kwargs)
-        from chatter.chatterbot.comparisons import levenshtein_distance
-        from chatter.chatterbot.response_selection import get_first_response
+        from ..comparisons import levenshtein_distance
+        from ..response_selection import get_first_response
 
         # Import string module parameters
         if 'statement_comparison_function' in kwargs:

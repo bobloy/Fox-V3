@@ -24,7 +24,7 @@ class LastSeen(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {"enabled": True}
+        default_guild = {"enabled": False}
         default_member = {"seen": None}
 
         self.config.register_global(**default_global)
@@ -74,6 +74,7 @@ class LastSeen(Cog):
         embed = discord.Embed(timestamp=last_seen)
         await ctx.send(embed=embed)
 
+    @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.status != self.offline_status and after.status == self.offline_status:
             if not await self.config.guild(before.guild).enabled():
