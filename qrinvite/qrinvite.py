@@ -60,7 +60,7 @@ class QRInvite(Cog):
             )
             return
 
-        eextention = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
+        extension = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
 
         path: pathlib.Path = cog_data_path(self)
         image_path = path / (ctx.guild.icon + "." + extension)
