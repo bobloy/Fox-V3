@@ -72,9 +72,15 @@ class QRInvite(Cog):
             file.write(image)
 
         if extension == "webp":
-            new_path = convert_png(str(image_path))
-        else:
+            new_path = convert_webp_to_png(str(image_path))
+        elif extension == "gif":
+            await ctx.send("gif is not supported yet, stay tuned")
+            return
+        elif extension == "png":
             new_path = str(image_path)
+        else:
+            await ctx.send(f"{extension} is not supported yet, stay tuned")
+            return
 
         myqr.run(
             invite,
@@ -89,7 +95,7 @@ class QRInvite(Cog):
             await ctx.send(file=discord.File(png_fp.read(), "qrcode.png"))
 
 
-def convert_png(path):
+def convert_webp_to_png(path):
     im = Image.open(path)
     im.load()
     alpha = im.split()[-1]
