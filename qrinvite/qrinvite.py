@@ -4,6 +4,7 @@ import aiohttp
 import discord
 from MyQR import myqr
 from PIL import Image
+from discord import Guild
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
@@ -49,8 +50,17 @@ class QRInvite(Cog):
                     return
             invite = invite.code
 
+        guild: Guild = ctx.guild
+
+        # guild.icon_url_as(format="png")
+        # guild.icon_url
+
         if image_url is None:
-            image_url = str(ctx.guild.icon_url)
+            image_url = str(guild.icon_url)
+            extension = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
+
+            if extension == "webp":
+                image_url = str(guild.icon_url_as(format="png"))
 
         if image_url == "":  # Still
             await ctx.send(
@@ -73,26 +83,39 @@ class QRInvite(Cog):
 
         if extension == "webp":
             new_path = convert_webp_to_png(str(image_path))
+            extension = "png"
         elif extension == "gif":
-            await ctx.send("gif is not supported yet, stay tuned")
-            return
+            # await ctx.send("gif is not supported yet, stay tuned")
+            # return
+            new_path = str(image_path)  # gif IS supported :)
         elif extension == "png":
             new_path = str(image_path)
         else:
             await ctx.send(f"{extension} is not supported yet, stay tuned")
             return
 
+        # new_path = str(image_path)
+
+        # print(new_path)
+
         myqr.run(
             invite,
             picture=new_path,
-            save_name=ctx.guild.icon + "_qrcode.png",
+            save_name=ctx.guild.icon + f"_qrcode.{extension}",
             save_dir=str(cog_data_path(self)),
             colorized=colorized,
+            contrast=1.0,
+            brightness=1.0,
         )
 
-        png_path: pathlib.Path = path / (ctx.guild.icon + "_qrcode.png")
+        png_path: pathlib.Path = path / (ctx.guild.icon + f"_qrcode.{extension}")
+
+        # print(png_path)
+
         with png_path.open("rb") as png_fp:
-            await ctx.send(file=discord.File(png_fp.read(), "qrcode.png"))
+            await ctx.send(file=discord.File(png_fp, f"qrcode.{extension}"))
+
+        # await ctx.send(file=discord.File(png_path, "qrcode.png"))
 
 
 def convert_webp_to_png(path):
