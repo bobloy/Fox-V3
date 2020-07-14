@@ -1,18 +1,18 @@
-import aiohttp
-
-import discord
-
-from redbot.core import Config, commands
-from redbot.core.bot import Red
 from typing import Any
+
+import aiohttp
+import discord
+from aiohttp.typedefs import StrOrURL
+from redbot.core import Config, commands, checks
+from redbot.core.bot import Red
 
 Cog: Any = getattr(commands, "Cog", object)
 
-
-async def fetch_img(session, url):
-    async with session.get(url) as response:
-        assert response.status == 200
-        return await response.read()
+# Replaced with discord.Asset.read()
+# async def fetch_img(session: aiohttp.ClientSession, url: StrOrURL):
+#     async with session.get(url) as response:
+#         assert response.status == 200
+#         return await response.read()
 
 
 async def check_guild(guild, emoji):
@@ -39,14 +39,13 @@ class StealEmoji(Cog):
         "require_colons": None,
         "managed": None,
         "guild_id": None,
-        "url": None,
         "animated": None,
     }
 
     def __init__(self, red: Red):
         self.bot = red
         self.config = Config.get_conf(self, identifier=11511610197108101109111106105)
-        default_global = {"stolemoji": {}, "guildbanks": [], "on": False}
+        default_global = {"stolemoji": {}, "guildbanks": [], "on": False, "notify": 0}
 
         self.config.register_global(**default_global)
 
@@ -58,6 +57,29 @@ class StealEmoji(Cog):
         if ctx.invoked_subcommand is None:
             pass
 
+    @checks.is_owner()
+    @stealemoji.command(name="notify")
+    async def se_notify(self, ctx: commands.Context):
+        """Cycles between notification settings for when an emoji is stolen
+
+        None (Default)
+        DM Owner
+        Msg in server channel
+        """
+        curr_setting = await self.config.notify()
+
+        if not curr_setting:
+            await self.config.notify.set(1)
+            await ctx.send("Bot owner will now be notified when an emoji is stolen")
+        elif curr_setting == 1:
+            channel: discord.TextChannel = ctx.channel
+            await self.config.notify.set(channel.id)
+            await ctx.send("This channel will now be notified when an emoji is stolen")
+        else:
+            await self.config.notify.set(0)
+            await ctx.send("Notifications are now off")
+
+    @checks.is_owner()
     @stealemoji.command(name="collect")
     async def se_collect(self, ctx):
         """Toggles whether emoji's are collected or not"""
@@ -65,6 +87,8 @@ class StealEmoji(Cog):
         await self.config.on.set(not curr_setting)
         await ctx.send("Collection is now " + str(not curr_setting))
 
+    @checks.is_owner()
+    @commands.guild_only()
     @stealemoji.command(name="bank")
     async def se_bank(self, ctx):
         """Add current server as emoji bank"""
@@ -113,13 +137,13 @@ class StealEmoji(Cog):
             # print("Not a custom emoji")
             return
 
-        if not (await self.config.on()):
-            # print("Collecting is off")
+        if not (await self.config.on()):  # TODO: Make this cached
+            print("Collecting is off")
             return
 
         emoji: discord.Emoji = reaction.emoji
         if emoji in self.bot.emojis:
-            # print("Emoji already in bot.emojis")
+            print("Emoji already in bot.emojis")
             return
 
         # This is now a custom emoji that the bot doesn't have access to, time to steal it
@@ -143,16 +167,18 @@ class StealEmoji(Cog):
 
         stolemojis = await self.config.stolemoji()
 
-        if emoji.id in stolemojis:
-            # print("Emoji has already been stolen")
+        if emoji.id in stolemojis:  # TODO: This is not preventing duplicates
+            print("Emoji has already been stolen")
             return
 
         # Alright, time to steal it for real
         # path = urlparse(emoji.url).path
         # ext = os.path.splitext(path)[1]
 
-        async with aiohttp.ClientSession() as session:
-            img = await fetch_img(session, emoji.url)
+        # async with aiohttp.ClientSession() as session:
+        #     img = await fetch_img(session, emoji.url)
+
+        img = await emoji.url.read()
 
         # path = data_manager.cog_data_path(cog_instance=self) / (emoji.name+ext)
 
@@ -174,7 +200,7 @@ class StealEmoji(Cog):
         # If you get this far, YOU DID IT
 
         save_dict = self.default_stolemoji.copy()
-        e_attr_list = [a for a in dir(emoji) if not a.startswith("__")]
+        # e_attr_list = [a for a in dir(emoji) if not a.startswith("__")]
 
         for k in save_dict.keys():
             save_dict[k] = getattr(emoji, k, None)
@@ -189,6 +215,13 @@ class StealEmoji(Cog):
             stolemoji[emoji.id] = save_dict
 
         # Enable the below if you want to get notified when it works
-        # owner = await self.bot.application_info()
-        # owner = owner.owner
-        # await owner.send("Just added emoji "+str(emoji)+" to server "+str(guildbank))
+        notify_settings = await self.config.notify()
+        if notify_settings:
+            if notify_settings == 1:
+                owner = await self.bot.application_info()
+                target = owner.owner
+            else:
+                target = self.bot.get_channel(notify_settings)
+
+            await target.send(f"Just added emoji {emoji} to server {guildbank}")
+
