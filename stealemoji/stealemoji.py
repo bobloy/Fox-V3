@@ -224,4 +224,3 @@ class StealEmoji(Cog):
                 target = self.bot.get_channel(notify_settings)
 
             await target.send(f"Just added emoji {emoji} to server {guildbank}")
-
