@@ -75,7 +75,7 @@ class CogLint(Cog):
 
         for c in code_blocks:
             is_python, code = c.split(None, 1)
-            is_python = is_python.lower() == "python"
+            is_python = is_python.lower() in ["python", "py"]
             if is_python:  # Then we're in business
                 linted, errors = await self.lint_code(code)
                 linted = linted.getvalue()

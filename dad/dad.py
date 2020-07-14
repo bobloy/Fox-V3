@@ -28,7 +28,7 @@ class Dad(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6897100, force_registration=True)
 
-        default_guild = {"enabled": False, "nickname": False, "cooldown": 240}
+        default_guild = {"enabled": True, "nickname": False, "cooldown": 240}
 
         self.config.register_guild(**default_guild)
 
@@ -76,6 +76,7 @@ class Dad(Cog):
         await self.config.guild(ctx.guild).cooldown.set(cooldown)
         await ctx.send("Dad joke cooldown is now set to {}".format(cooldown))
 
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         guild: discord.Guild = message.guild
         if guild is None:
@@ -104,8 +105,10 @@ class Dad(Cog):
                     out = message.author.mention
             else:
                 out = lower[4:]
-
-            await message.channel.send("Hi {}, I'm {}!".format(out, guild.me.display_name))
+            try:
+                await message.channel.send("Hi {}, I'm {}!".format(out, guild.me.display_name))
+            except discord.HTTPException:
+                return
 
             self.cooldown[guild.id] = datetime.now() + timedelta(
                 seconds=(await guild_config.cooldown())

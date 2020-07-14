@@ -30,7 +30,7 @@ class LoveCalculator(Cog):
                 soup_object = BeautifulSoup(await response.text(), "html.parser")
                 try:
                     description = (
-                        soup_object.find("div", attrs={"class": "result score"}).get_text().strip()
+                        soup_object.find("div", attrs={"class": "result__score"}).get_text().strip()
                     )
                 except:
                     description = "Dr. Love is busy right now"

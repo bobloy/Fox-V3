@@ -1,5 +1,5 @@
-from werewolf.night_powers import pick_target
-from werewolf.role import Role
+from ..night_powers import pick_target
+from ..role import Role
 
 
 class Shifter(Role):
