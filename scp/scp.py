@@ -1,8 +1,7 @@
 import discord
 from redbot.core import commands
-from typing import Any
 
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class SCP(Cog):

@@ -3,10 +3,8 @@ from datetime import date, timedelta
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.utils.chat_formatting import pagify
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class Flag(Cog):

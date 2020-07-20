@@ -1,14 +1,11 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any
 
 import aiohttp
 import discord
-from redbot.core import Config, checks
-from redbot.core import commands
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 async def fetch_url(session, url):

@@ -2,9 +2,7 @@ import aiohttp
 import discord
 from bs4 import BeautifulSoup
 from redbot.core import commands
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class LoveCalculator(Cog):
@@ -15,7 +13,7 @@ class LoveCalculator(Cog):
 
     @commands.command(aliases=["lovecalc"])
     async def lovecalculator(
-        self, ctx: commands.Context, lover: discord.Member, loved: discord.Member
+            self, ctx: commands.Context, lover: discord.Member, loved: discord.Member
     ):
         """Calculate the love percentage!"""
 
@@ -30,7 +28,9 @@ class LoveCalculator(Cog):
                 soup_object = BeautifulSoup(await response.text(), "html.parser")
                 try:
                     description = (
-                        soup_object.find("div", attrs={"class": "result__score"}).get_text().strip()
+                        soup_object.find("div", attrs={"class": "result__score"})
+                            .get_text()
+                            .strip()
                     )
                 except:
                     description = "Dr. Love is busy right now"

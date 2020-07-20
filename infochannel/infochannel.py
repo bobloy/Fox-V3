@@ -1,14 +1,14 @@
-from typing import Any
 import discord
-
-from redbot.core import Config, commands, checks
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 
-Cog: Any = getattr(commands, "Cog", object)
-listener = getattr(commands.Cog, "listener", None)  # Trusty + Sinbad
-if listener is None:
-    def listener(name=None):
-        return lambda x: x
+
+# Cog: Any = getattr(commands, "Cog", object)
+# listener = getattr(commands.Cog, "listener", None)  # Trusty + Sinbad
+# if listener is None:
+#     def listener(name=None):
+#         return lambda x: x
 
 
 class InfoChannel(Cog):
@@ -44,9 +44,9 @@ class InfoChannel(Cog):
 
         def check(m):
             return (
-                    m.content.upper() in ["Y", "YES", "N", "NO"]
-                    and m.channel == ctx.channel
-                    and m.author == ctx.author
+                m.content.upper() in ["Y", "YES", "N", "NO"]
+                and m.channel == ctx.channel
+                and m.author == ctx.author
             )
 
         guild: discord.Guild = ctx.guild
@@ -199,15 +199,15 @@ class InfoChannel(Cog):
             name = "{} ".format(online_msg)
             await onlinechannel.edit(reason="InfoChannel update", name=name)
 
-    @listener()
+    @Cog.listener()
     async def on_member_join(self, member: discord.Member):
         await self.update_infochannel(member.guild)
 
-    @listener()
+    @Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         await self.update_infochannel(member.guild)
 
-    @listener()
+    @Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         onlinecount = await self.config.guild(after.guild).online_count()
         if onlinecount:

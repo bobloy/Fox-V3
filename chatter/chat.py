@@ -3,17 +3,14 @@ import pathlib
 from datetime import datetime, timedelta
 
 import discord
-from redbot.core import Config
-from redbot.core import commands
+from redbot.core import Config, commands
+from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 
 from .chatterbot import ChatBot
 from .chatterbot.comparisons import levenshtein_distance
 from .chatterbot.response_selection import get_first_response
 from .chatterbot.trainers import ListTrainer
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class Chatter(Cog):
@@ -152,9 +149,11 @@ class Chatter(Cog):
         Trains the bot based on language in this guild
         """
 
-        await ctx.send("Warning: The cog may use significant RAM or CPU if trained on large data sets.\n"
-                       "Additionally, large sets will use more disk space to save the trained data.\n\n"
-                       "If you experience issues, clear your trained data and train again on a smaller scope.")
+        await ctx.send(
+            "Warning: The cog may use significant RAM or CPU if trained on large data sets.\n"
+            "Additionally, large sets will use more disk space to save the trained data.\n\n"
+            "If you experience issues, clear your trained data and train again on a smaller scope."
+        )
 
         conversation = await self._get_conversation(ctx, channel)
 

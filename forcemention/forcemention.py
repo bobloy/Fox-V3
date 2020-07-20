@@ -1,18 +1,16 @@
-from discord.utils import get
-
-from redbot import VersionInfo, version_info
-from redbot.core import Config, checks, commands
-
-from redbot.core.bot import Red
-from typing import Any
 import asyncio
 
-Cog: Any = getattr(commands, "Cog", object)
+from discord.utils import get
+from redbot import VersionInfo, version_info
+from redbot.core import Config, checks, commands
+from redbot.core.bot import Red
+from redbot.core.commands import Cog
 
 if version_info < VersionInfo.from_str("3.4.0"):
     SANITIZE_ROLES_KWARG = {}
 else:
     SANITIZE_ROLES_KWARG = {"sanitize_roles": False}
+
 
 class ForceMention(Cog):
     """
