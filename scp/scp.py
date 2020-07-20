@@ -25,7 +25,7 @@ class SCP(Cog):
             msg = "http://www.scp-wiki.net/scp-{:03}".format(num)
             c = discord.Color.green()
         else:
-            msg = "You must specify a number between 1 and 4999."
+            msg = "You must specify a number between 1 and 5999."
             c = discord.Color.red()
 
         if await ctx.embed_requested():

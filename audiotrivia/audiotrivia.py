@@ -5,13 +5,15 @@ from typing import List
 import lavalink
 import yaml
 from redbot.cogs.audio import Audio
+from redbot.cogs.audio.core.utilities import validation
 from redbot.cogs.trivia import LOG
 from redbot.cogs.trivia.trivia import InvalidListError, Trivia
 from redbot.core import commands, Config, checks
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.chat_formatting import box
-from redbot.cogs.audio.utils import userlimit
+# from redbot.cogs.audio.utils import userlimit
+
 
 from .audiosession import AudioSession
 
@@ -106,7 +108,7 @@ class AudioTrivia(Trivia):
             try:
                 if not ctx.author.voice.channel.permissions_for(
                     ctx.me
-                ).connect or userlimit(ctx.author.voice.channel):
+                ).connect or self.audio.is_vc_full(ctx.author.voice.channel):
                     return await ctx.send("I don't have permission to connect to your channel.")
                 await lavalink.connect(ctx.author.voice.channel)
                 lavaplayer = lavalink.get_player(ctx.guild.id)
@@ -117,7 +119,7 @@ class AudioTrivia(Trivia):
         lavaplayer = lavalink.get_player(ctx.guild.id)
         lavaplayer.store("channel", ctx.channel.id)  # What's this for? I dunno
 
-        await self.audio._data_check(ctx)
+        await self.audio.set_player_settings(ctx)
 
         if not ctx.author.voice or ctx.author.voice.channel != lavaplayer.channel:
             return await ctx.send(
