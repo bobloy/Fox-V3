@@ -5,15 +5,14 @@ import datetime
 import json
 import time
 from random import choice
-from typing import Any
 
 import discord
-from redbot.core import commands, Config, bank
+from redbot.core import Config, bank, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path
 
 
-class Gardener:
+class Gardener(commands.Cog):
     """Gardener class"""
 
     def __init__(self, user: discord.User, config: Config):
@@ -30,9 +29,7 @@ class Gardener:
             "Badges: {}\n"
             "Points: {}\n"
             "Products: {}\n"
-            "Current: {}".format(
-                self.user, self.badges, self.points, self.products, self.current
-            )
+            "Current: {}".format(self.user, self.badges, self.points, self.products, self.current)
         )
 
     def __repr__(self):
@@ -246,17 +243,12 @@ class PlantTycoon(commands.Cog):
         degradation = (
             100
             / (gardener.current["time"] / 60)
-            * (
-                self.defaults["degradation"]["base_degradation"]
-                + gardener.current["degradation"]
-            )
+            * (self.defaults["degradation"]["base_degradation"] + gardener.current["degradation"])
         ) + modifiers
 
         d = collections.namedtuple("degradation", "degradation time modifiers")
 
-        return d(
-            degradation=degradation, time=gardener.current["time"], modifiers=modifiers
-        )
+        return d(degradation=degradation, time=gardener.current["time"], modifiers=modifiers)
 
     # async def _get_member(self, user_id):
     #
@@ -285,10 +277,7 @@ class PlantTycoon(commands.Cog):
             await self._load_plants_products()
         product = product.lower()
         product_category = product_category.lower()
-        if (
-            product in self.products
-            and self.products[product]["category"] == product_category
-        ):
+        if product in self.products and self.products[product]["category"] == product_category:
             if product in gardener.products:
                 if gardener.products[product] > 0:
                     gardener.current["health"] += self.products[product]["health"]
@@ -359,13 +348,9 @@ class PlantTycoon(commands.Cog):
             ``{0}prune``: Prune your plant.\n"""
 
             em = discord.Embed(
-                title=title,
-                description=description.format(prefix),
-                color=discord.Color.green(),
+                title=title, description=description.format(prefix), color=discord.Color.green(),
             )
-            em.set_thumbnail(
-                url="https://image.prntscr.com/image/AW7GuFIBSeyEgkR2W3SeiQ.png"
-            )
+            em.set_thumbnail(url="https://image.prntscr.com/image/AW7GuFIBSeyEgkR2W3SeiQ.png")
             em.set_footer(
                 text="This cog was made by SnappyDragon18 and PaddoInWonderland. Inspired by The Lorax (2012)."
             )
@@ -439,9 +424,7 @@ class PlantTycoon(commands.Cog):
 
         em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
         avatar = author.avatar_url if author.avatar else author.default_avatar_url
-        em.set_author(
-            name="Gardening profile of {}".format(author.name), icon_url=avatar
-        )
+        em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
         em.add_field(name="**Thneeds**", value=str(gardener.points))
         if not gardener.current:
             em.add_field(name="**Currently growing**", value="None")
@@ -508,9 +491,7 @@ class PlantTycoon(commands.Cog):
             else:
                 tock += "**{}**\n".format(plant["name"])
                 tick_tock = 0
-        em = discord.Embed(
-            title="All plants that are growable", color=discord.Color.green()
-        )
+        em = discord.Embed(title="All plants that are growable", color=discord.Color.green())
         em.add_field(name="\a", value=tick)
         em.add_field(name="\a", value=tock)
         await ctx.send(embed=em)
@@ -532,18 +513,13 @@ class PlantTycoon(commands.Cog):
 
         if t:
             em = discord.Embed(
-                title="Plant statistics of {}".format(plant["name"]),
-                color=discord.Color.green(),
+                title="Plant statistics of {}".format(plant["name"]), color=discord.Color.green(),
             )
             em.set_thumbnail(url=plant["image"])
             em.add_field(name="**Name**", value=plant["name"])
             em.add_field(name="**Rarity**", value=plant["rarity"].capitalize())
-            em.add_field(
-                name="**Grow Time**", value="{0:.1f} minutes".format(plant["time"] / 60)
-            )
-            em.add_field(
-                name="**Damage Threshold**", value="{}%".format(plant["threshold"])
-            )
+            em.add_field(name="**Grow Time**", value="{0:.1f} minutes".format(plant["time"] / 60))
+            em.add_field(name="**Damage Threshold**", value="{}%".format(plant["threshold"]))
             em.add_field(name="**Badge**", value=plant["badge"])
             em.add_field(name="**Reward**", value="{} τ".format(plant["reward"]))
         else:
@@ -595,8 +571,7 @@ class PlantTycoon(commands.Cog):
         author = ctx.author
         if product is None:
             em = discord.Embed(
-                title="All gardening supplies that you can buy:",
-                color=discord.Color.green(),
+                title="All gardening supplies that you can buy:", color=discord.Color.green(),
             )
             for pd in self.products:
                 em.add_field(
@@ -630,8 +605,7 @@ class PlantTycoon(commands.Cog):
                         message = "You bought {}.".format(product.lower())
                     else:
                         message = "You don't have enough Thneeds. You have {}, but need {}.".format(
-                            gardener.points,
-                            self.products[product.lower()]["cost"] * amount,
+                            gardener.points, self.products[product.lower()]["cost"] * amount,
                         )
                 else:
                     message = "I don't have this product."
@@ -650,14 +624,11 @@ class PlantTycoon(commands.Cog):
             plural = "s"
         if withdraw_points:
             await bank.deposit_credits(author, amount)
-            message = "{} Thneed{} successfully exchanged for credits.".format(
-                amount, plural
-            )
+            message = "{} Thneed{} successfully exchanged for credits.".format(amount, plural)
             await gardener.save_gardener()
         else:
-            message = (
-                "You don't have enough Thneed{}. "
-                "You have {}, but need {}.".format(plural, gardener.points, amount)
+            message = "You don't have enough Thneed{}. " "You have {}, but need {}.".format(
+                plural, gardener.points, amount
             )
 
         em = discord.Embed(description=message, color=discord.Color.green())
@@ -749,9 +720,7 @@ class PlantTycoon(commands.Cog):
             degradation = await self._degradation(gardener)
             now = int(time.time())
             timestamp = gardener.current["timestamp"]
-            degradation_count = (now - timestamp) // (
-                self.defaults["timers"]["degradation"] * 60
-            )
+            degradation_count = (now - timestamp) // (self.defaults["timers"]["degradation"] * 60)
             degradation_count -= gardener.current["degrade_count"]
             gardener.current["health"] -= degradation.degradation * degradation_count
             gardener.points += self.defaults["points"]["growing"] * degradation_count

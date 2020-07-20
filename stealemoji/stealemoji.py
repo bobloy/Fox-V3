@@ -4,9 +4,8 @@ import discord
 
 from redbot.core import Config, commands
 from redbot.core.bot import Red
-from typing import Any
 
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 async def fetch_img(session, url):

@@ -1,20 +1,18 @@
 import asyncio
 import random
 from datetime import datetime, timedelta
-from typing import Any
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
-from redbot.core.utils.chat_formatting import pagify, box
+from redbot.core.utils.chat_formatting import box, pagify
 
 DEFAULT_MESSAGES = [
     # "Example message. Uncomment and overwrite to use",
     # "Example message 2. Each message is in quotes and separated by a comma"
 ]
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class AnnounceDaily(Cog):

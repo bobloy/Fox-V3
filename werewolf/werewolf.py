@@ -1,16 +1,17 @@
 import discord
-
-from redbot.core import Config, checks
-
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
-from redbot.core import commands
+from redbot.core.commands import Cog
+from redbot.core.utils.menus import DEFAULT_CONTROLS, menu
 
-from .builder import GameBuilder, role_from_name, role_from_alignment, role_from_category, role_from_id
+from .builder import (
+    GameBuilder,
+    role_from_alignment,
+    role_from_category,
+    role_from_id,
+    role_from_name,
+)
 from .game import Game
-from redbot.core.utils.menus import menu, DEFAULT_CONTROLS
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class Werewolf(Cog):
@@ -20,13 +21,15 @@ class Werewolf(Cog):
 
     def __init__(self, bot: Red):
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=87101114101119111108102, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=87101114101119111108102, force_registration=True
+        )
         default_global = {}
         default_guild = {
             "role_id": None,
             "category_id": None,
             "channel_id": None,
-            "log_channel_id": None
+            "log_channel_id": None,
         }
 
         self.config.register_global(**default_global)
@@ -83,7 +86,7 @@ class Werewolf(Cog):
 
     @commands.guild_only()
     @wwset.command(name="role")
-    async def wwset_role(self, ctx: commands.Context, role: discord.Role=None):
+    async def wwset_role(self, ctx: commands.Context, role: discord.Role = None):
         """
         Assign the game role
         This role should not be manually assigned
@@ -97,7 +100,7 @@ class Werewolf(Cog):
 
     @commands.guild_only()
     @wwset.command(name="category")
-    async def wwset_category(self, ctx: commands.Context, category_id: int=None):
+    async def wwset_category(self, ctx: commands.Context, category_id: int = None):
         """
         Assign the channel category
         """
@@ -114,7 +117,7 @@ class Werewolf(Cog):
 
     @commands.guild_only()
     @wwset.command(name="channel")
-    async def wwset_channel(self, ctx: commands.Context, channel: discord.TextChannel=None):
+    async def wwset_channel(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """
         Assign the village channel
         """
@@ -127,7 +130,7 @@ class Werewolf(Cog):
 
     @commands.guild_only()
     @wwset.command(name="logchannel")
-    async def wwset_log_channel(self, ctx: commands.Context, channel: discord.TextChannel=None):
+    async def wwset_log_channel(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """
         Assign the log channel
         """

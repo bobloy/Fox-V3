@@ -2,13 +2,9 @@ from datetime import datetime
 
 import dateutil.parser
 import discord
-
-from redbot.core import Config
+from redbot.core import Config, commands
 from redbot.core.bot import Red
-from redbot.core import commands
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class LastSeen(Cog):

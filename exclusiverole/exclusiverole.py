@@ -2,9 +2,7 @@ import asyncio
 
 import discord
 from redbot.core import Config, checks, commands
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class ExclusiveRole(Cog):

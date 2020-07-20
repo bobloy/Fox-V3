@@ -10,10 +10,8 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify, box
 
-Cog: Any = getattr(commands, "Cog", object)
 
-
-class CCRole(Cog):
+class CCRole(commands.Cog):
     """
     Custom commands
     Creates commands used to display text and adjust roles

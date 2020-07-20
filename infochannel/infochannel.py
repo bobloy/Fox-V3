@@ -1,15 +1,14 @@
-from typing import Any
 import discord
-
-from redbot.core import Config, commands, checks
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 
-Cog: Any = getattr(commands, "Cog", object)
-listener = getattr(commands.Cog, "listener", None)  # Trusty + Sinbad
-if listener is None:
 
-    def listener(name=None):
-        return lambda x: x
+# Cog: Any = getattr(commands, "Cog", object)
+# listener = getattr(commands.Cog, "listener", None)  # Trusty + Sinbad
+# if listener is None:
+#     def listener(name=None):
+#         return lambda x: x
 
 
 class InfoChannel(Cog):
@@ -160,8 +159,10 @@ class InfoChannel(Cog):
         onlinecount = guild_data["online_count"]
 
         # Gets count of bots
-        bots = lambda x: x.bot
-        num = len([m for m in guild.members if bots(m)])
+        # bots = lambda x: x.bot
+        # def bots(x): return x.bot
+
+        num = len([m for m in guild.members if m.bot])
         bot_msg = f"Bots: {num}"
 
         # Gets count of online users
@@ -188,8 +189,7 @@ class InfoChannel(Cog):
 
         if guild_data["member_count"]:
             name = "{} ".format(human_msg)
-
-        await channel.edit(reason="InfoChannel update", name=name)
+            await channel.edit(reason="InfoChannel update", name=name)
 
         if botcount:
             name = "{} ".format(bot_msg)
@@ -199,15 +199,15 @@ class InfoChannel(Cog):
             name = "{} ".format(online_msg)
             await onlinechannel.edit(reason="InfoChannel update", name=name)
 
-    @listener()
+    @Cog.listener()
     async def on_member_join(self, member: discord.Member):
         await self.update_infochannel(member.guild)
 
-    @listener()
+    @Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         await self.update_infochannel(member.guild)
 
-    @listener()
+    @Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         onlinecount = await self.config.guild(after.guild).online_count()
         if onlinecount:
