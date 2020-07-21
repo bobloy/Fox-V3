@@ -6,10 +6,8 @@ from MyQR import myqr
 from PIL import Image
 from redbot.core import Config, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class QRInvite(Cog):

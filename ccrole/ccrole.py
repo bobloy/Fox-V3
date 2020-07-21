@@ -1,22 +1,23 @@
 import asyncio
+import json
 import re
 from typing import Any
 
 import discord
+from discord.ext.commands.view import StringView
 from redbot.core import Config, checks
 from redbot.core import commands
+from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify, box
 
-Cog: Any = getattr(commands, "Cog", object)
 
-
-class CCRole(Cog):
+class CCRole(commands.Cog):
     """
     Custom commands
     Creates commands used to display text and adjust roles
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: Red):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9999114111108101)
         default_guild = {"cmdlist": {}, "settings": {}}
@@ -115,9 +116,7 @@ class CCRole(Cog):
                 return
 
         # Selfrole
-        await ctx.send(
-            "Is this a targeted command?(yes/no)\nNo will make this a selfrole command"
-        )
+        await ctx.send("Is this a targeted command?(yes/no)\nNo will make this a selfrole command")
 
         try:
             answer = await self.bot.wait_for("message", timeout=120, check=check)
@@ -235,24 +234,41 @@ class CCRole(Cog):
             for page in pagify(cmd_list, delims=[" ", "\n"]):
                 await ctx.author.send(box(page))
             await ctx.send("Command list DM'd")
-    
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if len(message.content) < 2 or message.guild is None:
-            return
 
-        guild = message.guild
-        try:
-            prefix = await self.get_prefix(message)
-        except ValueError:
-            return
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, exception):
+        cmd = ctx.invoked_with
+        guild = ctx.guild
+        message = ctx.message
 
         cmdlist = self.config.guild(guild).cmdlist
-        cmd = message.content[len(prefix) :].split()[0].lower()
+        # cmd = message.content[len(prefix) :].split()[0].lower()
         cmd = await cmdlist.get_raw(cmd, default=None)
 
         if cmd is not None:
-            await self.eval_cc(cmd, message)
+            await self.eval_cc(cmd, message, ctx)
+
+    # @commands.Cog.listener()
+    # async def on_message(self, message: discord.Message):
+    #     if len(message.content) < 2 or message.guild is None:
+    #         return
+    #
+    #     ctx: commands.Context = await self.bot.get_context(message)
+    #     cmd = ctx.invoked_with
+    #     guild = message.guild
+    #     # try:
+    #     #     prefix = await self.get_prefix(message)
+    #     # except ValueError:
+    #     #     return
+    #
+    #     # prefix = ctx.prefix
+    #
+    #     cmdlist = self.config.guild(guild).cmdlist
+    #     # cmd = message.content[len(prefix) :].split()[0].lower()
+    #     cmd = await cmdlist.get_raw(cmd, default=None)
+    #
+    #     if cmd is not None:
+    #         await self.eval_cc(cmd, message, ctx)
 
     async def _get_roles_from_content(self, ctx, content):
         content_list = content.split(",")
@@ -284,7 +300,7 @@ class CCRole(Cog):
                 return p
         raise ValueError
 
-    async def eval_cc(self, cmd, message):
+    async def eval_cc(self, cmd, message, ctx):
         """Does all the work"""
         if cmd["proles"] and not (
             set(role.id for role in message.author.roles) & set(cmd["proles"])
@@ -292,16 +308,45 @@ class CCRole(Cog):
             return  # Not authorized, do nothing
 
         if cmd["targeted"]:
-            try:
-                target = discord.utils.get(
-                    message.guild.members, mention=message.content.split(maxsplit=1)[1]
-                )
-            except IndexError:  # .split() return list of len<2
+            # try:
+            #     arg1 = message.content.split(maxsplit=1)[1]
+            # except IndexError:  # .split() return list of len<2
+            #     target = None
+            # else:
+            #     target = discord.utils.get(
+            #         message.guild.members, mention=arg1
+            #     )
+
+            view: StringView = ctx.view
+            view.skip_ws()
+
+            guild: discord.Guild = ctx.guild
+            # print(f"Guild: {guild}")
+
+            target = view.get_quoted_word()
+            # print(f"Target: {target}")
+
+            if target:
+                # target = discord.utils.get(guild.members, mention=target)
+                try:
+                    target = await commands.MemberConverter().convert(ctx, target)
+                except commands.BadArgument:
+                    target = None
+            else:
                 target = None
+
+            # try:
+            #     arg1 = ctx.args[1]
+            # except IndexError:  # args is list of len<2
+            #     target = None
+            # else:
+            #     target = discord.utils.get(
+            #         message.guild.members, mention=arg1
+            #     )
 
             if not target:
                 out_message = "This custom command is targeted! @mention a target\n`{} <target>`".format(
-                    message.content.split()[0]
+                    ctx.invoked_with
                 )
                 await message.channel.send(out_message)
                 return

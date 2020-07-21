@@ -1,11 +1,7 @@
 import discord
-
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
-from redbot.core.commands import Context
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog, Context
 
 
 class Leaver(Cog):
@@ -15,9 +11,7 @@ class Leaver(Cog):
 
     def __init__(self, bot: Red):
         self.bot = bot
-        self.config = Config.get_conf(
-            self, identifier=9811198108111121, force_registration=True
-        )
+        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_guild = {"channel": ""}
 
         self.config.register_guild(**default_guild)

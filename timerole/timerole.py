@@ -1,13 +1,11 @@
 import asyncio
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.utils.chat_formatting import pagify
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class Timerole(Cog):

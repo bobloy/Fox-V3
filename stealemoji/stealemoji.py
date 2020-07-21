@@ -6,7 +6,7 @@ from aiohttp.typedefs import StrOrURL
 from redbot.core import Config, commands, checks
 from redbot.core.bot import Red
 
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 # Replaced with discord.Asset.read()
 # async def fetch_img(session: aiohttp.ClientSession, url: StrOrURL):
