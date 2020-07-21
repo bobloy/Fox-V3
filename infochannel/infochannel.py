@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
@@ -198,6 +200,8 @@ class InfoChannel(Cog):
         if onlinecount:
             name = "{} ".format(online_msg)
             await onlinechannel.edit(reason="InfoChannel update", name=name)
+
+        await asyncio.sleep(60)
 
     @Cog.listener()
     async def on_member_join(self, member: discord.Member):
