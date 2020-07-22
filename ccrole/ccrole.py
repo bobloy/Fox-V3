@@ -1,14 +1,11 @@
 import asyncio
-import json
 import re
-from typing import Any
 
 import discord
 from discord.ext.commands.view import StringView
-from redbot.core import Config, checks
-from redbot.core import commands
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import pagify, box
+from redbot.core.utils.chat_formatting import box, pagify
 
 
 class CCRole(commands.Cog):
@@ -236,10 +233,27 @@ class CCRole(commands.Cog):
             await ctx.send("Command list DM'd")
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, exception):
+    async def on_message_without_command(self, message: discord.Message):
+
+        """Filtering credit to redbot.cogs.customcom's listener"""
+        ###########
+        is_private = isinstance(message.channel, discord.abc.PrivateChannel)
+
+        # user_allowed check, will be replaced with self.bot.user_allowed or
+        # something similar once it's added
+        user_allowed = True
+
+        if len(message.content) < 2 or is_private or not user_allowed or message.author.bot:
+            return
+
+        ctx = await self.bot.get_context(message)
+        ###########
+        # Thank you Cog-Creators
+
         cmd = ctx.invoked_with
+        cmd = cmd.lower()  # Continues the proud case_insentivity tradition of ccrole
         guild = ctx.guild
-        message = ctx.message
+        # message = ctx.message  # Unneeded since switch to `on_message_without_command` from `on_command_error`
 
         cmdlist = self.config.guild(guild).cmdlist
         # cmd = message.content[len(prefix) :].split()[0].lower()
