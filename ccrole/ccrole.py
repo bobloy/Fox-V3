@@ -247,6 +247,9 @@ class CCRole(commands.Cog):
             return
 
         ctx = await self.bot.get_context(message)
+
+        if ctx.prefix is None:
+            return
         ###########
         # Thank you Cog-Creators
 
