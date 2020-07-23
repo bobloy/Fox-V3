@@ -1,15 +1,9 @@
 import asyncio
 
 from discord.utils import get
-from redbot import VersionInfo, version_info
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
-
-if version_info < VersionInfo.from_str("3.4.0"):
-    SANITIZE_ROLES_KWARG = {}
-else:
-    SANITIZE_ROLES_KWARG = {"sanitize_roles": False}
 
 
 class ForceMention(Cog):
@@ -39,8 +33,8 @@ class ForceMention(Cog):
 
         if not role_obj.mentionable:
             await role_obj.edit(mentionable=True)
-            await ctx.send("{}\n{}".format(role_obj.mention, message), **SANITIZE_ROLES_KWARG)
+            await ctx.send("{}\n{}".format(role_obj.mention, message))
             await asyncio.sleep(5)
             await role_obj.edit(mentionable=False)
         else:
-            await ctx.send("{}\n{}".format(role_obj.mention, message), **SANITIZE_ROLES_KWARG)
+            await ctx.send("{}\n{}".format(role_obj.mention, message))
