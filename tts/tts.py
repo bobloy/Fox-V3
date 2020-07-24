@@ -31,4 +31,4 @@ class TTS(Cog):
         tts = gTTS(text, "en")
         tts.write_to_fp(mp3_fp)
         mp3_fp.seek(0)
-        await ctx.send(file=File(mp3_fp, "text.mp3"))
+        await ctx.send(file=discord.File(mp3_fp, "text.mp3"))
