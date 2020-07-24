@@ -30,4 +30,5 @@ class TTS(Cog):
         mp3_fp = io.BytesIO()
         tts = gTTS(text, "en")
         tts.write_to_fp(mp3_fp)
-        await ctx.send(file=discord.File(mp3_fp.getvalue(), "text.mp3"))
+        mp3_fp.seek(0)
+        await ctx.send(file=discord.File(mp3_fp, "text.mp3"))
