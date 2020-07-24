@@ -24,10 +24,11 @@ class TTS(Cog):
 
     @commands.command(aliases=["t2s", "text2"])
     async def tts(self, ctx: commands.Context, *, text: str):
-        """
+       """
        Send Text to speech messages as an mp3
        """
         mp3_fp = io.BytesIO()
         tts = gTTS(text, "en")
         tts.write_to_fp(mp3_fp)
-        await ctx.send(file=discord.File(mp3_fp.getvalue(), "text.mp3"))
+        mp3_fp.seek(0)
+        await ctx.send(file=File(mp3_fp, "text.mp3"))
