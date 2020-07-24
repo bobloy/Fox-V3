@@ -24,7 +24,7 @@ class TTS(Cog):
 
     @commands.command(aliases=["t2s", "text2"])
     async def tts(self, ctx: commands.Context, *, text: str):
-       """
+        """
        Send Text to speech messages as an mp3
        """
         mp3_fp = io.BytesIO()
