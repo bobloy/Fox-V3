@@ -7,10 +7,10 @@ from redbot.core import Config, commands
 from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 
-from .chatterbot import ChatBot
-from .chatterbot.comparisons import levenshtein_distance
-from .chatterbot.response_selection import get_first_response
-from .chatterbot.trainers import ListTrainer
+from chatterbot import ChatBot
+from chatterbot.comparisons import levenshtein_distance
+from chatterbot.response_selection import get_first_response
+from chatterbot.trainers import ListTrainer
 
 
 class Chatter(Cog):
@@ -19,6 +19,7 @@ class Chatter(Cog):
     """
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6710497116116101114)
         default_global = {}
