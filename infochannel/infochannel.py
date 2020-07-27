@@ -50,9 +50,9 @@ class InfoChannel(Cog):
 
         def check(m):
             return (
-                    m.content.upper() in ["Y", "YES", "N", "NO"]
-                    and m.channel == ctx.channel
-                    and m.author == ctx.author
+                m.content.upper() in ["Y", "YES", "N", "NO"]
+                and m.channel == ctx.channel
+                and m.author == ctx.author
             )
 
         guild: discord.Guild = ctx.guild
@@ -253,7 +253,9 @@ class InfoChannel(Cog):
             self._critical_section_wooah_ = 2
 
             while self._critical_section_wooah_:
-                await asyncio.sleep(RATE_LIMIT_DELAY // 4)  # Max delay ends up as 1.25 * RATE_LIMIT_DELAY
+                await asyncio.sleep(
+                    RATE_LIMIT_DELAY // 4
+                )  # Max delay ends up as 1.25 * RATE_LIMIT_DELAY
 
             print("Issuing queued update")
             return await self.update_infochannel_with_cooldown(guild)
