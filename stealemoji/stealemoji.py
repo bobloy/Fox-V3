@@ -43,6 +43,7 @@ class StealEmoji(Cog):
     }
 
     def __init__(self, red: Red):
+        super().__init__()
         self.bot = red
         self.config = Config.get_conf(self, identifier=11511610197108101109111106105)
         default_global = {"stolemoji": {}, "guildbanks": [], "on": False, "notify": 0}
