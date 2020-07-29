@@ -12,8 +12,14 @@ from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 
 
-class ENG_LG:
+class ENG_LG:  # TODO: Add option to use this large model
     ISO_639_1 = 'en_core_web_lg'
+    ISO_639 = 'eng'
+    ENGLISH_NAME = 'English'
+
+
+class ENG_MD:
+    ISO_639_1 = 'en_core_web_md'
     ISO_639 = 'eng'
     ENGLISH_NAME = 'English'
 
@@ -32,7 +38,7 @@ class Chatter(Cog):
         path: pathlib.Path = cog_data_path(self)
         self.data_path = path / "database.sqlite3"
 
-        self.chatbot = self._create_chatbot(self.data_path, SpacySimilarity, 0.45, ENG_LG)
+        self.chatbot = self._create_chatbot(self.data_path, SpacySimilarity, 0.45, ENG_MD)
         # self.chatbot.set_trainer(ListTrainer)
 
         # self.trainer = ListTrainer(self.chatbot)
@@ -151,7 +157,7 @@ class Chatter(Cog):
             await ctx.send_help()
             return
 
-        self.chatbot = self._create_chatbot(self.data_path, algos[algo_number][0], algos[algo_number][1], ENG_LG)
+        self.chatbot = self._create_chatbot(self.data_path, algos[algo_number][0], algos[algo_number][1], ENG_MD)
 
         await ctx.tick()
 
@@ -161,6 +167,10 @@ class Chatter(Cog):
         Sets the number of minutes the bot will consider a break in a conversation during training
         Active servers should set a lower number, while less active servers should have a higher number
         """
+
+        if minutes < 1:
+            await ctx.send_help()
+            return
 
         await self.config.guild(ctx.guild).convo_length.set(minutes)
 
@@ -172,6 +182,10 @@ class Chatter(Cog):
         Sets the number of days to look back
         Will train on 1 day otherwise
         """
+
+        if days < 1:
+            await ctx.send_help()
+            return
 
         await self.config.guild(ctx.guild).days.set(days)
         await ctx.tick()
