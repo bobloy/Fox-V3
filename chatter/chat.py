@@ -13,7 +13,7 @@ from redbot.core.data_manager import cog_data_path
 
 
 class ENG_LG:
-    ISO_639_1 = 'en_vectors_web_lg'
+    ISO_639_1 = 'en_core_web_lg'
     ISO_639 = 'eng'
     ENGLISH_NAME = 'English'
 
@@ -32,7 +32,7 @@ class Chatter(Cog):
         path: pathlib.Path = cog_data_path(self)
         self.data_path = path / "database.sqlite3"
 
-        self.chatbot = self.create_chatbot(self.data_path, SpacySimilarity, 0.45, ENG_LG)
+        self.chatbot = self._create_chatbot(self.data_path, SpacySimilarity, 0.45, ENG_LG)
         # self.chatbot.set_trainer(ListTrainer)
 
         # self.trainer = ListTrainer(self.chatbot)
@@ -42,7 +42,7 @@ class Chatter(Cog):
 
         self.loop = asyncio.get_event_loop()
 
-    def create_chatbot(self, data_path, similarity_algorithm, similarity_threshold, tagger_language):
+    def _create_chatbot(self, data_path, similarity_algorithm, similarity_threshold, tagger_language):
         return ChatBot(
             "ChatterBot",
             storage_adapter="chatterbot.storage.SQLStorageAdapter",
@@ -64,14 +64,14 @@ class Chatter(Cog):
         after = datetime.today() - timedelta(days=(await self.config.guild(ctx.guild).days()))
         convo_delta = timedelta(minutes=(await self.config.guild(ctx.guild).convo_delta()))
 
-        def new_message(msg, sent, out_in, convo_delta):
+        def new_message(msg, sent, out_in, delta):
             if sent is None:
                 return False
 
             if len(out_in) < 2:
                 return False
 
-            return msg.created_at - sent >= convo_delta
+            return msg.created_at - sent >= delta
 
         for channel in ctx.guild.text_channels:
             if in_channel:
@@ -151,7 +151,7 @@ class Chatter(Cog):
             await ctx.send_help()
             return
 
-        self.chatbot = self.create_chatbot(self.data_path, algos[algo_number][0], algos[algo_number][1], ENG_LG)
+        self.chatbot = self._create_chatbot(self.data_path, algos[algo_number][0], algos[algo_number][1], ENG_LG)
 
         await ctx.tick()
 
