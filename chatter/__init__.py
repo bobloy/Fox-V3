@@ -1,4 +1,3 @@
-from . import chatterbot
 from .chat import Chatter
 
 
