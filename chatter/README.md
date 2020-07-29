@@ -18,6 +18,8 @@ It is based on the brilliant work over at [Chatterbot](https://github.com/gunthe
 * Chatter responses are irrelevant
     * This can be caused by bad training, but sometimes the data just doesn't come together right.
     * Asking for better accuracy often leads to slower responses as well, so I've leaned towards speed over accuracy.
+* Chatter installation is not working
+    * See installation instructions below
 
 ## Warning
 
