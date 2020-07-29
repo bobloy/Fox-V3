@@ -235,8 +235,11 @@ class CCRole(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_without_command(self, message: discord.Message):
-
-        """Filtering credit to redbot.cogs.customcom's listener"""
+        """
+        Credit to:
+        https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/cogs/customcom/customcom.py#L508
+        for the message filtering
+        """
         ###########
         is_private = isinstance(message.channel, discord.abc.PrivateChannel)
 
