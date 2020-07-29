@@ -15,6 +15,7 @@ class CCRole(commands.Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9999114111108101)
         default_guild = {"cmdlist": {}, "settings": {}}
@@ -23,12 +24,12 @@ class CCRole(commands.Cog):
 
     @commands.guild_only()
     @commands.group()
-    async def ccrole(self, ctx):
+    async def ccrole(self, ctx: commands.Context):
         """Custom commands management with roles
 
         Highly customizable custom commands with role management."""
         if not ctx.invoked_subcommand:
-            pass
+            await ctx.send_help()
 
     @ccrole.command(name="add")
     @checks.mod_or_permissions(administrator=True)
@@ -234,8 +235,11 @@ class CCRole(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_without_command(self, message: discord.Message):
-
-        """Filtering credit to redbot.cogs.customcom's listener"""
+        """
+        Credit to:
+        https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/cogs/customcom/customcom.py#L508
+        for the message filtering
+        """
         ###########
         is_private = isinstance(message.channel, discord.abc.PrivateChannel)
 
