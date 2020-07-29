@@ -5,6 +5,20 @@ Chatter is a tool designed to be a self-hosted chat cog.
 It is based on the brilliant work over at [Chatterbot](https://github.com/gunthercox/ChatterBot) and [spaCy](https://github.com/explosion/spaCy)
 
 
+## Known Issues
+
+* Chatter will not reload
+    * Causes this error:
+    ```
+    chatterbot.adapters.Adapter.InvalidAdapterTypeException: chatterbot.storage.SQLStorageAdapter must be a subclass of StorageAdapter 
+    ```
+* Chatter responses are slow
+    * This is an unfortunate side-effect to running self-hosted maching learning on a discord bot. 
+    * This version includes a number of attempts at improving this, but there is only so much that can be done.
+* Chatter responses are irrelevant
+    * This can be caused by bad training, but sometimes the data just doesn't come together right.
+    * Asking for better accuracy often leads to slower responses as well, so I've leaned towards speed over accuracy.
+
 ## Warning
 
 **Chatter is a CPU, RAM, and Disk intensive cog.**
