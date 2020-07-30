@@ -46,7 +46,7 @@ class StealEmoji(Cog):
 
         self.config.register_global(**default_global)
 
-        self.is_on = await self.config.on()
+        self.is_on = None
 
     @commands.group()
     async def stealemoji(self, ctx: commands.Context):
@@ -138,6 +138,9 @@ class StealEmoji(Cog):
         if not reaction.custom_emoji:
             # print("Not a custom emoji")
             return
+
+        if self.is_on is None:
+            self.is_on = await self.config.on()
 
         if not self.is_on:
             # print("Collecting is off")
