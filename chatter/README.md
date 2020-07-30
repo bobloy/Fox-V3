@@ -54,7 +54,7 @@ Install these on your windows machine before attempting the installation
 
 [Pandoc - Universal Document Converter](https://pandoc.org/installing.html)
 
-##Methods
+## Methods
 ### Windows - Manually
 #### Step 1: Built-in Downloader
 
