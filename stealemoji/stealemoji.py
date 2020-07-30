@@ -1,12 +1,8 @@
-from typing import Any
-
-import aiohttp
 import discord
-from aiohttp.typedefs import StrOrURL
-from redbot.core import Config, commands, checks
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
-
 from redbot.core.commands import Cog
+
 
 # Replaced with discord.Asset.read()
 # async def fetch_img(session: aiohttp.ClientSession, url: StrOrURL):
@@ -50,6 +46,8 @@ class StealEmoji(Cog):
 
         self.config.register_global(**default_global)
 
+        self.is_on = await self.config.on()
+
     @commands.group()
     async def stealemoji(self, ctx: commands.Context):
         """
@@ -86,6 +84,9 @@ class StealEmoji(Cog):
         """Toggles whether emoji's are collected or not"""
         curr_setting = await self.config.on()
         await self.config.on.set(not curr_setting)
+
+        self.is_on = await self.config.on()
+
         await ctx.send("Collection is now " + str(not curr_setting))
 
     @checks.is_owner()
@@ -138,13 +139,13 @@ class StealEmoji(Cog):
             # print("Not a custom emoji")
             return
 
-        if not (await self.config.on()):  # TODO: Make this cached
-            print("Collecting is off")
+        if not self.is_on:
+            # print("Collecting is off")
             return
 
         emoji: discord.Emoji = reaction.emoji
         if emoji in self.bot.emojis:
-            print("Emoji already in bot.emojis")
+            # print("Emoji already in bot.emojis")
             return
 
         # This is now a custom emoji that the bot doesn't have access to, time to steal it
@@ -160,17 +161,23 @@ class StealEmoji(Cog):
                 break
 
         if guildbank is None:
-            print("No guildbank to store emoji")
+            # print("No guildbank to store emoji")
             # Eventually make a new banklist
             return
 
         # Next, have I saved this emoji before (because uploaded emoji != orignal emoji)
 
-        stolemojis = await self.config.stolemoji()
-
-        if emoji.id in stolemojis:  # TODO: This is not preventing duplicates
-            print("Emoji has already been stolen")
+        if str(emoji.id) in await self.config.stolemoji():
+            # print("Emoji has already been stolen")
             return
+
+        # stolemojis = await self.config.stolemoji()
+        #
+        # print(stolemojis.keys())
+        #
+        # if emoji.id in stolemojis:
+        #     print("Emoji has already been stolen")
+        #     return
 
         # Alright, time to steal it for real
         # path = urlparse(emoji.url).path
@@ -192,10 +199,10 @@ class StealEmoji(Cog):
                 name=emoji.name, image=img, reason="Stole from " + str(user)
             )
         except discord.Forbidden as e:
-            print("PermissionError - no permission to add emojis")
+            # print("PermissionError - no permission to add emojis")
             raise PermissionError("No permission to add emojis") from e
         except discord.HTTPException as e:
-            print("HTTPException exception")
+            # print("HTTPException exception")
             raise e  # Unhandled error
 
         # If you get this far, YOU DID IT
