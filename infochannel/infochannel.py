@@ -247,9 +247,9 @@ class InfoChannel(Cog):
         """My attempt at preventing rate limits, lets see how it goes"""
         if self._critical_section_wooah_:
             if self._critical_section_wooah_ == 2:
-                print("Already pending, skipping")
+                # print("Already pending, skipping")
                 return  # Another one is already pending, don't queue more than one
-            print("Queuing another update")
+            # print("Queuing another update")
             self._critical_section_wooah_ = 2
 
             while self._critical_section_wooah_:
@@ -257,15 +257,15 @@ class InfoChannel(Cog):
                     RATE_LIMIT_DELAY // 4
                 )  # Max delay ends up as 1.25 * RATE_LIMIT_DELAY
 
-            print("Issuing queued update")
+            # print("Issuing queued update")
             return await self.update_infochannel_with_cooldown(guild)
 
-        print("Entering critical")
+        # print("Entering critical")
         self._critical_section_wooah_ = 1
         await self.update_infochannel(guild)
         await asyncio.sleep(RATE_LIMIT_DELAY)
         self._critical_section_wooah_ = 0
-        print("Exiting critical")
+        # print("Exiting critical")
 
     @Cog.listener()
     async def on_member_join(self, member: discord.Member):
