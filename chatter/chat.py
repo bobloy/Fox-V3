@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import discord
 from chatterbot import ChatBot
 from chatterbot.comparisons import JaccardSimilarity, LevenshteinDistance, SpacySimilarity
-from chatterbot.response_selection import get_first_response
+from chatterbot.response_selection import get_random_response
 from chatterbot.trainers import ChatterBotCorpusTrainer, ListTrainer
 from redbot.core import Config, commands
 from redbot.core.commands import Cog
@@ -56,9 +56,9 @@ class Chatter(Cog):
             storage_adapter="chatterbot.storage.SQLStorageAdapter",
             database_uri="sqlite:///" + str(data_path),
             statement_comparison_function=similarity_algorithm,
-            response_selection_method=get_first_response,
+            response_selection_method=get_random_response,
             logic_adapters=["chatterbot.logic.BestMatch"],
-            maximum_similarity_threshold=similarity_threshold,
+            # maximum_similarity_threshold=similarity_threshold,
             tagger_language=tagger_language,
         )
 
@@ -71,6 +71,9 @@ class Chatter(Cog):
         out = [[]]
         after = datetime.today() - timedelta(days=(await self.config.guild(ctx.guild).days()))
         convo_delta = timedelta(minutes=(await self.config.guild(ctx.guild).convo_delta()))
+
+        def predicate(message: discord.Message):
+            return message.clean_content
 
         def new_conversation(msg, sent, out_in, delta):
             # if sent is None:
@@ -95,7 +98,9 @@ class Chatter(Cog):
             try:
 
                 async for message in channel.history(
-                    limit=None, after=after
+                    limit=None, after=after, oldest_first=True
+                ).filter(
+                    predicate=predicate
                 ):  # type: discord.Message
                     # if message.author.bot:  # Skip bot messages
                     #     continue
@@ -138,7 +143,6 @@ class Chatter(Cog):
             for convo in data:
                 if len(convo) > 1:
                     trainer.train(convo)
-
         except:
             return False
         return True
@@ -296,8 +300,9 @@ class Chatter(Cog):
 
         ctx: commands.Context = await self.bot.get_context(message)
 
-        # if ctx.prefix is None:
-        #     return
+        if ctx.prefix is not None:
+            return
+
         ###########
         # Thank you Cog-Creators
 
@@ -305,6 +310,7 @@ class Chatter(Cog):
             for p in prefixes:
                 if content.startswith(p):
                     return p
+            return None
 
         when_mentionables = commands.when_mentioned(self.bot, message)
 
