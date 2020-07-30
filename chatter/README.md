@@ -66,6 +66,8 @@ You need to get a copy of the requirements.txt provided with chatter, I recommen
 
 #### Step 2: Install Requirements
 
+Make sure you have your virtual environment that you installed Red on activated before starting this step. See the Red Docs for details on how.
+
 In a terminal running as an admin, navigate to the directory containing this repo. 
 
 I've used my install directory as an example.
