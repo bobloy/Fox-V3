@@ -7,7 +7,7 @@ Cog Function
 | announcedaily | **Alpha** | <details><summary>Send daily announcements to all servers at a specified times</summary>Commissioned release, so suggestions will not be accepted</details> |
 | audiotrivia | **Alpha** | <details><summary>Guess the audio using the core trivia cog</summary>Replaces the core Trivia cog. Needs help adding audio trivia lists, please submit a PR to contribute</details> |
 | ccrole | **Release** | <details><summary>Create custom commands that also assign roles</summary>May have some bugs, please create an issue if you find any</details> |
-| chatter | **Beta** | <details><summary>Chat-bot trained to talk like your guild</summary>Missing some key features, but currently functional</details> |
+| chatter | **Beta** | <details><summary>Chat-bot trained to talk like your guild</summary>Missing some key features, but currently functional. See [Chatter](https://github.com/bobloy/Fox-V3/tree/master/chatter) for install instructions</details> |
 | coglint | **Alpha** | <details><summary>Error check code in python syntax posted to discord</summary>Works, but probably needs more turning to work for cogs</details> |
 | dad | **Beta** | <details><summary>Tell dad jokes</summary>Works great!</details> |
 | exclusiverole | **Alpha** | <details><summary>Prevent certain roles from getting any other roles</summary>Fully functional, but pretty simple</details> |
