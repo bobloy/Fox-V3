@@ -337,8 +337,8 @@ class Chatter(Cog):
 
         # A bit more aggressive, could remove two mentions
         # Or might not work at all, since mentionables are pre-cleaned_content
+        message.content = message.content.replace(prefix, "", 1)
         text = message.clean_content
-        text.replace(prefix, "", 1)
 
         async with channel.typing():
             future = await self.loop.run_in_executor(None, self.chatbot.get_response, text)
