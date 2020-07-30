@@ -36,7 +36,7 @@ The sqlite database can be safely deleted at any time. Deletion will only erase 
 
 
 # Installation
-The installation is currently very tricky, and only tested on a Windows Machine. 
+The installation is currently very tricky on Windows.
 
 There are a number of reasons for this, but the main ones are as follows:
 * Using a dev version of chatterbot
@@ -45,6 +45,8 @@ There are a number of reasons for this, but the main ones are as follows:
 * A symlink in spacy to map `en` to `en_core_web_sm` requires admin permissions on windows
 * C++ Build tools are required on Windows for spaCy
 * Pandoc is required for something on windows, but I can't remember what
+
+Linux is a bit easier, but only tested on Debian and Ubuntu.
 
 ## Windows Prerequisites
 
@@ -87,7 +89,25 @@ pip install --no-deps "chatterbot>=1.1"
 
 ### Linux - Manually
 
-Linux installation has not currently been evaluated, but Ubuntu testing is planned.
+#### Step 1: Built-in Downloader
+
+```
+[p]cog install Chatter
+```
+
+#### Step 2: Install Requirements
+
+In your console with your virtual environment activated:
+
+```
+pip install --no-deps "chatterbot>=1.1"
+```
+
+### Step 3: Load Chatter
+
+```
+[p]load chatter
+```
 
 # Configuration
 
