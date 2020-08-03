@@ -21,6 +21,7 @@ class AnnounceDaily(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.path = str(cog_data_path(self)).replace("\\", "/")
 

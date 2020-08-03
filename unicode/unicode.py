@@ -9,6 +9,7 @@ class Unicode(Cog):
     """Encode/Decode Unicode characters!"""
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
 
     @commands.group(name="unicode", pass_context=True)
