@@ -42,10 +42,14 @@ class Dad(Cog):
         async with aiohttp.ClientSession(headers=headers) as session:
             joke = await fetch_url(session, "https://icanhazdadjoke.com/")
 
-        em = discord.Embed()
-        em.set_image(url="https://icanhazdadjoke.com/j/{}.png".format(joke["id"]))
+        await ctx.maybe_send_embed(joke['joke'])
 
-        await ctx.send(embed=em)
+        # print(joke)
+        #
+        # em = discord.Embed()
+        # em.set_image(url="https://icanhazdadjoke.com/j/{}.png".format(joke["id"]))
+        #
+        # await ctx.send(embed=em)
 
     @commands.group()
     @checks.admin()
@@ -69,14 +73,15 @@ class Dad(Cog):
 
     @dad.command(name="cooldown")
     async def dad_cooldown(self, ctx: commands.Context, cooldown: int):
-        """Set the auto-joke cooldown"""
+        """Set the auto-joke cooldown in seconds"""
 
         await self.config.guild(ctx.guild).cooldown.set(cooldown)
-        await ctx.send("Dad joke cooldown is now set to {}".format(cooldown))
+        self.cooldown[ctx.guild.id] = datetime.now()
+        await ctx.send("Dad joke cooldown is now set to {} seconds".format(cooldown))
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        guild: discord.Guild = message.guild
+    async def on_message_without_command(self, message: discord.Message):
+        guild: discord.Guild = getattr(message, "guild", None)
         if guild is None:
             return
 
@@ -104,7 +109,7 @@ class Dad(Cog):
             else:
                 out = lower[4:]
             try:
-                await message.channel.send("Hi {}, I'm {}!".format(out, guild.me.display_name))
+                await message.channel.send(f"Hi {out}, I'm {guild.me.display_name}!")
             except discord.HTTPException:
                 return
 
