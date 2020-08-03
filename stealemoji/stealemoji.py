@@ -69,14 +69,14 @@ class StealEmoji(Cog):
 
         if not curr_setting:
             await self.config.notify.set(1)
-            await ctx.send("Bot owner will now be notified when an emoji is stolen")
+            await ctx.maybe_send_embed("Bot owner will now be notified when an emoji is stolen")
         elif curr_setting == 1:
             channel: discord.TextChannel = ctx.channel
             await self.config.notify.set(channel.id)
-            await ctx.send("This channel will now be notified when an emoji is stolen")
+            await ctx.maybe_send_embed("This channel will now be notified when an emoji is stolen")
         else:
             await self.config.notify.set(0)
-            await ctx.send("Notifications are now off")
+            await ctx.maybe_send_embed("Notifications are now off")
 
     @checks.is_owner()
     @stealemoji.command(name="collect")
@@ -87,7 +87,7 @@ class StealEmoji(Cog):
 
         self.is_on = await self.config.on()
 
-        await ctx.send("Collection is now " + str(not curr_setting))
+        await ctx.maybe_send_embed("Collection is now " + str(not curr_setting))
 
     @checks.is_owner()
     @commands.guild_only()
@@ -105,12 +105,12 @@ class StealEmoji(Cog):
         already_a_guildbank = ctx.guild.id in (await self.config.guildbanks())
 
         if already_a_guildbank:
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 "This is already an emoji bank\n"
                 "Are you sure you want to remove the current server from the emoji bank list? (y/n)"
             )
         else:
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 "This will upload custom emojis to this server\n"
                 "Are you sure you want to make the current server an emoji bank? (y/n)"
             )
@@ -118,7 +118,7 @@ class StealEmoji(Cog):
         msg = await self.bot.wait_for("message", check=check)
 
         if msg.content.upper() in ["N", "NO"]:
-            await ctx.send("Cancelled")
+            await ctx.maybe_send_embed("Cancelled")
             return
 
         async with self.config.guildbanks() as guildbanks:
@@ -128,9 +128,9 @@ class StealEmoji(Cog):
                 guildbanks.append(ctx.guild.id)
 
         if already_a_guildbank:
-            await ctx.send("This server has been removed from being an emoji bank")
+            await ctx.maybe_send_embed("This server has been removed from being an emoji bank")
         else:
-            await ctx.send("This server has been added to be an emoji bank")
+            await ctx.maybe_send_embed("This server has been added to be an emoji bank")
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):

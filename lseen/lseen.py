@@ -45,7 +45,7 @@ class LastSeen(Cog):
         enabled = not await self.config.guild(ctx.guild).enabled()
         await self.config.guild(ctx.guild).enabled.set(enabled)
 
-        await ctx.send(
+        await ctx.maybe_send_embed(
             "Seen for this server is now {}".format("Enabled" if enabled else "Disabled")
         )
 
@@ -60,7 +60,7 @@ class LastSeen(Cog):
         else:
             last_seen = await self.config.member(member).seen()
             if last_seen is None:
-                await ctx.send(embed=discord.Embed(description="I've never seen this user"))
+                await ctx.maybe_send_embed(embed=discord.Embed(description="I've never seen this user"))
                 return
             last_seen = self.get_date_time(last_seen)
 

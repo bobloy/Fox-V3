@@ -28,7 +28,7 @@ class Leaver(Cog):
         """Choose the channel to send leave messages to"""
         guild = ctx.guild
         await self.config.guild(guild).channel.set(ctx.channel.id)
-        await ctx.send("Channel set to " + ctx.channel.name)
+        await ctx.maybe_send_embed("Channel set to " + ctx.channel.name)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):

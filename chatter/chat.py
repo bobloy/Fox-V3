@@ -91,7 +91,7 @@ class Chatter(Cog):
         for channel in ctx.guild.text_channels:
             if in_channel:
                 channel = in_channel
-            await ctx.send("Gathering {}".format(channel.mention))
+            await ctx.maybe_send_embed("Gathering {}".format(channel.mention))
             user = None
             i = 0
             send_time = after - timedelta(days=100)  # Makes the first message a new message
@@ -167,7 +167,7 @@ class Chatter(Cog):
         """
 
         if not confirm:
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 "Warning, this command will erase all your training data and reset your configuration\n"
                 "If you want to proceed, run the command again as `[p]chatter cleardata True`"
             )
@@ -242,7 +242,7 @@ class Chatter(Cog):
         Backup your training data to a json for later use
         """
 
-        await ctx.send("Backing up data, this may take a while")
+        await ctx.maybe_send_embed("Backing up data, this may take a while")
 
         path: pathlib.Path = cog_data_path(self)
 
@@ -253,9 +253,9 @@ class Chatter(Cog):
         )
 
         if future:
-            await ctx.send(f"Backup successful! Look in {path} for your backup")
+            await ctx.maybe_send_embed(f"Backup successful! Look in {path} for your backup")
         else:
-            await ctx.send("Error occurred :(")
+            await ctx.maybe_send_embed("Error occurred :(")
 
     @chatter.command(name="trainenglish")
     async def chatter_train_english(self, ctx: commands.Context):
@@ -266,9 +266,9 @@ class Chatter(Cog):
             future = await self.loop.run_in_executor(None, self._train_english)
 
         if future:
-            await ctx.send("Training successful!")
+            await ctx.maybe_send_embed("Training successful!")
         else:
-            await ctx.send("Error occurred :(")
+            await ctx.maybe_send_embed("Error occurred :(")
 
     @chatter.command()
     async def train(self, ctx: commands.Context, channel: discord.TextChannel):
@@ -276,7 +276,7 @@ class Chatter(Cog):
         Trains the bot based on language in this guild
         """
 
-        await ctx.send(
+        await ctx.maybe_send_embed(
             "Warning: The cog may use significant RAM or CPU if trained on large data sets.\n"
             "Additionally, large sets will use more disk space to save the trained data.\n\n"
             "If you experience issues, clear your trained data and train again on a smaller scope."
@@ -286,10 +286,10 @@ class Chatter(Cog):
             conversation = await self._get_conversation(ctx, channel)
 
         if not conversation:
-            await ctx.send("Failed to gather training data")
+            await ctx.maybe_send_embed("Failed to gather training data")
             return
 
-        await ctx.send(
+        await ctx.maybe_send_embed(
             "Gather successful! Training begins now\n"
             "(**This will take a long time, be patient. See console for progress**)"
         )
@@ -304,9 +304,9 @@ class Chatter(Cog):
             pass
 
         if future:
-            await ctx.send("Training successful!")
+            await ctx.maybe_send_embed("Training successful!")
         else:
-            await ctx.send("Error occurred :(")
+            await ctx.maybe_send_embed("Error occurred :(")
 
     @commands.Cog.listener()
     async def on_message_without_command(self, message: discord.Message):
