@@ -179,7 +179,10 @@ class Chatter(Cog):
                 10
             )  # Pause to allow pending commands to complete before deleting sql data
             if os.path.isfile(self.data_path):
-                os.remove(self.data_path)
+                try:
+                    os.remove(self.data_path)
+                except PermissionError:
+                    await ctx.maybe_send_embed("Failed to clear training database. Please wait a bit and try again")
 
             self._create_chatbot(self.data_path, SpacySimilarity, 0.45, ENG_MD)
 
