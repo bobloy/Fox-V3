@@ -12,6 +12,7 @@ class Timerole(Cog):
     """Add roles to users based on time on server"""
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}

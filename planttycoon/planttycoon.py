@@ -16,6 +16,7 @@ class Gardener(commands.Cog):
     """Gardener class"""
 
     def __init__(self, user: discord.User, config: Config):
+        super().__init__()
         self.user = user
         self.config = config
         self.badges = []

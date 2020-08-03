@@ -11,6 +11,7 @@ class RecyclingPlant(Cog):
     """Apply for a job at the recycling plant!"""
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.junk = None
 
