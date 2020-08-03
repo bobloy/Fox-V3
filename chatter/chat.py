@@ -1,4 +1,5 @@
 import asyncio
+import os
 import pathlib
 from datetime import datetime, timedelta
 
@@ -49,7 +50,7 @@ class Chatter(Cog):
         self.loop = asyncio.get_event_loop()
 
     def _create_chatbot(
-        self, data_path, similarity_algorithm, similarity_threshold, tagger_language
+            self, data_path, similarity_algorithm, similarity_threshold, tagger_language
     ):
         return ChatBot(
             "ChatterBot",
@@ -72,8 +73,8 @@ class Chatter(Cog):
         after = datetime.today() - timedelta(days=(await self.config.guild(ctx.guild).days()))
         convo_delta = timedelta(minutes=(await self.config.guild(ctx.guild).convo_delta()))
 
-        def predicate(message: discord.Message):
-            return message.clean_content
+        def predicate(msg: discord.Message):
+            return msg.clean_content
 
         def new_conversation(msg, sent, out_in, delta):
             # if sent is None:
@@ -98,7 +99,7 @@ class Chatter(Cog):
             try:
 
                 async for message in channel.history(
-                    limit=None, after=after, oldest_first=True
+                        limit=None, after=after, oldest_first=True
                 ).filter(
                     predicate=predicate
                 ):  # type: discord.Message
@@ -131,20 +132,22 @@ class Chatter(Cog):
 
     def _train_english(self):
         trainer = ChatterBotCorpusTrainer(self.chatbot)
-        try:
-            trainer.train("chatterbot.corpus.english")
-        except:
-            return False
+        # try:
+        trainer.train("chatterbot.corpus.english")
+        # except:
+        #     return False
         return True
 
     def _train(self, data):
         trainer = ListTrainer(self.chatbot)
-        try:
-            for convo in data:
-                if len(convo) > 1:
-                    trainer.train(convo)
-        except:
-            return False
+        total = len(data)
+        # try:
+        for c, convo in enumerate(data, 1):
+            if len(convo) > 1:
+                print(f"{c} / {total}")
+                trainer.train(convo)
+        # except:
+        #     return False
         return True
 
     @commands.group(invoke_without_command=False)
@@ -154,6 +157,29 @@ class Chatter(Cog):
         """
         if ctx.invoked_subcommand is None:
             pass
+
+    @chatter.command(name="cleardata")
+    async def chatter_cleardata(self, ctx: commands.Context, confirm: bool = False):
+        """
+        This command will erase all training data and reset your configuration settings
+
+        Use `[p]chatter cleardata True`
+        """
+
+        if not confirm:
+            await ctx.send("Warning, this command will erase all your training data and reset your configuration\n"
+                           "If you want to proceed, run the command again as `[p]chatter cleardata True`")
+            return
+        async with ctx.typing():
+            await self.config.clear_all()
+            self.chatbot = None
+            await asyncio.sleep(10)  # Pause to allow pending commands to complete before deleting sql data
+            if os.path.isfile(self.data_path):
+                os.remove(self.data_path)
+
+            self._create_chatbot(self.data_path, SpacySimilarity, 0.45, ENG_MD)
+
+        await ctx.tick()
 
     @chatter.command(name="algorithm")
     async def chatter_algorithm(self, ctx: commands.Context, algo_number: int):
