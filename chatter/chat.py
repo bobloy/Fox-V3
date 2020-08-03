@@ -143,7 +143,7 @@ class Chatter(Cog):
         total = len(data)
         # try:
         for c, convo in enumerate(data, 1):
-            if len(convo) > 1:
+            if len(convo) > 1:  # TODO: Toggleable skipping short conversations
                 print(f"{c} / {total}")
                 trainer.train(convo)
         # except:
