@@ -6,18 +6,18 @@ Cog Function
 | --- | --- | --- |
 | announcedaily | **Alpha** | <details><summary>Send daily announcements to all servers at a specified times</summary>Commissioned release, so suggestions will not be accepted</details> |
 | audiotrivia | **Alpha** | <details><summary>Guess the audio using the core trivia cog</summary>Replaces the core Trivia cog. Needs help adding audio trivia lists, please submit a PR to contribute</details> |
-| ccrole | **Beta** | <details><summary>Create custom commands that also assign roles</summary>May have some bugs, please create an issue if you find any</details> |
-| chatter | **Alpha** | <details><summary>Chat-bot trained to talk like your guild</summary>Missing some key features, but currently functional</details> |
+| ccrole | **Release** | <details><summary>Create custom commands that also assign roles</summary>May have some bugs, please create an issue if you find any</details> |
+| chatter | **Beta** | <details><summary>Chat-bot trained to talk like your guild</summary>Missing some key features, but currently functional. See [Chatter](https://github.com/bobloy/Fox-V3/tree/master/chatter) for install instructions</details> |
 | coglint | **Alpha** | <details><summary>Error check code in python syntax posted to discord</summary>Works, but probably needs more turning to work for cogs</details> |
-| dad | **Alpha** | <details><summary>Tell dad jokes</summary>Works great!</details> |
+| dad | **Beta** | <details><summary>Tell dad jokes</summary>Works great!</details> |
 | exclusiverole | **Alpha** | <details><summary>Prevent certain roles from getting any other roles</summary>Fully functional, but pretty simple</details> |
 | fight | **Incomplete** | <details><summary>Organize bracket tournaments within discord</summary>Still in-progress, a massive project</details> |
 | flag | **Alpha** | <details><summary>Create temporary marks on users that expire after specified time</summary>Ported, will not import old data. Please report bugs</details> |
 | forcemention | **Alpha** | <details><summary>Mentions unmentionable roles</summary>Very simple cog, mention doesn't persist</details> |
-| hangman | **Alpha** | <details><summary>Play a game of hangman</summary>Some visual glitches and needs more customization</details> |
+| hangman | **Beta** | <details><summary>Play a game of hangman</summary>Some visual glitches and needs more customization</details> |
 | howdoi | **Incomplete** | <details><summary>Ask coding questions and get results from StackExchange</summary>Not yet functional</details> |
 | leaver | **Beta** | <details><summary>Send a message in a channel when a user leaves the server</summary>Seems to be functional, please report any bugs or suggestions</details> |
-| infochannel | **Alpha** | <details><summary>Create a channel to display server info</summary>Just released, please report bugs</details> |
+| infochannel | **Beta** | <details><summary>Create a channel to display server info</summary>Just released, please report bugs</details> |
 | lovecalculator | **Alpha** | <details><summary>Calculate the love between two users</summary>[Snap-Ons] Just updated to V3</details> |
 | lseen | **Alpha** | <details><summary>Track when a member was last online</summary>Alpha release, please report bugs</details> |
 | nudity | **Incomplete** | <details><summary>Checks for NSFW images posted in non-NSFW channels</summary>Library this is based on has a bug, waiting for author to merge my PR</details> |

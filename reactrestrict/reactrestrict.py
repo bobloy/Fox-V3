@@ -28,6 +28,7 @@ class ReactRestrict(Cog):
     """
 
     def __init__(self, red: Red):
+        super().__init__()
         self.bot = red
         self.config = Config.get_conf(
             self, 8210197991168210111511611410599116, force_registration=True
