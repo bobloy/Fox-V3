@@ -167,13 +167,17 @@ class Chatter(Cog):
         """
 
         if not confirm:
-            await ctx.send("Warning, this command will erase all your training data and reset your configuration\n"
-                           "If you want to proceed, run the command again as `[p]chatter cleardata True`")
+            await ctx.send(
+                "Warning, this command will erase all your training data and reset your configuration\n"
+                "If you want to proceed, run the command again as `[p]chatter cleardata True`"
+            )
             return
         async with ctx.typing():
             await self.config.clear_all()
             self.chatbot = None
-            await asyncio.sleep(10)  # Pause to allow pending commands to complete before deleting sql data
+            await asyncio.sleep(
+                10
+            )  # Pause to allow pending commands to complete before deleting sql data
             if os.path.isfile(self.data_path):
                 os.remove(self.data_path)
 
