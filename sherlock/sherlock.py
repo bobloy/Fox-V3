@@ -42,6 +42,22 @@ class Sherlock(commands.Cog):
             queries.add(member.nick)
         queries = list(queries)
 
-        results = await execute_queries(queries=queries, platforms=self.platforms)
+        async with ctx.typing():
+            results = await execute_queries(queries=queries, platforms=self.platforms)
 
-        await ctx.send("Hello world")
+            for result in results:
+                out = discord.Embed(
+                    title=str(result.platform),
+                    url=result.link,
+                    description=f"Valid: {result.valid}\nAvailable: {result.available}",
+                )
+                # out.description =
+                # out.add_field(name=result.platform, value=)
+
+                # out = "\n".join(
+                #     f"{result.query} on {result.platform}: {result.message} "
+                #     f"(Success: {result.success}, Valid: {result.valid}, Available: {result.available})"
+                #     for result in results
+                # )
+
+                await ctx.send(embed=out)
