@@ -29,7 +29,7 @@ class CCRole(commands.Cog):
 
         Highly customizable custom commands with role management."""
         if not ctx.invoked_subcommand:
-            await ctx.send_help()
+            pass
 
     @ccrole.command(name="add")
     @checks.mod_or_permissions(administrator=True)
