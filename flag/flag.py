@@ -1,9 +1,11 @@
 from datetime import date, timedelta
+from typing import Literal
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
+from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import pagify
 
 
@@ -21,6 +23,21 @@ class Flag(Cog):
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
+
+    async def red_delete_data_for_user(
+        self,
+        *,
+        requester: Literal["discord_deleted_user", "owner", "user", "user_strict"],
+        user_id: int,
+    ):
+        if requester not in ["discord_deleted_user", "owner"]:
+            return
+
+        all_members = await self.config.all_members()
+
+        async for guild_id, guild_data in AsyncIter(all_members.items(), steps=100):
+            if user_id in guild_data:
+                await self.config.member_from_ids(guild_id, user_id).clear()
 
     @checks.is_owner()
     @commands.guild_only()

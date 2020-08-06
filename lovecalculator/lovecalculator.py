@@ -9,7 +9,12 @@ class LoveCalculator(Cog):
     """Calculate the love percentage for two users!"""
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     @commands.command(aliases=["lovecalc"])
     async def lovecalculator(

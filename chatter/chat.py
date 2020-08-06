@@ -2,6 +2,7 @@ import asyncio
 import os
 import pathlib
 from datetime import datetime, timedelta
+from typing import Literal
 
 import discord
 from chatterbot import ChatBot
@@ -11,6 +12,7 @@ from chatterbot.trainers import ChatterBotCorpusTrainer, ListTrainer
 from redbot.core import Config, commands
 from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
+from redbot.core.utils import AsyncIter
 
 
 class ENG_LG:  # TODO: Add option to use this large model
@@ -49,8 +51,12 @@ class Chatter(Cog):
 
         self.loop = asyncio.get_event_loop()
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     def _create_chatbot(
-            self, data_path, similarity_algorithm, similarity_threshold, tagger_language
+        self, data_path, similarity_algorithm, similarity_threshold, tagger_language
     ):
         return ChatBot(
             "ChatterBot",
@@ -99,7 +105,7 @@ class Chatter(Cog):
             try:
 
                 async for message in channel.history(
-                        limit=None, after=after, oldest_first=True
+                    limit=None, after=after, oldest_first=True
                 ).filter(
                     predicate=predicate
                 ):  # type: discord.Message
@@ -182,7 +188,9 @@ class Chatter(Cog):
                 try:
                     os.remove(self.data_path)
                 except PermissionError:
-                    await ctx.maybe_send_embed("Failed to clear training database. Please wait a bit and try again")
+                    await ctx.maybe_send_embed(
+                        "Failed to clear training database. Please wait a bit and try again"
+                    )
 
             self._create_chatbot(self.data_path, SpacySimilarity, 0.45, ENG_MD)
 

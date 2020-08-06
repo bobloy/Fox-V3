@@ -15,6 +15,10 @@ class RecyclingPlant(Cog):
         self.bot = bot
         self.junk = None
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     def load_junk(self):
         junk_path = bundled_data_path(self) / "junk.json"
         with junk_path.open() as json_data:

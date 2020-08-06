@@ -48,6 +48,10 @@ class StealEmoji(Cog):
 
         self.is_on = None
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     @commands.group()
     async def stealemoji(self, ctx: commands.Context):
         """
