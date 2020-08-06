@@ -12,6 +12,7 @@
   "install_msg": "Thank you for installing Hangman! Get started with `[p]load hangman`, then `[p]help Hangman`",
   "requirements": [],
   "short": "Play Hangman",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "game",
     "fun",

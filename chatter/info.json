@@ -24,6 +24,7 @@
     "spacy>=2.3,<2.4"
   ],
   "short": "Local Chatbot run on machine learning",
+  "end_user_data_statement": "This cog only stores anonymous conversations data; no End User Data is stored.",
   "tags": [
     "chat",
     "chatbot",

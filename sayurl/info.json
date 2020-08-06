@@ -12,6 +12,7 @@
   "install_msg": "Thank you for installing SayUrl! Get started with `[p]load sayurl`, then `[p]help SayUrl",
   "requirements": ["html2text"],
   "short": "Convert URL to text",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "bobloy",
     "tools"

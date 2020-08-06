@@ -11,6 +11,7 @@
   "hidden": false,
   "install_msg": "Thank you for installing Custom Commands w/ Roles. Get started with `[p]load ccrole` and `[p]help CCRole`",
   "short": "[Incomplete] Creates commands that adjust roles",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "fox",
     "bobloy",

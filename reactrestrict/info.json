@@ -11,6 +11,7 @@
   "hidden": true,
   "install_msg": "Thank you for installing ReactRestrict.",
   "short": "[Incomplete] Prevent reactions",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "react",
     "reaction",

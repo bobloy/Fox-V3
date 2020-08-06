@@ -12,6 +12,7 @@
   "hidden": false,
   "install_msg": "Thank you for installing RecyclingPlant. Start recycling today with `[p]load recyclingplant`, then `[p]recyclingplant`",
   "short": "Apply for a job at the recycling plant!",
+  "end_user_data_statement": "This cog used the core",
   "tags": [
     "bobloy",
     "environment",

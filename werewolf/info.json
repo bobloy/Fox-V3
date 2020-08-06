@@ -12,6 +12,7 @@
   "install_msg": "Thank you for installing Werewolf! Get started with `[p]load werewolf`\n Use `[p]wwset` to run inital setup",
   "requirements": [],
   "short": "Werewolf Game",
+  "end_user_data_statement": "This store user IDs in memory while they're actively using the cog, and store no persistent End User Data.",
   "tags": [
     "mafia",
     "werewolf",

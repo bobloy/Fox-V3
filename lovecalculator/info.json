@@ -15,6 +15,7 @@
     "beautifulsoup4"
   ],
   "short": "Calculate love percentage",
+  "end_user_data_statement": "This cog uses the core Bank cog. It store no End User Data otherwise.",
   "tags": [
     "bobloy",
     "fun",
