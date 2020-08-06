@@ -33,11 +33,11 @@ class Flag(Cog):
         if requester not in ["discord_deleted_user", "owner"]:
             return
 
-        all_members = await self.config.all_members()
+        all_guilds = await self.config.all_guilds()
 
-        async for guild_id, guild_data in AsyncIter(all_members.items(), steps=100):
-            if user_id in guild_data:
-                await self.config.member_from_ids(guild_id, user_id).clear()
+        async for guild_id, guild_data in AsyncIter(all_guilds.items(), steps=100):
+            if user_id in guild_data["flags"]:
+                await self.config.guild_from_id(guild_id).flags.clear_raw(user_id)
 
     @checks.is_owner()
     @commands.guild_only()
