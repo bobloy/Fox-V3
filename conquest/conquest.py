@@ -1,15 +1,15 @@
 import json
+import os
 import pathlib
-from io import BytesIO
+from shutil import copyfile
 from typing import Optional
 
 import discord
-from PIL import Image
+from PIL import Image, ImageColor
 from discord.ext.commands import Greedy
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path, cog_data_path
-from shutil import copyfile
 
 
 class Conquest(commands.Cog):
@@ -39,6 +39,7 @@ class Conquest(commands.Cog):
 
     async def load_data(self):
         self.asset_path = bundled_data_path(self) / "assets"
+        print(self.asset_path)
 
     @commands.group()
     async def conquest(self, ctx: commands.Context):
@@ -54,25 +55,11 @@ class Conquest(commands.Cog):
         List currently available maps
         """
         maps_json = self.asset_path / "maps.json"
-        
-        async with maps_json.open() as maps:
-            map_list = "\n".join(map_name for map_name in maps["maps"])
+
+        with maps_json.open() as maps:
+            maps_json = json.load(maps)
+            map_list = "\n".join(map_name for map_name in maps_json["maps"])
             await ctx.maybe_send_embed(f"Current maps:\n{map_list}")
-
-    @conquest.command(name="current")
-    async def _conquest_current(self, ctx: commands.Context):
-        """
-        Send the current map.
-        """
-        if self.current_map:
-            await ctx.maybe_send_embed(
-                "No map is currently set. See `[p]conquestset map`"
-            )
-            return
-
-        current_jpg = self.data_path / self.current_map / "current.jpg"
-        with current_jpg.open() as map_file:
-            await ctx.send(file=discord.File(fp=map_file, filename="current_map.jpg"))
 
     @conquest.group(name="set")
     async def conquest_set(self, ctx: commands.Context):
@@ -80,8 +67,43 @@ class Conquest(commands.Cog):
         if ctx.invoked_subcommand is None:
             pass
 
+    @conquest_set.command(name="save")
+    async def _conquest_set_save(self, ctx: commands.Context, *, save_name):
+        """Save the current map to be loaded later"""
+        if self.current_map is None:
+            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            return
+
+        current_map_folder = self.data_path / self.current_map
+        current_map = current_map_folder / "current.jpg"
+
+        if not current_map_folder.exists() or not current_map.exists():
+            await ctx.maybe_send_embed("Current map doesn't exist! Try settin a new one")
+            return
+
+        copyfile(current_map, current_map_folder / f"{save_name}.jpg")
+        await ctx.tick()
+
+    @conquest_set.command(name="load")
+    async def _conquest_set_load(self, ctx: commands.Context, *, save_name):
+        """Load a saved map to be the current map"""
+        if self.current_map is None:
+            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            return
+
+        current_map_folder = self.data_path / self.current_map
+        current_map = current_map_folder / "current.jpg"
+        saved_map = current_map_folder / f"{save_name}.jpg"
+
+        if not current_map_folder.exists() or not saved_map.exists():
+            await ctx.maybe_send_embed(f"Saved map not found in the {self.current_map} folder")
+            return
+
+        copyfile(saved_map, current_map)
+        await ctx.tick()
+
     @conquest_set.command(name="map")
-    async def _conquest_set_map(self, ctx: commands.Context, mapname: str):
+    async def _conquest_set_map(self, ctx: commands.Context, mapname: str, reset: bool = False):
         """
         Select a map from current available maps
 
@@ -95,18 +117,36 @@ class Conquest(commands.Cog):
             return
 
         self.current_map = mapname
-        async with open(self.asset_path / mapname / "data.json") as mapdata:
+        map_data_path = self.asset_path / mapname / "data.json"
+        with map_data_path.open() as mapdata:
             self.map_data = json.load(mapdata)
 
-        current_map = self.data_path / self.current_map / "current.jpg"
-        if current_map.exists():
+        current_map_folder = self.data_path / self.current_map
+        current_map = current_map_folder / "current.jpg"
+
+        if not reset and current_map.exists():
             await ctx.maybe_send_embed(
-                "This map is already in progress, resuming from last game"
+                "This map is already in progress, resuming from last game\n"
+                "Use `[p]conquest set map [mapname] True` to start a new game"
             )
         else:
+            if not current_map_folder.exists():
+                os.makedirs(current_map_folder)
             copyfile(self.asset_path / mapname / "blank.jpg", current_map)
 
         await ctx.tick()
+
+    @conquest.command(name="current")
+    async def _conquest_current(self, ctx: commands.Context):
+        """
+        Send the current map.
+        """
+        if self.current_map is None:
+            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            return
+
+        current_jpg = self.data_path / self.current_map / "current.jpg"
+        await ctx.send(file=discord.File(fp=current_jpg, filename="current_map.jpg"))
 
     @conquest.command("blank")
     async def _conquest_blank(self, ctx: commands.Context):
@@ -114,13 +154,11 @@ class Conquest(commands.Cog):
         Print the blank version of the current map, for reference.
         """
         if self.current_map is None:
-            await ctx.maybe_send_embed(
-                "No map is currently set. See `[p]conquest set map`"
-            )
+            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        with open(self.asset_path / self.current_map / "blank.jpg") as map_file:
-            await ctx.send(file=discord.File(fp=map_file, filename="blank_map.jpg"))
+        current_blank_jpg = self.asset_path / self.current_map / "blank.jpg"
+        await ctx.send(file=discord.File(fp=current_blank_jpg, filename="blank_map.jpg"))
 
     @conquest.command("numbered")
     async def _conquest_numbered(self, ctx: commands.Context):
@@ -128,18 +166,14 @@ class Conquest(commands.Cog):
         Print the numbered version of the current map, for reference.
         """
         if self.current_map is None:
-            await ctx.maybe_send_embed(
-                "No map is currently set. See `[p]conquest set map`"
-            )
+            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        with open(self.asset_path / self.current_map / "numbered.jpg") as map_file:
-            await ctx.send(file=discord.File(fp=map_file, filename="numbered_map.jpg"))
+        current_numbered_jpg = self.asset_path / self.current_map / "numbered.jpg"
+        await ctx.send(file=discord.File(fp=current_numbered_jpg, filename="numbered_map.jpg"))
 
     @conquest.command(name="take")
-    async def _conquest_take(
-        self, ctx: commands.Context, regions: Greedy[int], color: str
-    ):
+    async def _conquest_take(self, ctx: commands.Context, regions: Greedy[int], *, color: str):
         """
         Claim a territory or list of territories for a specified color
 
@@ -151,9 +185,13 @@ class Conquest(commands.Cog):
             return
 
         if self.current_map is None:
-            await ctx.maybe_send_embed(
-                "No map is currently set. See `[p]conquest set map`"
-            )
+            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            return
+
+        try:
+            color = ImageColor.getrgb(color)
+        except ValueError:
+            await ctx.maybe_send_embed(f"Invalid color {color}")
             return
 
         for region in regions:
@@ -162,23 +200,22 @@ class Conquest(commands.Cog):
                     f"Max region number is {self.map_data['region_max']}, minimum is 1"
                 )
 
-        im = Image.open(self.data_path / self.current_map / "current.jpg")
+        current_jpg_path = self.data_path / self.current_map / "current.jpg"
+        im = Image.open(current_jpg_path)
         out: Image.Image = await self._composite_image(im, regions, color)
 
-        out.save(self.data_path / self.current_map / "current.jpg", "jpeg")
+        out.save(current_jpg_path, "jpeg")
 
-        output_buffer = BytesIO()
-        out.save(output_buffer, "jpeg")
-        output_buffer.seek(0)
-
-        await ctx.send(file=discord.File(fp=output_buffer, filename="map.jpg"))
+        await ctx.send(file=discord.File(fp=current_jpg_path, filename="map.jpg"))
 
     async def _composite_image(self, im, regions, color) -> Image.Image:
+
         im2 = Image.new("RGB", im.size, color)
+
         out = None
         for region in regions:
             mask = Image.open(
-                self.asset_path / f"simple_blank_map/masks/{region}.jpg"
+                self.asset_path / self.current_map / "masks" / f"{region}.jpg"
             ).convert("L")
             if out is None:
                 out = Image.composite(im, im2, mask)
