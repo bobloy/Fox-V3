@@ -11,7 +11,9 @@
   "hidden": true,
   "install_msg": "Thank you for installing Dad. Get started with `[p]load conquest`, then `[p]help Conquest`",
   "short": "War Game Map",
-  "requirements": ["pillow",],
+  "requirements": [
+    "pillow"
+  ],
   "tags": [
     "bobloy",
     "games",
