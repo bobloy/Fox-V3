@@ -22,11 +22,13 @@ class Conquest(commands.Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=0, force_registration=True)
+        self.config = Config.get_conf(self, identifier=67111110113117101115116, force_registration=True)
 
         default_guild = {}
-
+        default_global = {"current_map": None}
         self.config.register_guild(**default_guild)
+        self.config.register_global(**default_global)
+
         self.data_path: pathlib.Path = cog_data_path(self)
         self.asset_path: Optional[pathlib.Path] = None
 
@@ -39,7 +41,7 @@ class Conquest(commands.Cog):
 
     async def load_data(self):
         self.asset_path = bundled_data_path(self) / "assets"
-        print(self.asset_path)
+        self.current_map = await self.config.current_map()
 
     @commands.group()
     async def conquest(self, ctx: commands.Context):
@@ -66,6 +68,30 @@ class Conquest(commands.Cog):
         """Base command for admin actions like selecting a map"""
         if ctx.invoked_subcommand is None:
             pass
+
+    @conquest_set.command(name="zoomtest")
+    async def _conquest_set_zoomtest(self, ctx: commands.Context, x: int, y: int, zoom: float):
+        """Test the zoom level and position of the current map"""
+        if self.current_map is None:
+            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            return
+
+        current_map = Image.open(self.data_path / self.current_map / "current.jpg")
+
+        w, h = current_map.size
+        zoom2 = zoom * 2
+        zoomed_map = current_map.crop((x - w / zoom2, y - h / zoom2, x + w / zoom2, y + h / zoom2))
+
+        # zoomed_map = zoomed_map.resize((w, h), Image.LANCZOS)
+
+        zoomed_map.save(self.data_path / self.current_map / "current_zoomed.jpg", "jpeg")
+
+        await ctx.send(
+            file=discord.File(
+                fp=self.data_path / self.current_map / "current_zoomed.jpg",
+                filename="current_zoomed.jpg",
+            )
+        )
 
     @conquest_set.command(name="save")
     async def _conquest_set_save(self, ctx: commands.Context, *, save_name):
@@ -117,6 +143,8 @@ class Conquest(commands.Cog):
             return
 
         self.current_map = mapname
+        await self.config.current_map.set(self.current_map)  # Save to config too
+
         map_data_path = self.asset_path / mapname / "data.json"
         with map_data_path.open() as mapdata:
             self.map_data = json.load(mapdata)
@@ -169,8 +197,18 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
+        numbers_path = self.asset_path / self.current_map / "numbers.jpg"
+        if not numbers_path.exists():
+            await ctx.send(
+                file=discord.File(
+                    fp=self.asset_path / self.current_map / "numbered.jpg",
+                    filename="numbered.jpg",
+                )
+            )
+            return
+
         current_map = Image.open(self.data_path / self.current_map / "current.jpg")
-        numbers = Image.open(self.asset_path / self.current_map / "numbers.jpg").convert("L")
+        numbers = Image.open(numbers_path).convert("L")
 
         inverted_map = ImageOps.invert(current_map)
 
