@@ -1,7 +1,6 @@
 import json
 import os
 import pathlib
-from io import BytesIO
 from shutil import copyfile
 from typing import Optional
 
@@ -170,21 +169,22 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        await ctx.send(file=discord.File(fp=self.data_path / self.current_map / "current.jpg", filename="current.jpg"))
-        await ctx.send(file=discord.File(fp=self.asset_path / self.current_map / "numbers.jpg", filename="numbers.jpg"))
-
         current_map = Image.open(self.data_path / self.current_map / "current.jpg")
         numbers = Image.open(self.asset_path / self.current_map / "numbers.jpg").convert("L")
 
         inverted_map = ImageOps.invert(current_map)
 
         current_numbered_jpg: Image.Image = Image.composite(current_map, inverted_map, numbers)
+        current_numbered_jpg.save(
+            self.data_path / self.current_map / "current_numbered.jpg", "jpeg"
+        )
 
-        output_buffer = BytesIO()
-        current_numbered_jpg.save(output_buffer, "jpeg")
-        current_numbered_jpg.seek(0)
-
-        await ctx.send(file=discord.File(fp=output_buffer, filename="numbered_map.jpg"))
+        await ctx.send(
+            file=discord.File(
+                fp=self.data_path / self.current_map / "current_numbered.jpg",
+                filename="current_numbered.jpg",
+            )
+        )
 
     @conquest.command(name="take")
     async def _conquest_take(self, ctx: commands.Context, regions: Greedy[int], *, color: str):
