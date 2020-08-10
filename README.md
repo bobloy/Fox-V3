@@ -9,6 +9,7 @@ Cog Function
 | ccrole | **Release** | <details><summary>Create custom commands that also assign roles</summary>May have some bugs, please create an issue if you find any</details> |
 | chatter | **Beta** | <details><summary>Chat-bot trained to talk like your guild</summary>Missing some key features, but currently functional. See [Chatter](https://github.com/bobloy/Fox-V3/tree/master/chatter) for install instructions</details> |
 | coglint | **Alpha** | <details><summary>Error check code in python syntax posted to discord</summary>Works, but probably needs more turning to work for cogs</details> |
+| conquest | **Alpha** | <details><summary>Manage maps for war games and RPGs</summary>Lots of additional features are planned, currently function with simple map</details> |
 | dad | **Beta** | <details><summary>Tell dad jokes</summary>Works great!</details> |
 | exclusiverole | **Alpha** | <details><summary>Prevent certain roles from getting any other roles</summary>Fully functional, but pretty simple</details> |
 | fight | **Incomplete** | <details><summary>Organize bracket tournaments within discord</summary>Still in-progress, a massive project</details> |
