@@ -1,11 +1,12 @@
 import json
 import os
 import pathlib
+from io import BytesIO
 from shutil import copyfile
 from typing import Optional
 
 import discord
-from PIL import Image, ImageColor
+from PIL import Image, ImageColor, ImageOps
 from discord.ext.commands import Greedy
 from redbot.core import Config, commands
 from redbot.core.bot import Red
@@ -169,8 +170,21 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        current_numbered_jpg = self.asset_path / self.current_map / "numbered.jpg"
-        await ctx.send(file=discord.File(fp=current_numbered_jpg, filename="numbered_map.jpg"))
+        await ctx.send(file=discord.File(fp=self.data_path / self.current_map / "current.jpg", filename="current.jpg"))
+        await ctx.send(file=discord.File(fp=self.asset_path / self.current_map / "numbers.jpg", filename="numbers.jpg"))
+
+        current_map = Image.open(self.data_path / self.current_map / "current.jpg")
+        numbers = Image.open(self.asset_path / self.current_map / "numbers.jpg").convert("L")
+
+        inverted_map = ImageOps.invert(current_map)
+
+        current_numbered_jpg: Image.Image = Image.composite(current_map, inverted_map, numbers)
+
+        output_buffer = BytesIO()
+        current_numbered_jpg.save(output_buffer, "jpeg")
+        current_numbered_jpg.seek(0)
+
+        await ctx.send(file=discord.File(fp=output_buffer, filename="numbered_map.jpg"))
 
     @conquest.command(name="take")
     async def _conquest_take(self, ctx: commands.Context, regions: Greedy[int], *, color: str):
@@ -202,13 +216,13 @@ class Conquest(commands.Cog):
 
         current_jpg_path = self.data_path / self.current_map / "current.jpg"
         im = Image.open(current_jpg_path)
-        out: Image.Image = await self._composite_image(im, regions, color)
+        out: Image.Image = await self._composite_regions(im, regions, color)
 
         out.save(current_jpg_path, "jpeg")
 
         await ctx.send(file=discord.File(fp=current_jpg_path, filename="map.jpg"))
 
-    async def _composite_image(self, im, regions, color) -> Image.Image:
+    async def _composite_regions(self, im, regions, color) -> Image.Image:
 
         im2 = Image.new("RGB", im.size, color)
 
