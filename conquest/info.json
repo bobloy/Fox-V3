@@ -9,7 +9,7 @@
   ],
   "description": "Handle war games by filling in specified territories with colors",
   "hidden": false,
-  "install_msg": "Thank you for installing Dad. Get started with `[p]load conquest`, then `[p]help Conquest`",
+  "install_msg": "Thank you for installing Conquest. Get started with `[p]load conquest`, then `[p]help Conquest`",
   "short": "War Game Map",
   "requirements": [
     "Pillow"
