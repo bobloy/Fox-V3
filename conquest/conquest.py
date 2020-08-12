@@ -20,6 +20,8 @@ class Conquest(commands.Cog):
 
     default_zoom_json = {"enabled": False, "x": -1, "y": -1, "zoom": 1.0}
 
+    default_custom_map = {"name": "", "im": None, "regions": {}, "extension": "png"}
+
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
@@ -34,13 +36,13 @@ class Conquest(commands.Cog):
 
         self.data_path: pathlib.Path = cog_data_path(self)
 
-        custom_map_folder = self.data_path / "custom_maps"
-        if not custom_map_folder.exists() or not custom_map_folder.is_dir():
-            os.makedirs(custom_map_folder)
+        self.custom_map_folder = self.data_path / "custom_maps"
+        if not self.custom_map_folder.exists() or not self.custom_map_folder.is_dir():
+            os.makedirs(self.custom_map_folder)
 
-        current_map_folder = self.data_path / "current_maps"
-        if not current_map_folder.exists() or not current_map_folder.is_dir():
-            os.makedirs(current_map_folder)
+        self.current_map_folder = self.data_path / "current_maps"
+        if not self.current_map_folder.exists() or not self.current_map_folder.is_dir():
+            os.makedirs(self.current_map_folder)
 
         self.asset_path: Optional[pathlib.Path] = None
 
@@ -50,7 +52,6 @@ class Conquest(commands.Cog):
         self.ext_format = None
 
         self.mm_current_map = None
-        self.mm_im = None
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -74,7 +75,7 @@ class Conquest(commands.Cog):
         self.ext_format = "JPEG" if self.ext.upper() == "JPG" else self.ext.upper()
 
     async def _get_current_map_path(self):
-        return self.data_path / "current_maps" / self.current_map
+        return self.current_map_folder / self.current_map
 
     async def _create_zoomed_map(self, map_path, x, y, zoom, **kwargs):
         current_map = Image.open(map_path)
@@ -142,14 +143,35 @@ class Conquest(commands.Cog):
     @mapmaker.command(name="save")
     async def _mapmaker_save(self, ctx: commands.Context, *, map_name: str):
         """Save the current map to the specified map name"""
-        if not self.mm_im:
+        if not self.mm_current_map:
+            await ctx.maybe_send_embed("No map currently being worked on")
+            return
+
+        if not self.mm_current_map["im"]:
             await ctx.maybe_send_embed("No map image to save")
             return
 
-        custom_map_folder = self.data_path / "custom_maps"
+        self.mm_current_map["name"] = map_name
 
-        if not custom_map_folder.exists():
-            os.makedirs(custom_map_folder)
+        target_save = self.custom_map_folder / map_name
+
+        if target_save.exists() and target_save.is_dir():
+            await ctx.maybe_send_embed(f"{map_name} already exists, okay to overwrite?")
+
+            def check(m):
+                return (
+                        m.content.upper() in ["Y", "YES", "N", "NO"]
+                        and m.channel == ctx.channel
+                        and m.author == ctx.author
+                )
+
+            msg = await self.bot.wait_for("message", check=check)
+
+            if msg.content.upper() in ["N", "NO"]:
+                await ctx.send("Cancelled")
+                return
+
+
 
     @mapmaker.command(name="upload")
     async def _mapmaker_upload(self, ctx: commands.Context, map_path=""):
@@ -161,6 +183,9 @@ class Conquest(commands.Cog):
             )
             return
 
+        if not self.mm_current_map:
+            self.mm_current_map = self.default_custom_map.copy()
+
         if map_path:
             map_path = pathlib.Path(map_path)
 
@@ -168,11 +193,11 @@ class Conquest(commands.Cog):
                 await ctx.maybe_send_embed("Map not found at that path")
                 return
 
-            self.mm_im = Image.open(map_path)
+            self.mm_current_map["im"] = Image.open(map_path)
 
         if message.attachments:
             attch: discord.Attachment = message.attachments[0]
-            self.mm_im = Image.frombytes("RGBA", (attch.width, attch.height), attch.read())
+            self.mm_current_map["im"] = Image.frombytes("RGBA", (attch.width, attch.height), attch.read())
 
     @mapmaker.command(name="load")
     async def _mapmaker_load(self, ctx: commands.Context, map_name=""):
@@ -398,7 +423,7 @@ class Conquest(commands.Cog):
             )
             return
 
-        current_map_path = self.data_path / "current_maps" / self.current_map
+        current_map_path = await self._get_current_map_path()
         current_map = Image.open(current_map_path / f"current.{self.ext}")
         numbers = Image.open(numbers_path).convert("L")
 
@@ -421,6 +446,11 @@ class Conquest(commands.Cog):
     async def _conquest_multitake(
         self, ctx: commands.Context, start_region: int, end_region: int, color: str
     ):
+        """
+        Claim all the territories between the two provided region numbers (inclusive)
+
+        :param start_region:
+        """
         if self.current_map is None:
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
@@ -436,6 +466,10 @@ class Conquest(commands.Cog):
                 f"Max region number is {self.map_data['region_max']}, minimum is 1"
             )
             return
+
+        if start_region < end_region:
+            start_region, end_region = end_region, start_region
+
         regions = [r for r in range(start_region, end_region + 1)]
 
         await self._process_take_regions(color, ctx, regions)

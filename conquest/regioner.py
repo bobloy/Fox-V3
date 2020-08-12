@@ -84,6 +84,13 @@ class Regioner:
         self.region_color = ImageColor.getcolor(region_color, "L")
 
     def execute(self):
+        """
+        Create the regions of the map
+
+        TODO: Using proper multithreading best practices.
+        TODO: This is iterating over a 2d array with some overlap, you went to school for this Bozo
+        """
+
         base_img_path = self.filepath / self.filename
         if not base_img_path.exists():
             return None
@@ -121,7 +128,7 @@ class Regioner:
 
                         already_processed.update(filled)
 
-        # TODO: save mask_centers to json
+        # TODO: save mask_centers
 
         return self.create_number_mask(base_img, mask_centers)
 
