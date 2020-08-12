@@ -52,7 +52,8 @@ class Conquest(commands.Cog):
         self.asset_path = bundled_data_path(self) / "assets"
         self.current_map = await self.config.current_map()
 
-        await self.current_map_load()
+        if self.current_map:
+            await self.current_map_load()
 
     async def current_map_load(self):
         map_data_path = self.asset_path / self.current_map / "data.json"
