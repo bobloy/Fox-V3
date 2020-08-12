@@ -8,7 +8,7 @@
     0
   ],
   "description": "Cog to prevent reactions on specific messages from certain users",
-  "hidden": true,
+  "hidden": false,
   "install_msg": "Thank you for installing ReactRestrict.",
   "short": "[Incomplete] Prevent reactions",
   "tags": [
