@@ -38,9 +38,13 @@ class MapMaker(commands.Cog):
         """Load a map image to be modified. Upload one with this command or provide a path"""
         message: discord.Message = ctx.message
         if not message.attachments and not map_path:
-            await ctx.maybe_send_embed("Either upload an image with this command or provide a path to the image")
+            await ctx.maybe_send_embed(
+                "Either upload an image with this command or provide a path to the image"
+            )
             return
+        await ctx.maybe_send_embed("WIP")
 
     @mapmaker.command(name="load")
     async def _mapmaker_load(self, ctx: commands.Context, map_name=""):
         """Load an existing map to be modified."""
+        await ctx.maybe_send_embed("WIP")
