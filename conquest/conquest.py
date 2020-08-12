@@ -33,6 +33,15 @@ class Conquest(commands.Cog):
         self.config.register_global(**default_global)
 
         self.data_path: pathlib.Path = cog_data_path(self)
+
+        custom_map_folder = self.data_path / "custom_maps"
+        if not custom_map_folder.exists() or not custom_map_folder.is_dir():
+            os.makedirs(custom_map_folder)
+
+        current_map_folder = self.data_path / "current_maps"
+        if not current_map_folder.exists() or not current_map_folder.is_dir():
+            os.makedirs(current_map_folder)
+
         self.asset_path: Optional[pathlib.Path] = None
 
         self.current_map = None
@@ -64,6 +73,64 @@ class Conquest(commands.Cog):
         self.ext = self.map_data["extension"]
         self.ext_format = "JPEG" if self.ext.upper() == "JPG" else self.ext.upper()
 
+    async def _get_current_map_path(self):
+        return self.data_path / "current_maps" / self.current_map
+
+    async def _create_zoomed_map(self, map_path, x, y, zoom, **kwargs):
+        current_map = Image.open(map_path)
+
+        w, h = current_map.size
+        zoom2 = zoom * 2
+        zoomed_map = current_map.crop((x - w / zoom2, y - h / zoom2, x + w / zoom2, y + h / zoom2))
+        # zoomed_map = zoomed_map.resize((w, h), Image.LANCZOS)
+        current_map_path_ = await self._get_current_map_path()
+        zoomed_map.save(current_map_path_ / f"zoomed.{self.ext}", self.ext_format)
+        return current_map_path_ / f"zoomed.{self.ext}"
+
+    async def _send_maybe_zoomed_map(self, ctx, map_path, filename):
+        zoom_data = {"enabled": False}
+
+        zoom_json_path = await self._get_current_map_path() / "settings.json"
+
+        if zoom_json_path.exists():
+            with zoom_json_path.open() as zoom_json:
+                zoom_data = json.load(zoom_json)
+
+        if zoom_data["enabled"]:
+            map_path = await self._create_zoomed_map(map_path, **zoom_data)
+
+        await ctx.send(file=discord.File(fp=map_path, filename=filename))
+
+    async def _process_take_regions(self, color, ctx, regions):
+        current_img_path = await self._get_current_map_path() / f"current.{self.ext}"
+        im = Image.open(current_img_path)
+        async with ctx.typing():
+            out: Image.Image = await self._composite_regions(im, regions, color)
+            out.save(current_img_path, self.ext_format)
+            await self._send_maybe_zoomed_map(ctx, current_img_path, f"map.{self.ext}")
+
+    async def _composite_regions(self, im, regions, color) -> Image.Image:
+        im2 = Image.new("RGB", im.size, color)
+
+        loop = asyncio.get_running_loop()
+
+        combined_mask = None
+        for region in regions:
+            mask = Image.open(
+                self.asset_path / self.current_map / "masks" / f"{region}.{self.ext}"
+            ).convert("L")
+            if combined_mask is None:
+                combined_mask = mask
+            else:
+                # combined_mask = ImageChops.logical_or(combined_mask, mask)
+                combined_mask = await loop.run_in_executor(
+                    None, ImageChops.multiply, combined_mask, mask
+                )
+
+        out = await loop.run_in_executor(None, Image.composite, im, im2, combined_mask)
+
+        return out
+
     @commands.group()
     async def mapmaker(self, ctx: commands.context):
         """
@@ -75,6 +142,14 @@ class Conquest(commands.Cog):
     @mapmaker.command(name="save")
     async def _mapmaker_save(self, ctx: commands.Context, *, map_name: str):
         """Save the current map to the specified map name"""
+        if not self.mm_im:
+            await ctx.maybe_send_embed("No map image to save")
+            return
+
+        custom_map_folder = self.data_path / "custom_maps"
+
+        if not custom_map_folder.exists():
+            os.makedirs(custom_map_folder)
 
     @mapmaker.command(name="upload")
     async def _mapmaker_upload(self, ctx: commands.Context, map_path=""):
@@ -98,7 +173,6 @@ class Conquest(commands.Cog):
         if message.attachments:
             attch: discord.Attachment = message.attachments[0]
             self.mm_im = Image.frombytes("RGBA", (attch.width, attch.height), attch.read())
-
 
     @mapmaker.command(name="load")
     async def _mapmaker_load(self, ctx: commands.Context, map_name=""):
@@ -139,7 +213,7 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        zoom_json_path = self.data_path / self.current_map / "settings.json"
+        zoom_json_path = await self._get_current_map_path() / "settings.json"
         if not zoom_json_path.exists():
             await ctx.maybe_send_embed(
                 f"No zoom data found for {self.current_map}, reset not needed"
@@ -168,7 +242,7 @@ class Conquest(commands.Cog):
             await ctx.send_help()
             return
 
-        zoom_json_path = self.data_path / self.current_map / "settings.json"
+        zoom_json_path = await self._get_current_map_path() / "settings.json"
 
         zoom_data = self.default_zoom_json.copy()
         zoom_data["enabled"] = True
@@ -199,20 +273,10 @@ class Conquest(commands.Cog):
             return
 
         zoomed_path = await self._create_zoomed_map(
-            self.data_path / self.current_map / f"current.{self.ext}", x, y, zoom
+            await self._get_current_map_path() / f"current.{self.ext}", x, y, zoom
         )
 
         await ctx.send(file=discord.File(fp=zoomed_path, filename=f"current_zoomed.{self.ext}",))
-
-    async def _create_zoomed_map(self, map_path, x, y, zoom, **kwargs):
-        current_map = Image.open(map_path)
-
-        w, h = current_map.size
-        zoom2 = zoom * 2
-        zoomed_map = current_map.crop((x - w / zoom2, y - h / zoom2, x + w / zoom2, y + h / zoom2))
-        # zoomed_map = zoomed_map.resize((w, h), Image.LANCZOS)
-        zoomed_map.save(self.data_path / self.current_map / f"zoomed.{self.ext}", self.ext_format)
-        return self.data_path / self.current_map / f"zoomed.{self.ext}"
 
     @conquest_set.command(name="save")
     async def _conquest_set_save(self, ctx: commands.Context, *, save_name):
@@ -221,7 +285,7 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        current_map_folder = self.data_path / self.current_map
+        current_map_folder = await self._get_current_map_path()
         current_map = current_map_folder / f"current.{self.ext}"
 
         if not current_map_folder.exists() or not current_map.exists():
@@ -238,7 +302,7 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        current_map_folder = self.data_path / self.current_map
+        current_map_folder = await self._get_current_map_path()
         current_map = current_map_folder / f"current.{self.ext}"
         saved_map = current_map_folder / f"{save_name}.{self.ext}"
 
@@ -274,7 +338,7 @@ class Conquest(commands.Cog):
         #
         # self.ext = self.map_data["extension"]
 
-        current_map_folder = self.data_path / self.current_map
+        current_map_folder = await self._get_current_map_path()
         current_map = current_map_folder / f"current.{self.ext}"
 
         if not reset and current_map.exists():
@@ -298,23 +362,9 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        current_img = self.data_path / self.current_map / f"current.{self.ext}"
+        current_img = await self._get_current_map_path() / f"current.{self.ext}"
 
         await self._send_maybe_zoomed_map(ctx, current_img, f"current_map.{self.ext}")
-
-    async def _send_maybe_zoomed_map(self, ctx, map_path, filename):
-        zoom_data = {"enabled": False}
-
-        zoom_json_path = self.data_path / self.current_map / "settings.json"
-
-        if zoom_json_path.exists():
-            with zoom_json_path.open() as zoom_json:
-                zoom_data = json.load(zoom_json)
-
-        if zoom_data["enabled"]:
-            map_path = await self._create_zoomed_map(map_path, **zoom_data)
-
-        await ctx.send(file=discord.File(fp=map_path, filename=filename))
 
     @conquest.command("blank")
     async def _conquest_blank(self, ctx: commands.Context):
@@ -348,7 +398,8 @@ class Conquest(commands.Cog):
             )
             return
 
-        current_map = Image.open(self.data_path / self.current_map / f"current.{self.ext}")
+        current_map_path = self.data_path / "current_maps" / self.current_map
+        current_map = Image.open(current_map_path / f"current.{self.ext}")
         numbers = Image.open(numbers_path).convert("L")
 
         inverted_map = ImageOps.invert(current_map)
@@ -359,13 +410,11 @@ class Conquest(commands.Cog):
         )
 
         current_numbered_img.save(
-            self.data_path / self.current_map / f"current_numbered.{self.ext}", self.ext_format
+            current_map_path / f"current_numbered.{self.ext}", self.ext_format
         )
 
         await self._send_maybe_zoomed_map(
-            ctx,
-            self.data_path / self.current_map / f"current_numbered.{self.ext}",
-            f"current_numbered.{self.ext}",
+            ctx, current_map_path / f"current_numbered.{self.ext}", f"current_numbered.{self.ext}",
         )
 
     @conquest.command(name="multitake")
@@ -390,14 +439,6 @@ class Conquest(commands.Cog):
         regions = [r for r in range(start_region, end_region + 1)]
 
         await self._process_take_regions(color, ctx, regions)
-
-    async def _process_take_regions(self, color, ctx, regions):
-        current_img_path = self.data_path / self.current_map / f"current.{self.ext}"
-        im = Image.open(current_img_path)
-        async with ctx.typing():
-            out: Image.Image = await self._composite_regions(im, regions, color)
-            out.save(current_img_path, self.ext_format)
-            await self._send_maybe_zoomed_map(ctx, current_img_path, f"map.{self.ext}")
 
     @conquest.command(name="take")
     async def _conquest_take(self, ctx: commands.Context, regions: Greedy[int], *, color: str):
@@ -429,25 +470,3 @@ class Conquest(commands.Cog):
                 return
 
         await self._process_take_regions(color, ctx, regions)
-
-    async def _composite_regions(self, im, regions, color) -> Image.Image:
-        im2 = Image.new("RGB", im.size, color)
-
-        loop = asyncio.get_running_loop()
-
-        combined_mask = None
-        for region in regions:
-            mask = Image.open(
-                self.asset_path / self.current_map / "masks" / f"{region}.{self.ext}"
-            ).convert("L")
-            if combined_mask is None:
-                combined_mask = mask
-            else:
-                # combined_mask = ImageChops.logical_or(combined_mask, mask)
-                combined_mask = await loop.run_in_executor(
-                    None, ImageChops.multiply, combined_mask, mask
-                )
-
-        out = await loop.run_in_executor(None, Image.composite, im, im2, combined_mask)
-
-        return out
