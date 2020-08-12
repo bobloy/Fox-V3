@@ -272,10 +272,16 @@ class Chatter(Cog):
             await ctx.send("Error occurred :(")
 
     @chatter.command(name="trainubuntu")
-    async def chatter_train_ubuntu(self, ctx: commands.Context):
+    async def chatter_train_ubuntu(self, ctx: commands.Context, confirmation: bool = False):
         """
         WARNING: Large Download! Trains the bot using Ubuntu Dialog Corpus data.
         """
+
+        if not confirmation:
+            await ctx.maybe_send_embed("Warning: This command downloads ~500MB then eats your CPU for training\n"
+                                       "If you're sure you want to continue, run `[p]chatter trainubuntu True`")
+            return
+
         async with ctx.typing():
             future = await self.loop.run_in_executor(None, self._train_ubuntu)
 
