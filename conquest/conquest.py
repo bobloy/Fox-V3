@@ -2,7 +2,6 @@ import asyncio
 import json
 import os
 import pathlib
-from abc import ABC
 from shutil import copyfile
 from typing import Optional
 
@@ -41,6 +40,9 @@ class Conquest(commands.Cog):
         self.ext = None
         self.ext_format = None
 
+        self.mm_current_map = None
+        self.mm_im = None
+
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
         return
@@ -61,6 +63,47 @@ class Conquest(commands.Cog):
             self.map_data: dict = json.load(mapdata)
         self.ext = self.map_data["extension"]
         self.ext_format = "JPEG" if self.ext.upper() == "JPG" else self.ext.upper()
+
+    @commands.group()
+    async def mapmaker(self, ctx: commands.context):
+        """
+        Base command for managing current maps or creating new ones
+        """
+        if ctx.invoked_subcommand is None:
+            pass
+
+    @mapmaker.command(name="save")
+    async def _mapmaker_save(self, ctx: commands.Context, *, map_name: str):
+        """Save the current map to the specified map name"""
+
+    @mapmaker.command(name="upload")
+    async def _mapmaker_upload(self, ctx: commands.Context, map_path=""):
+        """Load a map image to be modified. Upload one with this command or provide a path"""
+        message: discord.Message = ctx.message
+        if not message.attachments and not map_path:
+            await ctx.maybe_send_embed(
+                "Either upload an image with this command or provide a path to the image"
+            )
+            return
+
+        if map_path:
+            map_path = pathlib.Path(map_path)
+
+            if not map_path.exist():
+                await ctx.maybe_send_embed("Map not found at that path")
+                return
+
+            self.mm_im = Image.open(map_path)
+
+        if message.attachments:
+            attch: discord.Attachment = message.attachments[0]
+            self.mm_im = Image.frombytes("RGBA", (attch.width, attch.height), attch.read())
+
+
+    @mapmaker.command(name="load")
+    async def _mapmaker_load(self, ctx: commands.Context, map_name=""):
+        """Load an existing map to be modified."""
+        await ctx.maybe_send_embed("WIP")
 
     @commands.group()
     async def conquest(self, ctx: commands.Context):

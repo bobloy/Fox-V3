@@ -2,11 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    4,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Handle war games by filling in specified territories with colors",
   "hidden": false,
   "install_msg": "Thank you for installing Conquest. Get started with `[p]load conquest`, then `[p]help Conquest`",
@@ -23,6 +19,8 @@
     "axisandallies",
     "heartsofiron",
     "conquest",
-    "rpg"
+    "rpg",
+    "mapmaker",
+    "tool"
   ]
 }

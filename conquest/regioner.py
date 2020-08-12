@@ -121,12 +121,15 @@ class Regioner:
 
                         already_processed.update(filled)
 
+        # TODO: save mask_centers to json
+
+        return self.create_number_mask(base_img, mask_centers)
+
+    def create_number_mask(self, base_img, mask_centers):
         number_img = Image.new("L", base_img.size, 255)
         fnt = ImageFont.load_default()
         d = ImageDraw.Draw(number_img)
         for mask_num, center in mask_centers.items():
             d.text(center, str(mask_num), font=fnt, fill=0)
-
         number_img.save(self.filepath / f"numbers.png", "PNG")
-
         return mask_centers
