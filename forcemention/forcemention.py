@@ -1,11 +1,9 @@
+import asyncio
+
 from discord.utils import get
-
 from redbot.core import Config, checks, commands
-
 from redbot.core.bot import Red
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class ForceMention(Cog):
@@ -14,6 +12,7 @@ class ForceMention(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
@@ -24,7 +23,7 @@ class ForceMention(Cog):
 
     @checks.admin_or_permissions(manage_roles=True)
     @commands.command()
-    async def forcemention(self, ctx: commands.Context, role: str, *, message=''):
+    async def forcemention(self, ctx: commands.Context, role: str, *, message=""):
         """
        Mentions that role, regardless if it's unmentionable
        """
@@ -36,6 +35,7 @@ class ForceMention(Cog):
         if not role_obj.mentionable:
             await role_obj.edit(mentionable=True)
             await ctx.send("{}\n{}".format(role_obj.mention, message))
+            await asyncio.sleep(5)
             await role_obj.edit(mentionable=False)
         else:
             await ctx.send("{}\n{}".format(role_obj.mention, message))

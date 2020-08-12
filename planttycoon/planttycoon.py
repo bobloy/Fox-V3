@@ -1,21 +1,22 @@
 import asyncio
 import collections
+import copy
 import datetime
+import json
 import time
 from random import choice
 
 import discord
-from redbot.core import commands, Config, bank
+from redbot.core import Config, bank, commands
 from redbot.core.bot import Red
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.data_manager import bundled_data_path
 
 
-class Gardener:
+class Gardener(commands.Cog):
     """Gardener class"""
 
     def __init__(self, user: discord.User, config: Config):
+        super().__init__()
         self.user = user
         self.config = config
         self.badges = []
@@ -37,7 +38,7 @@ class Gardener:
             self.user, self.badges, self.points, self.products, self.current
         )
 
-    async def _load_config(self):
+    async def load_config(self):
         self.badges = await self.config.user(self.user).badges()
         self.points = await self.config.user(self.user).points()
         self.products = await self.config.user(self.user).products()
@@ -48,6 +49,33 @@ class Gardener:
         await self.config.user(self.user).points.set(self.points)
         await self.config.user(self.user).products.set(self.products)
         await self.config.user(self.user).current.set(self.current)
+
+    async def is_complete(self, now):
+
+        message = None
+        if self.current:
+            then = self.current["timestamp"]
+            health = self.current["health"]
+            grow_time = self.current["time"]
+            badge = self.current["badge"]
+            reward = self.current["reward"]
+            if (now - then) > grow_time:
+                self.points += reward
+                if badge not in self.badges:
+                    self.badges.append(badge)
+                message = (
+                    "Your plant made it! "
+                    "You are rewarded with the **{}** badge and you have received **{}** Thneeds.".format(
+                        badge, reward
+                    )
+                )
+            if health < 0:
+                message = "Your plant died!"
+
+        if message is not None:
+            self.current = {}
+            await self.save_gardener()
+            await self.user.send(message)
 
 
 async def _die_in(gardener, degradation):
@@ -87,10 +115,11 @@ async def _withdraw_points(gardener: Gardener, amount):
         return True
 
 
-class PlantTycoon(Cog):
+class PlantTycoon(commands.Cog):
     """Grow your own plants! Be sure to take proper care of it."""
 
-    def __init__(self, bot: Red):
+    def __init__(self, bot: Red, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.bot = bot
         self.config = Config.get_conf(self, identifier=80108971101168412199111111110)
 
@@ -98,739 +127,9 @@ class PlantTycoon(Cog):
 
         self.config.register_user(**default_user)
 
-        self.plants = {
-            "plants": [
-                {
-                    "name": "Poppy",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/S4hjyUX.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Dandelion",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/emqnQP2.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Daisy",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/lcFq4AB.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Chrysanthemum",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/5jLtqWL.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Pansy",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/f7TgD1b.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Lavender",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/g3OmOSK.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Lily",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/0hzy7lO.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Petunia",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/rJm8ISv.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Sunflower",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/AzgzQK9.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Daffodil",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/pnCCRsH.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Clover",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/jNTgirw.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Tulip",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/kodIFjE.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Rose",
-                    "article": "a",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/sdTNiOH.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Aster",
-                    "article": "an",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/1tN04Hl.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Aloe Vera",
-                    "article": "an",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/WFAYIpx.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Orchid",
-                    "article": "an",
-                    "time": 3600,
-                    "rarity": "common",
-                    "image": "http://i.imgur.com/IQrQYDC.jpg",
-                    "health": 100,
-                    "degradation": 0.625,
-                    "threshold": 110,
-                    "badge": "Flower Power",
-                    "reward": 600,
-                },
-                {
-                    "name": "Dragon Fruit Plant",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/pfngpDS.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Mango Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/ybR78Oc.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Lychee Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/w9LkfhX.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Durian Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/jh249fz.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Fig Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/YkhnpEV.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Jack Fruit Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/2D79TlA.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Prickly Pear Plant",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/GrcGAGj.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Pineapple Plant",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/VopYQtr.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Citron Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/zh7Dr23.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Cherimoya Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/H62gQK6.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Mangosteen Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/McNnMqa.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Guava Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/iy8WgPt.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Orange Tree",
-                    "article": "an",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/lwjEJTm.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Apple Tree",
-                    "article": "an",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/QI3UTR3.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Sapodilla Tree",
-                    "article": "a",
-                    "time": 5400,
-                    "rarity": "uncommon",
-                    "image": "http://i.imgur.com/6BvO5Fu.jpg",
-                    "health": 100,
-                    "degradation": 0.75,
-                    "threshold": 110,
-                    "badge": "Fruit Brute",
-                    "reward": 1200,
-                },
-                {
-                    "name": "Franklin Tree",
-                    "article": "a",
-                    "time": 7200,
-                    "rarity": "rare",
-                    "image": "http://i.imgur.com/hoh17hp.jpg",
-                    "health": 100,
-                    "degradation": 1.5,
-                    "threshold": 110,
-                    "badge": "Sporadic",
-                    "reward": 2400,
-                },
-                {
-                    "name": "Parrot's Beak",
-                    "article": "a",
-                    "time": 7200,
-                    "rarity": "rare",
-                    "image": "http://i.imgur.com/lhSjfQY.jpg",
-                    "health": 100,
-                    "degradation": 1.5,
-                    "threshold": 110,
-                    "badge": "Sporadic",
-                    "reward": 2400,
-                },
-                {
-                    "name": "Koki'o",
-                    "article": "a",
-                    "time": 7200,
-                    "rarity": "rare",
-                    "image": "http://i.imgur.com/Dhw9ync.jpg",
-                    "health": 100,
-                    "degradation": 1.5,
-                    "threshold": 110,
-                    "badge": "Sporadic",
-                    "reward": 2400,
-                },
-                {
-                    "name": "Jade Vine",
-                    "article": "a",
-                    "time": 7200,
-                    "rarity": "rare",
-                    "image": "http://i.imgur.com/h4fJo2R.jpg",
-                    "health": 100,
-                    "degradation": 1.5,
-                    "threshold": 110,
-                    "badge": "Sporadic",
-                    "reward": 2400,
-                },
-                {
-                    "name": "Venus Fly Trap",
-                    "article": "a",
-                    "time": 7200,
-                    "rarity": "rare",
-                    "image": "http://i.imgur.com/NoSdxXh.jpg",
-                    "health": 100,
-                    "degradation": 1.5,
-                    "threshold": 110,
-                    "badge": "Sporadic",
-                    "reward": 2400,
-                },
-                {
-                    "name": "Chocolate Cosmos",
-                    "article": "a",
-                    "time": 7200,
-                    "rarity": "rare",
-                    "image": "http://i.imgur.com/4ArSekX.jpg",
-                    "health": 100,
-                    "degradation": 1.5,
-                    "threshold": 110,
-                    "badge": "Sporadic",
-                    "reward": 2400,
-                },
-                {
-                    "name": "Pizza Plant",
-                    "article": "a",
-                    "time": 9000,
-                    "rarity": "super-rare",
-                    "image": "http://i.imgur.com/ASZXr7C.png",
-                    "health": 100,
-                    "degradation": 2,
-                    "threshold": 110,
-                    "badge": "Odd-pod",
-                    "reward": 3600,
-                },
-                # {
-                #     "name": "tba",
-                #     "article": "a",
-                #     "time": 9000,
-                #     "rarity": "super-rare",
-                #     "image": "tba",
-                #     "health": 100,
-                #     "degradation": 1.5,
-                #     "threshold": 110,
-                #     "badge": "Odd-pod",
-                #     "reward": 3600
-                # },
-                {
-                    "name": "Piranha Plant",
-                    "article": "a",
-                    "time": 9000,
-                    "rarity": "super-rare",
-                    "image": "http://i.imgur.com/c03i9W7.jpg",
-                    "health": 100,
-                    "degradation": 2,
-                    "threshold": 110,
-                    "badge": "Odd-pod",
-                    "reward": 3600,
-                },
-                # {
-                #     "name": "tba",
-                #     "article": "a",
-                #     "time": 9000,
-                #     "rarity": "super-rare",
-                #     "image": "tba",
-                #     "health": 100,
-                #     "degradation": 1.5,
-                #     "threshold": 110,
-                #     "badge": "Odd-pod",
-                #     "reward": 3600
-                # },
-                {
-                    "name": "Peashooter",
-                    "article": "a",
-                    "time": 9000,
-                    "rarity": "super-rare",
-                    "image": "https://i.imgur.com/Vo4v2Ry.png",
-                    "health": 100,
-                    "degradation": 2,
-                    "threshold": 110,
-                    "badge": "Odd-pod",
-                    "reward": 3600,
-                },
-                {
-                    "name": "Eldergleam Tree",
-                    "article": "a",
-                    "time": 10800,
-                    "rarity": "epic",
-                    "image": "https://i.imgur.com/pnZYKZc.jpg",
-                    "health": 100,
-                    "degradation": 2.5,
-                    "threshold": 110,
-                    "badge": "Greenfingers",
-                    "reward": 5400,
-                },
-                {
-                    "name": "Pikmin",
-                    "article": "a",
-                    "time": 10800,
-                    "rarity": "epic",
-                    "image": "http://i.imgur.com/sizf7hE.png",
-                    "health": 100,
-                    "degradation": 2.5,
-                    "threshold": 110,
-                    "badge": "Greenfingers",
-                    "reward": 5400,
-                },
-                {
-                    "name": "Flora Colossus",
-                    "article": "a",
-                    "time": 10800,
-                    "rarity": "epic",
-                    "image": "http://i.imgur.com/9f5QzaW.jpg",
-                    "health": 100,
-                    "degradation": 2.5,
-                    "threshold": 110,
-                    "badge": "Greenfingers",
-                    "reward": 5400,
-                },
-                {
-                    "name": "Plantera Bulb",
-                    "article": "a",
-                    "time": 10800,
-                    "rarity": "epic",
-                    "image": "https://i.imgur.com/ExqLLHO.png",
-                    "health": 100,
-                    "degradation": 2.5,
-                    "threshold": 110,
-                    "badge": "Greenfingers",
-                    "reward": 5400,
-                },
-                {
-                    "name": "Chorus Tree",
-                    "article": "an",
-                    "time": 10800,
-                    "rarity": "epic",
-                    "image": "https://i.imgur.com/tv2B72j.png",
-                    "health": 100,
-                    "degradation": 2.5,
-                    "threshold": 110,
-                    "badge": "Greenfingers",
-                    "reward": 5400,
-                },
-                {
-                    "name": "Money Tree",
-                    "article": "a",
-                    "time": 35400,
-                    "rarity": "legendary",
-                    "image": "http://i.imgur.com/MIJQDLL.jpg",
-                    "health": 100,
-                    "degradation": 8,
-                    "threshold": 110,
-                    "badge": "Nobel Peas Prize",
-                    "reward": 10800,
-                },
-                {
-                    "name": "Truffula Tree",
-                    "article": "a",
-                    "time": 35400,
-                    "rarity": "legendary",
-                    "image": "http://i.imgur.com/cFSmaHH.png",
-                    "health": 100,
-                    "degradation": 8,
-                    "threshold": 110,
-                    "badge": "Nobel Peas Prize",
-                    "reward": 10800,
-                },
-                {
-                    "name": "Whomping Willow",
-                    "article": "a",
-                    "time": 35400,
-                    "rarity": "legendary",
-                    "image": "http://i.imgur.com/Ibwm2xY.jpg",
-                    "health": 100,
-                    "degradation": 8,
-                    "threshold": 110,
-                    "badge": "Nobel Peas Prize",
-                    "reward": 10800,
-                },
-            ],
-            "event": {
-                "January": {
-                    "name": "Tanabata Tree",
-                    "article": "a",
-                    "time": 70800,
-                    "rarity": "event",
-                    "image": "http://i.imgur.com/FD38JJj.jpg",
-                    "health": 100,
-                    "degradation": 9,
-                    "threshold": 110,
-                    "badge": "Annualsary",
-                    "reward": 21600,
-                },
-                "February": {
-                    "name": "Chocolate Rose",
-                    "article": "a",
-                    "time": 70800,
-                    "rarity": "event",
-                    "image": "http://i.imgur.com/Sqg6pcG.jpg",
-                    "health": 100,
-                    "degradation": 9,
-                    "threshold": 110,
-                    "badge": "Annualsary",
-                    "reward": 21600,
-                },
-                "March": {
-                    "name": "Shamrock",
-                    "article": "a",
-                    "time": 70800,
-                    "rarity": "event",
-                    "image": "http://i.imgur.com/kVig04M.jpg",
-                    "health": 100,
-                    "degradation": 9,
-                    "threshold": 110,
-                    "badge": "Annualsary",
-                    "reward": 21600,
-                },
-                "April": {
-                    "name": "Easter Egg Eggplant",
-                    "article": "an",
-                    "time": 70800,
-                    "rarity": "event",
-                    "image": "http://i.imgur.com/5jltGQa.jpg",
-                    "health": 100,
-                    "degradation": 9,
-                    "threshold": 110,
-                    "badge": "Annualsary",
-                    "reward": 21600,
-                },
-                "October": {
-                    "name": "Jack O' Lantern",
-                    "article": "a",
-                    "time": 70800,
-                    "rarity": "event",
-                    "image": "http://i.imgur.com/efApsxG.jpg",
-                    "health": 100,
-                    "degradation": 9,
-                    "threshold": 110,
-                    "badge": "Annualsary",
-                    "reward": 21600,
-                },
-                "November": {
-                    "name": "Mayflower",
-                    "article": "a",
-                    "time": 70800,
-                    "rarity": "event",
-                    "image": "http://i.imgur.com/nntNtoL.jpg",
-                    "health": 100,
-                    "degradation": 9,
-                    "threshold": 110,
-                    "badge": "Annualsary",
-                    "reward": 21600,
-                },
-                "December": {
-                    "name": "Holly",
-                    "article": "a",
-                    "time": 70800,
-                    "rarity": "event",
-                    "image": "http://i.imgur.com/maDLmJC.jpg",
-                    "health": 100,
-                    "degradation": 9,
-                    "threshold": 110,
-                    "badge": "Annualsary",
-                    "reward": 21600,
-                },
-            },
-        }
+        self.plants = None
 
-        self.products = {
-            "water": {
-                "cost": 5,
-                "health": 10,
-                "damage": 45,
-                "modifier": 0,
-                "category": "water",
-                "uses": 1,
-            },
-            "manure": {
-                "cost": 20,
-                "health": 20,
-                "damage": 55,
-                "modifier": -0.035,
-                "category": "fertilizer",
-                "uses": 1,
-            },
-            "vermicompost": {
-                "cost": 35,
-                "health": 30,
-                "damage": 60,
-                "modifier": -0.5,
-                "category": "fertilizer",
-                "uses": 1,
-            },
-            "nitrates": {
-                "cost": 70,
-                "health": 60,
-                "damage": 75,
-                "modifier": -0.08,
-                "category": "fertilizer",
-                "uses": 1,
-            },
-            "pruner": {
-                "cost": 500,
-                "health": 40,
-                "damage": 90,
-                "modifier": -0.065,
-                "category": "tool",
-                "uses": 10,
-            },
-        }
+        self.products = None
 
         self.defaults = {
             "points": {
@@ -871,8 +170,8 @@ class PlantTycoon(Cog):
         # Starting loops
         #
 
-        self.completion_task = bot.loop.create_task(self.check_completion())
-        self.degradation_task = bot.loop.create_task(self.check_degradation())
+        self.completion_task = bot.loop.create_task(self.check_completion_loop())
+        # self.degradation_task = bot.loop.create_task(self.check_degradation())
         self.notification_task = bot.loop.create_task(self.send_notification())
 
         #
@@ -881,21 +180,58 @@ class PlantTycoon(Cog):
 
         # self.bank = bot.get_cog('Economy').bank
 
+    async def _load_plants_products(self):
+        plant_path = bundled_data_path(self) / "plants.json"
+        product_path = bundled_data_path(self) / "products.json"
+        with plant_path.open() as json_data:
+            self.plants = json.load(json_data)
+
+        await self._load_event_seeds()
+
+        with product_path.open() as json_data:
+            self.products = json.load(json_data)
+
+        for product in self.products:
+            print("PlantTycoon: Loaded {}".format(product))
+
+    async def _load_event_seeds(self):
+        self.plants["all_plants"] = copy.deepcopy(self.plants["plants"])
+        plant_options = self.plants["all_plants"]
+
+        d = datetime.date.today()
+        month = d.month
+        if month == 1:
+            plant_options.append(self.plants["event"]["January"])
+        elif month == 2:
+            plant_options.append(self.plants["event"]["February"])
+        elif month == 3:
+            plant_options.append(self.plants["event"]["March"])
+        elif month == 4:
+            plant_options.append(self.plants["event"]["April"])
+        elif month == 10:
+            plant_options.append(self.plants["event"]["October"])
+        elif month == 11:
+            plant_options.append(self.plants["event"]["November"])
+        elif month == 12:
+            plant_options.append(self.plants["event"]["December"])
+
     async def _gardener(self, user: discord.User) -> Gardener:
 
         #
-        # This function returns an individual gardener namedtuple
+        # This function returns a Gardener object for the user
         #
 
         g = Gardener(user, self.config)
-        await g._load_config()
+        await g.load_config()
         return g
 
     async def _degradation(self, gardener: Gardener):
 
         #
-        # Calculating the rate of degradation per check_completion() cycle.
+        # Calculating the rate of degradation per check_completion_loop() cycle.
         #
+        if self.products is None:
+            await self._load_plants_products()
 
         modifiers = sum(
             [
@@ -938,7 +274,8 @@ class PlantTycoon(Cog):
         #
         # The function to add health
         #
-
+        if self.products is None:
+            await self._load_plants_products()
         product = product.lower()
         product_category = product_category.lower()
         if product in self.products and self.products[product]["category"] == product_category:
@@ -971,7 +308,7 @@ class PlantTycoon(Cog):
                     message = "You have no {}. Go buy some!".format(product)
             else:
                 if product_category == "tool":
-                    message = "You have don't have a {}. Go buy one!".format(product)
+                    message = "You don't have a {}. Go buy one!".format(product)
                 else:
                     message = "You have no {}. Go buy some!".format(product)
         else:
@@ -1012,7 +349,7 @@ class PlantTycoon(Cog):
             ``{0}prune``: Prune your plant.\n"""
 
             em = discord.Embed(
-                title=title, description=description.format(prefix), color=discord.Color.green()
+                title=title, description=description.format(prefix), color=discord.Color.green(),
             )
             em.set_thumbnail(url="https://image.prntscr.com/image/AW7GuFIBSeyEgkR2W3SeiQ.png")
             em.set_footer(
@@ -1020,9 +357,12 @@ class PlantTycoon(Cog):
             )
             await ctx.send(embed=em)
 
+    @commands.cooldown(1, 60 * 10, commands.BucketType.user)
     @_gardening.command(name="seed")
     async def _seed(self, ctx: commands.Context):
         """Plant a seed inside the earth."""
+        if self.plants is None:
+            await self._load_plants_products()
         author = ctx.author
         # server = context.message.server
         # if author.id not in self.gardeners:
@@ -1034,36 +374,11 @@ class PlantTycoon(Cog):
         gardener = await self._gardener(author)
 
         if not gardener.current:
-            d = datetime.date.today()
-            month = d.month
-
-            #
-            # Event Plant Check start
-            #
-            plant_options = self.plants["plants"]
-
-            if month == 1:
-                plant_options.append(self.plants["event"]["January"])
-            elif month == 2:
-                plant_options.append(self.plants["event"]["February"])
-            elif month == 3:
-                plant_options.append(self.plants["event"]["March"])
-            elif month == 4:
-                plant_options.append(self.plants["event"]["April"])
-            elif month == 10:
-                plant_options.append(self.plants["event"]["October"])
-            elif month == 11:
-                plant_options.append(self.plants["event"]["November"])
-            elif month == 12:
-                plant_options.append(self.plants["event"]["December"])
-
-
-            #
-            # Event Plant Check end
-            #
+            plant_options = self.plants["all_plants"]
 
             plant = choice(plant_options)
             plant["timestamp"] = int(time.time())
+            plant["degrade_count"] = 0
             # index = len(self.plants["plants"]) - 1
             # del [self.plants["plants"][index]]
             message = (
@@ -1097,12 +412,17 @@ class PlantTycoon(Cog):
     @_gardening.command(name="profile")
     async def _profile(self, ctx: commands.Context, *, member: discord.Member = None):
         """Check your gardening profile."""
-        if member:
+        if member is not None:
             author = member
         else:
             author = ctx.author
 
         gardener = await self._gardener(author)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
+
         em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
         avatar = author.avatar_url if author.avatar else author.default_avatar_url
         em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
@@ -1128,11 +448,13 @@ class PlantTycoon(Cog):
             em.add_field(name="**Products**", value="None")
         else:
             products = ""
-            for product in gardener.products:
+            for product_name, product_data in gardener.products.items():
+                if self.products[product_name] is None:
+                    continue
                 products += "{} ({}) {}\n".format(
-                    product.capitalize(),
-                    gardener.products[product] / self.products[product.lower()]["uses"],
-                    self.products[product]["modifier"],
+                    product_name.capitalize(),
+                    product_data / self.products[product_name]["uses"],
+                    self.products[product_name]["modifier"],
                 )
             em.add_field(name="**Products**", value=products)
         if gardener.current:
@@ -1158,10 +480,12 @@ class PlantTycoon(Cog):
     @_gardening.command(name="plants")
     async def _plants(self, ctx):
         """Look at the list of the available plants."""
+        if self.plants is None:
+            await self._load_plants_products()
         tick = ""
         tock = ""
         tick_tock = 0
-        for plant in self.plants["plants"]:
+        for plant in self.plants["all_plants"]:
             if tick_tock == 0:
                 tick += "**{}**\n".format(plant["name"])
                 tick_tock = 1
@@ -1174,18 +498,23 @@ class PlantTycoon(Cog):
         await ctx.send(embed=em)
 
     @_gardening.command(name="plant")
-    async def _plant(self, ctx: commands.Context, *plant):
+    async def _plant(self, ctx: commands.Context, *, plantname):
         """Look at the details of a plant."""
-        plant = " ".join(plant)
+        if not plantname:
+            await ctx.send_help()
+        if self.plants is None:
+            await self._load_plants_products()
         t = False
-        for p in self.plants["plants"]:
-            if p["name"].lower() == plant.lower():
+        plant = None
+        for p in self.plants["all_plants"]:
+            if p["name"].lower() == plantname.lower().strip('"'):
                 plant = p
                 t = True
                 break
+
         if t:
             em = discord.Embed(
-                title="Plant statistics of {}".format(plant["name"]), color=discord.Color.green()
+                title="Plant statistics of {}".format(plant["name"]), color=discord.Color.green(),
             )
             em.set_thumbnail(url=plant["image"])
             em.add_field(name="**Name**", value=plant["name"])
@@ -1195,9 +524,8 @@ class PlantTycoon(Cog):
             em.add_field(name="**Badge**", value=plant["badge"])
             em.add_field(name="**Reward**", value="{} τ".format(plant["reward"]))
         else:
-            message = "What plant?"
+            message = "I can't seem to find that plant."
             em = discord.Embed(description=message, color=discord.Color.red())
-            await ctx.send_help()
         await ctx.send(embed=em)
 
     @_gardening.command(name="state")
@@ -1205,6 +533,12 @@ class PlantTycoon(Cog):
         """Check the state of your plant."""
         author = ctx.author
         gardener = await self._gardener(author)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
+
         if not gardener.current:
             message = "You're currently not growing a plant."
             em_color = discord.Color.red()
@@ -1232,20 +566,23 @@ class PlantTycoon(Cog):
     @_gardening.command(name="buy")
     async def _buy(self, ctx, product=None, amount: int = 1):
         """Buy gardening supplies."""
+        if self.products is None:
+            await self._load_plants_products()
+
         author = ctx.author
         if product is None:
             em = discord.Embed(
-                title="All gardening supplies that you can buy:", color=discord.Color.green()
+                title="All gardening supplies that you can buy:", color=discord.Color.green(),
             )
-            for product in self.products:
+            for pd in self.products:
                 em.add_field(
-                    name="**{}**".format(product.capitalize()),
+                    name="**{}**".format(pd.capitalize()),
                     value="Cost: {} τ\n+{} health\n-{}% damage\nUses: {}\nCategory: {}".format(
-                        self.products[product]["cost"],
-                        self.products[product]["health"],
-                        self.products[product]["damage"],
-                        self.products[product]["uses"],
-                        self.products[product]["category"],
+                        self.products[pd]["cost"],
+                        self.products[pd]["health"],
+                        self.products[pd]["damage"],
+                        self.products[pd]["uses"],
+                        self.products[pd]["category"],
                     ),
                 )
             await ctx.send(embed=em)
@@ -1260,7 +597,8 @@ class PlantTycoon(Cog):
                     if withdraw_points:
                         if product.lower() not in gardener.products:
                             gardener.products[product.lower()] = 0
-                        gardener.products[product.lower()] += amount
+                        # gardener.products[product.lower()] += amount
+                        # Only add it once
                         gardener.products[product.lower()] += (
                             amount * self.products[product.lower()]["uses"]
                         )
@@ -1268,7 +606,7 @@ class PlantTycoon(Cog):
                         message = "You bought {}.".format(product.lower())
                     else:
                         message = "You don't have enough Thneeds. You have {}, but need {}.".format(
-                            gardener.points, self.products[product.lower()]["cost"] * amount
+                            gardener.points, self.products[product.lower()]["cost"] * amount,
                         )
                 else:
                     message = "I don't have this product."
@@ -1297,7 +635,6 @@ class PlantTycoon(Cog):
         em = discord.Embed(description=message, color=discord.Color.green())
         await ctx.send(embed=em)
 
-    @commands.cooldown(1, 60 * 10, commands.BucketType.user)
     @commands.command(name="shovel")
     async def _shovel(self, ctx: commands.Context):
         """Shovel your plant out."""
@@ -1307,7 +644,7 @@ class PlantTycoon(Cog):
             message = "You're currently not growing a plant."
         else:
             gardener.current = {}
-            message = "You sucessfuly shovelled your plant out."
+            message = "You successfully shovelled your plant out."
             if gardener.points < 0:
                 gardener.points = 0
             await gardener.save_gardener()
@@ -1321,6 +658,11 @@ class PlantTycoon(Cog):
         author = ctx.author
         channel = ctx.channel
         gardener = await self._gardener(author)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
         product = "water"
         product_category = "water"
         if not gardener.current:
@@ -1333,6 +675,11 @@ class PlantTycoon(Cog):
     async def _fertilize(self, ctx, fertilizer):
         """Fertilize the soil."""
         gardener = await self._gardener(ctx.author)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
         channel = ctx.channel
         product = fertilizer
         product_category = "fertilizer"
@@ -1346,6 +693,11 @@ class PlantTycoon(Cog):
     async def _prune(self, ctx):
         """Prune your plant."""
         gardener = await self._gardener(ctx.author)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
         channel = ctx.channel
         product = "pruner"
         product_category = "tool"
@@ -1355,49 +707,45 @@ class PlantTycoon(Cog):
         else:
             await self._add_health(channel, gardener, product, product_category)
 
-    async def check_degradation(self):
-        while "PlantTycoon" in self.bot.cogs:
-            users = await self.config.all_users()
-            for user_id in users:
-                user = self.bot.get_user(user_id)
-                gardener = await self._gardener(user)
-                if gardener.current:
-                    degradation = await self._degradation(gardener)
-                    gardener.current["health"] -= degradation.degradation
-                    gardener.points += self.defaults["points"]["growing"]
-                    await gardener.save_gardener()
-            await asyncio.sleep(self.defaults["timers"]["degradation"] * 60)
+    # async def check_degradation(self):
+    #     while "PlantTycoon" in self.bot.cogs:
+    #         users = await self.config.all_users()
+    #         for user_id in users:
+    #             user = self.bot.get_user(user_id)
+    #             gardener = await self._gardener(user)
+    #             await self._apply_degradation(gardener)
+    #         await asyncio.sleep(self.defaults["timers"]["degradation"] * 60)
 
-    async def check_completion(self):
+    async def _apply_degradation(self, gardener):
+        if gardener.current:
+            degradation = await self._degradation(gardener)
+            now = int(time.time())
+            timestamp = gardener.current["timestamp"]
+            degradation_count = (now - timestamp) // (self.defaults["timers"]["degradation"] * 60)
+            degradation_count -= gardener.current["degrade_count"]
+            gardener.current["health"] -= degradation.degradation * degradation_count
+            gardener.points += self.defaults["points"]["growing"] * degradation_count
+            gardener.current["degrade_count"] += degradation_count
+            await gardener.save_gardener()
+            await gardener.is_complete(now)
+
+    async def check_completion_loop(self):
         while "PlantTycoon" in self.bot.cogs:
             now = int(time.time())
             users = await self.config.all_users()
             for user_id in users:
-                message = None
                 user = self.bot.get_user(user_id)
+                if not user:
+                    continue
                 gardener = await self._gardener(user)
-                if gardener.current:
-                    then = gardener.current["timestamp"]
-                    health = gardener.current["health"]
-                    grow_time = gardener.current["time"]
-                    badge = gardener.current["badge"]
-                    reward = gardener.current["reward"]
-                    if (now - then) > grow_time:
-                        gardener.points += reward
-                        if badge not in gardener.badges:
-                            gardener.badges.append(badge)
-                        message = (
-                            "Your plant made it! "
-                            "You are rewarded with the **{}** badge and you have received **{}** Thneeds.".format(
-                                badge, reward
-                            )
-                        )
-                    if health < 0:
-                        message = "Your plant died!"
-                if message is not None:
-                    await user.send(message)
-                    gardener.current = {}
-                    await gardener.save_gardener()
+                if not gardener:
+                    continue
+                try:
+                    await self._apply_degradation(gardener)
+                    await gardener.is_complete(now)
+                except discord.Forbidden:
+                    # Couldn't DM the results
+                    pass
             await asyncio.sleep(self.defaults["timers"]["completion"] * 60)
 
     async def send_notification(self):
@@ -1405,15 +753,29 @@ class PlantTycoon(Cog):
             users = await self.config.all_users()
             for user_id in users:
                 user = self.bot.get_user(user_id)
+                if not user:
+                    continue
                 gardener = await self._gardener(user)
+                if not gardener:
+                    continue
+                try:
+                    await self._apply_degradation(gardener)
+                except discord.Forbidden:
+                    # Couldn't DM the degradation
+                    pass
+
                 if gardener.current:
                     health = gardener.current["health"]
                     if health < self.defaults["notification"]["max_health"]:
                         message = choice(self.notifications["messages"])
-                        await user.send(message)
+                        try:
+                            await user.send(message)
+                        except discord.Forbidden:
+                            # Couldn't DM the results
+                            pass
             await asyncio.sleep(self.defaults["timers"]["notification"] * 60)
 
     def __unload(self):
         self.completion_task.cancel()
-        self.degradation_task.cancel()
+        # self.degradation_task.cancel()
         self.notification_task.cancel()

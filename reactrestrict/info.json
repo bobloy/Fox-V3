@@ -1,10 +1,22 @@
 {
-    "author" : ["Bobloy"],
-    "bot_version" : [3,0,0],
-    "description" : "Cog to prevent reactions on specific messages from certain users",
-    "hidden" : true,
-    "install_msg" : "Thank you for installing ReactRestrict.",
-    "requirements" : [],
-    "short" : "[Incomplete] Prevent reactions",
-    "tags" : ["react", "reaction", "restrict", "tools", "utils", "bobloy"]
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Cog to prevent reactions on specific messages from certain users",
+  "hidden": false,
+  "install_msg": "Thank you for installing ReactRestrict.",
+  "short": "Prevent reactions to messages",
+  "tags": [
+    "react",
+    "reaction",
+    "restrict",
+    "tools",
+    "utils",
+    "bobloy"
+  ]
 }

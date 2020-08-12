@@ -1,34 +1,30 @@
 import asyncio
 import re
-from typing import Any
 
 import discord
-from redbot.core import Config, checks
-from redbot.core import commands
-from redbot.core.utils.chat_formatting import pagify, box
+from discord.ext.commands.view import StringView
+from redbot.core import Config, checks, commands
+from redbot.core.bot import Red
+from redbot.core.utils.chat_formatting import box, pagify
 
-Cog: Any = getattr(commands, "Cog", object)
 
-
-class CCRole(Cog):
+class CCRole(commands.Cog):
     """
     Custom commands
     Creates commands used to display text and adjust roles
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9999114111108101)
-        default_guild = {
-            "cmdlist": {},
-            "settings": {}
-        }
+        default_guild = {"cmdlist": {}, "settings": {}}
 
         self.config.register_guild(**default_guild)
 
     @commands.guild_only()
     @commands.group()
-    async def ccrole(self, ctx):
+    async def ccrole(self, ctx: commands.Context):
         """Custom commands management with roles
 
         Highly customizable custom commands with role management."""
@@ -54,17 +50,23 @@ class CCRole(Cog):
         cmd_list = self.config.guild(guild).cmdlist
 
         if await cmd_list.get_raw(command, default=None):
-            await ctx.send("This command already exists. Delete it with `{}ccrole delete` first.".format(ctx.prefix))
+            await ctx.send(
+                "This command already exists. Delete it with `{}ccrole delete` first.".format(
+                    ctx.prefix
+                )
+            )
             return
 
         # Roles to add
-        await ctx.send('What roles should it add? (Must be **comma separated**)\nSay `None` to skip adding roles')
+        await ctx.send(
+            "What roles should it add? (Must be **comma separated**)\nSay `None` to skip adding roles"
+        )
 
         def check(m):
             return m.author == author and m.channel == channel
 
         try:
-            answer = await self.bot.wait_for('message', timeout=120, check=check)
+            answer = await self.bot.wait_for("message", timeout=120, check=check)
         except asyncio.TimeoutError:
             await ctx.send("Timed out, canceling")
             return
@@ -77,9 +79,11 @@ class CCRole(Cog):
                 return
 
         # Roles to remove
-        await ctx.send('What roles should it remove? (Must be comma separated)\nSay `None` to skip removing roles')
+        await ctx.send(
+            "What roles should it remove? (Must be comma separated)\nSay `None` to skip removing roles"
+        )
         try:
-            answer = await self.bot.wait_for('message', timeout=120, check=check)
+            answer = await self.bot.wait_for("message", timeout=120, check=check)
         except asyncio.TimeoutError:
             await ctx.send("Timed out, canceling")
             return
@@ -93,10 +97,11 @@ class CCRole(Cog):
 
         # Roles to use
         await ctx.send(
-            'What roles are allowed to use this command? (Must be comma separated)\nSay `None` to allow all roles')
+            "What roles are allowed to use this command? (Must be comma separated)\nSay `None` to allow all roles"
+        )
 
         try:
-            answer = await self.bot.wait_for('message', timeout=120, check=check)
+            answer = await self.bot.wait_for("message", timeout=120, check=check)
         except asyncio.TimeoutError:
             await ctx.send("Timed out, canceling")
             return
@@ -109,10 +114,10 @@ class CCRole(Cog):
                 return
 
         # Selfrole
-        await ctx.send('Is this a targeted command?(yes//no)\nNo will make this a selfrole command')
+        await ctx.send("Is this a targeted command?(yes/no)\nNo will make this a selfrole command")
 
         try:
-            answer = await self.bot.wait_for('message', timeout=120, check=check)
+            answer = await self.bot.wait_for("message", timeout=120, check=check)
         except asyncio.TimeoutError:
             await ctx.send("Timed out, canceling")
             return
@@ -126,13 +131,14 @@ class CCRole(Cog):
 
         # Message to send
         await ctx.send(
-            'What message should the bot say when using this command?\n'
-            'Say `None` to send the default `Success!` message\n'
-            'Eval Options: `{author}`, `{target}`, `{server}`, `{channel}`, `{message}`\n'
-            'For example: `Welcome {target.mention} to {server.name}!`')
+            "What message should the bot say when using this command?\n"
+            "Say `None` to send the default `Success!` message\n"
+            "Eval Options: `{author}`, `{target}`, `{server}`, `{channel}`, `{message}`\n"
+            "For example: `Welcome {target.mention} to {server.name}!`"
+        )
 
         try:
-            answer = await self.bot.wait_for('message', timeout=120, check=check)
+            answer = await self.bot.wait_for("message", timeout=120, check=check)
         except asyncio.TimeoutError:
             await ctx.send("Timed out, canceling")
             return
@@ -143,7 +149,13 @@ class CCRole(Cog):
 
         # Save the command
 
-        out = {'text': text, 'aroles': arole_list, 'rroles': rrole_list, "proles": prole_list, "targeted": targeted}
+        out = {
+            "text": text,
+            "aroles": arole_list,
+            "rroles": rrole_list,
+            "proles": prole_list,
+            "targeted": targeted,
+        }
 
         await cmd_list.set_raw(command, value=out)
 
@@ -174,18 +186,24 @@ class CCRole(Cog):
             await ctx.send("That command doesn't exist")
             return
 
-        embed = discord.Embed(title=command,
-                              description="{} custom command".format("Targeted" if cmd['targeted'] else "Non-Targeted"))
+        embed = discord.Embed(
+            title=command,
+            description="{} custom command".format(
+                "Targeted" if cmd["targeted"] else "Non-Targeted"
+            ),
+        )
 
         def process_roles(role_list):
             if not role_list:
                 return "None"
-            return ", ".join([discord.utils.get(ctx.guild.roles, id=roleid).name for roleid in role_list])
+            return ", ".join(
+                [discord.utils.get(ctx.guild.roles, id=roleid).name for roleid in role_list]
+            )
 
-        embed.add_field(name="Text", value="```{}```".format(cmd['text']))
-        embed.add_field(name="Adds Roles", value=process_roles(cmd['aroles']), inline=True)
-        embed.add_field(name="Removes Roles", value=process_roles(cmd['rroles']), inline=True)
-        embed.add_field(name="Role Restrictions", value=process_roles(cmd['proles']), inline=True)
+        embed.add_field(name="Text", value="```{}```".format(cmd["text"]))
+        embed.add_field(name="Adds Roles", value=process_roles(cmd["aroles"]), inline=True)
+        embed.add_field(name="Removes Roles", value=process_roles(cmd["rroles"]), inline=True)
+        embed.add_field(name="Role Restrictions", value=process_roles(cmd["proles"]), inline=True)
 
         await ctx.send(embed=embed)
 
@@ -198,40 +216,88 @@ class CCRole(Cog):
         if not cmd_list:
             await ctx.send(
                 "There are no custom commands in this server. Use `{}ccrole add` to start adding some.".format(
-                    ctx.prefix))
+                    ctx.prefix
+                )
+            )
             return
 
         cmd_list = ", ".join([ctx.prefix + c for c in sorted(cmd_list.keys())])
         cmd_list = "Custom commands:\n\n" + cmd_list
 
-        if len(cmd_list) < 1500:  # I'm allowed to have arbitrary numbers for when it's too much to dm dammit
+        if (
+            len(cmd_list) < 1500
+        ):  # I'm allowed to have arbitrary numbers for when it's too much to dm dammit
             await ctx.send(box(cmd_list))
         else:
             for page in pagify(cmd_list, delims=[" ", "\n"]):
                 await ctx.author.send(box(page))
             await ctx.send("Command list DM'd")
 
-    async def on_message(self, message):
-        if len(message.content) < 2 or message.guild is None:
+    @commands.Cog.listener()
+    async def on_message_without_command(self, message: discord.Message):
+        """
+        Credit to:
+        https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/cogs/customcom/customcom.py#L508
+        for the message filtering
+        """
+        ###########
+        is_private = isinstance(message.channel, discord.abc.PrivateChannel)
+
+        # user_allowed check, will be replaced with self.bot.user_allowed or
+        # something similar once it's added
+        user_allowed = True
+
+        if len(message.content) < 2 or is_private or not user_allowed or message.author.bot:
             return
 
-        guild = message.guild
-        try:
-            prefix = await self.get_prefix(message)
-        except ValueError:
+        ctx = await self.bot.get_context(message)
+
+        if ctx.prefix is None:
             return
+        ###########
+        # Thank you Cog-Creators
+
+        cmd = ctx.invoked_with
+        cmd = cmd.lower()  # Continues the proud case_insentivity tradition of ccrole
+        guild = ctx.guild
+        # message = ctx.message  # Unneeded since switch to `on_message_without_command` from `on_command_error`
 
         cmdlist = self.config.guild(guild).cmdlist
-        cmd = message.content[len(prefix):].split()[0].lower()
+        # cmd = message.content[len(prefix) :].split()[0].lower()
         cmd = await cmdlist.get_raw(cmd, default=None)
 
         if cmd is not None:
-            await self.eval_cc(cmd, message)
+            await self.eval_cc(cmd, message, ctx)
+
+    # @commands.Cog.listener()
+    # async def on_message(self, message: discord.Message):
+    #     if len(message.content) < 2 or message.guild is None:
+    #         return
+    #
+    #     ctx: commands.Context = await self.bot.get_context(message)
+    #     cmd = ctx.invoked_with
+    #     guild = message.guild
+    #     # try:
+    #     #     prefix = await self.get_prefix(message)
+    #     # except ValueError:
+    #     #     return
+    #
+    #     # prefix = ctx.prefix
+    #
+    #     cmdlist = self.config.guild(guild).cmdlist
+    #     # cmd = message.content[len(prefix) :].split()[0].lower()
+    #     cmd = await cmdlist.get_raw(cmd, default=None)
+    #
+    #     if cmd is not None:
+    #         await self.eval_cc(cmd, message, ctx)
 
     async def _get_roles_from_content(self, ctx, content):
         content_list = content.split(",")
         try:
-            role_list = [discord.utils.get(ctx.guild.roles, name=role.strip(' ')).id for role in content_list]
+            role_list = [
+                discord.utils.get(ctx.guild.roles, name=role.strip(" ")).id
+                for role in content_list
+            ]
         except (discord.HTTPException, AttributeError):  # None.id is attribute error
             return None
         else:
@@ -249,35 +315,69 @@ class CCRole(Cog):
         """
         content = message.content
         prefix_list = await self.bot.command_prefix(self.bot, message)
-        prefixes = sorted(prefix_list,
-                          key=lambda pfx: len(pfx),
-                          reverse=True)
+        prefixes = sorted(prefix_list, key=lambda pfx: len(pfx), reverse=True)
         for p in prefixes:
             if content.startswith(p):
                 return p
         raise ValueError
 
-    async def eval_cc(self, cmd, message):
+    async def eval_cc(self, cmd, message, ctx):
         """Does all the work"""
-        if cmd['proles'] and not (set(role.id for role in message.author.roles) & set(cmd['proles'])):
+        if cmd["proles"] and not (
+            set(role.id for role in message.author.roles) & set(cmd["proles"])
+        ):
             return  # Not authorized, do nothing
 
-        if cmd['targeted']:
-            try:
-                target = discord.utils.get(message.guild.members, mention=message.content.split()[1])
-            except IndexError:  # .split() return list of len<2
+        if cmd["targeted"]:
+            # try:
+            #     arg1 = message.content.split(maxsplit=1)[1]
+            # except IndexError:  # .split() return list of len<2
+            #     target = None
+            # else:
+            #     target = discord.utils.get(
+            #         message.guild.members, mention=arg1
+            #     )
+
+            view: StringView = ctx.view
+            view.skip_ws()
+
+            guild: discord.Guild = ctx.guild
+            # print(f"Guild: {guild}")
+
+            target = view.get_quoted_word()
+            # print(f"Target: {target}")
+
+            if target:
+                # target = discord.utils.get(guild.members, mention=target)
+                try:
+                    target = await commands.MemberConverter().convert(ctx, target)
+                except commands.BadArgument:
+                    target = None
+            else:
                 target = None
+
+            # try:
+            #     arg1 = ctx.args[1]
+            # except IndexError:  # args is list of len<2
+            #     target = None
+            # else:
+            #     target = discord.utils.get(
+            #         message.guild.members, mention=arg1
+            #     )
 
             if not target:
                 out_message = "This custom command is targeted! @mention a target\n`{} <target>`".format(
-                    message.content.split()[0])
+                    ctx.invoked_with
+                )
                 await message.channel.send(out_message)
                 return
         else:
             target = message.author
 
-        if cmd['aroles']:
-            arole_list = [discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd['aroles']]
+        if cmd["aroles"]:
+            arole_list = [
+                discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd["aroles"]
+            ]
             # await self.bot.send_message(message.channel, "Adding: "+str([str(arole) for arole in arole_list]))
             try:
                 await target.add_roles(*arole_list)
@@ -285,8 +385,10 @@ class CCRole(Cog):
                 await message.channel.send("Permission error: Unable to add roles")
         await asyncio.sleep(1)
 
-        if cmd['rroles']:
-            rrole_list = [discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd['rroles']]
+        if cmd["rroles"]:
+            rrole_list = [
+                discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd["rroles"]
+            ]
             # await self.bot.send_message(message.channel, "Removing: "+str([str(rrole) for rrole in rrole_list]))
             try:
                 await target.remove_roles(*rrole_list)
@@ -297,7 +399,7 @@ class CCRole(Cog):
         await message.channel.send(out_message)
 
     def format_cc(self, cmd, message, target):
-        out = cmd['text']
+        out = cmd["text"]
         results = re.findall("{([^}]+)\}", out)
         for result in results:
             param = self.transform_parameter(result, message, target)
@@ -316,7 +418,7 @@ class CCRole(Cog):
             "channel": message.channel,
             "server": message.guild,
             "guild": message.guild,
-            "target": target
+            "target": target,
         }
         if result in objects:
             return str(objects[result])

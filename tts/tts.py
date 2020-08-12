@@ -4,9 +4,7 @@ import discord
 from gtts import gTTS
 from redbot.core import Config, commands
 from redbot.core.bot import Red
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class TTS(Cog):
@@ -14,7 +12,8 @@ class TTS(Cog):
     Send Text-to-Speech messages
     """
 
-    def __init__(self, bot: Red):
+    def __init__(self, bot: Red, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.bot = bot
 
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
@@ -30,6 +29,7 @@ class TTS(Cog):
        Send Text to speech messages as an mp3
        """
         mp3_fp = io.BytesIO()
-        tts = gTTS(text, 'en')
+        tts = gTTS(text, lang="en")
         tts.write_to_fp(mp3_fp)
-        await ctx.send(file=discord.File(mp3_fp.getvalue(), "text.mp3"))
+        mp3_fp.seek(0)
+        await ctx.send(file=discord.File(mp3_fp, "text.mp3"))

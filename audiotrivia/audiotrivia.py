@@ -5,6 +5,7 @@ from typing import List
 import lavalink
 import yaml
 from redbot.cogs.audio import Audio
+from redbot.cogs.audio.core.utilities import validation
 from redbot.cogs.trivia import LOG
 from redbot.cogs.trivia.trivia import InvalidListError, Trivia
 from redbot.core import commands, Config, checks
@@ -12,25 +13,27 @@ from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.chat_formatting import box
 
+# from redbot.cogs.audio.utils import userlimit
+
+
 from .audiosession import AudioSession
 
 
 class AudioTrivia(Trivia):
     """
-    Custom commands
-    Creates commands used to display text and adjust roles
+    Upgrade to the Trivia cog that enables audio trivia
+    Replaces the Trivia cog
     """
 
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
         self.audio = None
-        self.audioconf = Config.get_conf(self, identifier=651171001051118411410511810597, force_registration=True)
-
-        self.audioconf.register_guild(
-            delay=30.0,
-            repeat=True,
+        self.audioconf = Config.get_conf(
+            self, identifier=651171001051118411410511810597, force_registration=True
         )
+
+        self.audioconf.register_guild(delay=30.0, repeat=True)
 
     @commands.group()
     @commands.guild_only()
@@ -63,7 +66,9 @@ class AudioTrivia(Trivia):
         """Set whether or not short audio will be repeated"""
         settings = self.audioconf.guild(ctx.guild)
         await settings.repeat.set(true_or_false)
-        await ctx.send("Done. Repeating short audio is now set to {}.".format(true_or_false))
+        await ctx.send(
+            "Done. Repeating short audio is now set to {}.".format(true_or_false)
+        )
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
@@ -87,21 +92,35 @@ class AudioTrivia(Trivia):
         categories = [c.lower() for c in categories]
         session = self._get_trivia_session(ctx.channel)
         if session is not None:
-            await ctx.send("There is already an ongoing trivia session in this channel.")
+            await ctx.send(
+                "There is already an ongoing trivia session in this channel."
+            )
             return
-
         status = await self.audio.config.status()
+        notify = await self.audio.config.guild(ctx.guild).notify()
 
         if status:
-            await ctx.send("I recommend disabling audio status with `{}audioset status`".format(ctx.prefix))
+            await ctx.send(
+                "It is recommended to disable audio status with `{}audioset status`".format(
+                    ctx.prefix
+                )
+            )
+
+        if notify:
+            await ctx.send(
+                "It is recommended to disable audio notify with `{}audioset notify`".format(
+                    ctx.prefix
+                )
+            )
 
         if not self.audio._player_check(ctx):
             try:
-                if not ctx.author.voice.channel.permissions_for(ctx.me).connect or self.audio._userlimit(
-                        ctx.author.voice.channel
-                ):
-                    return await ctx.send("I don't have permission to connect to your channel."
-                                          )
+                if not ctx.author.voice.channel.permissions_for(
+                    ctx.me
+                ).connect or self.audio.is_vc_full(ctx.author.voice.channel):
+                    return await ctx.send(
+                        "I don't have permission to connect to your channel."
+                    )
                 await lavalink.connect(ctx.author.voice.channel)
                 lavaplayer = lavalink.get_player(ctx.guild.id)
                 lavaplayer.store("connect", datetime.datetime.utcnow())
@@ -110,14 +129,13 @@ class AudioTrivia(Trivia):
 
         lavaplayer = lavalink.get_player(ctx.guild.id)
         lavaplayer.store("channel", ctx.channel.id)  # What's this for? I dunno
-        lavaplayer.store("guild", ctx.guild.id)
 
-        await self.audio._data_check(ctx)
+        await self.audio.set_player_settings(ctx)
 
-        if (
-                not ctx.author.voice or ctx.author.voice.channel != lavaplayer.channel
-        ):
-            return await ctx.send("You must be in the voice channel to use the audiotrivia command.")
+        if not ctx.author.voice or ctx.author.voice.channel != lavaplayer.channel:
+            return await ctx.send(
+                "You must be in the voice channel to use the audiotrivia command."
+            )
 
         trivia_dict = {}
         authors = []
@@ -148,7 +166,8 @@ class AudioTrivia(Trivia):
                 "The trivia list was parsed successfully, however it appears to be empty!"
             )
             return
-        settings = await self.conf.guild(ctx.guild).all()
+
+        settings = await self.config.guild(ctx.guild).all()
         audiosettings = await self.audioconf.guild(ctx.guild).all()
         config = trivia_dict.pop("CONFIG", None)
         if config and settings["allow_override"]:
@@ -157,7 +176,12 @@ class AudioTrivia(Trivia):
 
         # Delay in audiosettings overwrites delay in settings
         combined_settings = {**settings, **audiosettings}
-        session = AudioSession.start(ctx=ctx, question_list=trivia_dict, settings=combined_settings, player=lavaplayer)
+        session = AudioSession.start(
+            ctx=ctx,
+            question_list=trivia_dict,
+            settings=combined_settings,
+            player=lavaplayer,
+        )
         self.trivia_sessions.append(session)
         LOG.debug("New audio trivia session; #%s in %d", ctx.channel, ctx.guild.id)
 
@@ -190,11 +214,13 @@ class AudioTrivia(Trivia):
         try:
             path = next(p for p in self._audio_lists() if p.stem == category)
         except StopIteration:
-            raise FileNotFoundError("Could not find the `{}` category.".format(category))
+            raise FileNotFoundError(
+                "Could not find the `{}` category.".format(category)
+            )
 
         with path.open(encoding="utf-8") as file:
             try:
-                dict_ = yaml.load(file)
+                dict_ = yaml.load(file, Loader=yaml.SafeLoader)
             except yaml.error.YAMLError as exc:
                 raise InvalidListError("YAML parsing failed.") from exc
             else:

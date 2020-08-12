@@ -1,4 +1,3 @@
-from . import chatterbot
 from .chat import Chatter
 
 
@@ -6,6 +5,6 @@ def setup(bot):
     bot.add_cog(Chatter(bot))
 
 
-__all__ = (
-    'chatterbot'
-)
+# __all__ = (
+#     'chatterbot'
+# )

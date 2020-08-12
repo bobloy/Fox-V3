@@ -3,32 +3,37 @@ from random import randint
 
 import discord
 from redbot.core import Config, checks, commands
-from redbot.core.data_manager import cog_data_path
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
+from redbot.core.data_manager import bundled_data_path
 
 
 class Hangman(Cog):
     """Lets anyone play a game of hangman with custom phrases"""
+
     navigate = "🔼🔽"
     letters = "🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿"
 
     def __init__(self, bot):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=1049711010310997110)
-        default_guild = {
-            "theface": ':thinking:',
-            "emojis": True,
-        }
+        default_guild = {"theface": ":thinking:", "emojis": True}
 
         self.config.register_guild(**default_guild)
 
         self.the_data = defaultdict(
-            lambda: {"running": False, "hangman": 0, "guesses": [], "trackmessage": False, "answer": ''})
-        self.path = str(cog_data_path(self)).replace('\\', '/')
+            lambda: {
+                "running": False,
+                "hangman": 0,
+                "guesses": [],
+                "trackmessage": False,
+                "answer": "",
+            }
+        )
+        #         self.path = str(cog_data_path(self)).replace("\\", "/")
 
-        self.answer_path = self.path + "/bundled_data/hanganswers.txt"
+        #         self.answer_path = self.path + "/bundled_data/hanganswers.txt"
+
+        self.answer_path = bundled_data_path(self) / "hanganswers.txt"
 
         self.winbool = defaultdict(lambda: False)
 
@@ -48,7 +53,6 @@ class Hangman(Cog):
                     |                   
                     |\___                 
                     """,
-
                 """>
                    \_________
                     |/   |      
@@ -59,88 +63,99 @@ class Hangman(Cog):
                     |                   
                     |\___                 
                     H""",
-
                 """>
                    \_________       
                     |/   |              
-                    |   """ + theface + """
+                    |   """
+                + theface
+                + """
                     |                         
                     |                       
                     |                         
                     |                          
                     |\___                       
                     HA""",
-
                 """>
                    \________               
                     |/   |                   
-                    |   """ + theface + """                   
+                    |   """
+                + theface
+                + """                   
                     |    |                     
                     |    |                    
                     |                           
                     |                            
                     |\___                    
                     HAN""",
-
                 """>
                    \_________             
                     |/   |               
-                    |   """ + theface + """                    
+                    |   """
+                + theface
+                + """                    
                     |   /|                     
                     |     |                    
                     |                        
                     |                          
                     |\___                          
                     HANG""",
-
                 """>
                    \_________              
                     |/   |                     
-                    |   """ + theface + """                      
+                    |   """
+                + theface
+                + """                      
                     |   /|\                    
                     |     |                       
                     |                             
                     |                            
                     |\___                          
                     HANGM""",
-
                 """>
                    \________                   
                     |/   |                         
-                    |   """ + theface + """                       
+                    |   """
+                + theface
+                + """                       
                     |   /|\                             
                     |     |                          
                     |   /                            
                     |                                  
                     |\___                              
                     HANGMA""",
-
                 """>
                    \________
                     |/   |     
-                    |   """ + theface + """     
+                    |   """
+                + theface
+                + """     
                     |   /|\           
                     |     |        
                     |   / \        
                     |               
                     |\___           
-                    HANGMAN""")
+                    HANGMAN""",
+            )
 
-    @commands.group(aliases=['sethang'], pass_context=True)
+    @commands.group(aliases=["sethang"])
     @checks.mod_or_permissions(administrator=True)
     async def hangset(self, ctx):
         """Adjust hangman settings"""
         if ctx.invoked_subcommand is None:
             pass
 
-    @hangset.command(pass_context=True)
+    @hangset.command()
     async def face(self, ctx: commands.Context, theface):
         """Set the face of the hangman"""
         message = ctx.message
         # Borrowing FlapJack's emoji validation
         # (https://github.com/flapjax/FlapJack-Cogs/blob/master/smartreact/smartreact.py)
         if theface[:2] == "<:":
-            theface = [r for r in self.bot.emojis if r.id == theface.split(':')[2][:-1]][0]
+            theface = self.bot.get_emoji(int(theface.split(":")[2][:-1]))
+
+        if theface is None:
+            await ctx.send("I could not find that emoji")
+            return
 
         try:
             # Use the face as reaction to see if it's valid (THANKS FLAPJACK <3)
@@ -149,11 +164,11 @@ class Hangman(Cog):
             await ctx.send("That's not an emoji I recognize.")
             return
 
-        await self.config.guild(ctx.guild).theface.set(theface)
+        await self.config.guild(ctx.guild).theface.set(str(theface))
         await self._update_hanglist()
         await ctx.send("Face has been updated!")
 
-    @hangset.command(pass_context=True)
+    @hangset.command()
     async def toggleemoji(self, ctx: commands.Context):
         """Toggles whether to automatically react with the alphabet"""
 
@@ -161,7 +176,7 @@ class Hangman(Cog):
         await self.config.guild(ctx.guild).emojis.set(not current)
         await ctx.send("Emoji Letter reactions have been set to {}".format(not current))
 
-    @commands.command(aliases=['hang'], pass_context=True)
+    @commands.command(aliases=["hang"])
     async def hangman(self, ctx, guess: str = None):
         """Play a game of hangman against the bot!"""
         if guess is None:
@@ -200,14 +215,16 @@ class Hangman(Cog):
             await channel.send("You Win!")
             self._stopgame(channel.guild)
         elif self.the_data[channel.guild]["hangman"] >= 7:
-            await channel.send("You Lose!\nThe Answer was: **" + self.the_data[channel.guild]["answer"] + "**")
+            await channel.send(
+                "You Lose!\nThe Answer was: **" + self.the_data[channel.guild]["answer"] + "**"
+            )
 
             self._stopgame(channel.guild)
 
     def _getphrase(self):
         """Get a new phrase for the game and returns it"""
 
-        with open(self.answer_path, 'r') as phrasefile:
+        with open(self.answer_path, "r") as phrasefile:
             phrases = phrasefile.readlines()
 
         outphrase = ""
@@ -257,6 +274,7 @@ class Hangman(Cog):
 
         await self._reprintgame(message)
 
+    @commands.Cog.listener()
     async def on_react(self, reaction, user):
         """ Thanks to flapjack reactpoll for guidelines
             https://github.com/flapjax/FlapJack-Cogs/blob/master/reactpoll/reactpoll.py"""
@@ -305,7 +323,9 @@ class Hangman(Cog):
         await self._try_clear_reactions(message)
 
         for x in range(len(self.letters)):
-            if x in [i for i, b in enumerate("ABCDEFGHIJKLM") if b not in self._guesslist(message.guild)]:
+            if x in [
+                i for i, b in enumerate("ABCDEFGHIJKLM") if b not in self._guesslist(message.guild)
+            ]:
                 await message.add_reaction(self.letters[x])
 
         await message.add_reaction(self.navigate[-1])
@@ -317,16 +337,21 @@ class Hangman(Cog):
         await self._try_clear_reactions(message)
 
         for x in range(len(self.letters)):
-            if x in [i for i, b in enumerate("NOPQRSTUVWXYZ") if b not in self._guesslist(message.guild)]:
+            if x in [
+                i for i, b in enumerate("NOPQRSTUVWXYZ") if b not in self._guesslist(message.guild)
+            ]:
                 await message.add_reaction(self.letters[x + 13])
 
         await message.add_reaction(self.navigate[0])
 
-    def _make_say(self, guild):
+    async def _make_say(self, guild):
         c_say = "Guess this: " + str(self._hideanswer(guild)) + "\n"
         c_say += "Used Letters: " + str(self._guesslist(guild)) + "\n"
         c_say += self.hanglist[guild][self.the_data[guild]["hangman"]] + "\n"
-        c_say += self.navigate[0] + " for A-M, " + self.navigate[-1] + " for N-Z"
+        if await self.config.guild(guild).emojis():
+            c_say += "{} for A-M, {} for N-Z".format(self.navigate[0], self.navigate[-1])
+        else:
+            c_say += "React with {} - {} to guess".format(self.letters[0], self.letters[-1])
 
         return c_say
 
@@ -334,7 +359,7 @@ class Hangman(Cog):
         if message.guild not in self.hanglist:
             await self._update_hanglist()
 
-        c_say = self._make_say(message.guild)
+        c_say = await self._make_say(message.guild)
 
         await message.edit(content=c_say)
         self.the_data[message.guild]["trackmessage"] = message.id
@@ -346,7 +371,7 @@ class Hangman(Cog):
         if channel.guild not in self.hanglist:
             await self._update_hanglist()
 
-        c_say = self._make_say(channel.guild)
+        c_say = await self._make_say(channel.guild)
 
         message = await channel.send(c_say)
 

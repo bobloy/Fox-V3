@@ -3,10 +3,8 @@ from datetime import date, timedelta
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.utils.chat_formatting import pagify
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class Flag(Cog):
@@ -15,14 +13,11 @@ class Flag(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {
-            "days": 31,
-            "dm": True,
-            "flags": {}
-        }
+        default_guild = {"days": 31, "dm": True, "flags": {}}
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
@@ -67,12 +62,7 @@ class Flag(Cog):
 
     @staticmethod
     def _flag_template():
-        return {
-            'reason': "",
-            'expireyear': 0,
-            'expiremonth': 0,
-            'expireday': 0
-        }
+        return {"reason": "", "expireyear": 0, "expiremonth": 0, "expireday": 0}
 
     @commands.guild_only()
     @checks.mod_or_permissions(manage_roles=True)
@@ -81,25 +71,22 @@ class Flag(Cog):
         """Flag a member"""
         guild = ctx.guild
         await self._check_flags(guild)
-        # clashroyale = self.bot.get_cog('clashroyale')
-        # if clashroyale is None:
-        # await ctx.send("Requires clashroyale cog installed")
-        # return
 
         flag = self._flag_template()
-        expiredate = date.today()
-        expiredate += timedelta(days=await self.config.guild(guild).days())
+        expire_date = date.today() + timedelta(days=await self.config.guild(guild).days())
 
-        flag['reason'] = reason
-        flag['expireyear'] = expiredate.year
-        flag['expiremonth'] = expiredate.month
-        flag['expireday'] = expiredate.day
+        flag["reason"] = reason
+        flag["expireyear"] = expire_date.year
+        flag["expiremonth"] = expire_date.month
+        flag["expireday"] = expire_date.day
 
         # flags = await self.config.guild(guild).flags.get_raw(str(member.id), default=[])
         # flags.append(flag)
         # await self.config.guild(guild).flags.set_raw(str(member.id), value=flags)
 
         async with self.config.guild(guild).flags() as flags:
+            if str(member.id) not in flags:
+                flags[str(member.id)] = []
             flags[str(member.id)].append(flag)
 
         outembed = await self._list_flags(member)
@@ -107,13 +94,16 @@ class Flag(Cog):
         if outembed:
             await ctx.send(embed=outembed)
             if await self.config.guild(guild).dm():
-                await member.send(embed=outembed)
+                try:
+                    await member.send(embed=outembed)
+                except discord.Forbidden:
+                    await ctx.send("DM-ing user failed")
         else:
             await ctx.send("This member has no flags.. somehow..")
 
     @commands.guild_only()
     @checks.mod_or_permissions(manage_roles=True)
-    @commands.command(aliases=['flagclear'])
+    @commands.command(aliases=["flagclear"])
     async def clearflag(self, ctx: commands.Context, member: discord.Member):
         """Clears flags for a member"""
         guild = ctx.guild
@@ -124,7 +114,7 @@ class Flag(Cog):
         await ctx.send("Success!")
 
     @commands.guild_only()
-    @commands.command(aliases=['flaglist'])
+    @commands.command(aliases=["flaglist"])
     async def listflag(self, ctx: commands.Context, member: discord.Member):
         """Lists flags for a member"""
         server = ctx.guild
@@ -138,7 +128,7 @@ class Flag(Cog):
             await ctx.send("This member has no flags!")
 
     @commands.guild_only()
-    @commands.command(aliases=['flagall'])
+    @commands.command(aliases=["flagall"])
     async def allflag(self, ctx: commands.Context):
         """Lists all flags for the server"""
         guild = ctx.guild
@@ -162,12 +152,18 @@ class Flag(Cog):
         """Returns a pretty embed of flags on a member"""
         flags = await self.config.guild(member.guild).flags.get_raw(str(member.id), default=[])
 
-        embed = discord.Embed(title="Flags for " + member.display_name,
-                              description="User has {} active flags".format(len(flags)), color=0x804040)
+        embed = discord.Embed(
+            title="Flags for " + member.display_name,
+            description="User has {} active flags".format(len(flags)),
+            color=0x804040,
+        )
         for flag in flags:
-            embed.add_field(name="Reason: " + flag['reason'],
-                            value="Expires on " + str(date(flag['expireyear'], flag['expiremonth'], flag['expireday'])),
-                            inline=True)
+            embed.add_field(
+                name="Reason: " + flag["reason"],
+                value="Expires on "
+                + str(date(flag["expireyear"], flag["expiremonth"], flag["expireday"])),
+                inline=True,
+            )
 
         embed.set_thumbnail(url=member.avatar_url)
 
@@ -176,14 +172,16 @@ class Flag(Cog):
     async def _check_flags(self, guild: discord.Guild):
         """Updates and removes expired flags"""
         flag_data = await self.config.guild(guild).flags()
-        flag_d = {}
+        # flag_d = {}
         for memberid, flags in flag_data.items():
             # for member in guild.members:
             # flags = await self.config.guild(guild).flags.get_raw(str(member.id), default=[])
             x = 0
             while x < len(flags):
                 flag = flags[x]
-                if date.today() >= date(flag['expireyear'], flag['expiremonth'], flag['expireday']):
+                if date.today() >= date(
+                    flag["expireyear"], flag["expiremonth"], flag["expireday"]
+                ):
                     del flags[x]
                 else:
                     x += 1

@@ -1,0 +1,17 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Send daily announcements to all servers at a specified times",
+  "hidden": false,
+  "install_msg": "Thank you for installing AnnounceDaily! Get started with `[p]load announcedaily` and `[p]help AnnounceDaily`",
+  "short": "Send daily announcements",
+  "tags": [
+    "bobloy"
+  ]
+}

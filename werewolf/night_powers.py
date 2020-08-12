@@ -1,4 +1,4 @@
-from werewolf.role import Role
+from .role import Role
 
 
 def night_immune(role: Role):

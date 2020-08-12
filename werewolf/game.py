@@ -5,10 +5,10 @@ from typing import List, Any, Dict, Set, Union
 import discord
 from redbot.core import commands
 
-from werewolf.builder import parse_code
-from werewolf.player import Player
-from werewolf.role import Role
-from werewolf.votegroup import VoteGroup
+from .builder import parse_code
+from .player import Player
+from .role import Role
+from .votegroup import VoteGroup
 
 
 class Game:
