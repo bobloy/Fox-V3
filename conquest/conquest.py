@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os
 import pathlib
 from shutil import copyfile
 from typing import Optional
@@ -38,11 +37,11 @@ class Conquest(commands.Cog):
 
         self.custom_map_folder = self.data_path / "custom_maps"
         if not self.custom_map_folder.exists() or not self.custom_map_folder.is_dir():
-            os.makedirs(self.custom_map_folder)
+            self.custom_map_folder.mkdir()
 
         self.current_map_folder = self.data_path / "current_maps"
         if not self.current_map_folder.exists() or not self.current_map_folder.is_dir():
-            os.makedirs(self.current_map_folder)
+            self.current_map_folder.mkdir()
 
         self.asset_path: Optional[pathlib.Path] = None
 
@@ -160,9 +159,9 @@ class Conquest(commands.Cog):
 
             def check(m):
                 return (
-                        m.content.upper() in ["Y", "YES", "N", "NO"]
-                        and m.channel == ctx.channel
-                        and m.author == ctx.author
+                    m.content.upper() in ["Y", "YES", "N", "NO"]
+                    and m.channel == ctx.channel
+                    and m.author == ctx.author
                 )
 
             msg = await self.bot.wait_for("message", check=check)
@@ -170,8 +169,6 @@ class Conquest(commands.Cog):
             if msg.content.upper() in ["N", "NO"]:
                 await ctx.send("Cancelled")
                 return
-
-
 
     @mapmaker.command(name="upload")
     async def _mapmaker_upload(self, ctx: commands.Context, map_path=""):
@@ -194,10 +191,13 @@ class Conquest(commands.Cog):
                 return
 
             self.mm_current_map["im"] = Image.open(map_path)
+            self.mm_current_map["extension"] = map_path.suffix[1:]
 
         if message.attachments:
             attch: discord.Attachment = message.attachments[0]
-            self.mm_current_map["im"] = Image.frombytes("RGBA", (attch.width, attch.height), attch.read())
+            self.mm_current_map["im"] = Image.frombytes(
+                "RGBA", (attch.width, attch.height), attch.read()
+            )
 
     @mapmaker.command(name="load")
     async def _mapmaker_load(self, ctx: commands.Context, map_name=""):
@@ -373,7 +373,7 @@ class Conquest(commands.Cog):
             )
         else:
             if not current_map_folder.exists():
-                os.makedirs(current_map_folder)
+                current_map_folder.mkdir()
             copyfile(self.asset_path / mapname / f"blank.{self.ext}", current_map)
 
         await ctx.tick()

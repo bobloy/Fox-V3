@@ -1,6 +1,6 @@
-import os
 import pathlib
-from PIL import Image, ImageColor, ImageFont, ImageOps, ImageDraw
+
+from PIL import Image, ImageColor, ImageDraw, ImageFont
 from PIL.ImageDraw import _color_diff
 
 
@@ -98,7 +98,7 @@ class Regioner:
         masks_path = self.filepath / "masks"
 
         if not masks_path.exists():
-            os.makedirs(masks_path)
+            masks_path.mkdir()
 
         black = ImageColor.getcolor("black", "L")
         white = ImageColor.getcolor("white", "L")
