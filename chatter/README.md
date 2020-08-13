@@ -162,6 +162,16 @@ This command trains Chatter on the specified channel based on the configured
 settings. This can take a long time to process.
 
 
+### Train Ubuntu
+
+```
+[p]chatter trainubuntu
+``` 
+*WARNING:* This will trigger a large download and use a lot of processing power
+
+This command trains Chatter on the publicly available Ubuntu Dialogue Corpus. (It'll talk like a geek)
+
+
 ## Switching Algorithms
 
 ```
