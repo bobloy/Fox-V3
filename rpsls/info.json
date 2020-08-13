@@ -3,11 +3,7 @@
     "Bobloy",
     "SnappyDragon"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Play Rock Papers Scissor Lizard Spock by Sam Kass in Discord!",
   "hidden": false,
   "install_msg": "Thank you for installing RPSLS. Get started with `[p]load rpsls`, then `[p]rpsls`",

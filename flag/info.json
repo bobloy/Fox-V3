@@ -2,11 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Add expiring flags on members to track warnings or incidents",
   "hidden": false,
   "install_msg": "Thank you for installing Flag! Get started with `[p]load flag` and `[p]help Flag`",
