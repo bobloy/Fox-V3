@@ -186,10 +186,10 @@ Chatter can be configured to use one of three different Similarity algorithms.
 
 Changing this can help if the response speed is too slow, but can reduce the accuracy of results.
 
-The second argument is the minimum similarity threshold,
-raising this will make the bot me more selective with the responses it finds.
+The second argument is the maximum similarity threshold,
+lowering that will make the bot stop searching sooner.
 
-Default minimum similarity threshold is 0.90
+Default maximum similarity threshold is 0.90
 
 
 ## Switching Pretrained Models
