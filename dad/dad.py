@@ -46,7 +46,7 @@ class Dad(Cog):
         async with aiohttp.ClientSession(headers=headers) as session:
             joke = await fetch_url(session, "https://icanhazdadjoke.com/")
 
-        await ctx.maybe_send_embed(joke['joke'])
+        await ctx.maybe_send_embed(joke["joke"])
 
         # print(joke)
         #
@@ -97,21 +97,21 @@ class Dad(Cog):
         if self.cooldown[guild.id] > datetime.now():
             return
 
-        lower = message.clean_content.lower()
-        lower_split = lower.split()
-        if len(lower_split) == 0:
+        cleaned_content = message.clean_content
+        content_split = cleaned_content.split()
+        if len(content_split) == 0:
             return
 
-        if lower_split[0] == "i'm" and len(lower_split) >= 2:
+        if content_split[0].lower() == "i'm" and len(content_split) >= 2:
             if await guild_config.nickname():
                 try:
-                    await message.author.edit(nick=lower[4:])
+                    await message.author.edit(nick=cleaned_content[4:])
                 except discord.Forbidden:
-                    out = lower[4:]
+                    out = cleaned_content[4:]
                 else:
                     out = message.author.mention
             else:
-                out = lower[4:]
+                out = cleaned_content[4:]
             try:
                 await message.channel.send(f"Hi {out}, I'm {guild.me.display_name}!")
             except discord.HTTPException:

@@ -8,7 +8,7 @@
     0
   ],
   "description": "Tell dad jokes and give out bad nicknames",
-  "hidden": true,
+  "hidden": false,
   "install_msg": "Thank you for installing Dad. Get started with `[p]load dad`, then `[p]help Dad`",
   "short": "Dad joke bot",
   "end_user_data_statement": "This cog does not store any End User Data",
