@@ -1,6 +1,7 @@
 import pathlib
+from typing import List
 
-from PIL import Image, ImageColor, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFont
 from PIL.ImageDraw import _color_diff
 
 
@@ -11,6 +12,10 @@ def get_center(points):
     x = [p[0] for p in points]
     y = [p[1] for p in points]
     return sum(x) / len(points), sum(y) / len(points)
+
+
+def recommended_combinations(mask_centers):
+    pass  # TODO: Create recommendation algo and test it
 
 
 def floodfill(image, xy, value, border=None, thresh=0) -> set:
@@ -89,11 +94,13 @@ class Regioner:
 
         TODO: Using proper multithreading best practices.
         TODO: This is iterating over a 2d array with some overlap, you went to school for this Bozo
+
+        TODO: Fails on some maps where borders aren't just black (i.e. water borders vs region borders)
         """
 
         base_img_path = self.filepath / self.filename
         if not base_img_path.exists():
-            return None
+            return False
 
         masks_path = self.filepath / "masks"
 
@@ -118,7 +125,7 @@ class Regioner:
                     if filled:  # Pixels were updated, make them into a mask
                         mask = Image.new("L", base_img.size, 255)
                         for x2, y2 in filled:
-                            mask.putpixel((x2, y2), 0)
+                            mask.putpixel((x2, y2), 0)  # TODO: Switch to ImageDraw
 
                         mask_count += 1
                         mask = mask.convert("L")
@@ -130,13 +137,51 @@ class Regioner:
 
         # TODO: save mask_centers
 
-        return self.create_number_mask(base_img, mask_centers)
+        self.create_number_mask(mask_centers)
+        return mask_centers
 
-    def create_number_mask(self, base_img, mask_centers):
+    def create_number_mask(self, mask_centers):
+        base_img_path = self.filepath / self.filename
+        if not base_img_path.exists():
+            return False
+
+        base_img: Image.Image = Image.open(base_img_path).convert("L")
+
         number_img = Image.new("L", base_img.size, 255)
         fnt = ImageFont.load_default()
         d = ImageDraw.Draw(number_img)
         for mask_num, center in mask_centers.items():
             d.text(center, str(mask_num), font=fnt, fill=0)
         number_img.save(self.filepath / f"numbers.png", "PNG")
-        return mask_centers
+        return True
+
+    def combine_masks(self, mask_list: List[int]):
+        if not mask_list:
+            return False, None
+
+        base_img_path = self.filepath / self.filename
+        if not base_img_path.exists():
+            return False, None
+
+        masks_path = self.filepath / "masks"
+
+        if not masks_path.exists():
+            return False, None
+
+        base_img: Image.Image = Image.open(base_img_path)
+        mask = Image.new("1", base_img.size, 1)
+
+        lowest_num = None
+        eliminated_masks = []
+
+        for mask_num in mask_list:
+            if lowest_num is None or mask_num < lowest_num:
+                lowest_num = mask_num
+            else:
+                eliminated_masks.append(mask_num)
+
+            mask2 = Image.open(masks_path / f"{mask_num}.png").convert("1")
+            mask = ImageChops.logical_and(mask, mask2)
+
+        mask.save(masks_path / f"{lowest_num}.png", "PNG")
+        return lowest_num, eliminated_masks
