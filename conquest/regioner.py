@@ -1,3 +1,4 @@
+import json
 import pathlib
 from typing import List
 
@@ -79,9 +80,90 @@ def floodfill(image, xy, value, border=None, thresh=0) -> set:
     return filled_pixels
 
 
+class ConquestMap:
+    def __init__(self, path):
+        self.path = path
+
+        self.name = None
+        self.custom = None
+        self.region_max = None
+        self.extension = None
+        self.regions = {}
+
+    async def change_name(self, new_name: str, new_path: pathlib.Path):
+        self.name = new_name
+        if new_path.exists() and new_path.is_dir():
+            # This is an overwrite operation
+            # await ctx.maybe_send_embed(f"{map_name} already exists, okay to overwrite?")
+            #
+            # pred = MessagePredicate.yes_or_no(ctx)
+            # try:
+            #     await self.bot.wait_for("message", check=pred, timeout=30)
+            # except TimeoutError:
+            #     await ctx.maybe_send_embed("Response timed out, cancelling save")
+            #     return
+            # if not pred.result:
+            #     return
+            return False, "Overwrite currently not supported"
+
+        # This is a new name
+        new_path.mkdir()
+        ext_format = "JPEG" if self.extension.upper() == "JPG" else self.extension.upper()
+        self.mm_img.save(new_path / f"blank.{self.extension}", ext_format)
+
+        await self._save_mm_data(target_save)
+
+        return True
+
+    def masks_path(self):
+        return self.path / "masks"
+
+    def data_path(self):
+        return self.path / "data.json"
+
+    def blank_path(self):
+        return self.path / "blank.png"
+
+    def numbers_path(self):
+        return self.path / "numbers.png"
+
+    def numbered_path(self):
+        return self.path / "numbered.png"
+
+    def save_data(self):
+        with self.data_path().open("w+") as dp:
+            json.dump(self.__dict__, dp, sort_keys=True, indent=4)
+
+    def load_data(self):
+        with self.data_path().open() as dp:
+            data = json.load(dp)
+
+        self.name = data["name"]
+        self.custom = data["custom"]
+        self.region_max = data["region_max"]
+
+        self.regions = {key: Region(number=key, host=self, **data) for key, data in data["regions"].items()}
+
+    def save_region(self, region):
+        if not self.custom:
+            return False
+        pass
+
+
+class Region:
+    def __init__(self, number, host: ConquestMap, center, **kwargs):
+        self.number = number
+        self.host = host
+        self.center = center
+        self.data = kwargs
+
+    def save(self):
+        self.host.save_region(self)
+
+
 class Regioner:
     def __init__(
-        self, filepath: pathlib.Path, filename: str, wall_color="black", region_color="white"
+            self, filepath: pathlib.Path, filename: str, wall_color="black", region_color="white"
     ):
         self.filepath = filepath
         self.filename = filename
@@ -131,7 +213,7 @@ class Regioner:
                         mask = mask.convert("L")
                         mask.save(masks_path / f"{mask_count}.png", "PNG")
 
-                        mask_centers[mask_count] = get_center(filled)
+                        mask_centers[mask_count] = {"center": get_center(filled), "point_count": len(filled)}
 
                         already_processed.update(filled)
 
@@ -150,7 +232,8 @@ class Regioner:
         number_img = Image.new("L", base_img.size, 255)
         fnt = ImageFont.load_default()
         d = ImageDraw.Draw(number_img)
-        for mask_num, center in mask_centers.items():
+        for mask_num, data in mask_centers.items():
+            center = data["center"]
             d.text(center, str(mask_num), font=fnt, fill=0)
         number_img.save(self.filepath / f"numbers.png", "PNG")
         return True

@@ -13,7 +13,7 @@ from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
-from conquest.regioner import Regioner, get_center
+from conquest.regioner import ConquestMap, Regioner, get_center
 
 
 class Conquest(commands.Cog):
@@ -48,6 +48,8 @@ class Conquest(commands.Cog):
         self.custom_map_path = self.data_path / "custom_maps"
         if not self.custom_map_path.exists() or not self.custom_map_path.is_dir():
             self.custom_map_path.mkdir()
+            with (self.custom_map_path / "maps.json").open("w+") as dj:
+                json.dump({"maps": []}, dj, sort_keys=True, indent=4)
 
         self.current_map_folder = self.data_path / "current_maps"
         if not self.current_map_folder.exists() or not self.current_map_folder.is_dir():
@@ -61,8 +63,8 @@ class Conquest(commands.Cog):
         self.ext = None
         self.ext_format = None
 
-        self.mm = {}
-        self.mm_img: Union[Image.Image, None] = None
+        self.mm: Union[ConquestMap, None] = None
+        # self.mm_img: Union[Image.Image, None] = None
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -130,7 +132,7 @@ class Conquest(commands.Cog):
             out.save(current_img_path, self.ext_format)
             await self._send_maybe_zoomed_map(ctx, current_img_path, f"map.{self.ext}")
 
-    async def _composite_regions(self, im, regions, color, region_path) -> Image.Image:
+    async def _composite_regions(self, im, regions, color, region_path) -> Union[Image.Image, None]:
         im2 = Image.new("RGB", im.size, color)
 
         loop = asyncio.get_running_loop()
@@ -148,41 +150,23 @@ class Conquest(commands.Cog):
                     None, ImageChops.logical_and, combined_mask, mask
                 )
 
-        out = await loop.run_in_executor(None, Image.composite, im, im2, combined_mask.covert("L"))
+        if combined_mask is None:  # No regions usually
+            return None
+
+        out = await loop.run_in_executor(None, Image.composite, im, im2, combined_mask.convert("L"))
 
         return out
 
     async def _mm_save_map(self, ctx, map_name, target_save):
-        self.mm["name"] = map_name
-        if target_save.exists() and target_save.is_dir():
-            # This is an overwrite operation
-            # await ctx.maybe_send_embed(f"{map_name} already exists, okay to overwrite?")
-            #
-            # pred = MessagePredicate.yes_or_no(ctx)
-            # try:
-            #     await self.bot.wait_for("message", check=pred, timeout=30)
-            # except TimeoutError:
-            #     await ctx.maybe_send_embed("Response timed out, cancelling save")
-            #     return
-            # if not pred.result:
-            #     return
-            await ctx.maybe_send_embed("Overwrite currently not supported")
-            return False
+        result = await self.mm.change_name(map_name, target_save)
 
-        # This is a new name
-        target_save.mkdir()
-        ext = self.mm["extension"]
-        ext_format = "JPEG" if ext.upper() == "JPG" else ext.upper()
-        self.mm_img.save(target_save / f"blank.{ext}", ext_format)
-
-        await self._save_mm_data(target_save)
-
-        return True
+        if result:
+            await ctx.maybe_send_embed("Name changed")
 
     async def _save_mm_data(self, target_save):
         data_json = target_save / "data.json"
         with data_json.open("w+") as dj:
-            json.dump(self.mm, dj)
+            json.dump(self.mm, dj, sort_keys=True, indent=4)
 
     @commands.group()
     async def mapmaker(self, ctx: commands.context):
@@ -195,7 +179,7 @@ class Conquest(commands.Cog):
     @mapmaker.command(name="close")
     async def _mapmaker_close(self, ctx: commands.Context):
         """Close the currently open map."""
-        self.mm = {}
+        self.mm = None
         self.mm_img = None
 
         await ctx.tick()
@@ -248,17 +232,17 @@ class Conquest(commands.Cog):
                 return
 
         if not self.mm:
-            self.mm = self.default_custom_map.copy()
+            self.mm = ConquestMap(self.custom_map_path)
 
         if map_path:
             map_path = pathlib.Path(map_path)
 
-            if not map_path.exist():
+            if not map_path.exists():
                 await ctx.maybe_send_embed("Map not found at that path")
                 return
 
             self.mm_img = Image.open(map_path)
-            self.mm["extension"] = map_path.suffix[1:]
+            self.mm.extension = map_path.suffix[1:]
 
         elif message.attachments:
             attch: discord.Attachment = message.attachments[0]
@@ -277,7 +261,7 @@ class Conquest(commands.Cog):
         result = await self._mm_save_map(ctx, map_name, target_save)
 
         if not result:
-            self.mm = {}
+            self.mm = None
             self.mm_img = None
             await ctx.maybe_send_embed("Failed to upload to that name")
         else:
@@ -458,8 +442,8 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("Failed to combine masks")
             return
 
-        points = [self.mm["regions"][f"{n}"] for n in mask_list]
-        self.mm["regions"][f"{lowest}"] = get_center(points)
+        points = [self.mm["regions"][f"{n}"]["center"] for n in mask_list]
+        self.mm["regions"][f"{lowest}"]["center"] = get_center(points)
 
         for key in eliminated:
             self.mm["regions"].pop(f"{key}")
@@ -487,12 +471,20 @@ class Conquest(commands.Cog):
         """
         List currently available maps
         """
-        maps_json = self._path_if_custom() / "maps.json"
-
+        maps_json = self.asset_path / "maps.json"
         with maps_json.open() as maps:
             maps_json = json.load(maps)
-            map_list = "\n".join(map_name for map_name in maps_json["maps"])
-            await ctx.maybe_send_embed(f"Current maps:\n{map_list}")
+            map_list = maps_json["maps"]
+
+        maps_json = self.custom_map_path / "maps.json"
+        if maps_json.exists():
+            with maps_json.open() as maps:
+                maps_json = json.load(maps)
+                custom_map_list = maps_json["maps"]
+
+        map_list = "\n".join(map_list)
+        custom_map_list = "\n".join(custom_map_list)
+        await ctx.maybe_send_embed(f"Current maps:\n{map_list}\n\nCustom maps:\n{custom_map_list}")
 
     @conquest.group(name="set")
     async def conquest_set(self, ctx: commands.Context):
@@ -515,7 +507,7 @@ class Conquest(commands.Cog):
             return
 
         with zoom_json_path.open("w+") as zoom_json:
-            json.dump({"enabled": False}, zoom_json)
+            json.dump({"enabled": False}, zoom_json, sort_keys=True, indent=4)
 
         await ctx.tick()
 
@@ -545,7 +537,7 @@ class Conquest(commands.Cog):
         zoom_data["zoom"] = zoom
 
         with zoom_json_path.open("w+") as zoom_json:
-            json.dump(zoom_data, zoom_json)
+            json.dump(zoom_data, zoom_json, sort_keys=True, indent=4)
 
         await ctx.tick()
 
