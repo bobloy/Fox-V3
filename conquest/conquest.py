@@ -6,14 +6,14 @@ from shutil import copyfile
 from typing import Optional, Union
 
 import discord
-from PIL import Image, ImageChops, ImageColor, ImageOps
+from PIL import Image, ImageColor, ImageOps
 from discord.ext.commands import Greedy
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
-from conquest.regioner import ConquestMap, Regioner, get_center
+from conquest.regioner import ConquestMap, composite_regions
 
 
 class Conquest(commands.Cog):
@@ -29,6 +29,10 @@ class Conquest(commands.Cog):
         "region_max": 0,
         "extension": "png",
         "custom": True,
+    }
+
+    default_maps_json = {
+        "maps": []
     }
 
     def __init__(self, bot: Red):
@@ -49,7 +53,7 @@ class Conquest(commands.Cog):
         if not self.custom_map_path.exists() or not self.custom_map_path.is_dir():
             self.custom_map_path.mkdir()
             with (self.custom_map_path / "maps.json").open("w+") as dj:
-                json.dump({"maps": []}, dj, sort_keys=True, indent=4)
+                json.dump(self.default_maps_json.copy(), dj, sort_keys=True, indent=4)
 
         self.current_map_folder = self.data_path / "current_maps"
         if not self.current_map_folder.exists() or not self.current_map_folder.is_dir():
@@ -64,7 +68,6 @@ class Conquest(commands.Cog):
         self.ext_format = None
 
         self.mm: Union[ConquestMap, None] = None
-        # self.mm_img: Union[Image.Image, None] = None
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -90,8 +93,13 @@ class Conquest(commands.Cog):
     async def current_map_load(self):
         map_path = self._path_if_custom()
         map_data_path = map_path / self.current_map / "data.json"
-        with map_data_path.open() as mapdata:
-            self.map_data: dict = json.load(mapdata)
+        try:
+            with map_data_path.open() as mapdata:
+                self.map_data: dict = json.load(mapdata)
+        except FileNotFoundError as e:
+            print(e)
+            await self.config.current_map.set(None)
+            return
         self.ext = self.map_data["extension"]
         self.ext_format = "JPEG" if self.ext.upper() == "JPG" else self.ext.upper()
 
@@ -127,46 +135,14 @@ class Conquest(commands.Cog):
         current_img_path = await self._get_current_map_path() / f"current.{self.ext}"
         im = Image.open(current_img_path)
         async with ctx.typing():
-            out: Image.Image = await self._composite_regions(im, regions, color,
-                                                             self._path_if_custom() / self.current_map)
+            out: Image.Image = await composite_regions(
+                im, regions, color, self._path_if_custom() / self.current_map
+            )
             out.save(current_img_path, self.ext_format)
             await self._send_maybe_zoomed_map(ctx, current_img_path, f"map.{self.ext}")
 
-    async def _composite_regions(self, im, regions, color, region_path) -> Union[Image.Image, None]:
-        im2 = Image.new("RGB", im.size, color)
-
-        loop = asyncio.get_running_loop()
-
-        combined_mask = None
-        for region in regions:
-            mask = Image.open(
-                region_path / "masks" / f"{region}.{self.ext}"
-            ).convert("1")
-            if combined_mask is None:
-                combined_mask = mask
-            else:
-                # combined_mask = ImageChops.logical_or(combined_mask, mask)
-                combined_mask = await loop.run_in_executor(
-                    None, ImageChops.logical_and, combined_mask, mask
-                )
-
-        if combined_mask is None:  # No regions usually
-            return None
-
-        out = await loop.run_in_executor(None, Image.composite, im, im2, combined_mask.convert("L"))
-
-        return out
-
-    async def _mm_save_map(self, ctx, map_name, target_save):
-        result = await self.mm.change_name(map_name, target_save)
-
-        if result:
-            await ctx.maybe_send_embed("Name changed")
-
-    async def _save_mm_data(self, target_save):
-        data_json = target_save / "data.json"
-        with data_json.open("w+") as dj:
-            json.dump(self.mm, dj, sort_keys=True, indent=4)
+    async def _mm_save_map(self, map_name, target_save):
+        return await self.mm.change_name(map_name, target_save)
 
     @commands.group()
     async def mapmaker(self, ctx: commands.context):
@@ -180,7 +156,6 @@ class Conquest(commands.Cog):
     async def _mapmaker_close(self, ctx: commands.Context):
         """Close the currently open map."""
         self.mm = None
-        self.mm_img = None
 
         await ctx.tick()
 
@@ -191,17 +166,13 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map currently being worked on")
             return
 
-        if not self.mm_img:
-            await ctx.maybe_send_embed("No map image to save")
-            return
-
-        if self.mm["name"] == map_name:
+        if self.mm.name == map_name:
             await ctx.maybe_send_embed("This map already has that name, no reason to save")
             return
 
         target_save = self.custom_map_path / map_name
 
-        result = await self._mm_save_map(ctx, map_name, target_save)
+        result = await self._mm_save_map(map_name, target_save)
         if not result:
             await ctx.maybe_send_embed("Failed to save to that name")
         else:
@@ -233,6 +204,7 @@ class Conquest(commands.Cog):
 
         if not self.mm:
             self.mm = ConquestMap(self.custom_map_path)
+            self.mm.custom = True
 
         if map_path:
             map_path = pathlib.Path(map_path)
@@ -241,8 +213,7 @@ class Conquest(commands.Cog):
                 await ctx.maybe_send_embed("Map not found at that path")
                 return
 
-            self.mm_img = Image.open(map_path)
-            self.mm.extension = map_path.suffix[1:]
+            mm_img = Image.open(map_path)
 
         elif message.attachments:
             attch: discord.Attachment = message.attachments[0]
@@ -251,21 +222,26 @@ class Conquest(commands.Cog):
             buffer = BytesIO()
             await attch.save(buffer)
 
-            self.mm_img: Image.Image = Image.open(buffer)
-
-            self.mm["extension"] = pathlib.Path(attch.filename).suffix[1:]
+            mm_img: Image.Image = Image.open(buffer)
         else:
             # Wait what?
             return
 
-        result = await self._mm_save_map(ctx, map_name, target_save)
+        result = await self.mm.init_directory(map_name, target_save, mm_img)
 
         if not result:
             self.mm = None
-            self.mm_img = None
             await ctx.maybe_send_embed("Failed to upload to that name")
-        else:
-            await ctx.maybe_send_embed(f"Map successfully uploaded to {target_save}")
+            return
+
+        maps_json_path = self.custom_map_path / "maps.json"
+        with maps_json_path.open("r+") as maps:
+            map_data = json.load(maps)
+            map_data["maps"].append(map_name)
+            maps.seek(0)
+            json.dump(map_data, maps, sort_keys=True, indent=4)
+
+        await ctx.maybe_send_embed(f"Map successfully uploaded to {target_save}")
 
     @mapmaker.command(name="sample")
     async def _mapmaker_sample(self, ctx: commands.Context):
@@ -274,65 +250,20 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map currently being worked on")
             return
 
-        if not self.mm_img:
-            await ctx.maybe_send_embed("No map image has been loaded")
-            return
-
         async with ctx.typing():
-            map_dir = self.custom_map_path / self.mm["name"]
 
-            files = []
-
-            file1 = discord.File(map_dir / f"blank.{self.mm['extension']}")
-
-            files.append(file1)
-
-            masks_dir = map_dir / "masks"
-            if masks_dir.exists() and masks_dir.is_dir():
-                loop = asyncio.get_running_loop()
-                current_map = Image.open(map_dir / f"blank.{self.mm['extension']}")
-
-                regions = list(self.mm["regions"].keys())
-                fourth = len(regions) // 4
-
-                current_map = await self._composite_regions(
-                    current_map, regions[:fourth], ImageColor.getrgb("red"), map_dir
-                )
-                current_map = await self._composite_regions(
-                    current_map, regions[fourth: fourth * 2], ImageColor.getrgb("green"), map_dir
-                )
-                current_map = await self._composite_regions(
-                    current_map, regions[fourth * 2: fourth * 3], ImageColor.getrgb("blue"), map_dir
-                )
-                current_map = await self._composite_regions(
-                    current_map, regions[fourth * 3:], ImageColor.getrgb("yellow"), map_dir
-                )
-
-                numbers = Image.open(map_dir / "numbers.png").convert("L")
-                inverted_map = ImageOps.invert(current_map)
-                current_numbered_img = await loop.run_in_executor(
-                    None, Image.composite, current_map, inverted_map, numbers
-                )
-
-                buffer1 = BytesIO()
-                buffer2 = BytesIO()
-
-                current_map.save(buffer1, "png")
-                buffer1.seek(0)
-                current_numbered_img.save(buffer2, "png")
-                buffer2.seek(0)
-
-                files.append(discord.File(fp=buffer1, filename="colored_map.png"))
-                files.append(discord.File(fp=buffer2, filename="with_numbers.png"))
+            files = await self.mm.get_sample()
 
             for f in files:
-                await ctx.send(file=f)
+                await ctx.send(file=discord.File(f))
 
     @mapmaker.command(name="load")
     async def _mapmaker_load(self, ctx: commands.Context, map_name: str):
         """Load an existing map to be modified."""
-        if self.mm or self.mm_img:
-            await ctx.maybe_send_embed("There is a current map in progres. Close it first with `[p]mapmaker close`")
+        if self.mm:
+            await ctx.maybe_send_embed(
+                "There is a current map in progress. Close it first with `[p]mapmaker close`"
+            )
             return
 
         map_path = self.custom_map_path / map_name
@@ -341,12 +272,8 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed(f"Map {map_name} not found in {self.custom_map_path}")
             return
 
-        maps_json = map_path / "data.json"
-
-        with maps_json.open() as maps:
-            self.mm = json.load(maps)
-
-        self.mm_img = Image.open(map_path / f"blank.{self.mm['extension']}")
+        self.mm = ConquestMap(map_path)
+        await self.mm.load_data()
 
         await ctx.tick()
 
@@ -368,33 +295,17 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map currently being worked on")
             return
 
-        if not self.mm_img:
-            await ctx.maybe_send_embed("No map image to save")
-            return
-
-        map_dir = self.custom_map_path / self.mm["name"]
-        masks_dir = map_dir / "masks"
+        masks_dir = self.mm.masks_path()
         if masks_dir.exists() and masks_dir.is_dir():
             await ctx.maybe_send_embed("Mask folder already exists, delete this before continuing")
             return
 
-        # Done by Regioner
-        # masks_dir.mkdir()
-
-        regioner = Regioner(filename=f"blank.{self.mm['extension']}", filepath=map_dir)
-
-        loop = asyncio.get_running_loop()
         with ctx.typing():
-            regions = await loop.run_in_executor(None, regioner.execute)
+            regions = await self.mm.generate_masks()
 
         if not regions:
             await ctx.maybe_send_embed("Failed to generate masks")
             return
-
-        self.mm["regions"] = regions
-        self.mm["region_max"] = len(regions) + 1
-
-        await self._save_mm_data(map_dir)
 
         await ctx.maybe_send_embed(f"{len(regions)} masks generated into {masks_dir}")
 
@@ -407,24 +318,19 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map currently being worked on")
             return
 
-        if not self.mm_img:
-            await ctx.maybe_send_embed("No map image to save")
-            return
-
         if recommended and mask_list:
             await ctx.maybe_send_embed(
                 "Can't combine recommend masks and a mask list at the same time, pick one"
             )
             return
 
-        map_dir = self.custom_map_path / self.mm["name"]
-        masks_dir = map_dir / "masks"
+        masks_dir = self.mm.masks_path()
         if not masks_dir.exists() or not masks_dir.is_dir():
             await ctx.maybe_send_embed("There are no masks")
             return
 
         if not recommended:
-            for mask in mask_list:
+            for mask in mask_list:  # TODO: switch to self.mm.regions intersection of sets
                 m = masks_dir / f"{mask}.png"
                 if not m.exists():
                     await ctx.maybe_send_embed(f"Mask #{mask} does not exist")
@@ -433,29 +339,13 @@ class Conquest(commands.Cog):
             await ctx.send("Not Implemented")
             return
 
-        regioner = Regioner(filename=f"blank.{self.mm['extension']}", filepath=map_dir)
-
-        loop = asyncio.get_running_loop()
-        lowest, eliminated = await loop.run_in_executor(None, regioner.combine_masks, mask_list)
-
-        if not lowest:
-            await ctx.maybe_send_embed("Failed to combine masks")
-            return
-
-        points = [self.mm["regions"][f"{n}"]["center"] for n in mask_list]
-        self.mm["regions"][f"{lowest}"]["center"] = get_center(points)
-
-        for key in eliminated:
-            self.mm["regions"].pop(f"{key}")
-
-        future = await loop.run_in_executor(None, regioner.create_number_mask, self.mm["regions"])
-
-        if not future:
+        result = await self.mm.combine_masks(mask_list)
+        if not result:
             await ctx.maybe_send_embed(
-                "Failed to generate number mask, try running this command again"
+                "Failed to combine masks, try the command again or check log for errors"
             )
-
-        await self._save_mm_data(map_dir)
+            return
+        await ctx.tick()
 
     @commands.group()
     async def conquest(self, ctx: commands.Context):
