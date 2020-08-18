@@ -116,8 +116,10 @@ class Dad(Cog):
             else:
                 out = cleaned_content[4:]
             try:
-                await message.channel.send(f"Hi {out}, I'm {guild.me.display_name}!",
-                                           allowed_mentions=discord.AllowedMentions)
+                await message.channel.send(
+                    f"Hi {out}, I'm {guild.me.display_name}!",
+                    allowed_mentions=discord.AllowedMentions,
+                )
             except discord.HTTPException:
                 return
 

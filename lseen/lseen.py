@@ -75,7 +75,9 @@ class LastSeen(Cog):
         else:
             last_seen = await self.config.member(member).seen()
             if last_seen is None:
-                await ctx.maybe_send_embed(embed=discord.Embed(description="I've never seen this user"))
+                await ctx.maybe_send_embed(
+                    embed=discord.Embed(description="I've never seen this user")
+                )
                 return
             last_seen = self.get_date_time(last_seen)
 

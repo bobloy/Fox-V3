@@ -180,14 +180,18 @@ class Hangman(Cog):
 
         current = await self.config.guild(ctx.guild).emojis()
         await self.config.guild(ctx.guild).emojis.set(not current)
-        await ctx.maybe_send_embed("Emoji Letter reactions have been set to {}".format(not current))
+        await ctx.maybe_send_embed(
+            "Emoji Letter reactions have been set to {}".format(not current)
+        )
 
     @commands.command(aliases=["hang"])
     async def hangman(self, ctx, guess: str = None):
         """Play a game of hangman against the bot!"""
         if guess is None:
             if self.the_data[ctx.guild]["running"]:
-                await ctx.maybe_send_embed("Game of hangman is already running!\nEnter your guess!")
+                await ctx.maybe_send_embed(
+                    "Game of hangman is already running!\nEnter your guess!"
+                )
                 await self._printgame(ctx.channel)
                 """await self.bot.send_cmd_help(ctx)"""
             else:
@@ -195,7 +199,9 @@ class Hangman(Cog):
                 self._startgame(ctx.guild)
                 await self._printgame(ctx.channel)
         elif not self.the_data[ctx.guild]["running"]:
-            await ctx.maybe_send_embed("Game of hangman is not yet running!\nStarting a game of hangman!")
+            await ctx.maybe_send_embed(
+                "Game of hangman is not yet running!\nStarting a game of hangman!"
+            )
             self._startgame(ctx.guild)
             await self._printgame(ctx.channel)
         else:

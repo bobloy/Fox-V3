@@ -18,7 +18,7 @@ class LoveCalculator(Cog):
 
     @commands.command(aliases=["lovecalc"])
     async def lovecalculator(
-            self, ctx: commands.Context, lover: discord.Member, loved: discord.Member
+        self, ctx: commands.Context, lover: discord.Member, loved: discord.Member
     ):
         """Calculate the love percentage!"""
 
@@ -34,8 +34,8 @@ class LoveCalculator(Cog):
                 try:
                     description = (
                         soup_object.find("div", attrs={"class": "result__score"})
-                            .get_text()
-                            .strip()
+                        .get_text()
+                        .strip()
                     )
                 except:
                     description = "Dr. Love is busy right now"

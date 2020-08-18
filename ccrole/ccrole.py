@@ -229,7 +229,7 @@ class CCRole(commands.Cog):
         cmd_list = "Custom commands:\n\n" + cmd_list
 
         if (
-                len(cmd_list) < 1500
+            len(cmd_list) < 1500
         ):  # I'm allowed to have arbitrary numbers for when it's too much to dm dammit
             await ctx.send(box(cmd_list))
         else:
@@ -309,7 +309,7 @@ class CCRole(commands.Cog):
     async def eval_cc(self, cmd, message: discord.Message, ctx: commands.Context):
         """Does all the work"""
         if cmd["proles"] and not (
-                set(role.id for role in message.author.roles) & set(cmd["proles"])
+            set(role.id for role in message.author.roles) & set(cmd["proles"])
         ):
             return  # Not authorized, do nothing
 
