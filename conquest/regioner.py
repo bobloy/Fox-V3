@@ -28,7 +28,7 @@ async def composite_regions(im, regions, color, masks_path) -> Union[Image.Image
     if combined_mask is None:  # No regions usually
         return None
 
-    out = await loop.run_in_executor(None, Image.composite, im, im2, combined_mask.convert("L"))
+    out = await loop.run_in_executor(None, Image.composite, im, im2, combined_mask)
 
     return out
 
@@ -172,8 +172,12 @@ class ConquestMap:
         return True
 
     async def save_data(self):
-        to_save = self.__dict__.copy()
-        to_save.pop("path")
+        to_save = {
+            "name": self.name,
+            "custom": self.custom,
+            "region_max": self.region_max,
+            "regions": {num: r.get_json() for num, r in self.regions.items()}
+        }
         with self.data_path().open("w+") as dp:
             json.dump(to_save, dp, sort_keys=True, indent=4)
 
@@ -181,11 +185,13 @@ class ConquestMap:
         with self.data_path().open() as dp:
             data = json.load(dp)
 
-        self.name = data["name"]
-        self.custom = data["custom"]
-        self.region_max = data["region_max"]
-
-        self.regions = {key: Region(**data) for key, data in data["regions"].items()}
+        self.name = data.get("name")
+        self.custom = data.get("custom")
+        self.region_max = data.get("region_max")
+        if "regions" in data:
+            self.regions = {int(key): Region(**data) for key, data in data["regions"].items()}
+        else:
+            self.regions = {}
 
     async def save_region(self, region):
         if not self.custom:
@@ -238,6 +244,8 @@ class ConquestMap:
         await self.create_number_mask()
 
         await self.save_data()
+
+        return True
 
     def _img_combine_masks(self, mask_list: List[int]):
         if not mask_list:
@@ -297,11 +305,7 @@ class ConquestMap:
                 current_map, regions[fourth * 3:], ImageColor.getrgb("yellow"), self.masks_path()
             )
 
-            numbers = Image.open(self.numbers_path()).convert("L")
-            inverted_map = ImageOps.invert(current_map)
-            current_numbered_img = await loop.run_in_executor(
-                None, Image.composite, current_map, inverted_map, numbers
-            )
+            current_numbered_img = await self.get_numbered(current_map)
 
             buffer1 = BytesIO()
             buffer2 = BytesIO()
@@ -316,12 +320,36 @@ class ConquestMap:
 
         return files
 
+    async def get_blank_numbered_file(self):
+        im = await self.get_numbered(Image.open(self.blank_path()))
+        buffer1 = BytesIO()
+
+        im.save(buffer1, "png")
+        buffer1.seek(0)
+        return buffer1
+
+    async def get_numbered(self, current_map):
+        loop = asyncio.get_running_loop()
+        numbers = Image.open(self.numbers_path()).convert("L")
+        inverted_map = ImageOps.invert(current_map)
+        current_numbered_img = await loop.run_in_executor(
+            None, Image.composite, current_map, inverted_map, numbers
+        )
+        return current_numbered_img
+
 
 class Region:
     def __init__(self, center, weight, **kwargs):
         self.center = center
         self.weight = weight
         self.data = kwargs
+
+    def get_json(self):
+        return {
+            "center": self.center,
+            "weight": self.weight,
+            "data": self.data.copy()
+        }
 
 
 class Regioner:
@@ -398,8 +426,11 @@ class Regioner:
         fnt = ImageFont.load_default()
         d = ImageDraw.Draw(number_img)
         for region_num, region in regions.items():
-            center = region.center
-            text = getattr(region, "center", str(region_num))
-            d.text(center, text, font=fnt, fill=0)
+            text = getattr(region, "name", str(region_num))
+
+            w1, h1 = region.center
+            w2, h2 = fnt.getsize(text)
+
+            d.text((w1-(w2/2), h1-(h2/2)), text, font=fnt, fill=0)
         number_img.save(self.filepath / f"numbers.png", "PNG")
         return True

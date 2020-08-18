@@ -23,17 +23,7 @@ class Conquest(commands.Cog):
 
     default_zoom_json = {"enabled": False, "x": -1, "y": -1, "zoom": 1.0}
 
-    default_custom_map = {
-        "name": "",
-        "regions": {},
-        "region_max": 0,
-        "extension": "png",
-        "custom": True,
-    }
-
-    default_maps_json = {
-        "maps": []
-    }
+    default_maps_json = {"maps": []}
 
     def __init__(self, bot: Red):
         super().__init__()
@@ -64,8 +54,9 @@ class Conquest(commands.Cog):
         self.is_custom = False
         self.current_map = None
         self.map_data = None
-        self.ext = None
-        self.ext_format = None
+
+        self.ext = "PNG"
+        self.ext_format = "PNG"
 
         self.mm: Union[ConquestMap, None] = None
 
@@ -100,8 +91,6 @@ class Conquest(commands.Cog):
             print(e)
             await self.config.current_map.set(None)
             return
-        self.ext = self.map_data["extension"]
-        self.ext_format = "JPEG" if self.ext.upper() == "JPG" else self.ext.upper()
 
     async def _get_current_map_path(self):
         return self.current_map_folder / self.current_map
@@ -136,7 +125,7 @@ class Conquest(commands.Cog):
         im = Image.open(current_img_path)
         async with ctx.typing():
             out: Image.Image = await composite_regions(
-                im, regions, color, self._path_if_custom() / self.current_map
+                im, regions, color, self._path_if_custom() / self.current_map / "masks"
             )
             out.save(current_img_path, self.ext_format)
             await self._send_maybe_zoomed_map(ctx, current_img_path, f"map.{self.ext}")
@@ -151,6 +140,19 @@ class Conquest(commands.Cog):
         """
         if ctx.invoked_subcommand is None:
             pass
+
+    @mapmaker.command(name="numbers")
+    async def _mapmaker_numbers(self, ctx: commands.Context):
+        """Regenerates the number mask and puts it in the channel"""
+        if not self.mm:
+            await ctx.maybe_send_embed("No map currently being worked on")
+            return
+
+        async with ctx.typing():
+            await self.mm.create_number_mask()
+            im = await self.mm.get_blank_numbered_file()
+
+            await ctx.send(file=discord.File(im, filename="map.png"))
 
     @mapmaker.command(name="close")
     async def _mapmaker_close(self, ctx: commands.Context):
@@ -255,7 +257,7 @@ class Conquest(commands.Cog):
             files = await self.mm.get_sample()
 
             for f in files:
-                await ctx.send(file=discord.File(f))
+                await ctx.send(file=discord.File(f, filename="map.png"))
 
     @mapmaker.command(name="load")
     async def _mapmaker_load(self, ctx: commands.Context, map_name: str):
@@ -311,9 +313,13 @@ class Conquest(commands.Cog):
 
     @_mapmaker_masks.command(name="combine")
     async def _mapmaker_masks_combine(
-            self, ctx: commands.Context, mask_list: Greedy[int], recommended=False
+        self, ctx: commands.Context, mask_list: Greedy[int], recommended=False
     ):
         """Generate masks for the map"""
+        if not mask_list and not recommended:
+            await ctx.send_help()
+            return
+
         if not self.mm:
             await ctx.maybe_send_embed("No map currently being worked on")
             return
@@ -339,13 +345,14 @@ class Conquest(commands.Cog):
             await ctx.send("Not Implemented")
             return
 
-        result = await self.mm.combine_masks(mask_list)
-        if not result:
-            await ctx.maybe_send_embed(
-                "Failed to combine masks, try the command again or check log for errors"
-            )
-            return
-        await ctx.tick()
+        async with ctx.typing():
+            result = await self.mm.combine_masks(mask_list)
+            if not result:
+                await ctx.maybe_send_embed(
+                    "Failed to combine masks, try the command again or check log for errors"
+                )
+                return
+            await ctx.tick()
 
     @commands.group()
     async def conquest(self, ctx: commands.Context):
@@ -491,7 +498,7 @@ class Conquest(commands.Cog):
 
     @conquest_set.command(name="map")
     async def _conquest_set_map(
-            self, ctx: commands.Context, mapname: str, is_custom: bool = False, reset: bool = False
+        self, ctx: commands.Context, mapname: str, is_custom: bool = False, reset: bool = False
     ):
         """
         Select a map from current available maps
@@ -563,35 +570,35 @@ class Conquest(commands.Cog):
         if self.current_map is None:
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
-
-        numbers_path = self._path_if_custom() / self.current_map / f"numbers.{self.ext}"
-        if not numbers_path.exists():
-            await ctx.send(
-                file=discord.File(
-                    fp=self._path_if_custom() / self.current_map / f"numbered.{self.ext}",
-                    filename=f"numbered.{self.ext}",
+        async with ctx.typing():
+            numbers_path = self._path_if_custom() / self.current_map / f"numbers.{self.ext}"
+            if not numbers_path.exists():
+                await ctx.send(
+                    file=discord.File(
+                        fp=self._path_if_custom() / self.current_map / f"numbered.{self.ext}",
+                        filename=f"numbered.{self.ext}",
+                    )
                 )
+                return
+
+            current_map_path = await self._get_current_map_path()
+            current_map = Image.open(current_map_path / f"current.{self.ext}")
+            numbers = Image.open(numbers_path).convert("L")
+
+            inverted_map = ImageOps.invert(current_map)
+
+            loop = asyncio.get_running_loop()
+            current_numbered_img = await loop.run_in_executor(
+                None, Image.composite, current_map, inverted_map, numbers
             )
-            return
 
-        current_map_path = await self._get_current_map_path()
-        current_map = Image.open(current_map_path / f"current.{self.ext}")
-        numbers = Image.open(numbers_path).convert("L")
+            current_numbered_img.save(
+                current_map_path / f"current_numbered.{self.ext}", self.ext_format
+            )
 
-        inverted_map = ImageOps.invert(current_map)
-
-        loop = asyncio.get_running_loop()
-        current_numbered_img = await loop.run_in_executor(
-            None, Image.composite, current_map, inverted_map, numbers
-        )
-
-        current_numbered_img.save(
-            current_map_path / f"current_numbered.{self.ext}", self.ext_format
-        )
-
-        await self._send_maybe_zoomed_map(
-            ctx, current_map_path / f"current_numbered.{self.ext}", f"current_numbered.{self.ext}",
-        )
+            await self._send_maybe_zoomed_map(
+                ctx, current_map_path / f"current_numbered.{self.ext}", f"current_numbered.{self.ext}",
+            )
 
     @conquest.command(name="multitake")
     async def _conquest_multitake(
