@@ -2,7 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "min_bot_version": "3.3.0",
+  "min_bot_version": "3.4.0",
   "description": "Keep track of when users were last seen online",
   "hidden": false,
   "install_msg": "Thank you for installing LastSeen. Get started with `[p]load lseen`, then `[p]help LastSeen`",
