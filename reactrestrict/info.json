@@ -2,7 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "min_bot_version": "3.3.0",
+  "min_bot_version": "3.4.0",
   "description": "Cog to prevent reactions on specific messages from certain users",
   "hidden": false,
   "install_msg": "Thank you for installing ReactRestrict.",

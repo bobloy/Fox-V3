@@ -66,7 +66,9 @@ class Flag(Cog):
         Set the number of days for flags to expire after for server
         """
         await self.config.guild(ctx.guild).days.set(days)
-        await ctx.maybe_send_embed("Number of days for new flags to expire is now {} days".format(days))
+        await ctx.maybe_send_embed(
+            "Number of days for new flags to expire is now {} days".format(days)
+        )
 
     @flagset.command(name="dm")
     async def flagset_dm(self, ctx: commands.Context):
@@ -75,7 +77,9 @@ class Flag(Cog):
         dm = await self.config.guild(ctx.guild).dm()
         await self.config.guild(ctx.guild).dm.set(not dm)
 
-        await ctx.maybe_send_embed("DM-ing members when they get a flag is now set to **{}**".format(not dm))
+        await ctx.maybe_send_embed(
+            "DM-ing members when they get a flag is now set to **{}**".format(not dm)
+        )
 
     @staticmethod
     def _flag_template():

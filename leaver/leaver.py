@@ -38,6 +38,10 @@ class Leaver(Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         guild = member.guild
+
+        if await self.bot.cog_disabled_in_guild(self, guild):
+            return
+
         channel = await self.config.guild(guild).channel()
 
         if channel != "":

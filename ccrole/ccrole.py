@@ -254,6 +254,9 @@ class CCRole(commands.Cog):
         if len(message.content) < 2 or is_private or not user_allowed or message.author.bot:
             return
 
+        if await self.bot.cog_disabled_in_guild(self, message.guild):
+            return
+
         ctx = await self.bot.get_context(message)
 
         if ctx.prefix is None:
@@ -272,28 +275,6 @@ class CCRole(commands.Cog):
 
         if cmd is not None:
             await self.eval_cc(cmd, message, ctx)
-
-    # @commands.Cog.listener()
-    # async def on_message(self, message: discord.Message):
-    #     if len(message.content) < 2 or message.guild is None:
-    #         return
-    #
-    #     ctx: commands.Context = await self.bot.get_context(message)
-    #     cmd = ctx.invoked_with
-    #     guild = message.guild
-    #     # try:
-    #     #     prefix = await self.get_prefix(message)
-    #     # except ValueError:
-    #     #     return
-    #
-    #     # prefix = ctx.prefix
-    #
-    #     cmdlist = self.config.guild(guild).cmdlist
-    #     # cmd = message.content[len(prefix) :].split()[0].lower()
-    #     cmd = await cmdlist.get_raw(cmd, default=None)
-    #
-    #     if cmd is not None:
-    #         await self.eval_cc(cmd, message, ctx)
 
     async def _get_roles_from_content(self, ctx, content):
         content_list = content.split(",")
@@ -325,7 +306,7 @@ class CCRole(commands.Cog):
                 return p
         raise ValueError
 
-    async def eval_cc(self, cmd, message, ctx):
+    async def eval_cc(self, cmd, message: discord.Message, ctx: commands.Context):
         """Does all the work"""
         if cmd["proles"] and not (
             set(role.id for role in message.author.roles) & set(cmd["proles"])
@@ -400,7 +381,7 @@ class CCRole(commands.Cog):
                 await message.channel.send("Permission error: Unable to remove roles")
 
         out_message = self.format_cc(cmd, message, target)
-        await message.channel.send(out_message)
+        await message.channel.send(out_message, allowed_mentions=discord.AllowedMentions())
 
     def format_cc(self, cmd, message, target):
         out = cmd["text"]

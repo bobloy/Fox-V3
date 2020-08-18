@@ -2,7 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "min_bot_version": "3.3.0",
+  "min_bot_version": "3.4.0",
   "description": "Mentions roles that are unmentionable",
   "hidden": false,
   "install_msg": "Thank you for installing ForceMention! Get started with `[p]load forcemention`, then `[p]forcemention`",

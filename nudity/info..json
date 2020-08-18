@@ -2,7 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "min_bot_version": "3.3.11",
+  "min_bot_version": "3.4.0",
   "description": "Monitor images for NSFW content and moves them to a nsfw channel if possible",
   "hidden": false,
   "install_msg": "Thank you for installing Nudity. Get started with `[p]load nudity`, then `[p]help Nudity`",

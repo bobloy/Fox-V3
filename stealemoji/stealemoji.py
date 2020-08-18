@@ -181,6 +181,10 @@ class StealEmoji(Cog):
             # print("Collecting is off")
             return
 
+        guild: discord.Guild = getattr(user, "guild", None)
+        if await self.bot.cog_disabled_in_guild(self, guild):  # Handles None guild just fine
+            return
+
         emoji: discord.Emoji = reaction.emoji
         if emoji in self.bot.emojis:
             # print("Emoji already in bot.emojis")

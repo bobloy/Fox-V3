@@ -2,7 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "min_bot_version": "3.3.10",
+  "min_bot_version": "3.4.0",
   "description": "Create an offline chatbot that talks like your average member using Machine Learning",
   "hidden": false,
   "install_msg": "Thank you for installing Chatter! Get started ith `[p]load chatter` and `[p]help Chatter`",

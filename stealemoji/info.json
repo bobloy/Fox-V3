@@ -2,7 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "min_bot_version": "3.3.0",
+  "min_bot_version": "3.4.0",
   "description": "Steals custom emojis the bot sees and moves them to an emoji server",
   "hidden": false,
   "install_msg": "Thank you for installing StealEmoji",

@@ -273,14 +273,20 @@ class InfoChannel(Cog):
 
     @Cog.listener()
     async def on_member_join(self, member: discord.Member):
+        if await self.bot.cog_disabled_in_guild(self, member.guild):
+            return
         await self.update_infochannel_with_cooldown(member.guild)
 
     @Cog.listener()
     async def on_member_remove(self, member: discord.Member):
+        if await self.bot.cog_disabled_in_guild(self, member.guild):
+            return
         await self.update_infochannel_with_cooldown(member.guild)
 
     @Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
+        if await self.bot.cog_disabled_in_guild(self, after.guild):
+            return
         onlinecount = await self.config.guild(after.guild).online_count()
         if onlinecount:
             if before.status != after.status:
