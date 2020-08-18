@@ -48,7 +48,7 @@ class QRInvite(Cog):
                     invite = await ctx.channel.invites()
                     invite = invite[0]
                 except discord.Forbidden:
-                    await ctx.send("No permission to get an invite, please provide one")
+                    await ctx.maybe_send_embed("No permission to get an invite, please provide one")
                     return
             invite = invite.code
 
@@ -56,7 +56,7 @@ class QRInvite(Cog):
             image_url = str(ctx.guild.icon_url)
 
         if image_url == "":  # Still
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 "Could not get an image, please provide one. *(`{}help qrinvite` for details)*".format(
                     ctx.prefix
                 )
@@ -77,12 +77,12 @@ class QRInvite(Cog):
         if extension == "webp":
             new_path = convert_webp_to_png(str(image_path))
         elif extension == "gif":
-            await ctx.send("gif is not supported yet, stay tuned")
+            await ctx.maybe_send_embed("gif is not supported yet, stay tuned")
             return
         elif extension == "png":
             new_path = str(image_path)
         else:
-            await ctx.send(f"{extension} is not supported yet, stay tuned")
+            await ctx.maybe_send_embed(f"{extension} is not supported yet, stay tuned")
             return
 
         myqr.run(

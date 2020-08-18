@@ -46,7 +46,7 @@ class Flag(Cog):
         """Clears all flags for all members in this server"""
 
         await self.config.guild(ctx.guild).flags.clear()
-        await ctx.send("Done")
+        await ctx.maybe_send_embed("Done")
 
     @checks.mod_or_permissions(manage_roles=True)
     @commands.guild_only()
@@ -66,7 +66,7 @@ class Flag(Cog):
         Set the number of days for flags to expire after for server
         """
         await self.config.guild(ctx.guild).days.set(days)
-        await ctx.send("Number of days for new flags to expire is now {} days".format(days))
+        await ctx.maybe_send_embed("Number of days for new flags to expire is now {} days".format(days))
 
     @flagset.command(name="dm")
     async def flagset_dm(self, ctx: commands.Context):
@@ -75,7 +75,7 @@ class Flag(Cog):
         dm = await self.config.guild(ctx.guild).dm()
         await self.config.guild(ctx.guild).dm.set(not dm)
 
-        await ctx.send("DM-ing members when they get a flag is now set to **{}**".format(not dm))
+        await ctx.maybe_send_embed("DM-ing members when they get a flag is now set to **{}**".format(not dm))
 
     @staticmethod
     def _flag_template():
@@ -114,9 +114,9 @@ class Flag(Cog):
                 try:
                     await member.send(embed=outembed)
                 except discord.Forbidden:
-                    await ctx.send("DM-ing user failed")
+                    await ctx.maybe_send_embed("DM-ing user failed")
         else:
-            await ctx.send("This member has no flags.. somehow..")
+            await ctx.maybe_send_embed("This member has no flags.. somehow..")
 
     @commands.guild_only()
     @checks.mod_or_permissions(manage_roles=True)
@@ -128,7 +128,7 @@ class Flag(Cog):
 
         await self.config.guild(guild).flags.set_raw(str(member.id), value=[])
 
-        await ctx.send("Success!")
+        await ctx.maybe_send_embed("Success!")
 
     @commands.guild_only()
     @commands.command(aliases=["flaglist"])
@@ -142,7 +142,7 @@ class Flag(Cog):
         if outembed:
             await ctx.send(embed=outembed)
         else:
-            await ctx.send("This member has no flags!")
+            await ctx.maybe_send_embed("This member has no flags!")
 
     @commands.guild_only()
     @commands.command(aliases=["flagall"])

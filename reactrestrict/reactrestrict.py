@@ -213,7 +213,7 @@ class ReactRestrict(Cog):
         """
         message = await self._get_message(ctx, message_id)
         if message is None:
-            await ctx.send("That message doesn't seem to exist.")
+            await ctx.maybe_send_embed("That message doesn't seem to exist.")
             return
 
         # try:
@@ -232,7 +232,7 @@ class ReactRestrict(Cog):
         # noinspection PyTypeChecker
         await self.add_reactrestrict(message_id, role)
 
-        await ctx.send("Message|Role combo added.")
+        await ctx.maybe_send_embed("Message|Role combo added.")
 
     @reactrestrict.command()
     async def remove(self, ctx: commands.Context, message_id: int, role: discord.Role):

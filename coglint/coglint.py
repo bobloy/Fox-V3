@@ -39,7 +39,7 @@ class CogLint(Cog):
 
         self.do_lint = not curr
         await self.config.lint.set(not curr)
-        await ctx.send("Autolinting is now set to {}".format(not curr))
+        await ctx.maybe_send_embed("Autolinting is now set to {}".format(not curr))
 
     @commands.command()
     async def lint(self, ctx: commands.Context, *, code):
@@ -48,7 +48,7 @@ class CogLint(Cog):
         Toggle autolinting with `[p]autolint`
         """
         await self.lint_message(ctx.message)
-        await ctx.send("Hello World")
+        await ctx.maybe_send_embed("Hello World")
 
     async def lint_code(self, code):
         self.counter += 1
