@@ -3,15 +3,12 @@
     "Bobloy",
     "SnappyDragon"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Apply for a job at the recycling plant! Sort out the garbage!",
   "hidden": false,
   "install_msg": "Thank you for installing RecyclingPlant. Start recycling today with `[p]load recyclingplant`, then `[p]recyclingplant`",
   "short": "Apply for a job at the recycling plant!",
+  "end_user_data_statement": "This cog used the core",
   "tags": [
     "bobloy",
     "environment",

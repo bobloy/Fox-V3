@@ -5,18 +5,19 @@ import datetime
 import json
 import time
 from random import choice
+from typing import Literal
 
 import discord
 from redbot.core import Config, bank, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path
+from redbot.core.utils import AsyncIter
 
 
-class Gardener(commands.Cog):
+class Gardener:
     """Gardener class"""
 
     def __init__(self, user: discord.User, config: Config):
-        super().__init__()
         self.user = user
         self.config = config
         self.badges = []
@@ -180,7 +181,17 @@ class PlantTycoon(commands.Cog):
 
         # self.bank = bot.get_cog('Economy').bank
 
+    async def red_delete_data_for_user(
+        self,
+        *,
+        requester: Literal["discord_deleted_user", "owner", "user", "user_strict"],
+        user_id: int,
+    ):
+
+        await self.config.user_from_id(user_id).clear()
+
     async def _load_plants_products(self):
+        """Runs in __init__.py before cog is added to the bot"""
         plant_path = bundled_data_path(self) / "plants.json"
         product_path = bundled_data_path(self) / "products.json"
         with plant_path.open() as json_data:

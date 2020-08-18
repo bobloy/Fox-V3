@@ -41,6 +41,10 @@ class InfoChannel(Cog):
 
         self._critical_section_wooah_ = 0
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     @commands.command()
     @checks.admin()
     async def infochannel(self, ctx: commands.Context):

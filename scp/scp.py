@@ -11,6 +11,10 @@ class SCP(Cog):
         super().__init__()
         self.bot = bot
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     @commands.command()
     async def scp(self, ctx: commands.Context, num: int):
         """Look up SCP articles.

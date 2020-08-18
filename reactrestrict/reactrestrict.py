@@ -35,6 +35,10 @@ class ReactRestrict(Cog):
         )
         self.config.register_global(registered_combos=[])
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     async def combo_list(self) -> List[ReactRestrictCombo]:
         """
         Returns a list of reactrestrict combos.
@@ -209,7 +213,7 @@ class ReactRestrict(Cog):
         """
         message = await self._get_message(ctx, message_id)
         if message is None:
-            await ctx.send("That message doesn't seem to exist.")
+            await ctx.maybe_send_embed("That message doesn't seem to exist.")
             return
 
         # try:
@@ -228,7 +232,7 @@ class ReactRestrict(Cog):
         # noinspection PyTypeChecker
         await self.add_reactrestrict(message_id, role)
 
-        await ctx.send("Message|Role combo added.")
+        await ctx.maybe_send_embed("Message|Role combo added.")
 
     @reactrestrict.command()
     async def remove(self, ctx: commands.Context, message_id: int, role: discord.Role):

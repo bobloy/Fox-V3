@@ -10,11 +10,16 @@ class Leaver(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_guild = {"channel": ""}
 
         self.config.register_guild(**default_guild)
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     @commands.group(aliases=["setleaver"])
     @checks.mod_or_permissions(administrator=True)
@@ -28,7 +33,7 @@ class Leaver(Cog):
         """Choose the channel to send leave messages to"""
         guild = ctx.guild
         await self.config.guild(guild).channel.set(ctx.channel.id)
-        await ctx.send("Channel set to " + ctx.channel.name)
+        await ctx.maybe_send_embed("Channel set to " + ctx.channel.name)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):

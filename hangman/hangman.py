@@ -14,6 +14,7 @@ class Hangman(Cog):
     letters = "🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿"
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=1049711010310997110)
         default_guild = {"theface": ":thinking:", "emojis": True}
@@ -38,6 +39,10 @@ class Hangman(Cog):
         self.winbool = defaultdict(lambda: False)
 
         self.hanglist = {}
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     async def _update_hanglist(self):
         for guild in self.bot.guilds:
@@ -154,19 +159,19 @@ class Hangman(Cog):
             theface = self.bot.get_emoji(int(theface.split(":")[2][:-1]))
 
         if theface is None:
-            await ctx.send("I could not find that emoji")
+            await ctx.maybe_send_embed("I could not find that emoji")
             return
 
         try:
             # Use the face as reaction to see if it's valid (THANKS FLAPJACK <3)
             await message.add_reaction(theface)
         except discord.errors.HTTPException:
-            await ctx.send("That's not an emoji I recognize.")
+            await ctx.maybe_send_embed("That's not an emoji I recognize.")
             return
 
         await self.config.guild(ctx.guild).theface.set(str(theface))
         await self._update_hanglist()
-        await ctx.send("Face has been updated!")
+        await ctx.maybe_send_embed("Face has been updated!")
 
     @hangset.command()
     async def toggleemoji(self, ctx: commands.Context):
@@ -174,26 +179,26 @@ class Hangman(Cog):
 
         current = await self.config.guild(ctx.guild).emojis()
         await self.config.guild(ctx.guild).emojis.set(not current)
-        await ctx.send("Emoji Letter reactions have been set to {}".format(not current))
+        await ctx.maybe_send_embed("Emoji Letter reactions have been set to {}".format(not current))
 
     @commands.command(aliases=["hang"])
     async def hangman(self, ctx, guess: str = None):
         """Play a game of hangman against the bot!"""
         if guess is None:
             if self.the_data[ctx.guild]["running"]:
-                await ctx.send("Game of hangman is already running!\nEnter your guess!")
+                await ctx.maybe_send_embed("Game of hangman is already running!\nEnter your guess!")
                 await self._printgame(ctx.channel)
                 """await self.bot.send_cmd_help(ctx)"""
             else:
-                await ctx.send("Starting a game of hangman!")
+                await ctx.maybe_send_embed("Starting a game of hangman!")
                 self._startgame(ctx.guild)
                 await self._printgame(ctx.channel)
         elif not self.the_data[ctx.guild]["running"]:
-            await ctx.send("Game of hangman is not yet running!\nStarting a game of hangman!")
+            await ctx.maybe_send_embed("Game of hangman is not yet running!\nStarting a game of hangman!")
             self._startgame(ctx.guild)
             await self._printgame(ctx.channel)
         else:
-            await ctx.send("Guess by reacting to the message")
+            await ctx.maybe_send_embed("Guess by reacting to the message")
             # await self._guessletter(guess, ctx.channel)
 
     def _startgame(self, guild):

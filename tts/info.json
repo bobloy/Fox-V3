@@ -2,11 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Send Text2Speech messages as an uploaded mp3",
   "hidden": false,
   "install_msg": "Thank you for installing TTS. Get started with `[p]load tts`, then `[p]help TTS`",
@@ -14,6 +10,7 @@
     "gTTS"
   ],
   "short": "Send TTS messages as uploaded mp3",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "bobloy",
     "utils",

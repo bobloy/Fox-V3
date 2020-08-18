@@ -32,6 +32,10 @@ class Dad(Cog):
 
         self.cooldown = defaultdict(datetime.now)
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     @commands.command()
     async def dadjoke(self, ctx: commands.Context):
         headers = {
