@@ -118,7 +118,7 @@ class Dad(Cog):
             try:
                 await message.channel.send(
                     f"Hi {out}, I'm {guild.me.display_name}!",
-                    allowed_mentions=discord.AllowedMentions,
+                    allowed_mentions=discord.AllowedMentions(),
                 )
             except discord.HTTPException:
                 return
