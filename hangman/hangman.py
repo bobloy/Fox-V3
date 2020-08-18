@@ -14,6 +14,7 @@ class Hangman(Cog):
     letters = "🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿"
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=1049711010310997110)
         default_guild = {"theface": ":thinking:", "emojis": True}
@@ -38,6 +39,10 @@ class Hangman(Cog):
         self.winbool = defaultdict(lambda: False)
 
         self.hanglist = {}
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     async def _update_hanglist(self):
         for guild in self.bot.guilds:

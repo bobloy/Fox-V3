@@ -2,11 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Create a QR code invite for the server",
   "hidden": false,
   "install_msg": "Thank you for installing QRInvite! Get started with `[p]load qrinvite`, then `[p]help QRInvite`",
@@ -14,6 +10,7 @@
     "MyQR"
   ],
   "short": "Create a QR code invite",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "bobloy",
     "tools",

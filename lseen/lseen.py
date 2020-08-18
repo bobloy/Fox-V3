@@ -1,10 +1,12 @@
 from datetime import datetime
+from typing import Literal
 
 import dateutil.parser
 import discord
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
+from redbot.core.utils import AsyncIter
 
 
 class LastSeen(Cog):
@@ -27,6 +29,19 @@ class LastSeen(Cog):
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
         self.config.register_member(**default_member)
+
+    async def red_delete_data_for_user(
+        self,
+        *,
+        requester: Literal["discord_deleted_user", "owner", "user", "user_strict"],
+        user_id: int,
+    ):
+
+        all_members = await self.config.all_members()
+
+        async for guild_id, guild_data in AsyncIter(all_members.items(), steps=100):
+            if user_id in guild_data:
+                await self.config.member_from_ids(guild_id, user_id).clear()
 
     @staticmethod
     def get_date_time(s):

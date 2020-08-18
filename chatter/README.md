@@ -162,12 +162,53 @@ This command trains Chatter on the specified channel based on the configured
 settings. This can take a long time to process.
 
 
+### Train Ubuntu
+
+```
+[p]chatter trainubuntu
+``` 
+*WARNING:* This will trigger a large download and use a lot of processing power
+
+This command trains Chatter on the publicly available Ubuntu Dialogue Corpus. (It'll talk like a geek)
+
+
 ## Switching Algorithms
 
 ```
 [p]chatter algorithm X
 ```
+or
+```
+[p]chatter algo X 0.95
+```
 
 Chatter can be configured to use one of three different Similarity algorithms.
 
 Changing this can help if the response speed is too slow, but can reduce the accuracy of results.
+
+The second argument is the maximum similarity threshold,
+lowering that will make the bot stop searching sooner.
+
+Default maximum similarity threshold is 0.90
+
+
+## Switching Pretrained Models
+
+```
+[p]chatter model X
+```
+
+Chatter can be configured to use one of three pretrained statistical models for English.
+
+I have not noticed any advantage to changing this, 
+but supposedly it would help by splitting the search term into more useful parts.
+
+See [here](https://spacy.io/models) for more info on spaCy models.
+
+Before you're able to use the *large* model (option 3), you must install it through pip.
+
+*Warning:* This is ~800MB download.
+
+```
+[p]pipinstall https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-2.3.1/en_core_web_lg-2.3.1.tar.gz#egg=en_core_web_lg
+``` 

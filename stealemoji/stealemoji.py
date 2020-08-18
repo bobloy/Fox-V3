@@ -36,6 +36,7 @@ class StealEmoji(Cog):
         "managed": None,
         "guild_id": None,
         "animated": None,
+        "saveid": None,
     }
 
     def __init__(self, red: Red):
@@ -48,6 +49,10 @@ class StealEmoji(Cog):
 
         self.is_on = None
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     @commands.group()
     async def stealemoji(self, ctx: commands.Context):
         """
@@ -55,6 +60,36 @@ class StealEmoji(Cog):
         """
         if ctx.invoked_subcommand is None:
             pass
+
+    @checks.is_owner()
+    @stealemoji.command(name="clearemojis")
+    async def se_clearemojis(self, ctx: commands.Context, confirm: bool = False):
+        """Removes the history of all stolen emojis. Will not delete emojis from server banks"""
+        if not confirm:
+            await ctx.maybe_send_embed(
+                "This will reset all stolen emoji data.\n"
+                "If you want to continue, run this command again as:\n"
+                "`[p]stealemoji clearemojis True`"
+            )
+            return
+
+        await self.config.stolemoji.clear()
+        await ctx.tick()
+
+    @checks.is_owner()
+    @stealemoji.command(name="print")
+    async def se_print(self, ctx: commands.Context):
+        """Prints all the emojis that have been stolen so far"""
+        stolen = await self.config.stolemoji()
+        id_list = [v.get("saveid") for k, v in stolen.items()]
+
+        emoj = " ".join(str(e) for e in self.bot.emojis if e.id in id_list)
+
+        if emoj == " ":
+            await ctx.maybe_send_embed("No stolen emojis yet")
+            return
+
+        await ctx.maybe_send_embed(emoj)
 
     @checks.is_owner()
     @stealemoji.command(name="notify")
@@ -174,31 +209,10 @@ class StealEmoji(Cog):
             # print("Emoji has already been stolen")
             return
 
-        # stolemojis = await self.config.stolemoji()
-        #
-        # print(stolemojis.keys())
-        #
-        # if emoji.id in stolemojis:
-        #     print("Emoji has already been stolen")
-        #     return
-
-        # Alright, time to steal it for real
-        # path = urlparse(emoji.url).path
-        # ext = os.path.splitext(path)[1]
-
-        # async with aiohttp.ClientSession() as session:
-        #     img = await fetch_img(session, emoji.url)
-
         img = await emoji.url.read()
 
-        # path = data_manager.cog_data_path(cog_instance=self) / (emoji.name+ext)
-
-        # with path.open("wb") as f:
-        # f.write(img)
-        # urllib.urlretrieve(emoji.url, emoji.name+ext)
-
         try:
-            await guildbank.create_custom_emoji(
+            uploaded_emoji = await guildbank.create_custom_emoji(
                 name=emoji.name, image=img, reason="Stole from " + str(user)
             )
         except discord.Forbidden as e:
@@ -221,6 +235,7 @@ class StealEmoji(Cog):
         #         save_dict[k] = getattr(emoji, k, None)
 
         save_dict["guildbank"] = guildbank.id
+        save_dict["saveid"] = uploaded_emoji.id
 
         async with self.config.stolemoji() as stolemoji:
             stolemoji[emoji.id] = save_dict
@@ -234,4 +249,4 @@ class StealEmoji(Cog):
             else:
                 target = self.bot.get_channel(notify_settings)
 
-            await target.send(f"Just added emoji {emoji} to server {guildbank}")
+            await target.send(f"Just added emoji {uploaded_emoji} to server {guildbank}")

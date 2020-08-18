@@ -22,6 +22,10 @@ class Timerole(Cog):
         self.config.register_guild(**default_guild)
         self.updating = self.bot.loop.create_task(self.check_day())
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     def cog_unload(self):
         self.updating.cancel()
 

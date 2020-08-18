@@ -23,6 +23,10 @@ class TTS(Cog):
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     @commands.command(aliases=["t2s", "text2"])
     async def tts(self, ctx: commands.Context, *, text: str):
         """
