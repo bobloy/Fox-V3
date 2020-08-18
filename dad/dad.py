@@ -89,6 +89,9 @@ class Dad(Cog):
         if guild is None:
             return
 
+        if await self.bot.cog_disabled_in_guild(self, guild):
+            return
+
         guild_config = self.config.guild(guild)
         is_on = await guild_config.enabled()
         if not is_on:
@@ -113,7 +116,10 @@ class Dad(Cog):
             else:
                 out = cleaned_content[4:]
             try:
-                await message.channel.send(f"Hi {out}, I'm {guild.me.display_name}!")
+                await message.channel.send(
+                    f"Hi {out}, I'm {guild.me.display_name}!",
+                    allowed_mentions=discord.AllowedMentions(),
+                )
             except discord.HTTPException:
                 return
 

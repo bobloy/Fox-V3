@@ -75,7 +75,9 @@ class LastSeen(Cog):
         else:
             last_seen = await self.config.member(member).seen()
             if last_seen is None:
-                await ctx.maybe_send_embed(embed=discord.Embed(description="I've never seen this user"))
+                await ctx.maybe_send_embed(
+                    embed=discord.Embed(description="I've never seen this user")
+                )
                 return
             last_seen = self.get_date_time(last_seen)
 
@@ -89,6 +91,8 @@ class LastSeen(Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.status != self.offline_status and after.status == self.offline_status:
-            if not await self.config.guild(before.guild).enabled():
+            if await self.bot.cog_disabled_in_guild(self, after.guild):
+                return
+            if not await self.config.guild(after.guild).enabled():
                 return
             await self.config.member(before).seen.set(datetime.utcnow().isoformat())

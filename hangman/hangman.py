@@ -1,5 +1,6 @@
 from collections import defaultdict
 from random import randint
+from typing import Union
 
 import discord
 from redbot.core import Config, checks, commands
@@ -179,14 +180,18 @@ class Hangman(Cog):
 
         current = await self.config.guild(ctx.guild).emojis()
         await self.config.guild(ctx.guild).emojis.set(not current)
-        await ctx.maybe_send_embed("Emoji Letter reactions have been set to {}".format(not current))
+        await ctx.maybe_send_embed(
+            "Emoji Letter reactions have been set to {}".format(not current)
+        )
 
     @commands.command(aliases=["hang"])
     async def hangman(self, ctx, guess: str = None):
         """Play a game of hangman against the bot!"""
         if guess is None:
             if self.the_data[ctx.guild]["running"]:
-                await ctx.maybe_send_embed("Game of hangman is already running!\nEnter your guess!")
+                await ctx.maybe_send_embed(
+                    "Game of hangman is already running!\nEnter your guess!"
+                )
                 await self._printgame(ctx.channel)
                 """await self.bot.send_cmd_help(ctx)"""
             else:
@@ -194,7 +199,9 @@ class Hangman(Cog):
                 self._startgame(ctx.guild)
                 await self._printgame(ctx.channel)
         elif not self.the_data[ctx.guild]["running"]:
-            await ctx.maybe_send_embed("Game of hangman is not yet running!\nStarting a game of hangman!")
+            await ctx.maybe_send_embed(
+                "Game of hangman is not yet running!\nStarting a game of hangman!"
+            )
             self._startgame(ctx.guild)
             await self._printgame(ctx.channel)
         else:
@@ -280,15 +287,22 @@ class Hangman(Cog):
         await self._reprintgame(message)
 
     @commands.Cog.listener()
-    async def on_react(self, reaction, user):
+    async def on_react(self, reaction, user: Union[discord.User, discord.Member]):
         """ Thanks to flapjack reactpoll for guidelines
             https://github.com/flapjax/FlapJack-Cogs/blob/master/reactpoll/reactpoll.py"""
-
-        if reaction.message.id != self.the_data[user.guild]["trackmessage"]:
+        guild: discord.Guild = getattr(user, "guild", None)
+        if guild is None:
             return
 
-        if user == self.bot.user:
-            return  # Don't react to bot's own reactions
+        if reaction.message.id != self.the_data[guild]["trackmessage"]:
+            return
+
+        if user.bot:
+            return  # Don't react to bot reactions
+
+        if await self.bot.cog_disabled_in_guild(self, guild):
+            return
+
         message = reaction.message
         emoji = reaction.emoji
 

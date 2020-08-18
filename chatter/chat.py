@@ -219,7 +219,7 @@ class Chatter(Cog):
 
     @chatter.command(name="algorithm", aliases=["algo"])
     async def chatter_algorithm(
-            self, ctx: commands.Context, algo_number: int, threshold: float = None
+        self, ctx: commands.Context, algo_number: int, threshold: float = None
     ):
         """
         Switch the active logic algorithm to one of the three. Default after reload is Spacy
@@ -283,7 +283,9 @@ class Chatter(Cog):
         async with ctx.typing():
             self.chatbot = self._create_chatbot()
 
-            await ctx.maybe_send_embed(f"Model has been switched to {self.tagger_language.ISO_639_1}")
+            await ctx.maybe_send_embed(
+                f"Model has been switched to {self.tagger_language.ISO_639_1}"
+            )
 
     @chatter.command(name="minutes")
     async def minutes(self, ctx: commands.Context, minutes: int):
@@ -425,6 +427,9 @@ class Chatter(Cog):
         user_allowed = True
 
         if len(message.content) < 2 or is_private or not user_allowed or message.author.bot:
+            return
+
+        if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
 
         ctx: commands.Context = await self.bot.get_context(message)

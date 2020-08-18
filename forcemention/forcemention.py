@@ -1,5 +1,6 @@
 import asyncio
 
+import discord
 from discord.utils import get
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
@@ -38,8 +39,18 @@ class ForceMention(Cog):
 
         if not role_obj.mentionable:
             await role_obj.edit(mentionable=True)
-            await ctx.send("{}\n{}".format(role_obj.mention, message))
+            await ctx.send(
+                "{}\n{}".format(role_obj.mention, message),
+                allowed_mentions=discord.AllowedMentions(
+                    everyone=False, users=False, roles=[role_obj]
+                ),
+            )
             await asyncio.sleep(5)
             await role_obj.edit(mentionable=False)
         else:
-            await ctx.send("{}\n{}".format(role_obj.mention, message))
+            await ctx.send(
+                "{}\n{}".format(role_obj.mention, message),
+                allowed_mentions=discord.AllowedMentions(
+                    everyone=False, users=False, roles=[role_obj]
+                ),
+            )

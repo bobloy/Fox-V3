@@ -97,6 +97,9 @@ class ExclusiveRole(Cog):
         if before.roles == after.roles:
             return
 
+        if await self.bot.cog_disabled_in_guild(self, after.guild):
+            return
+
         await asyncio.sleep(1)
 
         role_set = set(await self.config.guild(after.guild).role_list())

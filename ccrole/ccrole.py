@@ -8,6 +8,19 @@ from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, pagify
 
 
+async def _get_roles_from_content(ctx, content):
+    content_list = content.split(",")
+    try:
+        role_list = [
+            discord.utils.get(ctx.guild.roles, name=role.strip(" ")).id
+            for role in content_list
+        ]
+    except (discord.HTTPException, AttributeError):  # None.id is attribute error
+        return None
+    else:
+        return role_list
+
+
 class CCRole(commands.Cog):
     """
     Custom commands
@@ -77,7 +90,7 @@ class CCRole(commands.Cog):
 
         arole_list = []
         if answer.content.upper() != "NONE":
-            arole_list = await self._get_roles_from_content(ctx, answer.content)
+            arole_list = await _get_roles_from_content(ctx, answer.content)
             if arole_list is None:
                 await ctx.send("Invalid answer, canceling")
                 return
@@ -94,7 +107,7 @@ class CCRole(commands.Cog):
 
         rrole_list = []
         if answer.content.upper() != "NONE":
-            rrole_list = await self._get_roles_from_content(ctx, answer.content)
+            rrole_list = await _get_roles_from_content(ctx, answer.content)
             if rrole_list is None:
                 await ctx.send("Invalid answer, canceling")
                 return
@@ -112,7 +125,7 @@ class CCRole(commands.Cog):
 
         prole_list = []
         if answer.content.upper() != "NONE":
-            prole_list = await self._get_roles_from_content(ctx, answer.content)
+            prole_list = await _get_roles_from_content(ctx, answer.content)
             if prole_list is None:
                 await ctx.send("Invalid answer, canceling")
                 return
@@ -244,14 +257,17 @@ class CCRole(commands.Cog):
         https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/cogs/customcom/customcom.py#L508
         for the message filtering
         """
+        # This covers message.author.bot check
+        if not await self.bot.message_eligible_as_command(message):
+            return
+
         ###########
         is_private = isinstance(message.channel, discord.abc.PrivateChannel)
 
-        # user_allowed check, will be replaced with self.bot.user_allowed or
-        # something similar once it's added
-        user_allowed = True
+        if is_private or len(message.content) < 2:
+            return
 
-        if len(message.content) < 2 or is_private or not user_allowed or message.author.bot:
+        if await self.bot.cog_disabled_in_guild(self, message.guild):
             return
 
         ctx = await self.bot.get_context(message)
@@ -273,40 +289,6 @@ class CCRole(commands.Cog):
         if cmd is not None:
             await self.eval_cc(cmd, message, ctx)
 
-    # @commands.Cog.listener()
-    # async def on_message(self, message: discord.Message):
-    #     if len(message.content) < 2 or message.guild is None:
-    #         return
-    #
-    #     ctx: commands.Context = await self.bot.get_context(message)
-    #     cmd = ctx.invoked_with
-    #     guild = message.guild
-    #     # try:
-    #     #     prefix = await self.get_prefix(message)
-    #     # except ValueError:
-    #     #     return
-    #
-    #     # prefix = ctx.prefix
-    #
-    #     cmdlist = self.config.guild(guild).cmdlist
-    #     # cmd = message.content[len(prefix) :].split()[0].lower()
-    #     cmd = await cmdlist.get_raw(cmd, default=None)
-    #
-    #     if cmd is not None:
-    #         await self.eval_cc(cmd, message, ctx)
-
-    async def _get_roles_from_content(self, ctx, content):
-        content_list = content.split(",")
-        try:
-            role_list = [
-                discord.utils.get(ctx.guild.roles, name=role.strip(" ")).id
-                for role in content_list
-            ]
-        except (discord.HTTPException, AttributeError):  # None.id is attribute error
-            return None
-        else:
-            return role_list
-
     async def get_prefix(self, message: discord.Message) -> str:
         """
         Borrowed from alias cog
@@ -325,7 +307,7 @@ class CCRole(commands.Cog):
                 return p
         raise ValueError
 
-    async def eval_cc(self, cmd, message, ctx):
+    async def eval_cc(self, cmd, message: discord.Message, ctx: commands.Context):
         """Does all the work"""
         if cmd["proles"] and not (
             set(role.id for role in message.author.roles) & set(cmd["proles"])
@@ -400,7 +382,7 @@ class CCRole(commands.Cog):
                 await message.channel.send("Permission error: Unable to remove roles")
 
         out_message = self.format_cc(cmd, message, target)
-        await message.channel.send(out_message)
+        await message.channel.send(out_message, allowed_mentions=discord.AllowedMentions())
 
     def format_cc(self, cmd, message, target):
         out = cmd["text"]

@@ -48,7 +48,9 @@ class QRInvite(Cog):
                     invite = await ctx.channel.invites()
                     invite = invite[0]
                 except discord.Forbidden:
-                    await ctx.maybe_send_embed("No permission to get an invite, please provide one")
+                    await ctx.maybe_send_embed(
+                        "No permission to get an invite, please provide one"
+                    )
                     return
             invite = invite.code
 

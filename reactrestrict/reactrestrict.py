@@ -281,6 +281,9 @@ class ReactRestrict(Cog):
         if member.bot:
             return
 
+        if await self.bot.cog_disabled_in_guild(self, member.guild):
+            return
+
         try:
             roles = [self._get_role(member.guild, c.role_id) for c in combos]
         except LookupError:

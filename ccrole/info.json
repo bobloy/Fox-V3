@@ -2,7 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "min_bot_version": "3.3.0",
+  "min_bot_version": "3.4.0",
   "description": "Creates custom commands to adjust roles and send custom messages",
   "hidden": false,
   "install_msg": "Thank you for installing Custom Commands w/ Roles. Get started with `[p]load ccrole` and `[p]help CCRole`",
