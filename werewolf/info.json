@@ -3,7 +3,6 @@
     "Bobloy"
   ],
   "min_bot_version": "3.3.0",
-  "max_bot_version": "3.3.12",
   "description": "Customizable Werewolf Game",
   "hidden": true,
   "install_msg": "Thank you for installing Werewolf! Get started with `[p]load werewolf`\n Use `[p]wwset` to run inital setup",
