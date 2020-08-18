@@ -258,7 +258,7 @@ class CCRole(commands.Cog):
         for the message filtering
         """
         # This covers message.author.bot check
-        if not self.bot.message_eligible_as_command(message):
+        if not await self.bot.message_eligible_as_command(message):
             return
 
         ###########
