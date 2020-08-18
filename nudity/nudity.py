@@ -96,6 +96,9 @@ class Nudity(commands.Cog):
             # print("did not qualify")
             return
 
+        if await self.bot.cog_disabled_in_guild(self, message.guild):
+            return
+
         try:
             is_on = await self.config.guild(message.guild).enabled()
         except AttributeError:

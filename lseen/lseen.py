@@ -89,6 +89,8 @@ class LastSeen(Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.status != self.offline_status and after.status == self.offline_status:
-            if not await self.config.guild(before.guild).enabled():
+            if await self.bot.cog_disabled_in_guild(self, after.guild):
+                return
+            if not await self.config.guild(after.guild).enabled():
                 return
             await self.config.member(before).seen.set(datetime.utcnow().isoformat())

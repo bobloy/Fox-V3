@@ -1,5 +1,6 @@
 from collections import defaultdict
 from random import randint
+from typing import Union
 
 import discord
 from redbot.core import Config, checks, commands
@@ -280,15 +281,22 @@ class Hangman(Cog):
         await self._reprintgame(message)
 
     @commands.Cog.listener()
-    async def on_react(self, reaction, user):
+    async def on_react(self, reaction, user: Union[discord.User, discord.Member]):
         """ Thanks to flapjack reactpoll for guidelines
             https://github.com/flapjax/FlapJack-Cogs/blob/master/reactpoll/reactpoll.py"""
-
-        if reaction.message.id != self.the_data[user.guild]["trackmessage"]:
+        guild: discord.Guild = getattr(user, "guild", None)
+        if guild is None:
             return
 
-        if user == self.bot.user:
-            return  # Don't react to bot's own reactions
+        if reaction.message.id != self.the_data[guild]["trackmessage"]:
+            return
+
+        if user.bot:
+            return  # Don't react to bot reactions
+
+        if await self.bot.cog_disabled_in_guild(self, guild):
+            return
+
         message = reaction.message
         emoji = reaction.emoji
 
