@@ -3,6 +3,7 @@ import logging
 import os
 import pathlib
 from datetime import datetime, timedelta
+from typing import Literal
 
 import discord
 from chatterbot import ChatBot
@@ -13,6 +14,7 @@ from redbot.core import Config, commands
 from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
+from redbot.core.utils import AsyncIter
 
 log = logging.getLogger("red.fox_v3.chat")
 
@@ -65,6 +67,10 @@ class Chatter(Cog):
 
         self.loop = asyncio.get_event_loop()
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     def _create_chatbot(self):
 
         return ChatBot(
@@ -115,7 +121,7 @@ class Chatter(Cog):
             try:
 
                 async for message in channel.history(
-                        limit=None, after=after, oldest_first=True
+                    limit=None, after=after, oldest_first=True
                 ).filter(
                     predicate=predicate
                 ):  # type: discord.Message

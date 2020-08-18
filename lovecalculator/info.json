@@ -3,11 +3,7 @@
     "Bobloy",
     "SnappyDragon"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Calculate the love percentage for two users",
   "hidden": false,
   "install_msg": "Thank you for installing LoveCalculator. Love is in the air.\n Get started with `[p]load lovecalculator`, then `[p]help LoveCalculator`",
@@ -15,6 +11,7 @@
     "beautifulsoup4"
   ],
   "short": "Calculate love percentage",
+  "end_user_data_statement": "This cog uses the core Bank cog. It store no End User Data otherwise.",
   "tags": [
     "bobloy",
     "fun",

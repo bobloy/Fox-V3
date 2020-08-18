@@ -4,16 +4,13 @@
     "SnappyDragon",
     "PaddoInWonderland"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Grow your own plants! Be sure to take care of it. Do `[p]gardening` to get started",
   "hidden": false,
   "install_msg": "Thank you for installing PlantTycoon. Check out all the commands with `[p]help PlantTycoon`",
   "requirements": [],
   "short": "Grow your own plants! Do `[p]gardening` to get started.",
+  "end_user_data_statement": "This cog stores user IDs along with their progress in the PlantTycoon game",
   "tags": [
     "bobloy",
     "games",

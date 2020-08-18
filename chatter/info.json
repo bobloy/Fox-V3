@@ -2,11 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    3,
-    10
-  ],
+  "min_bot_version": "3.3.10",
   "description": "Create an offline chatbot that talks like your average member using Machine Learning",
   "hidden": false,
   "install_msg": "Thank you for installing Chatter! Get started ith `[p]load chatter` and `[p]help Chatter`",
@@ -24,6 +20,7 @@
     "spacy>=2.3,<2.4"
   ],
   "short": "Local Chatbot run on machine learning",
+  "end_user_data_statement": "This cog only stores anonymous conversations data; no End User Data is stored.",
   "tags": [
     "chat",
     "chatbot",

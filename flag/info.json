@@ -2,15 +2,12 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Add expiring flags on members to track warnings or incidents",
   "hidden": false,
   "install_msg": "Thank you for installing Flag! Get started with `[p]load flag` and `[p]help Flag`",
   "short": "Add expiring flags to members",
+  "end_user_data_statement": "This cog stores user IDs listed along with a provided explanation for being flagged",
   "tags": [
     "bobloy",
     "warning",

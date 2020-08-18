@@ -20,6 +20,7 @@ class Werewolf(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(
             self, identifier=87101114101119111108102, force_registration=True
@@ -36,6 +37,10 @@ class Werewolf(Cog):
         self.config.register_guild(**default_guild)
 
         self.games = {}  # Active games stored here, id is per guild
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     def __unload(self):
         print("Unload called")

@@ -35,6 +35,10 @@ class ReactRestrict(Cog):
         )
         self.config.register_global(registered_combos=[])
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     async def combo_list(self) -> List[ReactRestrictCombo]:
         """
         Returns a list of reactrestrict combos.

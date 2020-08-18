@@ -22,6 +22,10 @@ class CCRole(commands.Cog):
 
         self.config.register_guild(**default_guild)
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     @commands.guild_only()
     @commands.group()
     async def ccrole(self, ctx: commands.Context):
