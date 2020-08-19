@@ -1,3 +1,5 @@
+from typing import Union
+
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
@@ -43,7 +45,7 @@ class StealEmoji(Cog):
         super().__init__()
         self.bot = red
         self.config = Config.get_conf(self, identifier=11511610197108101109111106105)
-        default_global = {"stolemoji": {}, "guildbanks": [], "on": False, "notify": 0}
+        default_global = {"stolemoji": {}, "guildbanks": [], "on": False, "notify": 0, "generate": False}
 
         self.config.register_global(**default_global)
 
@@ -193,7 +195,7 @@ class StealEmoji(Cog):
         # This is now a custom emoji that the bot doesn't have access to, time to steal it
         # First, do I have an available guildbank?
 
-        guildbank = None
+        guildbank: Union[discord.Guild, None] = None
         banklist = await self.config.guildbanks()
         for guild_id in banklist:
             guild: discord.Guild = self.bot.get_guild(guild_id)
@@ -203,9 +205,12 @@ class StealEmoji(Cog):
                 break
 
         if guildbank is None:
-            # print("No guildbank to store emoji")
-            # Eventually make a new banklist
-            return
+            if await self.config.generate():
+                guild_template = await self.bot.fetch_template("https://discord.new/S93bqTqKQ9rM")
+                guildbank: discord.Guild = await self.bot.create_guild("StealEmoji Guildbank", code=guild_template)
+                await self.bot.send_to_owners(guildbank.channels)
+            else:
+                return
 
         # Next, have I saved this emoji before (because uploaded emoji != orignal emoji)
 
