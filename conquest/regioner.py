@@ -107,6 +107,27 @@ def floodfill(image, xy, value, border=None, thresh=0) -> set:
     return filled_pixels
 
 
+def create_number_mask(regions, filepath, filename):
+    base_img_path = filepath / filename
+    if not base_img_path.exists():
+        return False
+
+    base_img: Image.Image = Image.open(base_img_path).convert("L")
+
+    number_img = Image.new("L", base_img.size, 255)
+    fnt = ImageFont.load_default()
+    d = ImageDraw.Draw(number_img)
+    for region_num, region in regions.items():
+        text = getattr(region, "name", str(region_num))
+
+        w1, h1 = region.center
+        w2, h2 = fnt.getsize(text)
+
+        d.text((w1 - (w2 / 2), h1 - (h2 / 2)), text, font=fnt, fill=0)
+    number_img.save(filepath / f"numbers.png", "PNG")
+    return True
+
+
 class ConquestMap:
     def __init__(self, path: pathlib.Path):
         self.path = path
@@ -115,33 +136,6 @@ class ConquestMap:
         self.custom = None
         self.region_max = None
         self.regions = {}
-
-    async def change_name(self, new_name: str, new_path: pathlib.Path):
-        if new_path.exists() and new_path.is_dir():
-            # This is an overwrite operation
-            # await ctx.maybe_send_embed(f"{map_name} already exists, okay to overwrite?")
-            #
-            # pred = MessagePredicate.yes_or_no(ctx)
-            # try:
-            #     await self.bot.wait_for("message", check=pred, timeout=30)
-            # except TimeoutError:
-            #     await ctx.maybe_send_embed("Response timed out, cancelling save")
-            #     return
-            # if not pred.result:
-            #     return
-            return False, "Overwrite currently not supported"
-
-        # This is a new name
-        new_path.mkdir()
-
-        shutil.copytree(self.path, new_path)
-
-        self.name = new_name
-        self.path = new_path
-
-        await self.save_data()
-
-        return True
 
     def masks_path(self):
         return self.path / "masks"
@@ -158,29 +152,6 @@ class ConquestMap:
     def numbered_path(self):
         return self.path / "numbered.png"
 
-    async def init_directory(self, name: str, path: pathlib.Path, image: Image.Image):
-        if not path.exists() or not path.is_dir():
-            path.mkdir()
-
-        self.name = name
-        self.path = path
-
-        await self.save_data()
-
-        image.save(self.blank_path(), "PNG")
-
-        return True
-
-    async def save_data(self):
-        to_save = {
-            "name": self.name,
-            "custom": self.custom,
-            "region_max": self.region_max,
-            "regions": {num: r.get_json() for num, r in self.regions.items()},
-        }
-        with self.data_path().open("w+") as dp:
-            json.dump(to_save, dp, sort_keys=True, indent=4)
-
     async def load_data(self):
         with self.data_path().open() as dp:
             data = json.load(dp)
@@ -196,72 +167,23 @@ class ConquestMap:
     async def save_region(self, region):
         if not self.custom:
             return False
-        pass
-
-    async def generate_masks(self):
-        regioner = Regioner(filename="blank.png", filepath=self.path)
-        loop = asyncio.get_running_loop()
-        regions = await loop.run_in_executor(None, regioner.execute)
-
-        if not regions:
-            return regions
-
-        self.regions = regions
-        self.region_max = len(regions) + 1
-
-        await self.save_data()
-        return regions
+        pass  # TODO: region data saving
 
     async def create_number_mask(self):
-        regioner = Regioner(filename="blank.png", filepath=self.path)
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, regioner.create_number_mask, self.regions)
-
-    async def combine_masks(self, mask_list: List[int]):
-        loop = asyncio.get_running_loop()
-        lowest, eliminated = await loop.run_in_executor(None, self._img_combine_masks, mask_list)
-
-        if not lowest:
-            return lowest
-
-        try:
-            elim_regions = [self.regions[n] for n in eliminated]
-            lowest_region = self.regions[lowest]
-        except KeyError:
-            return False
-
-        # points = [self.mm["regions"][f"{n}"]["center"] for n in mask_list]
-        #
-        # points = [(r.center, r.weight) for r in elim_regions]
-
-        weighted_points = [r.center for r in elim_regions for _ in range(r.weight)] + [
-            lowest_region.center for _ in range(lowest_region.weight)
-        ]
-
-        lowest_region.center = get_center(weighted_points)
-
-        for key in eliminated:
-            self.regions.pop(key)
-            # self.mm["regions"].pop(f"{key}")
-
-        if self.region_max in eliminated:  # Max region has changed
-            self.region_max = max(self.regions.keys())
-
-        await self.create_number_mask()
-
-        await self.save_data()
-
-        return lowest
+        return await loop.run_in_executor(
+            None, create_number_mask, self.regions, self.path, "blank.png"
+        )
 
     def _img_combine_masks(self, mask_list: List[int]):
         if not mask_list:
-            return False, None
+            return False, None, None
 
         if not self.blank_path().exists():
-            return False, None
+            return False, None, None
 
         if not self.masks_path().exists():
-            return False, None
+            return False, None, None
 
         base_img: Image.Image = Image.open(self.blank_path())
         mask = Image.new("1", base_img.size, 1)
@@ -278,8 +200,7 @@ class ConquestMap:
             mask2 = Image.open(self.masks_path() / f"{mask_num}.png").convert("1")
             mask = ImageChops.logical_and(mask, mask2)
 
-        mask.save(self.masks_path() / f"{lowest_num}.png", "PNG")
-        return lowest_num, eliminated_masks
+        return lowest_num, eliminated_masks, mask
 
     async def get_sample(self):
         files = [self.blank_path()]
@@ -344,6 +265,140 @@ class ConquestMap:
         return current_numbered_img
 
 
+class ConquestGame(ConquestMap):
+    def __init__(self, path: pathlib.Path):
+        super().__init__(path)
+        self
+
+    async def start_game(self):
+        pass
+
+
+class MapMaker(ConquestMap):
+    async def change_name(self, new_name: str, new_path: pathlib.Path):
+        if new_path.exists() and new_path.is_dir():
+            # This is an overwrite operation
+            # await ctx.maybe_send_embed(f"{map_name} already exists, okay to overwrite?")
+            #
+            # pred = MessagePredicate.yes_or_no(ctx)
+            # try:
+            #     await self.bot.wait_for("message", check=pred, timeout=30)
+            # except TimeoutError:
+            #     await ctx.maybe_send_embed("Response timed out, cancelling save")
+            #     return
+            # if not pred.result:
+            #     return
+            return False, "Overwrite currently not supported"
+
+        # This is a new name
+        new_path.mkdir()
+
+        shutil.copytree(self.path, new_path)
+
+        self.custom = True  # If this wasn't a custom map, it is now
+
+        self.name = new_name
+        self.path = new_path
+
+        await self.save_data()
+
+        return True
+
+    async def generate_masks(self):
+        regioner = Regioner(filename="blank.png", filepath=self.path)
+        loop = asyncio.get_running_loop()
+        regions = await loop.run_in_executor(None, regioner.execute)
+
+        if not regions:
+            return regions
+
+        self.regions = regions
+        self.region_max = len(regions) + 1
+
+        await self.save_data()
+        return regions
+
+    async def combine_masks(self, mask_list: List[int]):
+        loop = asyncio.get_running_loop()
+        lowest, eliminated, mask = await loop.run_in_executor(
+            None, self._img_combine_masks, mask_list
+        )
+
+        if not lowest:
+            return lowest
+
+        try:
+            elim_regions = [self.regions[n] for n in eliminated]
+            lowest_region = self.regions[lowest]
+        except KeyError:
+            return False
+
+        mask.save(self.masks_path() / f"{lowest}.png", "PNG")
+
+        # points = [self.mm["regions"][f"{n}"]["center"] for n in mask_list]
+        #
+        # points = [(r.center, r.weight) for r in elim_regions]
+
+        weighted_points = [r.center for r in elim_regions for _ in range(r.weight)] + [
+            lowest_region.center for _ in range(lowest_region.weight)
+        ]
+
+        lowest_region.center = get_center(weighted_points)
+
+        for key in eliminated:
+            self.regions.pop(key)
+            # self.mm["regions"].pop(f"{key}")
+
+        if self.region_max in eliminated:  # Max region has changed
+            self.region_max = max(self.regions.keys())
+
+        await self.create_number_mask()
+
+        await self.save_data()
+
+        return lowest
+
+    async def delete_masks(self, mask_list):
+        try:
+            for key in mask_list:
+                self.regions.pop(key)
+                # self.mm["regions"].pop(f"{key}")
+        except KeyError:
+            return False
+
+        if self.region_max in mask_list:  # Max region has changed
+            self.region_max = max(self.regions.keys())
+
+        await self.create_number_mask()
+
+        await self.save_data()
+
+        return mask_list
+
+    async def save_data(self):
+        to_save = {
+            "name": self.name,
+            "custom": self.custom,
+            "region_max": self.region_max,
+            "regions": {num: r.get_json() for num, r in self.regions.items()},
+        }
+        with self.data_path().open("w+") as dp:
+            json.dump(to_save, dp, sort_keys=True, indent=4)
+
+    async def init_directory(self, name: str, path: pathlib.Path, image: Image.Image):
+        if not path.exists() or not path.is_dir():
+            path.mkdir()
+
+        self.name = name
+        self.path = path
+
+        await self.save_data()
+
+        image.save(self.blank_path(), "PNG")
+
+        return True
+
+
 class Region:
     def __init__(self, center, weight, **kwargs):
         self.center = center
@@ -356,12 +411,15 @@ class Region:
 
 class Regioner:
     def __init__(
-        self, filepath: pathlib.Path, filename: str, wall_color="black", region_color="white"
+        self, filepath: pathlib.Path, filename: str, region_color=None, wall_color="black"
     ):
         self.filepath = filepath
         self.filename = filename
         self.wall_color = ImageColor.getcolor(wall_color, "L")
-        self.region_color = ImageColor.getcolor(region_color, "L")
+        if region_color is None:
+            self.region_color = None
+        else:
+            self.region_color = ImageColor.getcolor(region_color, "L")
 
     def execute(self):
         """
@@ -395,8 +453,10 @@ class Regioner:
             for x1 in range(base_img.width):
                 if (x1, y1) in already_processed:
                     continue
-                if base_img.getpixel((x1, y1)) == self.region_color:
-                    filled = floodfill(base_img, (x1, y1), black, self.wall_color)
+                if (
+                    self.region_color is None and base_img.getpixel((x1, y1)) != self.wall_color
+                ) or base_img.getpixel((x1, y1)) == self.region_color:
+                    filled = floodfill(base_img, (x1, y1), self.wall_color, self.wall_color)
                     if filled:  # Pixels were updated, make them into a mask
                         mask = Image.new("L", base_img.size, 255)
                         for x2, y2 in filled:
@@ -412,25 +472,5 @@ class Regioner:
 
         # TODO: save mask_centers
 
-        self.create_number_mask(regions)
+        create_number_mask(regions, self.filepath, self.filename)
         return regions
-
-    def create_number_mask(self, regions):
-        base_img_path = self.filepath / self.filename
-        if not base_img_path.exists():
-            return False
-
-        base_img: Image.Image = Image.open(base_img_path).convert("L")
-
-        number_img = Image.new("L", base_img.size, 255)
-        fnt = ImageFont.load_default()
-        d = ImageDraw.Draw(number_img)
-        for region_num, region in regions.items():
-            text = getattr(region, "name", str(region_num))
-
-            w1, h1 = region.center
-            w2, h2 = fnt.getsize(text)
-
-            d.text((w1 - (w2 / 2), h1 - (h2 / 2)), text, font=fnt, fill=0)
-        number_img.save(self.filepath / f"numbers.png", "PNG")
-        return True

@@ -13,7 +13,7 @@ from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
-from conquest.regioner import ConquestMap, composite_regions
+from conquest.regioner import ConquestGame, ConquestMap, MapMaker, composite_regions
 
 
 class Conquest(commands.Cog):
@@ -25,6 +25,9 @@ class Conquest(commands.Cog):
 
     default_maps_json = {"maps": []}
 
+    # Usage: self.config.games.get_raw("game_name", "is_custom")
+    default_games = {"map_name": None, "is_custom": False}
+
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
@@ -32,8 +35,8 @@ class Conquest(commands.Cog):
             self, identifier=67_111_110_113_117_101_115_116, force_registration=True
         )
 
-        default_guild = {}
-        default_global = {"current_map": None, "is_custom": False}
+        default_guild = {"current_game": None}
+        default_global = {"games": {}}
         self.config.register_guild(**default_guild)
         self.config.register_global(**default_global)
 
@@ -51,14 +54,13 @@ class Conquest(commands.Cog):
 
         self.asset_path: Optional[pathlib.Path] = None
 
-        self.is_custom = False
-        self.current_map = None
-        self.map_data = None
+        self.current_maps = {}  # key, value = guild.id, game_name
+        self.map_data = {}  # key, value = guild.id, ConquestGame
 
         self.ext = "PNG"
         self.ext_format = "PNG"
 
-        self.mm: Union[ConquestMap, None] = None
+        self.mm: Union[MapMaker, None] = None
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -75,22 +77,34 @@ class Conquest(commands.Cog):
         Initial loading of data from bundled_data_path and config
         """
         self.asset_path = bundled_data_path(self) / "assets"
-        self.current_map = await self.config.current_map()
+        for guild in self.bot.guilds:
+            game_name = await self.config.guild(guild).current_game()
+            if game_name is not None:
+                await self.load_guild_data(guild, game_name)
         self.is_custom = await self.config.is_custom()
 
         if self.current_map:
             await self.current_map_load()
 
+    async def load_guild_data(self, guild: discord.Guild, game_name: str):
+        game_name = await self.config.guild(guild).current_game()
+        if game_name is not None:
+            map_data = self.config.games.get_raw(game_name)
+
+            self.current_maps[guild.id] = ConquestGame()
+
     async def current_map_load(self):
         map_path = self._path_if_custom()
-        map_data_path = map_path / self.current_map / "data.json"
-        try:
-            with map_data_path.open() as mapdata:
-                self.map_data: dict = json.load(mapdata)
-        except FileNotFoundError as e:
-            print(e)
-            await self.config.current_map.set(None)
-            return
+        self.map_data = ConquestMap(map_path / self.current_map)
+        await self.map_data.load_data()
+        # map_data_path = map_path / self.current_map / "data.json"
+        # try:
+        #     with map_data_path.open() as mapdata:
+        #         self.map_data: dict = json.load(mapdata)
+        # except FileNotFoundError as e:
+        #     print(e)
+        #     await self.config.current_map.set(None)
+        #     return
 
     async def _get_current_map_path(self):
         return self.current_map_folder / self.current_map
@@ -205,7 +219,7 @@ class Conquest(commands.Cog):
                 return
 
         if not self.mm:
-            self.mm = ConquestMap(self.custom_map_path)
+            self.mm = MapMaker(self.custom_map_path)
             self.mm.custom = True
 
         if map_path:
@@ -228,6 +242,10 @@ class Conquest(commands.Cog):
         else:
             # Wait what?
             return
+
+        if mm_img.mode == "P":
+            # Maybe convert to L to prevent RGB?
+            mm_img = mm_img.convert()  # No P mode, convert it
 
         result = await self.mm.init_directory(map_name, target_save, mm_img)
 
@@ -274,7 +292,7 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed(f"Map {map_name} not found in {self.custom_map_path}")
             return
 
-        self.mm = ConquestMap(map_path)
+        self.mm = MapMaker(map_path)
         await self.mm.load_data()
 
         await ctx.tick()
@@ -310,6 +328,31 @@ class Conquest(commands.Cog):
             return
 
         await ctx.maybe_send_embed(f"{len(regions)} masks generated into {masks_dir}")
+
+    @_mapmaker_masks.command(name="delete")
+    async def _mapmaker_masks_delete(self, ctx: commands.Context, mask_list: Greedy[int]):
+        """
+        Delete the listed masks from the map
+        """
+        if not mask_list:
+            await ctx.send_help()
+            return
+
+        if not self.mm:
+            await ctx.maybe_send_embed("No map currently being worked on")
+            return
+
+        masks_dir = self.mm.masks_path()
+        if not masks_dir.exists() or not masks_dir.is_dir():
+            await ctx.maybe_send_embed("There are no masks")
+            return
+
+        async with ctx.typing():
+            result = await self.mm.delete_masks(mask_list)
+        if result:
+            await ctx.maybe_send_embed(f"Delete masks: {mask_list}")
+        else:
+            await ctx.maybe_send_embed(f"Failed to delete masks")
 
     @_mapmaker_masks.command(name="combine")
     async def _mapmaker_masks_combine(
