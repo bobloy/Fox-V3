@@ -176,7 +176,7 @@ class ConquestMap:
             "name": self.name,
             "custom": self.custom,
             "region_max": self.region_max,
-            "regions": {num: r.get_json() for num, r in self.regions.items()}
+            "regions": {num: r.get_json() for num, r in self.regions.items()},
         }
         with self.data_path().open("w+") as dp:
             json.dump(to_save, dp, sort_keys=True, indent=4)
@@ -210,6 +210,7 @@ class ConquestMap:
         self.region_max = len(regions) + 1
 
         await self.save_data()
+        return regions
 
     async def create_number_mask(self):
         regioner = Regioner(filename="blank.png", filepath=self.path)
@@ -223,14 +224,19 @@ class ConquestMap:
         if not lowest:
             return lowest
 
-        elim_regions = [self.regions[n] for n in eliminated]
-        lowest_region = self.regions[lowest]
+        try:
+            elim_regions = [self.regions[n] for n in eliminated]
+            lowest_region = self.regions[lowest]
+        except KeyError:
+            return False
 
         # points = [self.mm["regions"][f"{n}"]["center"] for n in mask_list]
         #
         # points = [(r.center, r.weight) for r in elim_regions]
 
-        weighted_points = [r.center for r in elim_regions for _ in range(r.weight)]
+        weighted_points = [r.center for r in elim_regions for _ in range(r.weight)] + [
+            lowest_region.center for _ in range(lowest_region.weight)
+        ]
 
         lowest_region.center = get_center(weighted_points)
 
@@ -245,7 +251,7 @@ class ConquestMap:
 
         await self.save_data()
 
-        return True
+        return lowest
 
     def _img_combine_masks(self, mask_list: List[int]):
         if not mask_list:
@@ -291,18 +297,18 @@ class ConquestMap:
             )
             current_map = await composite_regions(
                 current_map,
-                regions[fourth: fourth * 2],
+                regions[fourth : fourth * 2],
                 ImageColor.getrgb("green"),
                 self.masks_path(),
             )
             current_map = await composite_regions(
                 current_map,
-                regions[fourth * 2: fourth * 3],
+                regions[fourth * 2 : fourth * 3],
                 ImageColor.getrgb("blue"),
                 self.masks_path(),
             )
             current_map = await composite_regions(
-                current_map, regions[fourth * 3:], ImageColor.getrgb("yellow"), self.masks_path()
+                current_map, regions[fourth * 3 :], ImageColor.getrgb("yellow"), self.masks_path()
             )
 
             current_numbered_img = await self.get_numbered(current_map)
@@ -345,16 +351,12 @@ class Region:
         self.data = kwargs
 
     def get_json(self):
-        return {
-            "center": self.center,
-            "weight": self.weight,
-            "data": self.data.copy()
-        }
+        return {"center": self.center, "weight": self.weight, "data": self.data.copy()}
 
 
 class Regioner:
     def __init__(
-            self, filepath: pathlib.Path, filename: str, wall_color="black", region_color="white"
+        self, filepath: pathlib.Path, filename: str, wall_color="black", region_color="white"
     ):
         self.filepath = filepath
         self.filename = filename
@@ -404,9 +406,7 @@ class Regioner:
                         mask = mask.convert("L")
                         mask.save(masks_path / f"{mask_count}.png", "PNG")
 
-                        regions[mask_count] = Region(
-                            center=get_center(filled), weight=len(filled)
-                        )
+                        regions[mask_count] = Region(center=get_center(filled), weight=len(filled))
 
                         already_processed.update(filled)
 
@@ -431,6 +431,6 @@ class Regioner:
             w1, h1 = region.center
             w2, h2 = fnt.getsize(text)
 
-            d.text((w1-(w2/2), h1-(h2/2)), text, font=fnt, fill=0)
+            d.text((w1 - (w2 / 2), h1 - (h2 / 2)), text, font=fnt, fill=0)
         number_img.save(self.filepath / f"numbers.png", "PNG")
         return True

@@ -29,7 +29,7 @@ class Conquest(commands.Cog):
         super().__init__()
         self.bot = bot
         self.config = Config.get_conf(
-            self, identifier=67111110113117101115116, force_registration=True
+            self, identifier=67_111_110_113_117_101_115_116, force_registration=True
         )
 
         default_guild = {}
@@ -352,7 +352,7 @@ class Conquest(commands.Cog):
                     "Failed to combine masks, try the command again or check log for errors"
                 )
                 return
-            await ctx.tick()
+        await ctx.maybe_send_embed(f"Combined masks into mask # {result}")
 
     @commands.group()
     async def conquest(self, ctx: commands.Context):
@@ -459,7 +459,7 @@ class Conquest(commands.Cog):
             await self._get_current_map_path() / f"current.{self.ext}", x, y, zoom
         )
 
-        await ctx.send(file=discord.File(fp=zoomed_path, filename=f"current_zoomed.{self.ext}",))
+        await ctx.send(file=discord.File(fp=zoomed_path, filename=f"current_zoomed.{self.ext}"))
 
     @conquest_set.command(name="save")
     async def _conquest_set_save(self, ctx: commands.Context, *, save_name):
@@ -597,7 +597,9 @@ class Conquest(commands.Cog):
             )
 
             await self._send_maybe_zoomed_map(
-                ctx, current_map_path / f"current_numbered.{self.ext}", f"current_numbered.{self.ext}",
+                ctx,
+                current_map_path / f"current_numbered.{self.ext}",
+                f"current_numbered.{self.ext}",
             )
 
     @conquest.command(name="multitake")
