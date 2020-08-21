@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Union
 
@@ -232,7 +233,13 @@ class StealEmoji(Cog):
                     await self.config.autobank.set(False)
                     log.exception("Unable to create guilds, disabling autobank")
                     return
+                async with self.config.guildbanks() as guildbanks:
+                    guildbanks.append(guildbank.id)
+
+                await asyncio.sleep(2)
+
                 invite = await guildbank.text_channels[0].create_invite()
+
                 await self.bot.send_to_owners(invite)
                 log.info(f"Guild created id {guildbank.id}. Invite: {invite}")
             else:
