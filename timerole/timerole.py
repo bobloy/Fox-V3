@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
-from redbot.core.commands import Cog
+from redbot.core.commands import Cog, parse_timedelta
 from redbot.core.utils.chat_formatting import pagify
 
 
@@ -20,7 +20,7 @@ class Timerole(Cog):
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
-        self.updating = self.bot.loop.create_task(self.check_day())
+        self.updating = asyncio.create_task(self.check_day())
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -40,7 +40,7 @@ class Timerole(Cog):
         """
 
         await self.timerole_update()
-        await ctx.send("Success")
+        await ctx.tick()
 
     @commands.group()
     @checks.mod_or_permissions(administrator=True)
@@ -52,23 +52,34 @@ class Timerole(Cog):
 
     @timerole.command()
     async def addrole(
-        self, ctx: commands.Context, role: discord.Role, days: int, *requiredroles: discord.Role
+        self, ctx: commands.Context, role: discord.Role, time: str, *requiredroles: discord.Role
     ):
         """Add a role to be added after specified time on server"""
         guild = ctx.guild
 
-        to_set = {"days": days, "remove": False}
+        try:
+            parsed_time = parse_timedelta(time, allowed_units=["weeks", "days", "hours"])
+        except commands.BadArgument:
+            await ctx.maybe_send_embed("Error: Invalid time string.")
+            return
+
+        days = parsed_time.days
+        hours = parsed_time.seconds // 60 // 60
+
+        to_set = {"days": days, "hours": hours, "remove": False}
         if requiredroles:
             to_set["required"] = [r.id for r in requiredroles]
 
         await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
         await ctx.maybe_send_embed(
-            "Time Role for {0} set to {1} days until added".format(role.name, days)
+            "Time Role for {0} set to {1} days  and {2} hours until added".format(
+                role.name, days, hours
+            )
         )
 
     @timerole.command()
     async def removerole(
-        self, ctx: commands.Context, role: discord.Role, days: int, *requiredroles: discord.Role
+        self, ctx: commands.Context, role: discord.Role, time: str, *requiredroles: discord.Role
     ):
         """
         Add a role to be removed after specified time on server
@@ -76,14 +87,24 @@ class Timerole(Cog):
         Useful with an autorole cog
         """
         guild = ctx.guild
+        try:
+            parsed_time = parse_timedelta(time, allowed_units=["weeks", "days", "hours"])
+        except commands.BadArgument:
+            await ctx.maybe_send_embed("Error: Invalid time string.")
+            return
 
-        to_set = {"days": days, "remove": True}
+        days = parsed_time.days
+        hours = parsed_time.seconds // 60 // 60
+
+        to_set = {"days": days, "hours": hours, "remove": True}
         if requiredroles:
             to_set["required"] = [r.id for r in requiredroles]
 
         await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
         await ctx.maybe_send_embed(
-            "Time Role for {0} set to {1} days until removed".format(role.name, days)
+            "Time Role for {0} set to {1} days and {2} hours until removed".format(
+                role.name, days, hours
+            )
         )
 
     @timerole.command()
@@ -174,7 +195,7 @@ class Timerole(Cog):
                     await member.add_roles(role, reason="Timerole")
                 else:
                     await member.remove_roles(role, reason="Timerole")
-            except discord.Forbidden:
+            except (discord.Forbidden, discord.NotFound) as e:
                 results += "{} : {} **(Failed)**\n".format(member.display_name, role.name)
             else:
                 results += "{} : {}\n".format(member.display_name, role.name)
@@ -192,7 +213,11 @@ class Timerole(Cog):
                     continue
 
             if (
-                member.joined_at + timedelta(days=role_dict[str(role_id)]["days"])
+                member.joined_at
+                + timedelta(
+                    days=role_dict[str(role_id)]["days"],
+                    hours=role_dict[str(role_id)].get("hours", 0),
+                )
                 <= datetime.today()
             ):
                 # Qualifies
@@ -201,4 +226,4 @@ class Timerole(Cog):
     async def check_day(self):
         while self is self.bot.get_cog("Timerole"):
             await self.timerole_update()
-            await asyncio.sleep(86400)
+            await asyncio.sleep(3600)
