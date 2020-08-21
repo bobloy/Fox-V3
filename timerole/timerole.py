@@ -195,7 +195,7 @@ class Timerole(Cog):
                     await member.add_roles(role, reason="Timerole")
                 else:
                     await member.remove_roles(role, reason="Timerole")
-            except discord.Forbidden:
+            except (discord.Forbidden, discord.NotFound) as e:
                 results += "{} : {} **(Failed)**\n".format(member.display_name, role.name)
             else:
                 results += "{} : {}\n".format(member.display_name, role.name)
