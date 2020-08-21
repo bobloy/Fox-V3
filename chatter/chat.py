@@ -3,7 +3,6 @@ import logging
 import os
 import pathlib
 from datetime import datetime, timedelta
-from typing import Literal
 
 import discord
 from chatterbot import ChatBot
@@ -14,9 +13,8 @@ from redbot.core import Config, commands
 from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
-from redbot.core.utils import AsyncIter
 
-log = logging.getLogger("red.fox_v3.chat")
+log = logging.getLogger("red.fox_v3.chatter")
 
 
 class ENG_LG:
@@ -420,21 +418,18 @@ class Chatter(Cog):
         for the message filtering
         """
         ###########
-        is_private = isinstance(message.channel, discord.abc.PrivateChannel)
 
-        # user_allowed check, will be replaced with self.bot.user_allowed or
-        # something similar once it's added
-        user_allowed = True
-
-        if len(message.content) < 2 or is_private or not user_allowed or message.author.bot:
+        if len(message.content) < 2 or message.author.bot:
             return
 
-        if await self.bot.cog_disabled_in_guild(self, message.guild):
+        guild: discord.Guild = getattr(message, "guild", None)
+
+        if await self.bot.cog_disabled_in_guild(self, guild):
             return
 
         ctx: commands.Context = await self.bot.get_context(message)
 
-        if ctx.prefix is not None:
+        if ctx.prefix is not None:  # Probably unnecessary, we're in on_message_without_command
             return
 
         ###########
@@ -454,23 +449,8 @@ class Chatter(Cog):
             # print("not mentioned")
             return
 
-        author = message.author
-        guild: discord.Guild = message.guild
-
         channel: discord.TextChannel = message.channel
 
-        # if author.id != self.bot.user.id:
-        #     if guild is None:
-        #         to_strip = "@" + channel.me.display_name + " "
-        #     else:
-        #         to_strip = "@" + guild.me.display_name + " "
-        #     text = message.clean_content
-        #     if not text.startswith(to_strip):
-        #         return
-        #     text = text.replace(to_strip, "", 1)
-
-        # A bit more aggressive, could remove two mentions
-        # Or might not work at all, since mentionables are pre-cleaned_content
         message.content = message.content.replace(prefix, "", 1)
         text = message.clean_content
 
