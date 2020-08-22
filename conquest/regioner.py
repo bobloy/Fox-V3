@@ -266,9 +266,20 @@ class ConquestMap:
 
 
 class ConquestGame(ConquestMap):
-    def __init__(self, path: pathlib.Path):
+    def __init__(self, path: pathlib.Path, game_name: str, custom_map_path: pathlib.Path):
         super().__init__(path)
-        self
+        self.game_name = game_name
+        self.custom_map_path = custom_map_path
+        self.game_path = custom_map_path / game_name
+
+    def game_data_path(self):
+        return self.game_path / "data.json"
+
+    def game_current_path(self):
+        return self.game_path / "current.png"
+
+    def game_current_numbered_path(self):
+        return self.game_path / "current_numbered.png"
 
     async def start_game(self):
         pass
