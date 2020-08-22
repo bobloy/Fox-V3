@@ -89,7 +89,7 @@ class ExclusiveRole(Cog):
         to_remove = (member_set - role_set) - {member.guild.default_role.id}
 
         if to_remove and member_set & role_set:
-            to_remove = [discord.utils.get(member.guild.roles, id=id) for id in to_remove]
+            to_remove = [discord.utils.get(member.guild.roles, id=r_id) for r_id in to_remove]
             await member.remove_roles(*to_remove, reason="Exclusive roles")
 
     @commands.Cog.listener()
