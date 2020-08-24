@@ -238,7 +238,14 @@ class StealEmoji(Cog):
 
                 await asyncio.sleep(2)
 
-                invite = await guildbank.text_channels[0].create_invite()
+                if guildbank.text_channels:
+                    channel = guildbank.text_channels[0]
+                else:
+                    # Always hits the else.
+                    # Maybe create_guild doesn't return guild object with
+                    #    the template channel?
+                    channel = await guildbank.create_text_channel("invite-channel")
+                invite = await channel.create_invite()
 
                 await self.bot.send_to_owners(invite)
                 log.info(f"Guild created id {guildbank.id}. Invite: {invite}")
