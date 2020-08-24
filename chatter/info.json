@@ -5,7 +5,7 @@
   "min_bot_version": "3.4.0",
   "description": "Create an offline chatbot that talks like your average member using Machine Learning",
   "hidden": false,
-  "install_msg": "Thank you for installing Chatter! Get started ith `[p]load chatter` and `[p]help Chatter`",
+  "install_msg": "Thank you for installing Chatter! Please make sure you check the install instructions at https://github.com/bobloy/Fox-V3/blob/master/chatter/README.md\nAfter that, get started ith `[p]load chatter` and `[p]help Chatter`",
   "requirements": [
     "git+git://github.com/gunthercox/chatterbot-corpus@master#egg=chatterbot_corpus",
     "mathparse>=0.1,<0.2",
