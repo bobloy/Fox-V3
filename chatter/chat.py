@@ -3,6 +3,7 @@ import logging
 import os
 import pathlib
 from datetime import datetime, timedelta
+from typing import Optional
 
 import discord
 from chatterbot import ChatBot
@@ -15,6 +16,13 @@ from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
 log = logging.getLogger("red.fox_v3.chatter")
+
+
+def my_local_get_prefix(prefixes, content):
+    for p in prefixes:
+        if content.startswith(p):
+            return p
+    return None
 
 
 class ENG_LG:
@@ -45,7 +53,7 @@ class Chatter(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6710497116116101114)
         default_global = {}
-        default_guild = {"whitelist": None, "days": 1, "convo_delta": 15}
+        default_guild = {"whitelist": None, "days": 1, "convo_delta": 15, "chatchannel": None}
         path: pathlib.Path = cog_data_path(self)
         self.data_path = path / "database.sqlite3"
 
@@ -182,6 +190,25 @@ class Chatter(Cog):
         """
         if ctx.invoked_subcommand is None:
             pass
+
+    @chatter.command(name="channel")
+    async def chatter_channel(
+        self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None
+    ):
+        """
+        Set a channel that the bot will respond in without mentioning it
+
+        Pass with no channel object to clear this guild's channel
+        """
+        if channel is None:
+            await self.config.guild(ctx.guild).chatchannel.set(None)
+            await ctx.maybe_send_embed("Chat channel for guild is cleared")
+        else:
+            if channel.guild != ctx.guild:
+                await ctx.maybe_send_embed("What are you trying to pull here? :eyes:")
+                return
+            await self.config.guild(ctx.guild).chatchannel.set(channel.id)
+            await ctx.maybe_send_embed(f"Chat channel is now {channel.mention}")
 
     @chatter.command(name="cleardata")
     async def chatter_cleardata(self, ctx: commands.Context, confirm: bool = False):
@@ -434,24 +461,21 @@ class Chatter(Cog):
 
         ###########
         # Thank you Cog-Creators
-
-        def my_local_get_prefix(prefixes, content):
-            for p in prefixes:
-                if content.startswith(p):
-                    return p
-            return None
-
-        when_mentionables = commands.when_mentioned(self.bot, message)
-
-        prefix = my_local_get_prefix(when_mentionables, message.content)
-
-        if prefix is None:
-            # print("not mentioned")
-            return
-
         channel: discord.TextChannel = message.channel
 
-        message.content = message.content.replace(prefix, "", 1)
+        if channel.id == await self.config.guild(guild).chatchannel():
+            pass  # good to go
+        else:
+            when_mentionables = commands.when_mentioned(self.bot, message)
+
+            prefix = my_local_get_prefix(when_mentionables, message.content)
+
+            if prefix is None:
+                # print("not mentioned")
+                return
+
+            message.content = message.content.replace(prefix, "", 1)
+
         text = message.clean_content
 
         async with channel.typing():
