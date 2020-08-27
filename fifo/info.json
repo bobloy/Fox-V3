@@ -8,6 +8,9 @@
   "install_msg": "Thank you for installing FIFO.\nGet started with `[p]load fifo`, then `[p]help FIFO`",
   "short": "Schedule commands to be run by certain at certain times or intervals\"",
   "end_user_data_statement": "This cog does not store any End User Data",
+  "requirements": [
+    "apscheduler"
+  ],
   "tags": [
     "bobloy",
     "utilities",
