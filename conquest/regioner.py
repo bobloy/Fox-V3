@@ -164,11 +164,6 @@ class ConquestMap:
         else:
             self.regions = {}
 
-    async def save_region(self, region):
-        if not self.custom:
-            return False
-        pass  # TODO: region data saving
-
     async def create_number_mask(self):
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
@@ -280,6 +275,11 @@ class ConquestGame(ConquestMap):
 
     def game_current_numbered_path(self):
         return self.game_path / "current_numbered.png"
+
+    async def save_region(self, region):
+        if not self.custom:
+            return False
+        pass  # TODO: region data saving
 
     async def start_game(self):
         pass
