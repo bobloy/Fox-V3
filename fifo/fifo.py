@@ -57,16 +57,14 @@ def parse_triggers(data: Union[Dict, None]):
     return get_trigger(data["triggers"][0])
 
 
-# class FakeMessage(discord.Message):
-#     def __init__(self, *, state, channel, data):
-#         super().__init__(state=state, channel=channel, data=data)
-#
-#     _state = None
+class FakeMessage2(discord.Message):
+    __slots__ = ("__dict__",)
 
 
 class FakeMessage:
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+    def __init__(self, message: discord.Message):
+        d = {k: getattr(message, k) for k in dir(message)}
+        self.__dict__.update(**d)
 
 
 class Task:
@@ -114,6 +112,7 @@ class Task:
                             "hour": dt.hour,
                             "minute": dt.minute,
                             "second": dt.second,
+                            "tzinfo": dt.tzinfo
                         },
                     }
                 )
@@ -225,7 +224,8 @@ class Task:
             log.warning("No message found in channel cache yet, skipping execution")
             return
 
-        message = FakeMessage(**actual_message.__dict__)
+        message = FakeMessage(actual_message)
+        # message = FakeMessage2
         message.author = author
         message.id = None
         message.add_reaction = _do_nothing
@@ -451,7 +451,7 @@ class FIFO(commands.Cog):
 
     @fifo_trigger.command(name="interval")
     async def fifo_trigger_interval(
-        self, ctx: commands.Context, task_name: str, interval_str: TimedeltaConverter
+        self, ctx: commands.Context, task_name: str, *, interval_str: TimedeltaConverter
     ):
         """
         Add an interval trigger to the specified task
@@ -478,7 +478,7 @@ class FIFO(commands.Cog):
 
     @fifo_trigger.command(name="date")
     async def fifo_trigger_date(
-        self, ctx: commands.Context, task_name: str, datetime_str: DatetimeConverter
+        self, ctx: commands.Context, task_name: str, *, datetime_str: DatetimeConverter
     ):
         """
         Add a "run once" datetime trigger to the specified task
@@ -501,8 +501,11 @@ class FIFO(commands.Cog):
             return
 
         await task.save_data()
-        await self._process_task(task)
-        await ctx.tick()
+        job: Job = await self._process_task(task)
+        await ctx.maybe_send_embed(
+            f"Task `{task_name}` added {datetime_str} to its scheduled runtimes\n"
+            f"Next run time: {job.next_run_time}"
+        )
 
     @fifo_trigger.command(name="cron")
     async def fifo_trigger_cron(

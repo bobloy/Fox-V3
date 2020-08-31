@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 else:
     class DatetimeConverter(Converter):
         async def convert(self, ctx, argument) -> datetime:
-            dt = parser.parse(argument)
+            dt = parser.parse(argument, fuzzy=True)
             if dt is not None:
                 return dt
             raise BadArgument()
