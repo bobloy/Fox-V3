@@ -21,6 +21,10 @@ schedule_log.setLevel(logging.DEBUG)
 log.setLevel(logging.DEBUG)
 
 
+async def _do_nothing(*args, **kwargs):
+    pass
+
+
 async def _execute_task(task_state):
     log.info(f"Executing {task_state=}")
     task = Task(**task_state)
@@ -60,9 +64,9 @@ def parse_triggers(data: Union[Dict, None]):
 #     _state = None
 
 
-# class FakeMessage(discord.Message):
-#     def __init__(self):
-#         super().__init__(state=None, channel=None, data=None)
+class FakeMessage:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
 
 class Task:
@@ -216,11 +220,15 @@ class Task:
             log.warning(f"Could not execute task due to missing author: {self.author_id}")
             return False
 
-        message = channel.last_message
-        if message is None:
+        actual_message: discord.Message = channel.last_message
+        if actual_message is None:
             log.warning("No message found in channel cache yet, skipping execution")
             return
+
+        message = FakeMessage(**actual_message.__dict__)
         message.author = author
+        message.id = None
+        message.add_reaction = _do_nothing
 
         prefixes = await self.bot.get_prefix(message)
         if isinstance(prefixes, str):
