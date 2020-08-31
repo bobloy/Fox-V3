@@ -1,11 +1,22 @@
 import asyncio
+import logging
 from datetime import datetime, timedelta
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog, parse_timedelta
+from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import pagify
+
+log = logging.getLogger("red.fox_v3.timerole")
+
+
+async def sleep_till_next_hour():
+    now = datetime.utcnow()
+    next_hour = datetime(year=now.year, month=now.month, day=now.day, hour=now.hour + 1)
+    log.debug("Sleeping for {} seconds".format((next_hour - datetime.utcnow()).seconds))
+    await asyncio.sleep((next_hour - datetime.utcnow()).seconds)
 
 
 class Timerole(Cog):
@@ -20,7 +31,7 @@ class Timerole(Cog):
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
-        self.updating = asyncio.create_task(self.check_day())
+        self.updating = asyncio.create_task(self.check_hour())
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -34,13 +45,14 @@ class Timerole(Cog):
     @commands.guild_only()
     async def runtimerole(self, ctx: commands.Context):
         """
-        Trigger the daily timerole
+        Trigger the hourly timerole
 
         Useful for troubleshooting the initial setup
         """
 
-        await self.timerole_update()
-        await ctx.tick()
+        async with ctx.typing():
+            await self.timerole_update()
+            await ctx.tick()
 
     @commands.group()
     @checks.mod_or_permissions(administrator=True)
@@ -129,7 +141,7 @@ class Timerole(Cog):
         guild = ctx.guild
 
         role_dict = await self.config.guild(guild).roles()
-        out = ""
+        out = "Current Timeroles:\n"
         for r_id, r_data in role_dict.items():
             if r_data is not None:
                 role = discord.utils.get(guild.roles, id=int(r_id))
@@ -141,7 +153,7 @@ class Timerole(Cog):
                         str(discord.utils.get(guild.roles, id=int(new_id)))
                         for new_id in r_data["required"]
                     ]
-                out += "{} || {} days || requires: {}\n".format(str(role), r_data["days"], r_roles)
+                out += "{} | {} days | requires: {}\n".format(str(role), r_data["days"], r_roles)
         await ctx.maybe_send_embed(out)
 
     async def timerole_update(self):
@@ -153,7 +165,7 @@ class Timerole(Cog):
             if not any(role_data for role_data in role_dict.values()):  # No roles
                 continue
 
-            for member in guild.members:
+            async for member in AsyncIter(guild.members):
                 has_roles = [r.id for r in member.roles]
 
                 add_roles = [
@@ -203,6 +215,8 @@ class Timerole(Cog):
             await channel.send(title)
             for page in pagify(results, shorten_by=50):
                 await channel.send(page)
+        elif results:  # Channel is None, log the results
+            log.info(results)
 
     async def check_required_and_date(self, role_list, check_roles, has_roles, member, role_dict):
         for role_id in check_roles:
@@ -223,7 +237,11 @@ class Timerole(Cog):
                 # Qualifies
                 role_list.append((member, role_id))
 
-    async def check_day(self):
+    async def check_hour(self):
+        await sleep_till_next_hour()
         while self is self.bot.get_cog("Timerole"):
             await self.timerole_update()
-            await asyncio.sleep(3600)
+            await sleep_till_next_hour()
+
+from moviepy.editor import VideoFileClip
+
