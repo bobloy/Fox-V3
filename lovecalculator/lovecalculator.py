@@ -34,20 +34,21 @@ class LoveCalculator(Cog):
         )
         async with aiohttp.ClientSession(headers={"Connection": "keep-alive"}) as session:
             async with session.get(url) as response:
-                log.debug(f"{response=}")
                 assert response.status == 200
-                soup_object = BeautifulSoup(await response.text(), "html.parser")
-                try:
-                    description = (
-                        soup_object.find("div", class_="result__score").get_text().strip()
-                    )
-                except:
-                    description = "Dr. Love is busy right now"
+                resp = await response.text()
+        log.debug(f"{resp=}")
+        soup_object = BeautifulSoup(resp, "html.parser")
+        try:
+            description = (
+                soup_object.find("div", class_="result__score").get_text().strip()
+            )
+        except:
+            description = "Dr. Love is busy right now"
 
-                result_image = soup_object.find("img", class_="result__image").get("src")
+        result_image = soup_object.find("img", class_="result__image").get("src")
 
-                result_text = soup_object.find("div", class_="result-text").get_text()
-                result_text = " ".join(result_text.split())
+        result_text = soup_object.find("div", class_="result-text").get_text()
+        result_text = " ".join(result_text.split())
 
         try:
             z = description[:2]
@@ -60,8 +61,6 @@ class LoveCalculator(Cog):
         except:
             title = "Dr. Love has left a note for you."
 
-        em = discord.Embed(title=title, description=result_text, color=discord.Color.red())
-        if result_image:
-            em.set_image(url=f"https://www.lovecalculator.com/{result_image}")
+        em = discord.Embed(title=title, description=result_text, color=discord.Color.red(), url=f"https://www.lovecalculator.com/{result_image}")
 
         await ctx.send(embed=em)
