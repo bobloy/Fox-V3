@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import re
 
 import discord
@@ -7,13 +8,14 @@ from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, pagify
 
+log = logging.getLogger("red.fox_v3.ccrole")
+
 
 async def _get_roles_from_content(ctx, content):
     content_list = content.split(",")
     try:
         role_list = [
-            discord.utils.get(ctx.guild.roles, name=role.strip(" ")).id
-            for role in content_list
+            discord.utils.get(ctx.guild.roles, name=role.strip(" ")).id for role in content_list
         ]
     except (discord.HTTPException, AttributeError):  # None.id is attribute error
         return None
@@ -55,6 +57,12 @@ class CCRole(commands.Cog):
 
         When adding text, put arguments in `{}` to eval them
         Options: `{author}`, `{target}`, `{server}`, `{channel}`, `{message}`"""
+
+        # TODO: Clean this up so it's not so repetitive
+        # The call/answer format has better options as well
+        # Saying "none" over and over can trigger automod actions as well
+        # Also, allow `ctx.tick()` instead of sending a message
+
         command = command.lower()
         if command in self.bot.all_commands:
             await ctx.send("That command is already a standard command.")
@@ -76,7 +84,8 @@ class CCRole(commands.Cog):
 
         # Roles to add
         await ctx.send(
-            "What roles should it add? (Must be **comma separated**)\nSay `None` to skip adding roles"
+            "What roles should it add? (Must be **comma separated**)\n"
+            "Say `None` to skip adding roles"
         )
 
         def check(m):
@@ -97,7 +106,8 @@ class CCRole(commands.Cog):
 
         # Roles to remove
         await ctx.send(
-            "What roles should it remove? (Must be comma separated)\nSay `None` to skip removing roles"
+            "What roles should it remove? (Must be comma separated)\n"
+            "Say `None` to skip removing roles"
         )
         try:
             answer = await self.bot.wait_for("message", timeout=120, check=check)
@@ -114,7 +124,8 @@ class CCRole(commands.Cog):
 
         # Roles to use
         await ctx.send(
-            "What roles are allowed to use this command? (Must be comma separated)\nSay `None` to allow all roles"
+            "What roles are allowed to use this command? (Must be comma separated)\n"
+            "Say `None` to allow all roles"
         )
 
         try:
@@ -131,7 +142,8 @@ class CCRole(commands.Cog):
                 return
 
         # Selfrole
-        await ctx.send("Is this a targeted command?(yes/no)\nNo will make this a selfrole command")
+        await ctx.send("Is this a targeted command?(yes/no)\n"
+                       "No will make this a selfrole command")
 
         try:
             answer = await self.bot.wait_for("message", timeout=120, check=check)
@@ -149,7 +161,7 @@ class CCRole(commands.Cog):
         # Message to send
         await ctx.send(
             "What message should the bot say when using this command?\n"
-            "Say `None` to send the default `Success!` message\n"
+            "Say `None` to send no message and just react with ✅\n"
             "Eval Options: `{author}`, `{target}`, `{server}`, `{channel}`, `{message}`\n"
             "For example: `Welcome {target.mention} to {server.name}!`"
         )
@@ -160,7 +172,7 @@ class CCRole(commands.Cog):
             await ctx.send("Timed out, canceling")
             return
 
-        text = "Success!"
+        text = None
         if answer.content.upper() != "NONE":
             text = answer.content
 
@@ -193,7 +205,7 @@ class CCRole(commands.Cog):
             await self.config.guild(guild).cmdlist.set_raw(command, value=None)
             await ctx.send("Custom command successfully deleted.")
 
-    @ccrole.command(name="details")
+    @ccrole.command(name="details", aliases=["detail"])
     async def ccrole_details(self, ctx, command: str):
         """Provide details about passed custom command"""
         guild = ctx.guild
@@ -217,10 +229,10 @@ class CCRole(commands.Cog):
                 [discord.utils.get(ctx.guild.roles, id=roleid).name for roleid in role_list]
             )
 
-        embed.add_field(name="Text", value="```{}```".format(cmd["text"]))
-        embed.add_field(name="Adds Roles", value=process_roles(cmd["aroles"]), inline=True)
-        embed.add_field(name="Removes Roles", value=process_roles(cmd["rroles"]), inline=True)
-        embed.add_field(name="Role Restrictions", value=process_roles(cmd["proles"]), inline=True)
+        embed.add_field(name="Text", value="```{}```".format(cmd["text"]), inline=False)
+        embed.add_field(name="Adds Roles", value=process_roles(cmd["aroles"]), inline=False)
+        embed.add_field(name="Removes Roles", value=process_roles(cmd["rroles"]), inline=False)
+        embed.add_field(name="Role Restrictions", value=process_roles(cmd["proles"]), inline=False)
 
         await ctx.send(embed=embed)
 
@@ -288,6 +300,8 @@ class CCRole(commands.Cog):
 
         if cmd is not None:
             await self.eval_cc(cmd, message, ctx)
+        else:
+            log.debug(f"No custom command named {ctx.invoked_with} found")
 
     async def get_prefix(self, message: discord.Message) -> str:
         """
@@ -312,18 +326,10 @@ class CCRole(commands.Cog):
         if cmd["proles"] and not (
             set(role.id for role in message.author.roles) & set(cmd["proles"])
         ):
+            log.debug(f"{message.author} missing required role to execute {ctx.invoked_with}")
             return  # Not authorized, do nothing
 
         if cmd["targeted"]:
-            # try:
-            #     arg1 = message.content.split(maxsplit=1)[1]
-            # except IndexError:  # .split() return list of len<2
-            #     target = None
-            # else:
-            #     target = discord.utils.get(
-            #         message.guild.members, mention=arg1
-            #     )
-
             view: StringView = ctx.view
             view.skip_ws()
 
@@ -342,20 +348,12 @@ class CCRole(commands.Cog):
             else:
                 target = None
 
-            # try:
-            #     arg1 = ctx.args[1]
-            # except IndexError:  # args is list of len<2
-            #     target = None
-            # else:
-            #     target = discord.utils.get(
-            #         message.guild.members, mention=arg1
-            #     )
-
             if not target:
-                out_message = "This custom command is targeted! @mention a target\n`{} <target>`".format(
-                    ctx.invoked_with
+                out_message = (
+                    f"This custom command is targeted! @mention a target\n`"
+                    f"{ctx.invoked_with} <target>`"
                 )
-                await message.channel.send(out_message)
+                await ctx.send(out_message)
                 return
         else:
             target = message.author
@@ -364,25 +362,28 @@ class CCRole(commands.Cog):
             arole_list = [
                 discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd["aroles"]
             ]
-            # await self.bot.send_message(message.channel, "Adding: "+str([str(arole) for arole in arole_list]))
             try:
                 await target.add_roles(*arole_list)
             except discord.Forbidden:
-                await message.channel.send("Permission error: Unable to add roles")
+                log.exception(f"Permission error: Unable to add roles")
+                await ctx.send("Permission error: Unable to add roles")
         await asyncio.sleep(1)
 
         if cmd["rroles"]:
             rrole_list = [
                 discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd["rroles"]
             ]
-            # await self.bot.send_message(message.channel, "Removing: "+str([str(rrole) for rrole in rrole_list]))
             try:
                 await target.remove_roles(*rrole_list)
             except discord.Forbidden:
-                await message.channel.send("Permission error: Unable to remove roles")
+                log.exception(f"Permission error: Unable to remove roles")
+                await ctx.send("Permission error: Unable to remove roles")
 
-        out_message = self.format_cc(cmd, message, target)
-        await message.channel.send(out_message, allowed_mentions=discord.AllowedMentions())
+        if cmd["text"] is not None:
+            out_message = self.format_cc(cmd, message, target)
+            await ctx.send(out_message, allowed_mentions=discord.AllowedMentions())
+        else:
+            await ctx.tick()
 
     def format_cc(self, cmd, message, target):
         out = cmd["text"]
@@ -396,6 +397,7 @@ class CCRole(commands.Cog):
         """
         For security reasons only specific objects are allowed
         Internals are ignored
+        Copied from customcom.CustomCommands.transform_parameter and added `target`
         """
         raw_result = "{" + result + "}"
         objects = {
