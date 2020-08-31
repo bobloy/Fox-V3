@@ -36,14 +36,16 @@ class LoveCalculator(Cog):
             async with session.get(url) as response:
                 assert response.status == 200
                 resp = await response.text()
+
         log.debug(f"{resp=}")
         soup_object = BeautifulSoup(resp, "html.parser")
-        try:
-            description = (
-                soup_object.find("div", class_="result__score").get_text().strip()
-            )
-        except:
+
+        description = soup_object.find("div", class_="result__score").get_text()
+
+        if description is None:
             description = "Dr. Love is busy right now"
+        else:
+            description = description.strip()
 
         result_image = soup_object.find("img", class_="result__image").get("src")
 
@@ -61,6 +63,11 @@ class LoveCalculator(Cog):
         except:
             title = "Dr. Love has left a note for you."
 
-        em = discord.Embed(title=title, description=result_text, color=discord.Color.red(), url=f"https://www.lovecalculator.com/{result_image}")
+        em = discord.Embed(
+            title=title,
+            description=result_text,
+            color=discord.Color.red(),
+            url=f"https://www.lovecalculator.com/{result_image}",
+        )
 
         await ctx.send(embed=em)
