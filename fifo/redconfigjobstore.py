@@ -2,6 +2,8 @@ import asyncio
 import base64
 import logging
 import pickle
+from datetime import datetime
+from typing import Tuple, Union
 
 from apscheduler.job import Job
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
@@ -36,7 +38,7 @@ class RedConfigJobStore(MemoryJobStore):
         self._jobs_index = {job.id: (job, timestamp) for job, timestamp in self._jobs}
 
     def _encode_job(self, job: Job):
-        log.info(f"Encoding job id: {job.id}")
+        # log.debug(f"Encoding job id: {job.id}")
         job_state = job.__getstate__()
         new_args = list(job_state["args"])
         new_args[0]["config"] = None
@@ -52,7 +54,6 @@ class RedConfigJobStore(MemoryJobStore):
         new_args[0]["config"] = self.config
         new_args[0]["bot"] = self.bot
         job_state["args"] = tuple(new_args)
-        log.info(f"After encode: Check job args: {job.args=}")
         return out
 
     async def _decode_job(self, job_state):
@@ -72,20 +73,20 @@ class RedConfigJobStore(MemoryJobStore):
         #
         # job.func = task.execute
 
-        log.info(f"Decoded job id: {job.id}")
+        # log.debug(f"Decoded job id: {job.id}")
 
         return job
 
     def add_job(self, job: Job):
         if job.id in self._jobs_index:
             raise ConflictingIdError(job.id)
-        log.info(f"Check job args: {job.args=}")
+        # log.debug(f"Check job args: {job.args=}")
         timestamp = datetime_to_utc_timestamp(job.next_run_time)
         index = self._get_job_index(timestamp, job.id)  # This is fine
         self._jobs.insert(index, (job, timestamp))
         self._jobs_index[job.id] = (job, timestamp)
         asyncio.create_task(self._async_add_job(job, index, timestamp))
-        log.info(f"Added job: {self._jobs[index][0].args}")
+        # log.debug(f"Added job: {self._jobs[index][0].args}")
 
     async def _async_add_job(self, job, index, timestamp):
         async with self.config.jobs() as jobs:
@@ -94,7 +95,11 @@ class RedConfigJobStore(MemoryJobStore):
         return True
 
     def update_job(self, job):
-        old_job, old_timestamp = self._jobs_index.get(job.id, (None, None))
+        old_tuple: Tuple[Union[Job, None], Union[datetime, None]] = self._jobs_index.get(
+            job.id, (None, None)
+        )
+        old_job = old_tuple[0]
+        old_timestamp = old_tuple[1]
         if old_job is None:
             raise JobLookupError(job.id)
 
@@ -123,8 +128,8 @@ class RedConfigJobStore(MemoryJobStore):
         self._jobs_index[old_job.id] = (job, new_timestamp)
         await self.config.jobs_index.set_raw(old_job.id, value=(encoded_job, new_timestamp))
 
-        log.info(f"Async Updated {job.id=}")
-        log.info(f"Check job args: {job.args=}")
+        log.debug(f"Async Updated {job.id=}")
+        log.debug(f"Check job args: {job.args=}")
 
     def remove_job(self, job_id):
         job, timestamp = self._jobs_index.get(job_id, (None, None))

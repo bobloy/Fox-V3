@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 import discord
 from apscheduler.job import Job
@@ -63,7 +63,7 @@ class FakeMessage2(discord.Message):
 
 class FakeMessage:
     def __init__(self, message: discord.Message):
-        d = {k: getattr(message, k) for k in dir(message)}
+        d = {k: getattr(message, k, None) for k in dir(message)}
         self.__dict__.update(**d)
 
 
@@ -102,20 +102,21 @@ class Task:
 
             if t["type"] == "date":  # Convert into datetime
                 dt: datetime = t["time_data"]
-                triggers.append(
-                    {
-                        "type": t["type"],
-                        "time_data": {
-                            "year": dt.year,
-                            "month": dt.month,
-                            "day": dt.day,
-                            "hour": dt.hour,
-                            "minute": dt.minute,
-                            "second": dt.second,
-                            "tzinfo": dt.tzinfo
-                        },
-                    }
-                )
+                triggers.append({"type": t["type"], "time_data": dt.isoformat()})
+                # triggers.append(
+                #     {
+                #         "type": t["type"],
+                #         "time_data": {
+                #             "year": dt.year,
+                #             "month": dt.month,
+                #             "day": dt.day,
+                #             "hour": dt.hour,
+                #             "minute": dt.minute,
+                #             "second": dt.second,
+                #             "tzinfo": dt.tzinfo,
+                #         },
+                #     }
+                # )
                 continue
 
             if t["type"] == "cron":
@@ -134,7 +135,8 @@ class Task:
                 continue
 
             if t["type"] == "date":  # Convert into datetime
-                self.data["triggers"][n]["time_data"] = datetime(**t["time_data"])
+                # self.data["triggers"][n]["time_data"] = datetime(**t["time_data"])
+                self.data["triggers"][n]["time_data"] = datetime.fromisoformat(t["time_data"])
                 continue
 
             if t["type"] == "cron":
@@ -161,7 +163,16 @@ class Task:
         await self._decode_time_triggers()
         return self.data
 
-    async def get_trigger(self) -> Union[BaseTrigger, None]:
+    async def get_triggers(self) -> List[Union[IntervalTrigger, DateTrigger]]:
+        if not self.data:
+            await self.load_from_config()
+
+        if self.data is None or "triggers" not in self.data:  # No triggers
+            return []
+
+        return [get_trigger(t) for t in self.data["triggers"]]
+
+    async def get_combined_trigger(self) -> Union[BaseTrigger, None]:
         if not self.data:
             await self.load_from_config()
 
@@ -178,7 +189,7 @@ class Task:
 
         data_to_save = self.default_task_data.copy()
         if self.data:
-            data_to_save["command_str"] = self.data.get("command_str", "")
+            data_to_save["command_str"] = self.get_command_str()
             data_to_save["triggers"] = await self._encode_time_triggers()
 
         to_save = {
@@ -202,7 +213,7 @@ class Task:
         )
 
     async def execute(self):
-        if not self.data or not self.data.get("command_str", False):
+        if not self.data or not self.get_command_str():
             log.warning(f"Could not execute task due to data problem: {self.data=}")
             return False
 
@@ -236,7 +247,7 @@ class Task:
         else:
             prefix = prefixes[0]
 
-        message.content = f"{prefix}{self.data['command_str']}"
+        message.content = f"{prefix}{self.get_command_str()}"
 
         if not message.guild or not message.author or not message.content:
             log.warning(f"Could not execute task due to message problem: {message}")
@@ -256,6 +267,9 @@ class Task:
 
     async def set_author(self, author: Union[discord.User, str]):
         self.author_id = getattr(author, "id", None) or author
+
+    def get_command_str(self):
+        return self.data.get("command_str", "")
 
     async def set_commmand_str(self, command_str):
         if not self.data:
@@ -348,10 +362,10 @@ class FIFO(commands.Cog):
         return new_ctx.valid
 
     async def _process_task(self, task: Task):
-        job = await self._get_job(task)
+        job: Union[Job, None] = await self._get_job(task)
         if job is not None:
-            job.remove()
-
+            job.reschedule(await task.get_combined_trigger())
+            return job
         return await self._add_job(task)
 
     async def _get_job(self, task: Task) -> Job:
@@ -362,7 +376,7 @@ class FIFO(commands.Cog):
             _execute_task,
             args=[task.__getstate__()],
             id=_assemble_job_id(task.name, task.guild_id),
-            trigger=await task.get_trigger(),
+            trigger=await task.get_combined_trigger(),
         )
 
     async def _pause_job(self, task: Task):
@@ -375,10 +389,10 @@ class FIFO(commands.Cog):
     @commands.command()
     async def fifoclear(self, ctx: commands.Context):
         """Debug command to clear all current fifo data"""
+        self.scheduler.remove_all_jobs()
         await self.config.guild(ctx.guild).tasks.clear()
         await self.config.jobs.clear()
         await self.config.jobs_index.clear()
-        self.scheduler.remove_all_jobs()
         await ctx.tick()
 
     @checks.is_owner()  # Will be reduced when I figure out permissions later
@@ -389,6 +403,47 @@ class FIFO(commands.Cog):
         """
         if ctx.invoked_subcommand is None:
             pass
+
+    @fifo.command(name="details")
+    async def fifo_details(self, ctx: commands.Context, task_name: str):
+        """
+        Provide all the details on the specified task name
+
+        """
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
+        await task.load_from_config()
+
+        if task.data is None:
+            await ctx.maybe_send_embed(
+                f"Task by the name of {task_name} is not found in this guild"
+            )
+            return
+
+        embed = discord.Embed(title=task_name)
+
+        embed.add_field(
+            name="Task command", value=f"{ctx.prefix}{task.get_command_str()}", inline=False
+        )
+
+        guild: discord.Guild = self.bot.get_guild(task.guild_id)
+
+        if guild is not None:
+            author: discord.Member = guild.get_member(task.author_id)
+            channel: discord.TextChannel = guild.get_channel(task.channel_id)
+            embed.add_field(name="Server", value=guild.name)
+            if author is not None:
+                embed.add_field(name="Author", value=author.mention)
+            if channel is not None:
+                embed.add_field(name="Channel", value=channel.mention)
+
+        else:
+            embed.add_field(name="Server", value="Server not found")
+
+        trigger_str = "\n".join(str(t) for t in await task.get_triggers())
+        if trigger_str:
+            embed.add_field(name="Triggers", value=trigger_str, inline=False)
+
+        await ctx.send(embed=embed)
 
     @fifo.command(name="list")
     async def fifo_list(self, ctx: commands.Context, all_guilds: bool = False):
@@ -473,8 +528,12 @@ class FIFO(commands.Cog):
             )
             return
         await task.save_data()
-        await self._process_task(task)
-        await ctx.tick()
+        job: Job = await self._process_task(task)
+        delta_from_now: timedelta = job.next_run_time - datetime.now(job.next_run_time.tzinfo)
+        await ctx.maybe_send_embed(
+            f"Task `{task_name}` added interval of {interval_str} to its scheduled runtimes\n"
+            f"Next run time: {job.next_run_time} ({delta_from_now.total_seconds()} seconds)"
+        )
 
     @fifo_trigger.command(name="date")
     async def fifo_trigger_date(
@@ -502,9 +561,10 @@ class FIFO(commands.Cog):
 
         await task.save_data()
         job: Job = await self._process_task(task)
+        delta_from_now: timedelta = job.next_run_time - datetime.now(job.next_run_time.tzinfo)
         await ctx.maybe_send_embed(
             f"Task `{task_name}` added {datetime_str} to its scheduled runtimes\n"
-            f"Next run time: {job.next_run_time}"
+            f"Next run time: {job.next_run_time} ({delta_from_now.total_seconds()} seconds)"
         )
 
     @fifo_trigger.command(name="cron")
@@ -527,7 +587,7 @@ class FIFO(commands.Cog):
     #             await task.load_from_data(task_data)
     #
     #             job = self.scheduler.add_job(
-    #                 task.execute, id=task_name + "_" + guild_id, trigger=await task.get_trigger(),
+    #                 task.execute, id=task_name + "_" + guild_id, trigger=await task.get_combined_trigger(),
     #             )
     #
     #     self.scheduler.start()
