@@ -243,5 +243,5 @@ class Timerole(Cog):
             await self.timerole_update()
             await sleep_till_next_hour()
 
-from moviepy.editor import VideoFileClip
+
 
