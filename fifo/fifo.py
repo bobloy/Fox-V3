@@ -1,14 +1,17 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import discord
 from apscheduler.job import Job
+from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
 from apscheduler.triggers.base import BaseTrigger
 from apscheduler.triggers.combining import OrTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
+from discord.utils import time_snowflake
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import DictConverter, TimedeltaConverter
@@ -238,7 +241,7 @@ class Task:
         message = FakeMessage(actual_message)
         # message = FakeMessage2
         message.author = author
-        message.id = None
+        message.id = time_snowflake(datetime.now())  # Pretend to be now
         message.add_reaction = _do_nothing
 
         prefixes = await self.bot.get_prefix(message)
@@ -345,11 +348,15 @@ class FIFO(commands.Cog):
             jobstores=jobstores, job_defaults=job_defaults, logger=schedule_log
         )
 
-        self.scheduler.start()
+        self.scheduler.start()  # TODO: Jobs are not receiving next_run_times
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
         return
+
+    def cog_unload(self):
+        # self.scheduler.remove_all_jobs()
+        self.scheduler.shutdown()
 
     async def _check_parsable_command(self, ctx: commands.Context, command_to_parse: str):
         message: discord.Message = ctx.message
@@ -379,6 +386,13 @@ class FIFO(commands.Cog):
             trigger=await task.get_combined_trigger(),
         )
 
+    async def _resume_job(self, task: Task):
+        try:
+            job = self.scheduler.resume_job(job_id=_assemble_job_id(task.name, task.guild_id))
+        except JobLookupError:
+            job = await self._process_task(task)
+        return job
+
     async def _pause_job(self, task: Task):
         return self.scheduler.pause_job(job_id=_assemble_job_id(task.name, task.guild_id))
 
@@ -404,6 +418,52 @@ class FIFO(commands.Cog):
         if ctx.invoked_subcommand is None:
             pass
 
+    @fifo.command(name="resume")
+    async def fifo_resume(self, ctx: commands.Context, task_name: Optional[str] = None):
+        if task_name is None:
+            if self.scheduler.state == STATE_PAUSED:
+                self.scheduler.resume()
+                await ctx.maybe_send_embed("All task execution for all guilds has been resumed")
+            else:
+                await ctx.maybe_send_embed("Task execution is not paused, can't resume")
+        else:
+            task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
+            await task.load_from_config()
+
+            if task.data is None:
+                await ctx.maybe_send_embed(
+                    f"Task by the name of {task_name} is not found in this guild"
+                )
+                return
+
+            if await self._resume_job(task):
+                await ctx.maybe_send_embed(f"Execution of {task_name=} has been resumed")
+            else:
+                await ctx.maybe_send_embed(f"Failed to resume {task_name=}")
+
+    @fifo.command(name="pause")
+    async def fifo_pause(self, ctx: commands.Context, task_name: Optional[str] = None):
+        if task_name is None:
+            if self.scheduler.state == STATE_RUNNING:
+                self.scheduler.pause()
+                await ctx.maybe_send_embed("All task execution for all guilds has been paused")
+            else:
+                await ctx.maybe_send_embed("Task execution is not running, can't pause")
+        else:
+            task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
+            await task.load_from_config()
+
+            if task.data is None:
+                await ctx.maybe_send_embed(
+                    f"Task by the name of {task_name} is not found in this guild"
+                )
+                return
+
+            if await self._pause_job(task):
+                await ctx.maybe_send_embed(f"Execution of {task_name=} has been paused")
+            else:
+                await ctx.maybe_send_embed(f"Failed to pause {task_name=}")
+
     @fifo.command(name="details")
     async def fifo_details(self, ctx: commands.Context, task_name: str):
         """
@@ -419,7 +479,7 @@ class FIFO(commands.Cog):
             )
             return
 
-        embed = discord.Embed(title=task_name)
+        embed = discord.Embed(title=f"Task: {task_name}")
 
         embed.add_field(
             name="Task command", value=f"{ctx.prefix}{task.get_command_str()}", inline=False
@@ -437,11 +497,15 @@ class FIFO(commands.Cog):
                 embed.add_field(name="Channel", value=channel.mention)
 
         else:
-            embed.add_field(name="Server", value="Server not found")
+            embed.add_field(name="Server", value="Server not found", inline=False)
 
         trigger_str = "\n".join(str(t) for t in await task.get_triggers())
         if trigger_str:
             embed.add_field(name="Triggers", value=trigger_str, inline=False)
+
+        job = await self._get_job(task)
+        if job and job.next_run_time:
+            embed.timestamp = job.next_run_time
 
         await ctx.send(embed=embed)
 
