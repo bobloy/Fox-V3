@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from apscheduler.triggers.cron import CronTrigger
 from discord.ext.commands import BadArgument, Converter
 from dateutil import parser
 
@@ -8,6 +9,7 @@ from fifo.timezones import assemble_timezones
 
 if TYPE_CHECKING:
     DatetimeConverter = datetime
+    CronConverter = str
 else:
     class DatetimeConverter(Converter):
         async def convert(self, ctx, argument) -> datetime:
@@ -15,3 +17,12 @@ else:
             if dt is not None:
                 return dt
             raise BadArgument()
+
+    class CronConverter(Converter):
+        async def convert(self, ctx, argument) -> str:
+            try:
+                CronTrigger.from_crontab(argument)
+            except ValueError:
+                raise BadArgument()
+
+            return argument

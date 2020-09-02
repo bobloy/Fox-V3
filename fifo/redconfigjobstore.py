@@ -3,16 +3,19 @@ import base64
 import logging
 import pickle
 from datetime import datetime
+from time import sleep
 from typing import Tuple, Union
 
 from apscheduler.job import Job
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from apscheduler.jobstores.memory import MemoryJobStore
+from apscheduler.schedulers.asyncio import run_in_event_loop
 from apscheduler.util import datetime_to_utc_timestamp
 from redbot.core import Config
 
 # TODO: use get_lock on config
 from redbot.core.bot import Red
+from redbot.core.utils import AsyncIter
 
 log = logging.getLogger("red.fox_v3.fifo.jobstore")
 log.setLevel(logging.DEBUG)
@@ -26,19 +29,29 @@ class RedConfigJobStore(MemoryJobStore):
         self.config = config
         self.bot = bot
         self.pickle_protocol = pickle.HIGHEST_PROTOCOL
-        asyncio.ensure_future(self._load_from_config(), loop=self.bot.loop)
+        self._eventloop = self.bot.loop
+        # TODO: self.config.jobs_index is never read from,
+        #  either remove or replace self._jobs_index
 
-    async def _load_from_config(self):
-        self._jobs = await self.config.jobs()
+        # task = asyncio.create_task(self.load_from_config())
+        # while not task.done():
+        #     sleep(0.1)
+        # future = asyncio.ensure_future(self.load_from_config(), loop=self.bot.loop)
+
+    @run_in_event_loop
+    def start(self, scheduler, alias):
+        super().start(scheduler, alias)
+
+    async def load_from_config(self, scheduler, alias):
+        super().start(scheduler, alias)
+        _jobs = await self.config.jobs()
         self._jobs = [
-            (await self._decode_job(job["job_state"]), timestamp)
-            for (job, timestamp) in self._jobs
+            (await self._decode_job(job), timestamp) async for (job, timestamp) in AsyncIter(_jobs)
         ]
-        self._jobs_index = await self.config.jobs_index.all()
+        # self._jobs_index = await self.config.jobs_index.all()  # Overwritten by next
         self._jobs_index = {job.id: (job, timestamp) for job, timestamp in self._jobs}
 
     def _encode_job(self, job: Job):
-        # log.debug(f"Encoding job id: {job.id}")
         job_state = job.__getstate__()
         new_args = list(job_state["args"])
         new_args[0]["config"] = None
@@ -54,9 +67,15 @@ class RedConfigJobStore(MemoryJobStore):
         new_args[0]["config"] = self.config
         new_args[0]["bot"] = self.bot
         job_state["args"] = tuple(new_args)
+        # log.debug(f"Encoding job id: {job.id}\n"
+        #           f"Encoded as: {out}")
+
         return out
 
-    async def _decode_job(self, job_state):
+    async def _decode_job(self, in_job):
+        if in_job is None:
+            return None
+        job_state = in_job["job_state"]
         job_state = pickle.loads(base64.b64decode(job_state))
         new_args = list(job_state["args"])
         new_args[0]["config"] = self.config
@@ -73,10 +92,12 @@ class RedConfigJobStore(MemoryJobStore):
         #
         # job.func = task.execute
 
-        # log.debug(f"Decoded job id: {job.id}")
+        # log.debug(f"Decoded job id: {job.id}\n"
+        #           f"Decoded as {job_state}")
 
         return job
 
+    @run_in_event_loop
     def add_job(self, job: Job):
         if job.id in self._jobs_index:
             raise ConflictingIdError(job.id)
@@ -89,11 +110,14 @@ class RedConfigJobStore(MemoryJobStore):
         # log.debug(f"Added job: {self._jobs[index][0].args}")
 
     async def _async_add_job(self, job, index, timestamp):
+        encoded_job = self._encode_job(job)
+        job_tuple = tuple([encoded_job, timestamp])
         async with self.config.jobs() as jobs:
-            jobs.insert(index, (self._encode_job(job), timestamp))
-        await self.config.jobs_index.set_raw(job.id, value=(self._encode_job(job), timestamp))
+            jobs.insert(index, job_tuple)
+        await self.config.jobs_index.set_raw(job.id, value=job_tuple)
         return True
 
+    @run_in_event_loop
     def update_job(self, job):
         old_tuple: Tuple[Union[Job, None], Union[datetime, None]] = self._jobs_index.get(
             job.id, (None, None)
@@ -107,9 +131,8 @@ class RedConfigJobStore(MemoryJobStore):
         # Otherwise, reinsert the job to the list to preserve the ordering.
         old_index = self._get_job_index(old_timestamp, old_job.id)
         new_timestamp = datetime_to_utc_timestamp(job.next_run_time)
-        asyncio.ensure_future(
-            self._async_update_job(job, new_timestamp, old_index, old_job, old_timestamp),
-            loop=self.bot.loop,
+        asyncio.create_task(
+            self._async_update_job(job, new_timestamp, old_index, old_job, old_timestamp)
         )
 
     async def _async_update_job(self, job, new_timestamp, old_index, old_job, old_timestamp):
@@ -131,6 +154,7 @@ class RedConfigJobStore(MemoryJobStore):
         log.debug(f"Async Updated {job.id=}")
         log.debug(f"Check job args: {job.args=}")
 
+    @run_in_event_loop
     def remove_job(self, job_id):
         job, timestamp = self._jobs_index.get(job_id, (None, None))
         if job is None:
@@ -146,6 +170,7 @@ class RedConfigJobStore(MemoryJobStore):
             del jobs[index]
         await self.config.jobs_index.clear_raw(job.id)
 
+    @run_in_event_loop
     def remove_all_jobs(self):
         super().remove_all_jobs()
         asyncio.create_task(self._async_remove_all_jobs())
@@ -153,6 +178,10 @@ class RedConfigJobStore(MemoryJobStore):
     async def _async_remove_all_jobs(self):
         await self.config.jobs.clear()
         await self.config.jobs_index.clear()
+
+    def shutdown(self):
+        """Removes all jobs without clearing config"""
+        super().remove_all_jobs()
 
 
 # import asyncio
