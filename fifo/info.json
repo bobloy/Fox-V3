@@ -2,7 +2,7 @@
   "author": [
     "Bobloy"
   ],
-  "min_bot_version": "3.3.0",
+  "min_bot_version": "3.4.0",
   "description": "[ALPHA] Schedule commands to be run at certain times or intervals",
   "hidden": false,
   "install_msg": "Thank you for installing FIFO.\nGet started with `[p]load fifo`, then `[p]help FIFO`",
