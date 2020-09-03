@@ -12,6 +12,7 @@ Cog Function
 | conquest | **Alpha** | <details><summary>Manage maps for war games and RPGs</summary>Lots of additional features are planned, currently function with simple map</details> |
 | dad | **Beta** | <details><summary>Tell dad jokes</summary>Works great!</details> |
 | exclusiverole | **Alpha** | <details><summary>Prevent certain roles from getting any other roles</summary>Fully functional, but pretty simple</details> |
+| fifo | **Alpha** | <details><summary>Schedule commands to be run at certain times or intervals</summary>Just released, please report bugs as you find them. Only works for bot owner for now</details> |
 | fight | **Incomplete** | <details><summary>Organize bracket tournaments within discord</summary>Still in-progress, a massive project</details> |
 | flag | **Alpha** | <details><summary>Create temporary marks on users that expire after specified time</summary>Ported, will not import old data. Please report bugs</details> |
 | forcemention | **Alpha** | <details><summary>Mentions unmentionable roles</summary>Very simple cog, mention doesn't persist</details> |
