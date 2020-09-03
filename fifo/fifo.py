@@ -48,7 +48,7 @@ class FIFO(commands.Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=70737079, force_registration=True)
 
-        default_global = {"jobs_index": {}, "jobs": []}
+        default_global = {"jobs": []}
         default_guild = {"tasks": {}}
 
         self.config.register_global(**default_global)
