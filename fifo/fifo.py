@@ -81,7 +81,7 @@ class FIFO(commands.Cog):
         await self.jobstore.load_from_config(self.scheduler, "default")
         self.scheduler.add_jobstore(self.jobstore, "default")
 
-        self.scheduler.start()  # TODO: Jobs are not receiving next_run_times
+        self.scheduler.start()
 
     async def _check_parsable_command(self, ctx: commands.Context, command_to_parse: str):
         message: discord.Message = ctx.message

@@ -116,7 +116,7 @@ class Task:
                 # )
                 continue
 
-            if t["type"] == "cron":  # TODO: Implement this, should be easy
+            if t["type"] == "cron":
                 triggers.append(t)  # already a string, nothing to do
 
                 continue

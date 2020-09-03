@@ -30,8 +30,8 @@ class RedConfigJobStore(MemoryJobStore):
         self.bot = bot
         self.pickle_protocol = pickle.HIGHEST_PROTOCOL
         self._eventloop = self.bot.loop
-        # TODO: self.config.jobs_index is never read from,
-        #  either remove or replace self._jobs_index
+        # TODO: self.config.jobs_index is never used,
+        #  fine but maybe a sign of inefficient use of config
 
         # task = asyncio.create_task(self.load_from_config())
         # while not task.done():
@@ -114,7 +114,7 @@ class RedConfigJobStore(MemoryJobStore):
         job_tuple = tuple([encoded_job, timestamp])
         async with self.config.jobs() as jobs:
             jobs.insert(index, job_tuple)
-        await self.config.jobs_index.set_raw(job.id, value=job_tuple)
+        # await self.config.jobs_index.set_raw(job.id, value=job_tuple)
         return True
 
     @run_in_event_loop
@@ -149,7 +149,7 @@ class RedConfigJobStore(MemoryJobStore):
                 del jobs[old_index]
                 jobs.insert(new_index, (encoded_job, new_timestamp))
         self._jobs_index[old_job.id] = (job, new_timestamp)
-        await self.config.jobs_index.set_raw(old_job.id, value=(encoded_job, new_timestamp))
+        # await self.config.jobs_index.set_raw(old_job.id, value=(encoded_job, new_timestamp))
 
         log.debug(f"Async Updated {job.id=}")
         log.debug(f"Check job args: {job.args=}")
@@ -168,7 +168,7 @@ class RedConfigJobStore(MemoryJobStore):
     async def _async_remove_job(self, index, job):
         async with self.config.jobs() as jobs:
             del jobs[index]
-        await self.config.jobs_index.clear_raw(job.id)
+        # await self.config.jobs_index.clear_raw(job.id)
 
     @run_in_event_loop
     def remove_all_jobs(self):
@@ -177,108 +177,8 @@ class RedConfigJobStore(MemoryJobStore):
 
     async def _async_remove_all_jobs(self):
         await self.config.jobs.clear()
-        await self.config.jobs_index.clear()
+        # await self.config.jobs_index.clear()
 
     def shutdown(self):
         """Removes all jobs without clearing config"""
         super().remove_all_jobs()
-
-
-# import asyncio
-#
-# from apscheduler.jobstores.base import BaseJobStore, ConflictingIdError
-# from apscheduler.util import datetime_to_utc_timestamp
-# from redbot.core import Config
-# from redbot.core.utils import AsyncIter
-#
-#
-# class RedConfigJobStore(BaseJobStore):
-#     def __init__(self, config: Config, loop):
-#         super().__init__()
-#         self.config = config
-#         self.loop: asyncio.BaseEventLoop = loop
-#
-#         self._jobs = []
-#         self._jobs_index = {}  # id -> (job, timestamp) lookup table
-#
-#     def lookup_job(self, job_id):
-#         return asyncio.run(self._async_lookup_job(job_id))
-#
-#     async def _async_lookup_job(self, job_id):
-#         return (await self.config.jobs_index.get_raw(job_id, default=(None, None)))[0]
-#
-#     def get_due_jobs(self, now):
-#         return asyncio.run(self._async_get_due_jobs(now))
-#
-#     async def _async_get_due_jobs(self, now):
-#         now_timestamp = datetime_to_utc_timestamp(now)
-#         pending = []
-#         all_jobs = await self.config.jobs()
-#         async for job, timestamp in AsyncIter(all_jobs, steps=100):
-#             if timestamp is None or timestamp > now_timestamp:
-#                 break
-#             pending.append(job)
-#
-#         return pending
-#
-#     def get_next_run_time(self):
-#         return asyncio.run(self._async_get_next_run_time())
-#
-#     async def _async_get_next_run_time(self):
-#         _jobs = await self.config.jobs()
-#         return _jobs[0][0].next_run_time if _jobs else None
-#
-#     def get_all_jobs(self):
-#         return asyncio.run(self._async_get_all_jobs())
-#
-#     async def _async_get_all_jobs(self):
-#         return [j[0] for j in (await self.config.jobs())]
-#
-#     def add_job(self, job):
-#         return asyncio.run(self._async_add_job(job))
-#
-#     async def _async_add_job(self, job):
-#         if await self.config.jobs_index.get_raw(job.id, default=None) is not None:
-#             raise ConflictingIdError(job.id)
-#
-#         timestamp = datetime_to_utc_timestamp(job.next_run_time)
-#         index = self._get_job_index(timestamp, job.id)
-#         self._jobs.insert(index, (job, timestamp))
-#         self._jobs_index[job.id] = (job, timestamp)
-#
-#     def update_job(self, job):
-#         pass
-#
-#     def remove_job(self, job_id):
-#         pass
-#
-#     def remove_all_jobs(self):
-#         pass
-#
-#     def _get_job_index(self, timestamp, job_id):
-#         """
-#         Returns the index of the given job, or if it's not found, the index where the job should be
-#         inserted based on the given timestamp.
-#
-#         :type timestamp: int
-#         :type job_id: str
-#
-#         """
-#         lo, hi = 0, len(self._jobs)
-#         timestamp = float('inf') if timestamp is None else timestamp
-#         while lo < hi:
-#             mid = (lo + hi) // 2
-#             mid_job, mid_timestamp = self._jobs[mid]
-#             mid_timestamp = float('inf') if mid_timestamp is None else mid_timestamp
-#             if mid_timestamp > timestamp:
-#                 hi = mid
-#             elif mid_timestamp < timestamp:
-#                 lo = mid + 1
-#             elif mid_job.id > job_id:
-#                 hi = mid
-#             elif mid_job.id < job_id:
-#                 lo = mid + 1
-#             else:
-#                 return mid
-#
-#         return lo
