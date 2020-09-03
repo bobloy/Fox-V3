@@ -5,9 +5,9 @@ from typing import Dict, List, Union
 import discord
 from apscheduler.triggers.base import BaseTrigger
 from apscheduler.triggers.combining import OrTrigger
+from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.triggers.cron import CronTrigger
 from discord.utils import time_snowflake
 from redbot.core import Config, commands
 from redbot.core.bot import Red

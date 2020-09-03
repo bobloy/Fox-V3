@@ -3,7 +3,6 @@ import base64
 import logging
 import pickle
 from datetime import datetime
-from time import sleep
 from typing import Tuple, Union
 
 from apscheduler.job import Job

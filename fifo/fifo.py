@@ -9,7 +9,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
-from redbot.core.commands import DictConverter, TimedeltaConverter
+from redbot.core.commands import TimedeltaConverter
 
 from .datetime_cron_converters import CronConverter, DatetimeConverter
 from .task import Task
