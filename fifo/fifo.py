@@ -93,6 +93,13 @@ class FIFO(commands.Cog):
 
         return new_ctx.valid
 
+    async def _delete_task(self, task: Task):
+        job: Union[Job, None] = await self._get_job(task)
+        if job is not None:
+            job.remove()
+
+        await task.delete_self()
+
     async def _process_task(self, task: Task):
         job: Union[Job, None] = await self._get_job(task)
         if job is not None:
@@ -146,9 +153,14 @@ class FIFO(commands.Cog):
             pass
 
     @fifo.command(name="set")
-    async def fifo_setauthor(self, ctx: commands.Context, task_name: str, author_or_channel: Union[discord.Member, discord.TextChannel]):
+    async def fifo_set(
+        self,
+        ctx: commands.Context,
+        task_name: str,
+        author_or_channel: Union[discord.Member, discord.TextChannel],
+    ):
         """
-        Sets the task to be executed as a different author or in a different channel.
+        Sets a different author or in a different channel for execution of a task.
         """
         task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
         await task.load_from_config()
@@ -327,9 +339,39 @@ class FIFO(commands.Cog):
         """
         Deletes a task from this guild's task list
         """
-        pass
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
+        await task.load_from_config()
 
-    @fifo.group(name="trigger")
+        if task.data is None:
+            await ctx.maybe_send_embed(
+                f"Task by the name of {task_name} is not found in this guild"
+            )
+            return
+
+        await self._delete_task(task)
+        await ctx.maybe_send_embed(f"Task[{task_name}] has been deleted from this guild")
+
+    @fifo.command(name="cleartriggers", aliases=["cleartrigger"])
+    async def fifo_cleartriggers(self, ctx: commands.Context, task_name: str):
+        """
+        Removes all triggers from specified task
+
+        Useful to start over with new trigger
+        """
+
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
+        await task.load_from_config()
+
+        if task.data is None:
+            await ctx.maybe_send_embed(
+                f"Task by the name of {task_name} is not found in this guild"
+            )
+            return
+
+        await task.clear_triggers()
+        await ctx.tick()
+
+    @fifo.group(name="addtrigger", aliases=["trigger"])
     async def fifo_trigger(self, ctx: commands.Context):
         """
         Add a new trigger for a task from the current guild.
@@ -405,7 +447,9 @@ class FIFO(commands.Cog):
         self, ctx: commands.Context, task_name: str, *, cron_str: CronConverter
     ):
         """
-        Add a "time of day" trigger to the specified task
+        Add a cron "time of day" trigger to the specified task
+
+        See https://crontab.guru/ for help generating the cron_str
         """
         task = Task(task_name, ctx.guild.id, self.config)
         await task.load_from_config()

@@ -117,7 +117,9 @@ class Task:
                 continue
 
             if t["type"] == "cron":  # TODO: Implement this, should be easy
-                raise NotImplemented
+                triggers.append(t)  # already a string, nothing to do
+
+                continue
             raise NotImplemented
 
         return triggers
@@ -137,7 +139,7 @@ class Task:
                 continue
 
             if t["type"] == "cron":
-                raise NotImplemented
+                continue  # already a string
             raise NotImplemented
 
     # async def load_from_data(self, data: Dict):
@@ -266,7 +268,9 @@ class Task:
         new_ctx: commands.Context = await self.bot.get_context(message)
         new_ctx.assume_yes = True
         if not new_ctx.valid:
-            log.warning(f"Could not execute task due invalid context: {new_ctx}")
+            log.warning(
+                f"Could not execute Task[{self.name}] due invalid context: {new_ctx.invoked_with}"
+            )
             return False
 
         await self.bot.invoke(new_ctx)
@@ -284,7 +288,7 @@ class Task:
     async def set_channel(self, channel: Union[discord.TextChannel, str]):
         self.channel_id = getattr(channel, "id", None) or channel
         await self.config.guild_from_id(self.guild_id).tasks.set_raw(
-            self.name, "channel_id", value=self.author_id
+            self.name, "channel_id", value=self.channel_id
         )
 
     def get_command_str(self):
@@ -323,3 +327,11 @@ class Task:
             "config": self.config,
             "bot": self.bot,
         }
+
+    async def clear_triggers(self):
+        self.data["triggers"] = []
+        await self.save_data()
+
+    async def delete_self(self):
+        """Hopefully nothing uses the object after running this..."""
+        await self.config.guild_from_id(self.guild_id).tasks.clear_raw(self.name)
