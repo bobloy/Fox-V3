@@ -5,18 +5,17 @@ from typing import List
 import lavalink
 import yaml
 from redbot.cogs.audio import Audio
-from redbot.cogs.audio.core.utilities import validation
 from redbot.cogs.trivia import LOG
 from redbot.cogs.trivia.trivia import InvalidListError, Trivia
-from redbot.core import commands, Config, checks
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.chat_formatting import box
 
-# from redbot.cogs.audio.utils import userlimit
-
-
 from .audiosession import AudioSession
+
+
+# from redbot.cogs.audio.utils import userlimit
 
 
 class AudioTrivia(Trivia):
@@ -66,18 +65,16 @@ class AudioTrivia(Trivia):
         """Set whether or not short audio will be repeated"""
         settings = self.audioconf.guild(ctx.guild)
         await settings.repeat.set(true_or_false)
-        await ctx.send(
-            "Done. Repeating short audio is now set to {}.".format(true_or_false)
-        )
+        await ctx.send("Done. Repeating short audio is now set to {}.".format(true_or_false))
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
     async def audiotrivia(self, ctx: commands.Context, *categories: str):
         """Start trivia session on the specified category.
 
-                You may list multiple categories, in which case the trivia will involve
-                questions from all of them.
-                """
+        You may list multiple categories, in which case the trivia will involve
+        questions from all of them.
+        """
         if not categories and ctx.invoked_subcommand is None:
             await ctx.send_help()
             return
@@ -92,25 +89,19 @@ class AudioTrivia(Trivia):
         categories = [c.lower() for c in categories]
         session = self._get_trivia_session(ctx.channel)
         if session is not None:
-            await ctx.send(
-                "There is already an ongoing trivia session in this channel."
-            )
+            await ctx.send("There is already an ongoing trivia session in this channel.")
             return
         status = await self.audio.config.status()
         notify = await self.audio.config.guild(ctx.guild).notify()
 
         if status:
             await ctx.send(
-                "It is recommended to disable audio status with `{}audioset status`".format(
-                    ctx.prefix
-                )
+                f"It is recommended to disable audio status with `{ctx.prefix}audioset status`"
             )
 
         if notify:
             await ctx.send(
-                "It is recommended to disable audio notify with `{}audioset notify`".format(
-                    ctx.prefix
-                )
+                f"It is recommended to disable audio notify with `{ctx.prefix}audioset notify`"
             )
 
         if not self.audio._player_check(ctx):
@@ -118,9 +109,7 @@ class AudioTrivia(Trivia):
                 if not ctx.author.voice.channel.permissions_for(
                     ctx.me
                 ).connect or self.audio.is_vc_full(ctx.author.voice.channel):
-                    return await ctx.send(
-                        "I don't have permission to connect to your channel."
-                    )
+                    return await ctx.send("I don't have permission to connect to your channel.")
                 await lavalink.connect(ctx.author.voice.channel)
                 lavaplayer = lavalink.get_player(ctx.guild.id)
                 lavaplayer.store("connect", datetime.datetime.utcnow())
@@ -177,10 +166,7 @@ class AudioTrivia(Trivia):
         # Delay in audiosettings overwrites delay in settings
         combined_settings = {**settings, **audiosettings}
         session = AudioSession.start(
-            ctx=ctx,
-            question_list=trivia_dict,
-            settings=combined_settings,
-            player=lavaplayer,
+            ctx=ctx, question_list=trivia_dict, settings=combined_settings, player=lavaplayer,
         )
         self.trivia_sessions.append(session)
         LOG.debug("New audio trivia session; #%s in %d", ctx.channel, ctx.guild.id)
@@ -214,9 +200,7 @@ class AudioTrivia(Trivia):
         try:
             path = next(p for p in self._audio_lists() if p.stem == category)
         except StopIteration:
-            raise FileNotFoundError(
-                "Could not find the `{}` category.".format(category)
-            )
+            raise FileNotFoundError("Could not find the `{}` category.".format(category))
 
         with path.open(encoding="utf-8") as file:
             try:
