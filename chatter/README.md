@@ -83,6 +83,7 @@ pip install --no-deps "chatterbot>=1.1"
 #### Step 3: Load Chatter
 
 ```
+[p]repo add Fox https://github.com/bobloy/Fox-V3
 [p]cog install Fox chatter
 [p]load chatter
 ```
@@ -92,7 +93,7 @@ pip install --no-deps "chatterbot>=1.1"
 #### Step 1: Built-in Downloader
 
 ```
-[p]cog install Chatter
+[p]cog install <Fox> Chatter
 ```
 
 #### Step 2: Install Requirements
