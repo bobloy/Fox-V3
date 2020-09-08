@@ -29,7 +29,7 @@ Chatter by default uses spaCy's `en_core_web_md` training model, which is ~50 MB
 
 Chatter can potential use spaCy's `en_core_web_lg` training model, which is ~800 MB
 
-Chatter uses as sqlite database that can potentially take up a large amount os disk space,
+Chatter uses as sqlite database that can potentially take up a large amount of disk space,
 depending on how much training Chatter has done. 
 
 The sqlite database can be safely deleted at any time. Deletion will only erase training data.
