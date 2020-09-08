@@ -50,7 +50,9 @@ Linux is a bit easier, but only tested on Debian and Ubuntu.
 
 ## Windows Prerequisites
 
-Install these on your windows machine before attempting the installation
+**Requires 64 Bit Python to continue on Windows.**
+
+Install these on your windows machine before attempting the installation:
 
 [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
