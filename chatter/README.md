@@ -83,7 +83,7 @@ pip install --no-deps "chatterbot>=1.1"
 #### Step 3: Load Chatter
 
 ```
-[p]repo add Fox https://github.com/bobloy/Fox-V3
+[p]repo add Fox https://github.com/bobloy/Fox-V3  # If you didn't already do this in step 1
 [p]cog install Fox chatter
 [p]load chatter
 ```
