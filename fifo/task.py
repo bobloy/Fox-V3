@@ -300,7 +300,10 @@ class Task:
         self.data["command_str"] = command_str
         return True
 
-    async def add_trigger(self, param, parsed_time: Union[timedelta, datetime, str]):
+    async def add_trigger(
+        self, param, parsed_time: Union[timedelta, datetime, str], timezone=None
+    ):
+        # TODO: Save timezone separately for cron and date triggers
         trigger_data = {"type": param, "time_data": parsed_time}
         if not get_trigger(trigger_data):
             return False

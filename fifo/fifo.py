@@ -11,7 +11,7 @@ from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
 
-from .datetime_cron_converters import CronConverter, DatetimeConverter
+from .datetime_cron_converters import CronConverter, DatetimeConverter, TimezoneConverter
 from .task import Task
 
 schedule_log = logging.getLogger("red.fox_v3.fifo.scheduler")
@@ -444,7 +444,12 @@ class FIFO(commands.Cog):
 
     @fifo_trigger.command(name="cron")
     async def fifo_trigger_cron(
-        self, ctx: commands.Context, task_name: str, *, cron_str: CronConverter
+        self,
+        ctx: commands.Context,
+        task_name: str,
+        optional_tz: Optional[TimezoneConverter] = None,
+        *,
+        cron_str: CronConverter,
     ):
         """
         Add a cron "time of day" trigger to the specified task
@@ -460,7 +465,7 @@ class FIFO(commands.Cog):
             )
             return
 
-        result = await task.add_trigger("cron", cron_str)
+        result = await task.add_trigger("cron", cron_str, optional_tz)
         if not result:
             await ctx.maybe_send_embed(
                 "Failed to add a cron trigger to this task, see console for logs"
