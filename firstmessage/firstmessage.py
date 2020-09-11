@@ -10,8 +10,6 @@ log = logging.getLogger("red.fox_v3.firstmessage")
 class FirstMessage(commands.Cog):
     """
     Provides a link to the first message in the provided channel
-
-    Less important information about the cog
     """
 
     def __init__(self, bot: Red):
@@ -31,6 +29,9 @@ class FirstMessage(commands.Cog):
 
     @commands.command()
     async def firstmessage(self, ctx: commands.Context, channel: discord.TextChannel = None):
+        """
+        Provide a link to the first message in current or provided channel.
+        """
         if channel is None:
             channel = ctx.channel
         try:
