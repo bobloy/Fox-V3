@@ -261,8 +261,8 @@ class ConquestMap:
 
 
 class ConquestGame(ConquestMap):
-    def __init__(self, path: pathlib.Path, game_name: str, custom_map_path: pathlib.Path):
-        super().__init__(path)
+    def __init__(self, map_path: pathlib.Path, game_name: str, custom_map_path: pathlib.Path):
+        super().__init__(map_path)
         self.game_name = game_name
         self.custom_map_path = custom_map_path
         self.game_path = custom_map_path / game_name

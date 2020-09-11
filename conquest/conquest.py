@@ -67,7 +67,7 @@ class Conquest(commands.Cog):
         return
 
     def _path_if_custom(self, custom_custom: bool = None) -> pathlib.Path:
-        check_value = custom_custom if custom_custom is not None else self.is_custom
+        check_value = custom_custom  # if custom_custom is not None else self.is_custom
         if check_value:
             return self.custom_map_path
         return self.asset_path
@@ -81,7 +81,6 @@ class Conquest(commands.Cog):
             game_name = await self.config.guild(guild).current_game()
             if game_name is not None:
                 await self.load_guild_data(guild, game_name)
-        self.is_custom = await self.config.is_custom()
 
         if self.current_map:
             await self.current_map_load()
@@ -90,8 +89,10 @@ class Conquest(commands.Cog):
         game_name = await self.config.guild(guild).current_game()
         if game_name is not None:
             map_data = self.config.games.get_raw(game_name)
+            map_name = map_data["map_name"]
+            map_path = self._path_if_custom(map_data["is_custom"]) / map_name
 
-            self.current_maps[guild.id] = ConquestGame()
+            self.current_maps[guild.id] = ConquestGame(map_path, map_name, self.current_map_folder / map_name)
 
     async def current_map_load(self):
         map_path = self._path_if_custom()
