@@ -19,7 +19,8 @@ Cog Function
 | forcemention | **Alpha** | <details><summary>Mentions unmentionable roles</summary>Very simple cog, mention doesn't persist</details> |
 | hangman | **Beta** | <details><summary>Play a game of hangman</summary>Some visual glitches and needs more customization</details> |
 | howdoi | **Incomplete** | <details><summary>Ask coding questions and get results from StackExchange</summary>Not yet functional</details> |
-| infochannel | **Beta** | <details><summary>Create a channel to display server info</summary>Just released, please report bugs</details> |
+| infochannel | **Beta** | <details><summary>Create a channel to display server info</summary>Due to rate limits, this does not update as often as it once did</details> |
+| isitdown | **Beta** | <details><summary>Check if a website/url is down</summary>Just released, please report bugs</details> |
 | launchlib | **Beta** | <details><summary>Access rocket launch data</summary>Just released, please report bugs</details> |
 | leaver | **Beta** | <details><summary>Send a message in a channel when a user leaves the server</summary>Seems to be functional, please report any bugs or suggestions</details> |
 | lovecalculator | **Alpha** | <details><summary>Calculate the love between two users</summary>[Snap-Ons] Just updated to V3</details> |
