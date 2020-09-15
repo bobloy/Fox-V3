@@ -367,7 +367,6 @@ class CCRole(commands.Cog):
             except discord.Forbidden:
                 log.exception(f"Permission error: Unable to add roles")
                 await ctx.send("Permission error: Unable to add roles")
-        await asyncio.sleep(1)
 
         if cmd["rroles"]:
             rrole_list = [
