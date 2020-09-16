@@ -303,7 +303,10 @@ class ReactRestrict(Cog):
                 return
 
         message = await self._get_message_from_channel(channel_id, message_id)
-        await message.remove_reaction(emoji, member)
+        try:
+            await message.remove_reaction(emoji, member)
+        except (discord.Forbidden, discord.NotFound, discord.HTTPException):
+            log.exception("Unable to remove reaction")
 
     #     try:
     #         await member.add_roles(*roles)
