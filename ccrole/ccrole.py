@@ -7,6 +7,7 @@ from discord.ext.commands.view import StringView
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, pagify
+from redbot.core.utils.mod import get_audit_reason
 
 log = logging.getLogger("red.fox_v3.ccrole")
 
@@ -358,12 +359,14 @@ class CCRole(commands.Cog):
         else:
             target = message.author
 
+        reason = get_audit_reason(message.author)
+
         if cmd["aroles"]:
             arole_list = [
                 discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd["aroles"]
             ]
             try:
-                await target.add_roles(*arole_list)
+                await target.add_roles(*arole_list, reason=reason)
             except discord.Forbidden:
                 log.exception(f"Permission error: Unable to add roles")
                 await ctx.send("Permission error: Unable to add roles")
@@ -373,7 +376,7 @@ class CCRole(commands.Cog):
                 discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd["rroles"]
             ]
             try:
-                await target.remove_roles(*rrole_list)
+                await target.remove_roles(*rrole_list, reason=reason)
             except discord.Forbidden:
                 log.exception(f"Permission error: Unable to remove roles")
                 await ctx.send("Permission error: Unable to remove roles")
