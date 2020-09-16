@@ -8,6 +8,7 @@ from redbot.core.commands import Cog
 
 log = logging.getLogger("red.fox_v3.reactrestrict")
 
+
 class ReactRestrictCombo:
     def __init__(self, message_id, role_id):
         self.message_id = message_id
@@ -238,7 +239,7 @@ class ReactRestrict(Cog):
         # noinspection PyTypeChecker
         await self.add_reactrestrict(message_id, role)
 
-        await ctx.maybe_send_embed("Message|Role combo added.")
+        await ctx.maybe_send_embed("Message|Role restriction added.")
 
     @reactrestrict.command()
     async def remove(self, ctx: commands.Context, message_id: int, role: discord.Role):
@@ -254,7 +255,7 @@ class ReactRestrict(Cog):
         # noinspection PyTypeChecker
         await self.remove_react(message_id, role)
 
-        await ctx.send("Reaction removed.")
+        await ctx.send("React restriction removed.")
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
