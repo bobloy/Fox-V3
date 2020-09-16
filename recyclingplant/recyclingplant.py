@@ -1,20 +1,23 @@
 import asyncio
 import json
 import random
-from typing import Any
 
 from redbot.core import bank, commands
+from redbot.core.commands import Cog
 from redbot.core.data_manager import bundled_data_path
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class RecyclingPlant(Cog):
     """Apply for a job at the recycling plant!"""
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.junk = None
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     def load_junk(self):
         junk_path = bundled_data_path(self) / "junk.json"
@@ -64,7 +67,7 @@ class RecyclingPlant(Cog):
                         used["object"]
                     )
                 )
-                reward = reward + 50
+                reward += 50
                 x += 1
             elif answer.content.lower().strip() == opp:
                 await ctx.send(
@@ -72,7 +75,7 @@ class RecyclingPlant(Cog):
                         ctx.author.display_name
                     )
                 )
-                reward = reward - 50
+                reward -= 50
             elif answer.content.lower().strip() == "exit":
                 await ctx.send(
                     "{} has been relived of their duty.".format(ctx.author.display_name)

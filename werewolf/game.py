@@ -5,10 +5,10 @@ from typing import List, Any, Dict, Set, Union
 import discord
 from redbot.core import commands
 
-from werewolf.builder import parse_code
-from werewolf.player import Player
-from werewolf.role import Role
-from werewolf.votegroup import VoteGroup
+from .builder import parse_code
+from .player import Player
+from .role import Role
+from .votegroup import VoteGroup
 
 
 class Game:
@@ -97,7 +97,7 @@ class Game:
             await self.get_roles(ctx)
 
         if len(self.players) != len(self.roles):
-            await ctx.send("Player count does not match role count, cannot start\n"
+            await ctx.maybe_send_embed("Player count does not match role count, cannot start\n"
                            "Currently **{} / {}**\n"
                            "Use `{}ww code` to pick a new game"
                            "".format(len(self.players), len(self.roles), ctx.prefix))
@@ -112,7 +112,7 @@ class Game:
                                                              reason="(BOT) Werewolf game role")
                 self.to_delete.add(self.game_role)
             except (discord.Forbidden, discord.HTTPException):
-                await ctx.send("Game role not configured and unable to generate one, cannot start")
+                await ctx.maybe_send_embed("Game role not configured and unable to generate one, cannot start")
                 self.roles = []
                 return False
             try:

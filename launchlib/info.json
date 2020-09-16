@@ -1,0 +1,20 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.4.0",
+  "description": "Pull information from the Launch Library API for space flights",
+  "hidden": false,
+  "install_msg": "Thank you for installing LaunchLib. Get started with `[p]load launchlib`, then `[p]help LaunchLib`",
+  "short": "Access launch data for space flights",
+  "end_user_data_statement": "This cog does not store any End User Data",
+  "requirements": ["python-launch-library>=1.0.6"],
+  "tags": [
+    "bobloy",
+    "utils",
+    "launch",
+    "space",
+    "api",
+    "library"
+  ]
+}

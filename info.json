@@ -1,7 +1,7 @@
 {
-	"AUTHOR": "Bobloy",
-	"INSTALL_MSG": "Thank you for installing Fox-V3 by Bobloy",
-	"NAME": "Fox-V3",
-	"SHORT": "Cogs by Bobloy",
-	"DESCRIPTION": "Cogs for RED Discord Bot by Bobloy"
+	"author": ["Bobloy"],
+	"install_msg": "Thank you for installing Fox-V3 by Bobloy",
+	"name": "Fox-V3",
+	"short": "Cogs by Bobloy",
+	"description": "Cogs for RED Discord Bot by Bobloy"
 }

@@ -2,15 +2,12 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
-  "description": "[Incomplete] Creates custom commands to adjust roles and send custom messages",
+  "min_bot_version": "3.4.0",
+  "description": "Creates custom commands to adjust roles and send custom messages",
   "hidden": false,
   "install_msg": "Thank you for installing Custom Commands w/ Roles. Get started with `[p]load ccrole` and `[p]help CCRole`",
-  "short": "[Incomplete] Creates commands that adjust roles",
+  "short": "Creates commands that adjust roles",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "fox",
     "bobloy",

@@ -1,31 +1,35 @@
 import discord
 from redbot.core import commands
-from typing import Any
 
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class SCP(Cog):
     """Look up SCP articles. Warning: Some of them may be too creepy or gruesome."""
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     @commands.command()
     async def scp(self, ctx: commands.Context, num: int):
         """Look up SCP articles.
 
         Warning: Some of them may be too creepy or gruesome.
-        Reminder: You must specify a number between 1 and 4999.
+        Reminder: You must specify a number between 1 and 5999.
         """
 
         # Thanks Shigbeard and Redjumpman for helping me!
 
-        if 0 < num <= 4999:
+        if 0 < num <= 5999:
             msg = "http://www.scp-wiki.net/scp-{:03}".format(num)
             c = discord.Color.green()
         else:
-            msg = "You must specify a number between 1 and 4999."
+            msg = "You must specify a number between 1 and 5999."
             c = discord.Color.red()
 
         if await ctx.embed_requested():
@@ -50,10 +54,11 @@ class SCP(Cog):
 
         Warning: Some of them may be too creepy or gruesome."""
         valid_archive = (
+            1,
             13,
             48,
+            49,
             51,
-            89,
             91,
             112,
             132,
@@ -67,10 +72,9 @@ class SCP(Cog):
             257,
             338,
             356,
-            361,
             400,
             406,
-            503,
+            494,
             515,
             517,
             578,
@@ -106,7 +110,37 @@ class SCP(Cog):
         Warning: Some of them may be too creepy or gruesome.
         """
 
-        valid_archive = (711, 920, 1841, 1851, 1974, 2600, 4023, 8900)
+        valid_archive = (
+            1,
+            2,
+            67,
+            123,
+            445,
+            711,
+            888,
+            920,
+            1094,
+            1401,
+            1512,
+            1548,
+            1763,
+            1841,
+            1851,
+            1927,
+            1933,
+            1964,
+            1974,
+            1990,
+            2600,
+            2700,
+            3000,
+            4023,
+            4445,
+            4734,
+            5297,
+            5735,
+            8900,
+        )
         if num in valid_archive:
             msg = "http://www.scp-wiki.net/scp-{:03}-ex".format(num)
             c = discord.Color.green()

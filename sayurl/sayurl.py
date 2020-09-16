@@ -4,10 +4,8 @@ import justext
 
 from redbot.core import Config, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.utils.chat_formatting import pagify
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 async def fetch_url(session, url):
@@ -22,6 +20,7 @@ class SayUrl(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
@@ -29,6 +28,10 @@ class SayUrl(Cog):
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     @commands.command()
     async def sayurl(self, ctx: commands.Context, url):

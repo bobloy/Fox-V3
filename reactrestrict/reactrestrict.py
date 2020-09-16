@@ -1,12 +1,9 @@
 from typing import List, Union
 
 import discord
-from redbot.core import Config
-from redbot.core import commands
+from redbot.core import Config, commands
 from redbot.core.bot import Red
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class ReactRestrictCombo:
@@ -31,11 +28,16 @@ class ReactRestrict(Cog):
     """
 
     def __init__(self, red: Red):
+        super().__init__()
         self.bot = red
         self.config = Config.get_conf(
             self, 8210197991168210111511611410599116, force_registration=True
         )
         self.config.register_global(registered_combos=[])
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     async def combo_list(self) -> List[ReactRestrictCombo]:
         """
@@ -139,7 +141,8 @@ class ReactRestrict(Cog):
 
         return member
 
-    def _get_role(self, guild: discord.Guild, role_id: int) -> discord.Role:
+    @staticmethod
+    def _get_role(guild: discord.Guild, role_id: int) -> discord.Role:
         """
         Gets a role object from the given guild with the given ID.
 
@@ -210,7 +213,7 @@ class ReactRestrict(Cog):
         """
         message = await self._get_message(ctx, message_id)
         if message is None:
-            await ctx.send("That message doesn't seem to exist.")
+            await ctx.maybe_send_embed("That message doesn't seem to exist.")
             return
 
         # try:
@@ -229,7 +232,7 @@ class ReactRestrict(Cog):
         # noinspection PyTypeChecker
         await self.add_reactrestrict(message_id, role)
 
-        await ctx.send("Message|Role combo added.")
+        await ctx.maybe_send_embed("Message|Role combo added.")
 
     @reactrestrict.command()
     async def remove(self, ctx: commands.Context, message_id: int, role: discord.Role):
@@ -247,6 +250,7 @@ class ReactRestrict(Cog):
 
         await ctx.send("Reaction removed.")
 
+    @commands.Cog.listener()
     async def on_raw_reaction_add(
         self, emoji: discord.PartialEmoji, message_id: int, channel_id: int, user_id: int
     ):
@@ -275,6 +279,9 @@ class ReactRestrict(Cog):
             return
 
         if member.bot:
+            return
+
+        if await self.bot.cog_disabled_in_guild(self, member.guild):
             return
 
         try:

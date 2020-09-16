@@ -1,12 +1,11 @@
 from collections import defaultdict
 from random import randint
+from typing import Union
 
 import discord
 from redbot.core import Config, checks, commands
-from redbot.core.data_manager import cog_data_path
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
+from redbot.core.data_manager import bundled_data_path
 
 
 class Hangman(Cog):
@@ -16,6 +15,7 @@ class Hangman(Cog):
     letters = "🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿"
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=1049711010310997110)
         default_guild = {"theface": ":thinking:", "emojis": True}
@@ -31,13 +31,19 @@ class Hangman(Cog):
                 "answer": "",
             }
         )
-        self.path = str(cog_data_path(self)).replace("\\", "/")
+        #         self.path = str(cog_data_path(self)).replace("\\", "/")
 
-        self.answer_path = self.path + "/bundled_data/hanganswers.txt"
+        #         self.answer_path = self.path + "/bundled_data/hanganswers.txt"
+
+        self.answer_path = bundled_data_path(self) / "hanganswers.txt"
 
         self.winbool = defaultdict(lambda: False)
 
         self.hanglist = {}
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     async def _update_hanglist(self):
         for guild in self.bot.guilds:
@@ -154,19 +160,19 @@ class Hangman(Cog):
             theface = self.bot.get_emoji(int(theface.split(":")[2][:-1]))
 
         if theface is None:
-            await ctx.send("I could not find that emoji")
+            await ctx.maybe_send_embed("I could not find that emoji")
             return
 
         try:
             # Use the face as reaction to see if it's valid (THANKS FLAPJACK <3)
             await message.add_reaction(theface)
         except discord.errors.HTTPException:
-            await ctx.send("That's not an emoji I recognize.")
+            await ctx.maybe_send_embed("That's not an emoji I recognize.")
             return
 
         await self.config.guild(ctx.guild).theface.set(str(theface))
         await self._update_hanglist()
-        await ctx.send("Face has been updated!")
+        await ctx.maybe_send_embed("Face has been updated!")
 
     @hangset.command()
     async def toggleemoji(self, ctx: commands.Context):
@@ -174,26 +180,32 @@ class Hangman(Cog):
 
         current = await self.config.guild(ctx.guild).emojis()
         await self.config.guild(ctx.guild).emojis.set(not current)
-        await ctx.send("Emoji Letter reactions have been set to {}".format(not current))
+        await ctx.maybe_send_embed(
+            "Emoji Letter reactions have been set to {}".format(not current)
+        )
 
     @commands.command(aliases=["hang"])
     async def hangman(self, ctx, guess: str = None):
         """Play a game of hangman against the bot!"""
         if guess is None:
             if self.the_data[ctx.guild]["running"]:
-                await ctx.send("Game of hangman is already running!\nEnter your guess!")
+                await ctx.maybe_send_embed(
+                    "Game of hangman is already running!\nEnter your guess!"
+                )
                 await self._printgame(ctx.channel)
                 """await self.bot.send_cmd_help(ctx)"""
             else:
-                await ctx.send("Starting a game of hangman!")
+                await ctx.maybe_send_embed("Starting a game of hangman!")
                 self._startgame(ctx.guild)
                 await self._printgame(ctx.channel)
         elif not self.the_data[ctx.guild]["running"]:
-            await ctx.send("Game of hangman is not yet running!\nStarting a game of hangman!")
+            await ctx.maybe_send_embed(
+                "Game of hangman is not yet running!\nStarting a game of hangman!"
+            )
             self._startgame(ctx.guild)
             await self._printgame(ctx.channel)
         else:
-            await ctx.send("Guess by reacting to the message")
+            await ctx.maybe_send_embed("Guess by reacting to the message")
             # await self._guessletter(guess, ctx.channel)
 
     def _startgame(self, guild):
@@ -274,15 +286,23 @@ class Hangman(Cog):
 
         await self._reprintgame(message)
 
-    async def on_react(self, reaction, user):
+    @commands.Cog.listener()
+    async def on_react(self, reaction, user: Union[discord.User, discord.Member]):
         """ Thanks to flapjack reactpoll for guidelines
             https://github.com/flapjax/FlapJack-Cogs/blob/master/reactpoll/reactpoll.py"""
-
-        if reaction.message.id != self.the_data[user.guild]["trackmessage"]:
+        guild: discord.Guild = getattr(user, "guild", None)
+        if guild is None:
             return
 
-        if user == self.bot.user:
-            return  # Don't react to bot's own reactions
+        if reaction.message.id != self.the_data[guild]["trackmessage"]:
+            return
+
+        if user.bot:
+            return  # Don't react to bot reactions
+
+        if await self.bot.cog_disabled_in_guild(self, guild):
+            return
+
         message = reaction.message
         emoji = reaction.emoji
 

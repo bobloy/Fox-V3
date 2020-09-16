@@ -2,16 +2,13 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.4.0",
   "description": "Play Hangman with your friends",
   "hidden": false,
   "install_msg": "Thank you for installing Hangman! Get started with `[p]load hangman`, then `[p]help Hangman`",
   "requirements": [],
   "short": "Play Hangman",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "game",
     "fun",
