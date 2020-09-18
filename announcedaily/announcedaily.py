@@ -1,20 +1,18 @@
 import asyncio
 import random
 from datetime import datetime, timedelta
-from typing import Any
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
-from redbot.core.utils.chat_formatting import pagify, box
+from redbot.core.utils.chat_formatting import box, pagify
 
 DEFAULT_MESSAGES = [
     # "Example message. Uncomment and overwrite to use",
     # "Example message 2. Each message is in quotes and separated by a comma"
 ]
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class AnnounceDaily(Cog):
@@ -23,28 +21,31 @@ class AnnounceDaily(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
-        self.path = str(cog_data_path(self)).replace('\\', '/')
+        self.path = str(cog_data_path(self)).replace("\\", "/")
 
         self.image_path = self.path + "/"
 
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {
-            'messages': [],
-            'images': [],
-            'time': {'hour': 0, 'minute': 0, 'second': 0}
+            "messages": [],
+            "images": [],
+            "time": {"hour": 0, "minute": 0, "second": 0},
         }
-        default_guild = {
-            "channelid": None
-        }
+        default_guild = {"channelid": None}
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     async def _get_msgs(self):
         return DEFAULT_MESSAGES + await self.config.messages()
 
-    @commands.group(name="announcedaily", aliases=['annd'])
+    @commands.group(name="announcedaily", aliases=["annd"])
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
     async def _ad(self, ctx: commands.Context):
@@ -99,7 +100,7 @@ class AnnounceDaily(Cog):
         if ctx.message.attachments:
             att_ = ctx.message.attachments[0]
             try:
-                h = att_.height
+                att_.height
             except AttributeError:
                 await ctx.send("You must attach an image, no other file will be accepted")
                 return
@@ -112,7 +113,9 @@ class AnnounceDaily(Cog):
                 #     await att_.save(f)
                 await att_.save(self.image_path + filename)
             except discord.NotFound:
-                await ctx.send("Did you delete the message? Cause I couldn't download the attachment")
+                await ctx.send(
+                    "Did you delete the message? Cause I couldn't download the attachment"
+                )
             except discord.HTTPException:
                 await ctx.send("Failed to download the attachment, please try again")
             else:
@@ -131,14 +134,16 @@ class AnnounceDaily(Cog):
         List all registered announcement messages
         """
         messages = await self.config.messages()
-        for page in pagify("\n".join("{} - {}".format(key, image) for key, image in enumerate(messages))):
+        for page in pagify(
+            "\n".join("{} - {}".format(key, image) for key, image in enumerate(messages))
+        ):
             await ctx.send(box(page))
         await ctx.send("Done!")
 
     @_ad.command()
     async def listimg(self, ctx: commands.Context):
         """
-        List all registered announcement immages
+        List all registered announcement images
         """
         images = await self.config.images()
         for page in pagify("\n".join(images)):
@@ -187,10 +192,12 @@ class AnnounceDaily(Cog):
         h = ann_time.hour
         m = ann_time.minute
         s = ann_time.second
-        await self.config.time.set({'hour': h, 'minute': m, 'second': s})
+        await self.config.time.set({"hour": h, "minute": m, "second": s})
 
-        await ctx.send("Announcements time has been set to {}::{}::{} every day\n"
-                       "**Changes will apply after next scheduled announcement or reload**".format(h, m, s))
+        await ctx.send(
+            "Announcement time has been set to {}::{}::{} every day\n"
+            "**Changes will apply after next scheduled announcement or reload**".format(h, m, s)
+        )
 
     async def send_announcements(self):
         messages = await self._get_msgs()
@@ -205,7 +212,7 @@ class AnnounceDaily(Cog):
         if x >= len(messages):
             x -= len(messages)
             choice = images[x]
-            choice = open(self.image_path + choice, 'rb')
+            choice = open(self.image_path + choice, "rb")
             is_image = True
         else:
             choice = messages[x]
@@ -225,12 +232,18 @@ class AnnounceDaily(Cog):
                 await channel.send(choice)
 
     async def check_day(self):
-        while self is self.bot.get_cog("AnnounceDaily"):
+        while True:
             tomorrow = datetime.now() + timedelta(days=1)
             time = await self.config.time()
-            h, m, s = time['hour'], time['minute'], time['second']
-            midnight = datetime(year=tomorrow.year, month=tomorrow.month,
-                                day=tomorrow.day, hour=h, minute=m, second=s)
+            h, m, s = time["hour"], time["minute"], time["second"]
+            midnight = datetime(
+                year=tomorrow.year,
+                month=tomorrow.month,
+                day=tomorrow.day,
+                hour=h,
+                minute=m,
+                second=s,
+            )
 
             print("Sleeping for {} seconds".format((midnight - datetime.now()).seconds))
             await asyncio.sleep((midnight - datetime.now()).seconds)
@@ -242,6 +255,7 @@ class AnnounceDaily(Cog):
             await self.send_announcements()
 
             await asyncio.sleep(3)
+
 
 # [p]setchannel #channelname - Set the announcement channel per server
 # [p]addmsg <message goes here> - Adds a msg to the pool

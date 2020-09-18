@@ -1,0 +1,19 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.4.0",
+  "description": "Keep track of when users were last seen online",
+  "hidden": false,
+  "install_msg": "Thank you for installing LastSeen. Get started with `[p]load lseen`, then `[p]help LastSeen`",
+  "requirements": [
+    "python-dateutil"
+  ],
+  "short": "Last seen tracker",
+  "end_user_data_statement": "This cog stores user IDs along with a time they were last online per guild",
+  "tags": [
+    "bobloy",
+    "utils",
+    "tools"
+  ]
+}

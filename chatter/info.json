@@ -2,29 +2,34 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.4.0",
   "description": "Create an offline chatbot that talks like your average member using Machine Learning",
   "hidden": false,
-  "install_msg": "Thank you for installing Chatter! Get started ith `[p]load chatter` and `[p]help Chatter`",
+  "install_msg": "Thank you for installing Chatter! Please make sure you check the install instructions at https://github.com/bobloy/Fox-V3/blob/master/chatter/README.md\nAfter that, get started ith `[p]load chatter` and `[p]help Chatter`",
   "requirements": [
-    "sqlalchemy<1.3,>=1.2",
-    "python-twitter<4.0,>=3.0",
-    "python-dateutil<2.7,>=2.6",
-    "pymongo<4.0,>=3.3",
-    "nltk<4.0,>=3.2",
-    "mathparse<0.2,>=0.1",
-    "chatterbot-corpus<1.2,>=1.1"
+    "git+git://github.com/gunthercox/chatterbot-corpus@master#egg=chatterbot_corpus",
+    "mathparse>=0.1,<0.2",
+    "nltk>=3.2,<4.0",
+    "pint>=0.8.1",
+    "python-dateutil>=2.8,<2.9",
+    "pyyaml>=5.3,<5.4",
+    "sqlalchemy>=1.3,<1.4",
+    "pytz",
+    "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz#egg=en_core_web_sm",
+    "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-2.3.1/en_core_web_md-2.3.1.tar.gz#egg=en_core_web_md",
+    "spacy>=2.3,<2.4"
   ],
   "short": "Local Chatbot run on machine learning",
+  "end_user_data_statement": "This cog only stores anonymous conversations data; no End User Data is stored.",
   "tags": [
     "chat",
     "chatbot",
+    "chatterbot",
     "cleverbot",
     "clever",
+    "machinelearning",
+    "nlp",
+    "language",
     "bobloy"
   ]
 }

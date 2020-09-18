@@ -1,0 +1,14 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.3.0",
+  "description": "Send daily announcements to all servers at a specified times",
+  "hidden": false,
+  "install_msg": "Thank you for installing AnnounceDaily! Get started with `[p]load announcedaily` and `[p]help AnnounceDaily`",
+  "short": "Send daily announcements",
+  "end_user_data_statement": "This cog does not store any End User Data",
+  "tags": [
+    "bobloy"
+  ]
+}

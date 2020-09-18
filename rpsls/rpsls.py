@@ -3,39 +3,27 @@ import random
 
 import discord
 from redbot.core import commands
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class RPSLS(Cog):
     """Play Rock Paper Scissors Lizard Spock."""
 
     weaknesses = {
-        "rock": [
-            "paper",
-            "spock"
-        ],
-        "paper": [
-            "scissors",
-            "lizard"
-        ],
-        "scissors": [
-            "spock",
-            "rock"
-        ],
-        "lizard": [
-            "scissors",
-            "rock"
-        ],
-        "spock": [
-            "paper",
-            "lizard"
-        ]
+        "rock": ["paper", "spock"],
+        "paper": ["scissors", "lizard"],
+        "scissors": ["spock", "rock"],
+        "lizard": ["scissors", "rock"],
+        "spock": ["paper", "lizard"],
     }
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     @commands.command()
     async def rpsls(self, ctx: commands.Context, choice: str):
@@ -63,31 +51,31 @@ class RPSLS(Cog):
 
         bot_choice = random.choice(list(self.weaknesses.keys()))
         bot_emote = self.get_emote(bot_choice)
-        message = '{} vs. {}, who will win?'.format(player_emote, bot_emote)
+        message = "{} vs. {}, who will win?".format(player_emote, bot_emote)
         em = discord.Embed(description=message, color=discord.Color.blue())
         await ctx.send(embed=em)
         await asyncio.sleep(2)
         if player_choice in self.weaknesses[bot_choice]:
-            message = 'You win! :sob:'
+            message = "You win! :sob:"
             em_color = discord.Color.green()
         elif bot_choice in self.weaknesses[player_choice]:
-            message = 'I win! :smile:'
+            message = "I win! :smile:"
             em_color = discord.Color.red()
         else:
-            message = 'It\'s a draw! :neutral_face:'
+            message = "It's a draw! :neutral_face:"
             em_color = discord.Color.blue()
         em = discord.Embed(description=message, color=em_color)
         await ctx.send(embed=em)
 
     def get_emote(self, choice):
-        if choice == 'rock':
-            emote = ':moyai:'
-        elif choice == 'spock':
-            emote = ':vulcan:'
-        elif choice == 'paper':
-            emote = ':page_facing_up:'
-        elif choice in ['scissors', 'lizard']:
-            emote = ':{}:'.format(choice)
+        if choice == "rock":
+            emote = ":moyai:"
+        elif choice == "spock":
+            emote = ":vulcan:"
+        elif choice == "paper":
+            emote = ":page_facing_up:"
+        elif choice in ["scissors", "lizard"]:
+            emote = ":{}:".format(choice)
         else:
             emote = None
         return emote

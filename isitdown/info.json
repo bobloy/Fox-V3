@@ -1,0 +1,17 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.4.0",
+  "description": "Check if a website/url is down using the https://isitdown.site/ api",
+  "hidden": false,
+  "install_msg": "Thank you for installing IsItDown.\nGet started with `[p]load isitdown`, then `[p]help IsItDown`",
+  "short": "Check if a website/url is down",
+  "end_user_data_statement": "This cog does not store any End User Data",
+  "tags": [
+    "bobloy",
+    "utilities",
+    "tool",
+    "tools"
+  ]
+}

@@ -8,7 +8,9 @@ import discord
 # Import all roles here
 from redbot.core import commands
 
-from werewolf.roles import Seer, VanillaWerewolf, Villager
+from .roles.seer import Seer
+from .roles.vanillawerewolf import VanillaWerewolf
+from .roles.villager import Villager
 from redbot.core.utils.menus import menu, prev_page, next_page, close_menu
 
 # All roles in this list for iterating

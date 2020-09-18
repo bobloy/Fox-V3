@@ -1,0 +1,15 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.4.0",
+  "description": "Mentions roles that are unmentionable",
+  "hidden": false,
+  "install_msg": "Thank you for installing ForceMention! Get started with `[p]load forcemention`, then `[p]forcemention`",
+  "short": "Mention unmentionables",
+  "end_user_data_statement": "This cog does not store any End User Data",
+  "tags": [
+    "bobloy",
+    "utils"
+  ]
+}

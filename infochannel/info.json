@@ -1,0 +1,15 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.4.0",
+  "description": "Create a channel with updating server info",
+  "hidden": false,
+  "install_msg": "Thank you for installing InfoChannel. Get started with `[p]load infochannel`, then `[p]help InfoChannel`",
+  "short": "Updating server info channel",
+  "end_user_data_statement": "This cog does not store any End User Data",
+  "tags": [
+    "bobloy",
+    "utils"
+  ]
+}
