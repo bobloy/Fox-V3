@@ -1,3 +1,8 @@
+import logging
+
+log = logging.getLogger("red.fox_v3.werewolf.role")
+
+
 class Role:
     """
     Base Role class for werewolf game

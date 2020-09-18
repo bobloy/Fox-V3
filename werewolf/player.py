@@ -1,4 +1,8 @@
+import logging
+
 import discord
+
+log = logging.getLogger("red.fox_v3.werewolf.player")
 
 
 class Player:

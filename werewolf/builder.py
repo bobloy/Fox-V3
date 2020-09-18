@@ -1,4 +1,5 @@
 import bisect
+import logging
 from collections import defaultdict
 from random import choice
 
@@ -12,6 +13,8 @@ from .roles.seer import Seer
 from .roles.vanillawerewolf import VanillaWerewolf
 from .roles.villager import Villager
 from redbot.core.utils.menus import menu, prev_page, next_page, close_menu
+
+log = logging.getLogger("red.fox_v3.werewolf.builder")
 
 # All roles in this list for iterating
 

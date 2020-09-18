@@ -1,3 +1,5 @@
+import logging
+
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
@@ -12,6 +14,8 @@ from .builder import (
     role_from_name,
 )
 from .game import Game
+
+log = logging.getLogger("red.fox_v3.werewolf")
 
 
 class Werewolf(Cog):

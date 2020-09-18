@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import random
 from typing import List, Any, Dict, Set, Union
 
@@ -9,6 +10,8 @@ from .builder import parse_code
 from .player import Player
 from .role import Role
 from .votegroup import VoteGroup
+
+log = logging.getLogger("red.fox_v3.werewolf.game")
 
 
 class Game:
