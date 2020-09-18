@@ -17,7 +17,7 @@ from redbot.core.utils.menus import menu, prev_page, next_page, close_menu
 
 ROLE_LIST = sorted([Villager, Seer, VanillaWerewolf], key=lambda x: x.alignment)
 
-ALIGNMENT_COLORS = [0x008000, 0xff0000, 0xc0c0c0]
+ALIGNMENT_COLORS = [0x008000, 0xFF0000, 0xC0C0C0]
 TOWN_ROLES = [(idx, role) for idx, role in enumerate(ROLE_LIST) if role.alignment == 1]
 WW_ROLES = [(idx, role) for idx, role in enumerate(ROLE_LIST) if role.alignment == 2]
 OTHER_ROLES = [(idx, role) for idx, role in enumerate(ROLE_LIST) if role.alignment not in [0, 1]]
@@ -26,21 +26,38 @@ ROLE_PAGES = []
 PAGE_GROUPS = [0]
 
 ROLE_CATEGORIES = {
-    1: "Random", 2: "Investigative", 3: "Protective", 4: "Government",
-    5: "Killing", 6: "Power (Special night action)",
-    11: "Random", 12: "Deception", 15: "Killing", 16: "Support",
-    21: "Benign", 22: "Evil", 23: "Killing"}
+    1: "Random",
+    2: "Investigative",
+    3: "Protective",
+    4: "Government",
+    5: "Killing",
+    6: "Power (Special night action)",
+    11: "Random",
+    12: "Deception",
+    15: "Killing",
+    16: "Support",
+    21: "Benign",
+    22: "Evil",
+    23: "Killing",
+}
 
 CATEGORY_COUNT = []
 
 
 def role_embed(idx, role, color):
-    embed = discord.Embed(title="**{}** - {}".format(idx, str(role.__name__)), description=role.game_start_message,
-                          color=color)
-    embed.add_field(name='Alignment', value=['Town', 'Werewolf', 'Neutral'][role.alignment - 1], inline=True)
-    embed.add_field(name='Multiples Allowed', value=str(not role.unique), inline=True)
-    embed.add_field(name='Role Type', value=", ".join(ROLE_CATEGORIES[x] for x in role.category), inline=True)
-    embed.add_field(name='Random Option', value=str(role.rand_choice), inline=True)
+    embed = discord.Embed(
+        title="**{}** - {}".format(idx, str(role.__name__)),
+        description=role.game_start_message,
+        color=color,
+    )
+    embed.add_field(
+        name="Alignment", value=["Town", "Werewolf", "Neutral"][role.alignment - 1], inline=True
+    )
+    embed.add_field(name="Multiples Allowed", value=str(not role.unique), inline=True)
+    embed.add_field(
+        name="Role Type", value=", ".join(ROLE_CATEGORIES[x] for x in role.category), inline=True
+    )
+    embed.add_field(name="Random Option", value=str(role.rand_choice), inline=True)
 
     return embed
 
@@ -60,7 +77,11 @@ def setup():
         PAGE_GROUPS.append(len(ROLE_PAGES) - 1)
     for k, v in ROLE_CATEGORIES.items():
         if 0 < k <= 6:
-            ROLE_PAGES.append(discord.Embed(title="RANDOM:Town Role", description="Town {}".format(v), color=0x008000))
+            ROLE_PAGES.append(
+                discord.Embed(
+                    title="RANDOM:Town Role", description="Town {}".format(v), color=0x008000
+                )
+            )
             CATEGORY_COUNT.append(k)
 
     # Random WW Roles
@@ -69,7 +90,12 @@ def setup():
     for k, v in ROLE_CATEGORIES.items():
         if 10 < k <= 16:
             ROLE_PAGES.append(
-                discord.Embed(title="RANDOM:Werewolf Role", description="Werewolf {}".format(v), color=0xff0000))
+                discord.Embed(
+                    title="RANDOM:Werewolf Role",
+                    description="Werewolf {}".format(v),
+                    color=0xFF0000,
+                )
+            )
             CATEGORY_COUNT.append(k)
     # Random Neutral Roles
     if len(ROLE_PAGES) - 1 not in PAGE_GROUPS:
@@ -77,7 +103,10 @@ def setup():
     for k, v in ROLE_CATEGORIES.items():
         if 20 < k <= 26:
             ROLE_PAGES.append(
-                discord.Embed(title="RANDOM:Neutral Role", description="Neutral {}".format(v), color=0xc0c0c0))
+                discord.Embed(
+                    title="RANDOM:Neutral Role", description="Neutral {}".format(v), color=0xC0C0C0
+                )
+            )
             CATEGORY_COUNT.append(k)
 
 
@@ -187,9 +216,15 @@ async def encode(roles, rand_roles):
     return out_code
 
 
-async def next_group(ctx: commands.Context, pages: list,
-                     controls: dict, message: discord.Message, page: int,
-                     timeout: float, emoji: str):
+async def next_group(
+    ctx: commands.Context,
+    pages: list,
+    controls: dict,
+    message: discord.Message,
+    page: int,
+    timeout: float,
+    emoji: str,
+):
     perms = message.channel.permissions_for(ctx.me)
     if perms.manage_messages:  # Can manage messages, so remove react
         try:
@@ -203,13 +238,18 @@ async def next_group(ctx: commands.Context, pages: list,
     else:
         page = PAGE_GROUPS[page]
 
-    return await menu(ctx, pages, controls, message=message,
-                      page=page, timeout=timeout)
+    return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
 
 
-async def prev_group(ctx: commands.Context, pages: list,
-                     controls: dict, message: discord.Message, page: int,
-                     timeout: float, emoji: str):
+async def prev_group(
+    ctx: commands.Context,
+    pages: list,
+    controls: dict,
+    message: discord.Message,
+    page: int,
+    timeout: float,
+    emoji: str,
+):
     perms = message.channel.permissions_for(ctx.me)
     if perms.manage_messages:  # Can manage messages, so remove react
         try:
@@ -218,18 +258,23 @@ async def prev_group(ctx: commands.Context, pages: list,
             pass
     page = PAGE_GROUPS[bisect.bisect_left(PAGE_GROUPS, page) - 1]
 
-    return await menu(ctx, pages, controls, message=message,
-                      page=page, timeout=timeout)
+    return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
 
 
 def role_from_alignment(alignment):
-    return [role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
-            for idx, role in enumerate(ROLE_LIST) if alignment == role.alignment]
+    return [
+        role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
+        for idx, role in enumerate(ROLE_LIST)
+        if alignment == role.alignment
+    ]
 
 
 def role_from_category(category):
-    return [role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
-            for idx, role in enumerate(ROLE_LIST) if category in role.category]
+    return [
+        role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
+        for idx, role in enumerate(ROLE_LIST)
+        if category in role.category
+    ]
 
 
 def role_from_id(idx):
@@ -242,8 +287,11 @@ def role_from_id(idx):
 
 
 def role_from_name(name: str):
-    return [role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
-            for idx, role in enumerate(ROLE_LIST) if name in role.__name__]
+    return [
+        role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
+        for idx, role in enumerate(ROLE_LIST)
+        if name in role.__name__
+    ]
 
 
 def say_role_list(code_list, rand_roles):
@@ -268,7 +316,6 @@ def say_role_list(code_list, rand_roles):
 
 
 class GameBuilder:
-
     def __init__(self):
         self.code = []
         self.rand_roles = []
@@ -276,13 +323,13 @@ class GameBuilder:
 
     async def build_game(self, ctx: commands.Context):
         new_controls = {
-            '⏪': prev_group,
+            "⏪": prev_group,
             "⬅": prev_page,
-            '☑': self.select_page,
+            "☑": self.select_page,
             "➡": next_page,
-            '⏩': next_group,
-            '📇': self.list_roles,
-            "❌": close_menu
+            "⏩": next_group,
+            "📇": self.list_roles,
+            "❌": close_menu,
         }
 
         await ctx.send("Browse through roles and add the ones you want using the check mark")
@@ -292,9 +339,16 @@ class GameBuilder:
         out = await encode(self.code, self.rand_roles)
         return out
 
-    async def list_roles(self, ctx: commands.Context, pages: list,
-                         controls: dict, message: discord.Message, page: int,
-                         timeout: float, emoji: str):
+    async def list_roles(
+        self,
+        ctx: commands.Context,
+        pages: list,
+        controls: dict,
+        message: discord.Message,
+        page: int,
+        timeout: float,
+        emoji: str,
+    ):
         perms = message.channel.permissions_for(ctx.me)
         if perms.manage_messages:  # Can manage messages, so remove react
             try:
@@ -304,12 +358,18 @@ class GameBuilder:
 
         await ctx.send(embed=say_role_list(self.code, self.rand_roles))
 
-        return await menu(ctx, pages, controls, message=message,
-                          page=page, timeout=timeout)
+        return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
 
-    async def select_page(self, ctx: commands.Context, pages: list,
-                          controls: dict, message: discord.Message, page: int,
-                          timeout: float, emoji: str):
+    async def select_page(
+        self,
+        ctx: commands.Context,
+        pages: list,
+        controls: dict,
+        message: discord.Message,
+        page: int,
+        timeout: float,
+        emoji: str,
+    ):
         perms = message.channel.permissions_for(ctx.me)
         if perms.manage_messages:  # Can manage messages, so remove react
             try:
@@ -322,5 +382,4 @@ class GameBuilder:
         else:
             self.code.append(page)
 
-        return await menu(ctx, pages, controls, message=message,
-                          page=page, timeout=timeout)
+        return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)

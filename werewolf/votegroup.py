@@ -23,7 +23,7 @@ class VoteGroup:
             (self._at_day_end, 0),
             (self._at_night_start, 2),
             (self._at_night_end, 0),
-            (self._at_visit, 0)
+            (self._at_visit, 0),
         ]
 
     async def on_event(self, event, data):

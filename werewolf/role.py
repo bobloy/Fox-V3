@@ -1,31 +1,31 @@
 class Role:
     """
     Base Role class for werewolf game
-    
+
     Category enrollment guide as follows (category property):
         Town:
         1: Random, 2: Investigative, 3: Protective, 4: Government,
         5: Killing, 6: Power (Special night action)
-        
+
         Werewolf:
         11: Random, 12: Deception, 15: Killing, 16: Support
-        
+
         Neutral:
         21: Benign, 22: Evil, 23: Killing
-        
-        
+
+
         Example category:
         category = [1, 5, 6] Could be Veteran
         category = [1, 5] Could be Bodyguard
         category = [11, 16] Could be Werewolf Silencer
-        
-    
+
+
     Action guide as follows (on_event function):
         _at_night_start
         0. No Action
         1. Detain actions (Jailer/Kidnapper)
         2. Group discussions and choose targets
-        
+
         _at_night_end
         0. No Action
         1. Self actions (Veteran)
@@ -68,7 +68,7 @@ class Role:
             (self._at_day_end, 0),
             (self._at_night_start, 0),
             (self._at_night_end, 0),
-            (self._at_visit, 0)
+            (self._at_visit, 0),
         ]
 
     def __repr__(self):
