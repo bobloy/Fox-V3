@@ -13,7 +13,8 @@ class WolfVote(VoteGroup):
 
     kill_messages = [
         "**{ID}** - {target} was mauled by wolves",
-        "**{ID}** - {target} was found torn to shreds"]
+        "**{ID}** - {target} was found torn to shreds",
+    ]
 
     def __init__(self, game, channel):
         super().__init__(game, channel)
@@ -34,7 +35,7 @@ class WolfVote(VoteGroup):
             (self._at_day_end, 0),
             (self._at_night_start, 2),
             (self._at_night_end, 5),  # Kill priority
-            (self._at_visit, 0)
+            (self._at_visit, 0),
         ]
 
         # async def on_event(self, event, data):
@@ -75,7 +76,9 @@ class WolfVote(VoteGroup):
             await self.channel.send(mention_list)
         self.killer = random.choice(self.players)
 
-        await self.channel.send("{} has been selected as tonight's killer".format(self.killer.member.display_name))
+        await self.channel.send(
+            "{} has been selected as tonight's killer".format(self.killer.member.display_name)
+        )
 
     async def _at_night_end(self, data=None):
         if self.channel is None:
@@ -90,7 +93,9 @@ class WolfVote(VoteGroup):
         print("Target id: {}\nKiller: {}".format(target_id, self.killer.member.display_name))
         if target_id is not None and self.killer:
             await self.game.kill(target_id, self.killer, random.choice(self.kill_messages))
-            await self.channel.send("**{} has left to complete the kill...**".format(self.killer.member.display_name))
+            await self.channel.send(
+                "**{} has left to complete the kill...**".format(self.killer.member.display_name)
+            )
         else:
             await self.channel.send("**No kill will be attempted tonight...**")
 
@@ -117,4 +122,6 @@ class WolfVote(VoteGroup):
 
         self.vote_results[author.id] = target_id
 
-        await self.channel.send("{} has voted to kill {}".format(author.mention, target.member.display_name))
+        await self.channel.send(
+            "{} has voted to kill {}".format(author.mention, target.member.display_name)
+        )

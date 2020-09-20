@@ -97,7 +97,7 @@ class Werewolf(Cog):
     @wwset.command(name="role")
     async def wwset_role(self, ctx: commands.Context, role: discord.Role = None):
         """
-        Assign the game role
+        Set the game role
         This role should not be manually assigned
         """
         if role is None:
@@ -222,7 +222,7 @@ class Werewolf(Cog):
             await ctx.send("No game running, cannot start")
 
         if not await game.setup(ctx):
-            pass  # Do something?
+            pass  # ToDo something?
 
     @commands.guild_only()
     @ww.command(name="stop")
@@ -230,10 +230,10 @@ class Werewolf(Cog):
         """
         Stops the current game
         """
-        if ctx.guild is None:
-            # Private message, can't get guild
-            await ctx.send("Cannot start game from PM!")
-            return
+        # if ctx.guild is None:
+        #     # Private message, can't get guild
+        #     await ctx.send("Cannot stop game from PM!")
+        #     return
         if ctx.guild.id not in self.games or self.games[ctx.guild.id].game_over:
             await ctx.send("No game to stop")
             return
@@ -354,11 +354,11 @@ class Werewolf(Cog):
                 await ctx.send("Role ID not found")
 
     async def _get_game(self, ctx: commands.Context, game_code=None):
-        guild: discord.Guild = ctx.guild
+        guild: discord.Guild = getattr(ctx, "guild", None)
 
         if guild is None:
             # Private message, can't get guild
-            await ctx.send("Cannot start game from PM!")
+            await ctx.send("Cannot start game from DM!")
             return None
         if guild.id not in self.games or self.games[guild.id].game_over:
             await ctx.send("Starting a new game...")
@@ -368,7 +368,7 @@ class Werewolf(Cog):
                 await ctx.send("Cannot start a new game")
                 return None
 
-            self.games[guild.id] = Game(guild, role, category, channel, log_channel, game_code)
+            self.games[guild.id] = Game(self.bot, guild, role, category, channel, log_channel, game_code)
 
         return self.games[guild.id]
 

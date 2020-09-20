@@ -5,6 +5,7 @@ from typing import List, Any, Dict, Set, Union
 
 import discord
 from redbot.core import commands
+from redbot.core.bot import Red
 
 from .builder import parse_code
 from .player import Player
@@ -34,10 +35,15 @@ class Game:
         "**Morning has arrived on day {}..**",
     ]
 
+    night_messages = [
+        "**Dawn falls on day {}..****"
+    ]
+
     day_vote_count = 3
 
     def __init__(
         self,
+        bot: Red,
         guild: discord.Guild,
         role: discord.Role = None,
         category: discord.CategoryChannel = None,
@@ -45,6 +51,7 @@ class Game:
         log_channel: discord.TextChannel = None,
         game_code=None,
     ):
+        self.bot = bot
         self.guild = guild
         self.game_code = game_code
 
@@ -340,6 +347,9 @@ class Game:
         await self.village_channel.send(
             "**{} will be put to trial and has 30 seconds to defend themselves**".format(
                 target.mention
+            ),
+            allowed_mentions=discord.AllowedMentions(
+                everyone=False, users=[target]
             )
         )
 
@@ -347,11 +357,14 @@ class Game:
 
         await self.speech_perms(self.village_channel, target.member, undo=True)  # No one can talk
 
-        message = await self.village_channel.send(
+        message: discord.Message = await self.village_channel.send(
             "Everyone will now vote whether to lynch {}\n"
             "👍 to save, 👎 to lynch\n"
             "*Majority rules, no-lynch on ties, "
-            "vote both or neither to abstain, 15 seconds to vote*".format(target.mention)
+            "vote both or neither to abstain, 15 seconds to vote*".format(target.mention),
+            allowed_mentions=discord.AllowedMentions(
+                everyone=False, users=[target]
+            )
         )
 
         await message.add_reaction("👍")
@@ -442,7 +455,7 @@ class Game:
         await self.village_channel.send(
             embed=discord.Embed(title="**Thirty seconds until sunrise...**")
         )
-        await asyncio.sleep(3)  # .5 minutes FixMe to 3 Later
+        await asyncio.sleep(3)  # .5 minutes FixMe to 30 Later
 
         await self._at_night_end()
 
@@ -462,19 +475,20 @@ class Game:
 
     async def _notify(self, event, data=None):
         for i in range(1, 7):  # action guide 1-6 (0 is no action)
-            tasks = []
-            # Role priorities
-            role_order = [role for role in self.roles if role.action_list[event][1] == i]
-            for role in role_order:
-                tasks.append(asyncio.ensure_future(role.on_event(event, data), loop=self.loop))
-            # VoteGroup priorities
-            vote_order = [vg for vg in self.vote_groups.values() if vg.action_list[event][1] == i]
-            for vote_group in vote_order:
-                tasks.append(
-                    asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop)
-                )
-            if tasks:
-                await asyncio.gather(*tasks)
+            self.bot.dispatch(f"red.fox.werewolf.{event}", data=data, priority=i)
+            # tasks = []
+            # # Role priorities
+            # role_order = [role for role in self.roles if role.action_list[event][1] == i]
+            # for role in role_order:
+            #     tasks.append(asyncio.ensure_future(role.on_event(event, data), loop=self.loop))
+            # # VoteGroup priorities
+            # vote_order = [vg for vg in self.vote_groups.values() if vg.action_list[event][1] == i]
+            # for vote_group in vote_order:
+            #     tasks.append(
+            #         asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop)
+            #     )
+            # if tasks:
+            #     await asyncio.gather(*tasks)
             # Run same-priority task simultaneously
 
     ############END Notify structure############

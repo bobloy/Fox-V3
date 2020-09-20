@@ -14,8 +14,10 @@ class Seer(Role):
         "Lynch players during the day with `[p]ww vote <ID>`\n"
         "Check for werewolves at night with `[p]ww choose <ID>`"
     )
-    description = "A mystic in search of answers in a chaotic town.\n" \
-                  "Calls upon the cosmos to discern those of Lycan blood"
+    description = (
+        "A mystic in search of answers in a chaotic town.\n"
+        "Calls upon the cosmos to discern those of Lycan blood"
+    )
 
     def __init__(self, game):
         super().__init__(game)
@@ -33,7 +35,7 @@ class Seer(Role):
             (self._at_day_end, 0),
             (self._at_night_start, 2),
             (self._at_night_end, 4),
-            (self._at_visit, 0)
+            (self._at_visit, 0),
         ]
 
     async def see_alignment(self, source=None):
@@ -87,4 +89,8 @@ class Seer(Role):
         await super().choose(ctx, data)
 
         self.see_target, target = await pick_target(self, ctx, data)
-        await ctx.send("**You will attempt to see the role of {} tonight...**".format(target.member.display_name))
+        await ctx.send(
+            "**You will attempt to see the role of {} tonight...**".format(
+                target.member.display_name
+            )
+        )

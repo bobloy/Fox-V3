@@ -38,7 +38,7 @@ class Role:
         3. Protection / Preempt actions (bodyguard/framer)
         4. Non-disruptive actions (seer/silencer)
         5. Disruptive actions (Killing)
-        6. Role altering actions (Cult / Mason)
+        6. Role altering actions (Cult / Mason / Shifter)
     """
 
     rand_choice = False  # Determines if it can be picked as a random role (False for unusually disruptive roles)
