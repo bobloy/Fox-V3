@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import logging
 import random
 from collections import deque
@@ -36,9 +37,7 @@ class Game:
         "**Morning has arrived on day {}..**",
     ]
 
-    night_messages = [
-        "**Dawn falls on day {}..****"
-    ]
+    night_messages = ["**Dawn falls on day {}..****"]
 
     day_vote_count = 3
 
@@ -87,6 +86,7 @@ class Game:
         self.loop = asyncio.get_event_loop()
 
         self.action_queue = deque()
+        self.listeners = {}
 
     # def __del__(self):
     #     """
@@ -265,9 +265,7 @@ class Game:
     ############START Notify structure############
     async def _cycle(self):
         """
-        Each event calls the next event
-
-
+        Each event enqueues the next event
 
         _at_day_start()
             _at_voted()
@@ -296,7 +294,7 @@ class Game:
             embed=discord.Embed(title="Game is starting, please wait for setup to complete")
         )
 
-        await self._notify(0)
+        await self._notify("at_game_start")
 
     async def _at_day_start(self):  # ID 1
         if self.game_over:
@@ -318,7 +316,7 @@ class Game:
         await self.generate_targets(self.village_channel)
 
         await self.day_perms(self.village_channel)
-        await self._notify(1)
+        await self._notify("at_day_start")
 
         await self._check_game_over()
         if self.game_over:
@@ -346,7 +344,7 @@ class Game:
         if self.game_over:
             return
         data = {"player": target}
-        await self._notify(2, data)
+        await self._notify("at_voted", player=target)
 
         self.ongoing_vote = True
 
@@ -357,9 +355,7 @@ class Game:
             "**{} will be put to trial and has 30 seconds to defend themselves**".format(
                 target.mention
             ),
-            allowed_mentions=discord.AllowedMentions(
-                everyone=False, users=[target]
-            )
+            allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
         )
 
         await asyncio.sleep(30)
@@ -371,9 +367,7 @@ class Game:
             "👍 to save, 👎 to lynch\n"
             "*Majority rules, no-lynch on ties, "
             "vote both or neither to abstain, 15 seconds to vote*".format(target.mention),
-            allowed_mentions=discord.AllowedMentions(
-                everyone=False, users=[target]
-            )
+            allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
         )
 
         await message.add_reaction("👍")
@@ -422,13 +416,13 @@ class Game:
         if self.game_over:
             return
         data = {"player": target}
-        await self._notify(3, data)
+        await self._notify("at_kill", player=target)
 
     async def _at_hang(self, target):  # ID 4
         if self.game_over:
             return
         data = {"player": target}
-        await self._notify(4, data)
+        await self._notify("at_hang", player=target)
 
     async def _at_day_end(self):  # ID 5
         await self._check_game_over()
@@ -447,14 +441,14 @@ class Game:
             embed=discord.Embed(title="**The sun sets on the village...**")
         )
 
-        await self._notify(5)
+        await self._notify("at_day_end")
         await asyncio.sleep(5)
         self.action_queue.append(self._at_night_start())
 
     async def _at_night_start(self):  # ID 6
         if self.game_over:
             return
-        await self._notify(6)
+        await self._notify("at_night_start")
 
         await asyncio.sleep(12)  # 2 minutes FixMe to 120 later
         await self.village_channel.send(
@@ -471,7 +465,7 @@ class Game:
     async def _at_night_end(self):  # ID 7
         if self.game_over:
             return
-        await self._notify(7)
+        await self._notify("at_night_end")
 
         await asyncio.sleep(10)
         self.action_queue.append(self._at_day_start())
@@ -480,25 +474,30 @@ class Game:
         if self.game_over:
             return
         data = {"target": target, "source": source}
-        await self._notify(8, data)
+        await self._notify("at_visit", target=target, source=source)
 
-    async def _notify(self, event, data=None):
+    async def _notify(self, event, **kwargs):
         for i in range(1, 7):  # action guide 1-6 (0 is no action)
+            tasks = []
+            for event in self.listeners.get(event, []):
+                tasks.append(asyncio.ensure_future(event(**kwargs), loop=self.loop))
+            await asyncio.gather(*tasks)
+
             # self.bot.dispatch(f"red.fox.werewolf.{event}", data=data, priority=i)
             # self.bot.extra_events
-            tasks = []
-            # Role priorities
-            role_order = [role for role in self.roles if role.action_list[event][1] == i]
-            for role in role_order:
-                tasks.append(asyncio.ensure_future(role.on_event(event, data), loop=self.loop))
-            # VoteGroup priorities
-            vote_order = [vg for vg in self.vote_groups.values() if vg.action_list[event][1] == i]
-            for vote_group in vote_order:
-                tasks.append(
-                    asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop)
-                )
-            if tasks:
-                await asyncio.gather(*tasks)
+            # tasks = []
+            # # Role priorities
+            # role_order = [role for role in self.roles if role.action_list[event][1] == i]
+            # for role in role_order:
+            #     tasks.append(asyncio.ensure_future(role.on_event(event, data), loop=self.loop))
+            # # VoteGroup priorities
+            # vote_order = [vg for vg in self.vote_groups.values() if vg.action_list[event][1] == i]
+            # for vote_group in vote_order:
+            #     tasks.append(
+            #         asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop)
+            #     )
+            # if tasks:
+            #     await asyncio.gather(*tasks)
             # Run same-priority task simultaneously
 
     ############END Notify structure############
@@ -911,3 +910,117 @@ class Game:
             pass
 
         # Optional dynamic channels/categories
+
+    @classmethod
+    def wolflistener(cls, name=None):
+        """A decorator that marks a function as a listener.
+
+        This is the cog equivalent of :meth:`.Bot.listen`.
+
+        Parameters
+        ------------
+        name: :class:`str`
+            The name of the event being listened to. If not provided, it
+            defaults to the function's name.
+
+        Raises
+        --------
+        TypeError
+            The function is not a coroutine function or a string was not passed as
+            the name.
+        """
+
+        if name is not None and not isinstance(name, str):
+            raise TypeError(
+                "Cog.listener expected str but received {0.__class__.__name__!r} instead.".format(
+                    name
+                )
+            )
+
+        def decorator(func):
+            actual = func
+            if isinstance(actual, staticmethod):
+                actual = actual.__func__
+            if not inspect.iscoroutinefunction(actual):
+                raise TypeError("Listener function must be a coroutine function.")
+            actual.__werewolf_listener__ = True
+            to_assign = name or actual.__name__
+            try:
+                actual.__cog_listener_names__.append(to_assign)
+            except AttributeError:
+                actual.__cog_listener_names__ = [to_assign]
+            # we have to return `func` instead of `actual` because
+            # we need the type to be `staticmethod` for the metaclass
+            # to pick it up but the metaclass unfurls the function and
+            # thus the assignments need to be on the actual function
+            return func
+
+        return decorator
+
+    def wolflisten(self, name=None):
+        """A decorator that registers another function as an external
+        event listener. Basically this allows you to listen to multiple
+        events from different places e.g. such as :func:`.on_ready`
+
+        The functions being listened to must be a :ref:`coroutine <coroutine>`.
+
+        Example
+        --------
+
+        .. code-block:: python3
+
+            @bot.listen()
+            async def on_message(message):
+                print('one')
+
+            # in some other file...
+
+            @bot.listen('on_message')
+            async def my_message(message):
+                print('two')
+
+        Would print one and two in an unspecified order.
+
+        Raises
+        -------
+        TypeError
+            The function being listened to is not a coroutine.
+        """
+
+        def decorator(func):
+            self.add_wolflistener(func, name)
+            return func
+
+        return decorator
+
+    def add_wolflistener(self, func, name=None):
+        """The non decorator alternative to :meth:`.listen`.
+
+        Parameters
+        -----------
+        func: :ref:`coroutine <coroutine>`
+            The function to call.
+        name: Optional[:class:`str`]
+            The name of the event to listen for. Defaults to ``func.__name__``.
+
+        Example
+        --------
+
+        .. code-block:: python3
+
+            async def on_ready(): pass
+            async def my_message(message): pass
+
+            bot.add_listener(on_ready)
+            bot.add_listener(my_message, 'on_message')
+
+        """
+        name = func.__name__ if name is None else name
+
+        if not asyncio.iscoroutinefunction(func):
+            raise TypeError('Listeners must be coroutines')
+
+        if name in self.listeners:
+            self.listeners[name].append(func)
+        else:
+            self.listeners[name] = [func]

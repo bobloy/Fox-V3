@@ -1,4 +1,7 @@
+import inspect
 import logging
+
+from werewolf import Werewolf
 
 log = logging.getLogger("red.fox_v3.werewolf.role")
 
@@ -64,27 +67,27 @@ class Role:
         self.blocked = False
         self.properties = {}  # Extra data for other roles (i.e. arsonist)
 
-        self.action_list = [
-            (self._at_game_start, 1),  # (Action, Priority)
-            (self._at_day_start, 0),
-            (self._at_voted, 0),
-            (self._at_kill, 0),
-            (self._at_hang, 0),
-            (self._at_day_end, 0),
-            (self._at_night_start, 0),
-            (self._at_night_end, 0),
-            (self._at_visit, 0),
-        ]
+        # self.action_list = [
+        #     (self._at_game_start, 1),  # (Action, Priority)
+        #     (self._at_day_start, 0),
+        #     (self._at_voted, 0),
+        #     (self._at_kill, 0),
+        #     (self._at_hang, 0),
+        #     (self._at_day_end, 0),
+        #     (self._at_night_start, 0),
+        #     (self._at_night_end, 0),
+        #     (self._at_visit, 0),
+        # ]
 
     def __repr__(self):
         return self.__class__.__name__
 
-    async def on_event(self, event, data):
-        """
-        See Game class for event guide
-        """
-
-        await self.action_list[event][0](data)
+    # async def on_event(self, event, data):
+    #     """
+    #     See Game class for event guide
+    #     """
+    #
+    #     await self.action_list[event][0](data)
 
     async def assign_player(self, player):
         """
@@ -124,35 +127,36 @@ class Role:
         """
         return "Default"
 
+    @wolflistener("at_game_start")
     async def _at_game_start(self, data=None):
         if self.channel_id:
             await self.game.register_channel(self.channel_id, self)
 
         await self.player.send_dm(self.game_start_message)  # Maybe embeds eventually
 
-    async def _at_day_start(self, data=None):
-        pass
-
-    async def _at_voted(self, data=None):
-        pass
-
-    async def _at_kill(self, data=None):
-        pass
-
-    async def _at_hang(self, data=None):
-        pass
-
-    async def _at_day_end(self, data=None):
-        pass
-
-    async def _at_night_start(self, data=None):
-        pass
-
-    async def _at_night_end(self, data=None):
-        pass
-
-    async def _at_visit(self, data=None):
-        pass
+    # async def _at_day_start(self, data=None):
+    #     pass
+    #
+    # async def _at_voted(self, data=None):
+    #     pass
+    #
+    # async def _at_kill(self, data=None):
+    #     pass
+    #
+    # async def _at_hang(self, data=None):
+    #     pass
+    #
+    # async def _at_day_end(self, data=None):
+    #     pass
+    #
+    # async def _at_night_start(self, data=None):
+    #     pass
+    #
+    # async def _at_night_end(self, data=None):
+    #     pass
+    #
+    # async def _at_visit(self, data=None):
+    #     pass
 
     async def kill(self, source):
         """
