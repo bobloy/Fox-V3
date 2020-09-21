@@ -1,4 +1,5 @@
 import datetime
+import logging
 import pathlib
 from typing import List
 
@@ -15,7 +16,7 @@ from redbot.core.utils.chat_formatting import box
 from .audiosession import AudioSession
 
 
-# from redbot.cogs.audio.utils import userlimit
+log = logging.getLogger("red.fox_v3.audiotrivia")
 
 
 class AudioTrivia(Trivia):
@@ -166,7 +167,10 @@ class AudioTrivia(Trivia):
         # Delay in audiosettings overwrites delay in settings
         combined_settings = {**settings, **audiosettings}
         session = AudioSession.start(
-            ctx=ctx, question_list=trivia_dict, settings=combined_settings, player=lavaplayer,
+            ctx=ctx,
+            question_list=trivia_dict,
+            settings=combined_settings,
+            player=lavaplayer,
         )
         self.trivia_sessions.append(session)
         LOG.debug("New audio trivia session; #%s in %d", ctx.channel, ctx.guild.id)
