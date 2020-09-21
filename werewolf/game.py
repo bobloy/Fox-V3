@@ -16,6 +16,7 @@ from .votegroup import VoteGroup
 
 log = logging.getLogger("red.fox_v3.werewolf.game")
 
+HALF_DAY_LENGTH = 24  # FixMe: to 120 later for 4 minute days
 
 class Game:
     """
@@ -262,7 +263,7 @@ class Game:
         await asyncio.sleep(1)
         await asyncio.ensure_future(self._cycle())  # Start the loop
 
-    ############START Notify structure############
+    # ###########START Notify structure############
     async def _cycle(self):
         """
         Each event enqueues the next event
@@ -323,13 +324,13 @@ class Game:
             return
         self.can_vote = True
 
-        await asyncio.sleep(24)  # 4 minute days FixMe to 120 later
+        await asyncio.sleep(HALF_DAY_LENGTH)  # 4 minute days FixMe to 120 later
         if check():
             return
         await self.village_channel.send(
             embed=discord.Embed(title="**Two minutes of daylight remain...**")
         )
-        await asyncio.sleep(24)  # 4 minute days FixMe to 120 later
+        await asyncio.sleep(HALF_DAY_LENGTH)  # 4 minute days FixMe to 120 later
 
         # Need a loop here to wait for trial to end (can_vote?)
         while self.ongoing_vote:
@@ -500,7 +501,7 @@ class Game:
             #     await asyncio.gather(*tasks)
             # Run same-priority task simultaneously
 
-    ############END Notify structure############
+    # ###########END Notify structure############
 
     async def generate_targets(self, channel, with_roles=False):
         embed = discord.Embed(title="Remaining Players")
@@ -911,89 +912,7 @@ class Game:
 
         # Optional dynamic channels/categories
 
-    @classmethod
-    def wolflistener(cls, name=None):
-        """A decorator that marks a function as a listener.
-
-        This is the cog equivalent of :meth:`.Bot.listen`.
-
-        Parameters
-        ------------
-        name: :class:`str`
-            The name of the event being listened to. If not provided, it
-            defaults to the function's name.
-
-        Raises
-        --------
-        TypeError
-            The function is not a coroutine function or a string was not passed as
-            the name.
-        """
-
-        if name is not None and not isinstance(name, str):
-            raise TypeError(
-                "Cog.listener expected str but received {0.__class__.__name__!r} instead.".format(
-                    name
-                )
-            )
-
-        def decorator(func):
-            actual = func
-            if isinstance(actual, staticmethod):
-                actual = actual.__func__
-            if not inspect.iscoroutinefunction(actual):
-                raise TypeError("Listener function must be a coroutine function.")
-            actual.__werewolf_listener__ = True
-            to_assign = name or actual.__name__
-            try:
-                actual.__cog_listener_names__.append(to_assign)
-            except AttributeError:
-                actual.__cog_listener_names__ = [to_assign]
-            # we have to return `func` instead of `actual` because
-            # we need the type to be `staticmethod` for the metaclass
-            # to pick it up but the metaclass unfurls the function and
-            # thus the assignments need to be on the actual function
-            return func
-
-        return decorator
-
-    def wolflisten(self, name=None):
-        """A decorator that registers another function as an external
-        event listener. Basically this allows you to listen to multiple
-        events from different places e.g. such as :func:`.on_ready`
-
-        The functions being listened to must be a :ref:`coroutine <coroutine>`.
-
-        Example
-        --------
-
-        .. code-block:: python3
-
-            @bot.listen()
-            async def on_message(message):
-                print('one')
-
-            # in some other file...
-
-            @bot.listen('on_message')
-            async def my_message(message):
-                print('two')
-
-        Would print one and two in an unspecified order.
-
-        Raises
-        -------
-        TypeError
-            The function being listened to is not a coroutine.
-        """
-
-        def decorator(func):
-            self.add_wolflistener(func, name)
-            return func
-
-        return decorator
-
-    def add_wolflistener(self, func, name=None):
+    def add_listener(self, func, name=None):
         """The non decorator alternative to :meth:`.listen`.
 
         Parameters
@@ -1024,3 +943,23 @@ class Game:
             self.listeners[name].append(func)
         else:
             self.listeners[name] = [func]
+
+    def remove_listener(self, func, name=None):
+        """Removes a listener from the pool of listeners.
+
+        Parameters
+        -----------
+        func
+            The function that was used as a listener to remove.
+        name: :class:`str`
+            The name of the event we want to remove. Defaults to
+            ``func.__name__``.
+        """
+
+        name = func.__name__ if name is None else name
+
+        if name in self.listeners:
+            try:
+                self.listeners[name].remove(func)
+            except ValueError:
+                pass

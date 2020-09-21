@@ -1,3 +1,4 @@
+from ..listener import wolflistener
 from ..night_powers import pick_target
 from ..role import Role
 
@@ -5,31 +6,31 @@ from ..role import Role
 class Shifter(Role):
     """
     Base Role class for werewolf game
-    
+
     Category enrollment guide as follows (category property):
         Town:
         1: Random, 2: Investigative, 3: Protective, 4: Government,
         5: Killing, 6: Power (Special night action)
-        
+
         Werewolf:
         11: Random, 12: Deception, 15: Killing, 16: Support
-        
+
         Neutral:
         21: Benign, 22: Evil, 23: Killing
-        
-        
+
+
         Example category:
         category = [1, 5, 6] Could be Veteran
         category = [1, 5] Could be Bodyguard
         category = [11, 16] Could be Werewolf Silencer
-        
-    
+
+
     Action guide as follows (on_event function):
         _at_night_start
         0. No Action
         1. Detain actions (Jailer/Kidnapper)
         2. Group discussions and choose targets
-        
+
         _at_night_end
         0. No Action
         1. Self actions (Veteran)
@@ -61,17 +62,17 @@ class Shifter(Role):
         super().__init__(game)
 
         self.shift_target = None
-        self.action_list = [
-            (self._at_game_start, 1),  # (Action, Priority)
-            (self._at_day_start, 0),
-            (self._at_voted, 0),
-            (self._at_kill, 0),
-            (self._at_hang, 0),
-            (self._at_day_end, 0),
-            (self._at_night_start, 2),  # Chooses targets
-            (self._at_night_end, 6),  # Role Swap
-            (self._at_visit, 0)
-        ]
+        # self.action_list = [
+        #     (self._at_game_start, 1),  # (Action, Priority)
+        #     (self._at_day_start, 0),
+        #     (self._at_voted, 0),
+        #     (self._at_kill, 0),
+        #     (self._at_hang, 0),
+        #     (self._at_day_end, 0),
+        #     (self._at_night_start, 2),  # Chooses targets
+        #     (self._at_night_end, 6),  # Role Swap
+        #     (self._at_visit, 0),
+        # ]
 
     async def see_alignment(self, source=None):
         """
@@ -94,14 +95,14 @@ class Shifter(Role):
         """
         return "Shifter"
 
+    @wolflistener("at_night_start")
     async def _at_night_start(self, data=None):
-        await super()._at_night_start(data)
         self.shift_target = None
         await self.game.generate_targets(self.player.member)
         await self.player.send_dm("**Pick a target to shift into**")
 
+    @wolflistener("at_night_end")
     async def _at_night_end(self, data=None):
-        await super()._at_night_end(data)
         if self.shift_target is None:
             if self.player.alive:
                 await self.player.send_dm("You will not use your powers tonight...")
@@ -114,16 +115,22 @@ class Shifter(Role):
 
             # Roles have now been swapped
 
-            await self.player.send_dm("Your role has been stolen...\n"
-                                      "You are now a **Shifter**.")
+            await self.player.send_dm(
+                "Your role has been stolen...\n" "You are now a **Shifter**."
+            )
             await self.player.send_dm(self.game_start_message)
 
             await target.send_dm(target.role.game_start_message)
         else:
             await self.player.send_dm("**Your shift failed...**")
+
     async def choose(self, ctx, data):
         """Handle night actions"""
         await super().choose(ctx, data)
 
         self.shift_target, target = await pick_target(self, ctx, data)
-        await ctx.send("**You will attempt to see the role of {} tonight...**".format(target.member.display_name))
+        await ctx.send(
+            "**You will attempt to see the role of {} tonight...**".format(
+                target.member.display_name
+            )
+        )

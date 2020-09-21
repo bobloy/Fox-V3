@@ -1,3 +1,4 @@
+from ..listener import wolflistener
 from ..night_powers import pick_target
 from ..role import Role
 
@@ -59,6 +60,7 @@ class Seer(Role):
         """
         return "Villager"
 
+    @wolflistener("at_night_start")
     async def _at_night_start(self, data=None):
         if not self.player.alive:
             return
@@ -66,6 +68,7 @@ class Seer(Role):
         await self.game.generate_targets(self.player.member)
         await self.player.send_dm("**Pick a target to see tonight**")
 
+    @wolflistener("at_night_end")
     async def _at_night_end(self, data=None):
         if self.see_target is None:
             if self.player.alive:

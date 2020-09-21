@@ -1,3 +1,4 @@
+from ..listener import wolflistener
 from ..role import Role
 
 from ..votegroups.wolfvote import WolfVote
@@ -19,17 +20,17 @@ class VanillaWerewolf(Role):
     def __init__(self, game):
         super().__init__(game)
 
-        self.action_list = [
-            (self._at_game_start, 1),  # (Action, Priority)
-            (self._at_day_start, 0),
-            (self._at_voted, 0),
-            (self._at_kill, 0),
-            (self._at_hang, 0),
-            (self._at_day_end, 0),
-            (self._at_night_start, 0),
-            (self._at_night_end, 0),
-            (self._at_visit, 0)
-        ]
+        # self.action_list = [
+        #     (self._at_game_start, 1),  # (Action, Priority)
+        #     (self._at_day_start, 0),
+        #     (self._at_voted, 0),
+        #     (self._at_kill, 0),
+        #     (self._at_hang, 0),
+        #     (self._at_day_end, 0),
+        #     (self._at_night_start, 0),
+        #     (self._at_night_end, 0),
+        #     (self._at_visit, 0)
+        # ]
 
     async def see_alignment(self, source=None):
         """
@@ -52,6 +53,7 @@ class VanillaWerewolf(Role):
         """
         return "Werewolf"
 
+    @wolflistener("at_game_start")
     async def _at_game_start(self, data=None):
         if self.channel_id:
             print("Wolf has channel_id: " + self.channel_id)

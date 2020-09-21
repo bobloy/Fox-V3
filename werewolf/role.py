@@ -1,12 +1,12 @@
 import inspect
 import logging
 
-from werewolf import Werewolf
+from werewolf.listener import WolfListener, wolflistener
 
 log = logging.getLogger("red.fox_v3.werewolf.role")
 
 
-class Role:
+class Role(WolfListener):
     """
     Base Role class for werewolf game
 
@@ -28,7 +28,7 @@ class Role:
         category = [11, 16] Could be Werewolf Silencer
 
 
-    Action guide as follows (on_event function):
+    Action priority guide as follows (on_event function):
         _at_night_start
         0. No Action
         1. Detain actions (Jailer/Kidnapper)
@@ -62,6 +62,7 @@ class Role:
     icon_url = None  # Adding a URL here will enable a thumbnail of the role
 
     def __init__(self, game):
+        super().__init__(game)
         self.game = game
         self.player = None
         self.blocked = False
