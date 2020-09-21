@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+from collections import deque
 from typing import List, Any, Dict, Set, Union
 
 import discord
@@ -84,6 +85,8 @@ class Game:
         self.night_results = []
 
         self.loop = asyncio.get_event_loop()
+
+        self.action_queue = deque()
 
     # def __del__(self):
     #     """
@@ -275,8 +278,14 @@ class Game:
 
         and repeat with _at_day_start() again
         """
-        await self._at_day_start()
-        # Once cycle ends, this will trigger end_game
+
+        self.action_queue.append(self._at_day_start())
+
+        while self.action_queue:
+            await self.action_queue.popleft()
+        #
+        # await self._at_day_start()
+        # # Once cycle ends, this will trigger end_game
         await self._end_game()  # Handle open channels
 
     async def _at_game_start(self):  # ID 0
@@ -331,7 +340,7 @@ class Game:
         if check():
             return
 
-        await self._at_day_end()
+        self.action_queue.append(self._at_day_end())
 
     async def _at_voted(self, target):  # ID 2
         if self.game_over:
@@ -405,7 +414,7 @@ class Game:
         self.ongoing_vote = False
 
         if not self.can_vote:
-            await self._at_day_end()
+            self.action_queue.append(self._at_day_end())
         else:
             await self.normal_perms(self.village_channel)  # No point if about to be night
 
@@ -440,7 +449,7 @@ class Game:
 
         await self._notify(5)
         await asyncio.sleep(5)
-        await self._at_night_start()
+        self.action_queue.append(self._at_night_start())
 
     async def _at_night_start(self):  # ID 6
         if self.game_over:
@@ -457,7 +466,7 @@ class Game:
         )
         await asyncio.sleep(3)  # .5 minutes FixMe to 30 Later
 
-        await self._at_night_end()
+        self.action_queue.append(self._at_night_end())
 
     async def _at_night_end(self):  # ID 7
         if self.game_over:
@@ -465,7 +474,7 @@ class Game:
         await self._notify(7)
 
         await asyncio.sleep(10)
-        await self._at_day_start()
+        self.action_queue.append(self._at_day_start())
 
     async def _at_visit(self, target, source):  # ID 8
         if self.game_over:
@@ -475,20 +484,21 @@ class Game:
 
     async def _notify(self, event, data=None):
         for i in range(1, 7):  # action guide 1-6 (0 is no action)
-            self.bot.dispatch(f"red.fox.werewolf.{event}", data=data, priority=i)
-            # tasks = []
-            # # Role priorities
-            # role_order = [role for role in self.roles if role.action_list[event][1] == i]
-            # for role in role_order:
-            #     tasks.append(asyncio.ensure_future(role.on_event(event, data), loop=self.loop))
-            # # VoteGroup priorities
-            # vote_order = [vg for vg in self.vote_groups.values() if vg.action_list[event][1] == i]
-            # for vote_group in vote_order:
-            #     tasks.append(
-            #         asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop)
-            #     )
-            # if tasks:
-            #     await asyncio.gather(*tasks)
+            # self.bot.dispatch(f"red.fox.werewolf.{event}", data=data, priority=i)
+            # self.bot.extra_events
+            tasks = []
+            # Role priorities
+            role_order = [role for role in self.roles if role.action_list[event][1] == i]
+            for role in role_order:
+                tasks.append(asyncio.ensure_future(role.on_event(event, data), loop=self.loop))
+            # VoteGroup priorities
+            vote_order = [vg for vg in self.vote_groups.values() if vg.action_list[event][1] == i]
+            for vote_group in vote_order:
+                tasks.append(
+                    asyncio.ensure_future(vote_group.on_event(event, data), loop=self.loop)
+                )
+            if tasks:
+                await asyncio.gather(*tasks)
             # Run same-priority task simultaneously
 
     ############END Notify structure############
