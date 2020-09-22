@@ -1,6 +1,6 @@
-from ..listener import wolflistener
-from ..night_powers import pick_target
-from ..role import Role
+from werewolf.listener import wolflistener
+from werewolf.night_powers import pick_target
+from werewolf.role import Role
 
 
 class Shifter(Role):
