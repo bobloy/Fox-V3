@@ -82,15 +82,18 @@ class Werewolf(Cog):
         Lists current guild settings
         """
         valid, role, category, channel, log_channel = await self._get_settings(ctx)
-        if not valid:
-            await ctx.send("Failed to get settings")
-            return None
+        # if not valid:
+        #     await ctx.send("Failed to get settings")
+        #     return None
 
-        embed = discord.Embed(title="Current Guild Settings")
+        embed = discord.Embed(
+            title="Current Guild Settings", description=f"Valid: {valid}", color=0xFF0000
+        )
         embed.add_field(name="Role", value=str(role))
         embed.add_field(name="Category", value=str(category))
         embed.add_field(name="Channel", value=str(channel))
         embed.add_field(name="Log Channel", value=str(log_channel))
+
         await ctx.send(embed=embed)
 
     @commands.guild_only()
@@ -391,23 +394,30 @@ class Werewolf(Cog):
 
         if role_id is not None:
             role = discord.utils.get(guild.roles, id=role_id)
-            if role is None:
-                await ctx.send("Game Role is invalid")
-                return False, None, None, None, None
+        # if role is None:
+        #     # await ctx.send("Game Role is invalid")
+        #     return False, None, None, None, None
         if category_id is not None:
             category = discord.utils.get(guild.categories, id=category_id)
-            if category is None:
-                await ctx.send("Game Category is invalid")
-                return False, None, None, None, None
+        # if category is None:
+        #     # await ctx.send("Game Category is invalid")
+        #     return False, role, None, None, None
         if channel_id is not None:
             channel = discord.utils.get(guild.text_channels, id=channel_id)
-            if channel is None:
-                await ctx.send("Village Channel is invalid")
-                return False, None, None, None, None
+        # if channel is None:
+        #     # await ctx.send("Village Channel is invalid")
+        #     return False, role, category, None, None
+
         if log_channel_id is not None:
             log_channel = discord.utils.get(guild.text_channels, id=log_channel_id)
-            if log_channel is None:
-                await ctx.send("Log Channel is invalid")
-                return False, None, None, None, None
+            # if log_channel is None:
+            #     # await ctx.send("Log Channel is invalid")
+            #     return False, None, None, None, None
 
-        return True, role, category, channel, log_channel
+        return (
+            role is not None and category is not None and channel is not None,
+            role,
+            category,
+            channel,
+            log_channel,
+        )
