@@ -6,14 +6,14 @@ from redbot.core.bot import Red
 from redbot.core.commands import Cog
 from redbot.core.utils.menus import DEFAULT_CONTROLS, menu
 
-from .builder import (
+from werewolf.builder import (
     GameBuilder,
     role_from_alignment,
     role_from_category,
     role_from_id,
     role_from_name,
 )
-from .game import Game
+from werewolf.game import Game
 
 log = logging.getLogger("red.fox_v3.werewolf")
 
@@ -81,8 +81,8 @@ class Werewolf(Cog):
         """
         Lists current guild settings
         """
-        success, role, category, channel, log_channel = await self._get_settings(ctx)
-        if not success:
+        valid, role, category, channel, log_channel = await self._get_settings(ctx)
+        if not valid:
             await ctx.send("Failed to get settings")
             return None
 
@@ -362,13 +362,15 @@ class Werewolf(Cog):
             return None
         if guild.id not in self.games or self.games[guild.id].game_over:
             await ctx.send("Starting a new game...")
-            success, role, category, channel, log_channel = await self._get_settings(ctx)
+            valid, role, category, channel, log_channel = await self._get_settings(ctx)
 
-            if not success:
+            if not valid:
                 await ctx.send("Cannot start a new game")
                 return None
 
-            self.games[guild.id] = Game(self.bot, guild, role, category, channel, log_channel, game_code)
+            self.games[guild.id] = Game(
+                self.bot, guild, role, category, channel, log_channel, game_code
+            )
 
         return self.games[guild.id]
 

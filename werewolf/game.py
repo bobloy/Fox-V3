@@ -9,10 +9,10 @@ import discord
 from redbot.core import commands
 from redbot.core.bot import Red
 
-from .builder import parse_code
-from .player import Player
-from .role import Role
-from .votegroup import VoteGroup
+from werewolf.builder import parse_code
+from werewolf.player import Player
+from werewolf.role import Role
+from werewolf.votegroup import VoteGroup
 
 log = logging.getLogger("red.fox_v3.werewolf.game")
 
@@ -480,7 +480,7 @@ class Game:
     async def _notify(self, event, **kwargs):
         for i in range(1, 7):  # action guide 1-6 (0 is no action)
             tasks = []
-            for event in self.listeners.get(event, []):
+            for event in self.listeners.get(event, {}).get(i, []):
                 tasks.append(asyncio.ensure_future(event(**kwargs), loop=self.loop))
             await asyncio.gather(*tasks)
 
@@ -912,26 +912,19 @@ class Game:
 
         # Optional dynamic channels/categories
 
-    def add_listener(self, func, name=None):
-        """The non decorator alternative to :meth:`.listen`.
+    def add_ww_listener(self, func, priority=0, name=None):
+        """Adds a listener from the pool of listeners.
 
         Parameters
         -----------
         func: :ref:`coroutine <coroutine>`
             The function to call.
+        priority: Optional[:class:`int`]
+            Priority of the listener. Defaults to 0 (no-action)
         name: Optional[:class:`str`]
             The name of the event to listen for. Defaults to ``func.__name__``.
-
-        Example
-        --------
-
-        .. code-block:: python3
-
-            async def on_ready(): pass
-            async def my_message(message): pass
-
-            bot.add_listener(on_ready)
-            bot.add_listener(my_message, 'on_message')
+        do_sort: Optional[:class:`bool`]
+            Whether or not to sort listeners after. Skip sorting during mass appending
 
         """
         name = func.__name__ if name is None else name
@@ -940,26 +933,32 @@ class Game:
             raise TypeError('Listeners must be coroutines')
 
         if name in self.listeners:
-            self.listeners[name].append(func)
+            if priority in self.listeners[name]:
+                self.listeners[name][priority].append(func)
+            else:
+                self.listeners[name][priority] = [func]
         else:
-            self.listeners[name] = [func]
+            self.listeners[name] = {priority: [func]}
 
-    def remove_listener(self, func, name=None):
-        """Removes a listener from the pool of listeners.
+        # self.listeners[name].sort(reverse=True)
 
-        Parameters
-        -----------
-        func
-            The function that was used as a listener to remove.
-        name: :class:`str`
-            The name of the event we want to remove. Defaults to
-            ``func.__name__``.
-        """
 
-        name = func.__name__ if name is None else name
-
-        if name in self.listeners:
-            try:
-                self.listeners[name].remove(func)
-            except ValueError:
-                pass
+    # def remove_wolf_listener(self, func, name=None):
+    #     """Removes a listener from the pool of listeners.
+    #
+    #     Parameters
+    #     -----------
+    #     func
+    #         The function that was used as a listener to remove.
+    #     name: :class:`str`
+    #         The name of the event we want to remove. Defaults to
+    #         ``func.__name__``.
+    #     """
+    #
+    #     name = func.__name__ if name is None else name
+    #
+    #     if name in self.listeners:
+    #         try:
+    #             self.listeners[name].remove(func)
+    #         except ValueError:
+    #             pass

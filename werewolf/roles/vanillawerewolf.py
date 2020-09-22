@@ -1,7 +1,6 @@
-from ..listener import wolflistener
-from ..role import Role
-
-from ..votegroups.wolfvote import WolfVote
+from werewolf.listener import wolflistener
+from werewolf.role import Role
+from werewolf.votegroups.wolfvote import WolfVote
 
 
 class VanillaWerewolf(Role):

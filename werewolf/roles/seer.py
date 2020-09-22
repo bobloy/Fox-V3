@@ -1,6 +1,6 @@
-from ..listener import wolflistener
-from ..night_powers import pick_target
-from ..role import Role
+from werewolf.listener import wolflistener
+from werewolf.night_powers import pick_target
+from werewolf.role import Role
 
 
 class Seer(Role):
@@ -27,17 +27,17 @@ class Seer(Role):
         # self.blocked = False
         # self.properties = {}  # Extra data for other roles (i.e. arsonist)
         self.see_target = None
-        self.action_list = [
-            (self._at_game_start, 1),  # (Action, Priority)
-            (self._at_day_start, 0),
-            (self._at_voted, 0),
-            (self._at_kill, 0),
-            (self._at_hang, 0),
-            (self._at_day_end, 0),
-            (self._at_night_start, 2),
-            (self._at_night_end, 4),
-            (self._at_visit, 0),
-        ]
+        # self.action_list = [
+        #     (self._at_game_start, 1),  # (Action, Priority)
+        #     (self._at_day_start, 0),
+        #     (self._at_voted, 0),
+        #     (self._at_kill, 0),
+        #     (self._at_hang, 0),
+        #     (self._at_day_end, 0),
+        #     (self._at_night_start, 2),
+        #     (self._at_night_end, 4),
+        #     (self._at_visit, 0),
+        # ]
 
     async def see_alignment(self, source=None):
         """
@@ -60,7 +60,7 @@ class Seer(Role):
         """
         return "Villager"
 
-    @wolflistener("at_night_start")
+    @wolflistener("at_night_start", priority=2)
     async def _at_night_start(self, data=None):
         if not self.player.alive:
             return
@@ -68,7 +68,7 @@ class Seer(Role):
         await self.game.generate_targets(self.player.member)
         await self.player.send_dm("**Pick a target to see tonight**")
 
-    @wolflistener("at_night_end")
+    @wolflistener("at_night_end", priority=4)
     async def _at_night_end(self, data=None):
         if self.see_target is None:
             if self.player.alive:

@@ -1,6 +1,6 @@
 import logging
 
-from .role import Role
+from werewolf.role import Role
 
 log = logging.getLogger("red.fox_v3.werewolf.night_powers")
 

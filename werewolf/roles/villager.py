@@ -1,4 +1,4 @@
-from ..role import Role
+from werewolf.role import Role
 
 
 class Villager(Role):

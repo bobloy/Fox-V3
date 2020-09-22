@@ -1,7 +1,7 @@
 import inspect
 
 
-def wolflistener(name=None):
+def wolflistener(name=None, priority=0):
     """A decorator that marks a function as a listener.
 
     This is the werewolf.Game equivalent of :meth:`.Cog.listener`.
@@ -11,6 +11,22 @@ def wolflistener(name=None):
     name: :class:`str`
         The name of the event being listened to. If not provided, it
         defaults to the function's name.
+    priority: :class:`int`
+        The priority of the listener.
+        Priority guide as follows:
+        _at_night_start
+        0. No Action
+        1. Detain actions (Jailer/Kidnapper)
+        2. Group discussions and choose targets
+
+        _at_night_end
+        0. No Action
+        1. Self actions (Veteran)
+        2. Target switching and role blocks (bus driver, witch, escort)
+        3. Protection / Preempt actions (bodyguard/framer)
+        4. Non-disruptive actions (seer/silencer)
+        5. Disruptive actions (Killing)
+        6. Role altering actions (Cult / Mason / Shifter)
 
     Raises
     --------
@@ -32,12 +48,12 @@ def wolflistener(name=None):
             actual = actual.__func__
         if not inspect.iscoroutinefunction(actual):
             raise TypeError("Listener function must be a coroutine function.")
-        actual.__wolf_listener__ = True
+        actual.__wolf_listener__ = priority
         to_assign = name or actual.__name__
         try:
-            actual.__wolf_listener_names__.append(to_assign)
+            actual.__wolf_listener_names__.append((priority, to_assign))
         except AttributeError:
-            actual.__wolf_listener_names__ = [to_assign]
+            actual.__wolf_listener_names__ = [(priority, to_assign)]
         # we have to return `func` instead of `actual` because
         # we need the type to be `staticmethod` for the metaclass
         # to pick it up but the metaclass unfurls the function and
@@ -51,7 +67,6 @@ class WolfListenerMeta(type):
     def __new__(mcs, cls, *args, **kwargs):
         name, bases = args
 
-        commands = {}
         listeners = {}
         need_at_msg = "Listeners must start with at_ (in method {0.__name__}.{1})"
 
@@ -76,10 +91,10 @@ class WolfListenerMeta(type):
 
         listeners_as_list = []
         for listener in listeners.values():
-            for listener_name in listener.__wolf_listener_names__:
+            for priority, listener_name in listener.__wolf_listener_names__:
                 # I use __name__ instead of just storing the value so I can inject
                 # the self attribute when the time comes to add them to the bot
-                listeners_as_list.append((listener_name, listener.__name__))
+                listeners_as_list.append((priority, listener_name, listener.__name__))
 
         new_cls.__wolf_listeners__ = listeners_as_list
         return new_cls
@@ -87,5 +102,5 @@ class WolfListenerMeta(type):
 
 class WolfListener(metaclass=WolfListenerMeta):
     def __init__(self, game):
-        for name, method_name in self.__wolf_listeners__:
-            game.add_listener(getattr(self, method_name), name)
+        for priority, name, method_name in self.__wolf_listeners__:
+            game.add_ww_listener(getattr(self, method_name), priority, name)
