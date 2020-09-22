@@ -87,7 +87,9 @@ class Werewolf(Cog):
         #     return None
 
         embed = discord.Embed(
-            title="Current Guild Settings", description=f"Valid: {valid}", color=0xFF0000
+            title="Current Guild Settings",
+            description=f"Valid: {valid}",
+            color=0x008000 if valid else 0xFF0000,
         )
         embed.add_field(name="Role", value=str(role))
         embed.add_field(name="Category", value=str(category))
