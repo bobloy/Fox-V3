@@ -18,6 +18,7 @@ log = logging.getLogger("red.fox_v3.werewolf.game")
 
 HALF_DAY_LENGTH = 24  # FixMe: to 120 later for 4 minute days
 
+
 class Game:
     """
     Base class to run a single game of Werewolf
@@ -119,10 +120,10 @@ class Game:
 
         if len(self.players) != len(self.roles):
             await ctx.maybe_send_embed(
-                "Player count does not match role count, cannot start\n"
-                "Currently **{} / {}**\n"
-                "Use `{}ww code` to pick a new game"
-                "".format(len(self.players), len(self.roles), ctx.prefix)
+                f"Player count does not match role count, cannot start\n"
+                f"Currently **{len(self.players)} / {len(self.roles)}**\n"
+                f"Use `{ctx.prefix}ww code` to pick a game setup\n"
+                f"Use `{ctx.prefix}buildgame` to generate a new game"
             )
             self.roles = []
             return False
@@ -147,9 +148,7 @@ class Game:
                     await player.member.add_roles(*[self.game_role])
             except discord.Forbidden:
                 await ctx.send(
-                    "Unable to add role **{}**\nBot is missing `manage_roles` permissions".format(
-                        self.game_role.name
-                    )
+                    f"Unable to add role **{self.game_role.name}**\nBot is missing `manage_roles` permissions"
                 )
                 return False
 
@@ -353,9 +352,7 @@ class Game:
 
         await self.speech_perms(self.village_channel, target.member)  # Only target can talk
         await self.village_channel.send(
-            "**{} will be put to trial and has 30 seconds to defend themselves**".format(
-                target.mention
-            ),
+            f"**{target.mention} will be put to trial and has 30 seconds to defend themselves**",
             allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
         )
 
@@ -364,10 +361,10 @@ class Game:
         await self.speech_perms(self.village_channel, target.member, undo=True)  # No one can talk
 
         message: discord.Message = await self.village_channel.send(
-            "Everyone will now vote whether to lynch {}\n"
+            f"Everyone will now vote whether to lynch {target.mention}\n"
             "👍 to save, 👎 to lynch\n"
             "*Majority rules, no-lynch on ties, "
-            "vote both or neither to abstain, 15 seconds to vote*".format(target.mention),
+            "vote both or neither to abstain, 15 seconds to vote*",
             allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
         )
 
@@ -385,25 +382,31 @@ class Game:
         else:
             embed = discord.Embed(title="Vote Results", color=0x80FF80)
 
-        embed.add_field(name="👎", value="**{}**".format(up_votes), inline=True)
-        embed.add_field(name="👍", value="**{}**".format(down_votes), inline=True)
+        embed.add_field(name="👎", value=f"**{up_votes}**", inline=True)
+        embed.add_field(name="👍", value=f"**{down_votes}**", inline=True)
 
         await self.village_channel.send(embed=embed)
 
         if down_votes > up_votes:
-            await self.village_channel.send("**Voted to lynch {}!**".format(target.mention))
+            await self.village_channel.send(
+                f"**Voted to lynch {target.mention}!**",
+                allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
+            )
             await self.lynch(target)
             self.can_vote = False
         else:
-            await self.village_channel.send("**{} has been spared!**".format(target.mention))
+            await self.village_channel.send(
+                f"**{target.mention} has been spared!**",
+                allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
+            )
 
             if self.used_votes >= self.day_vote_count:
                 await self.village_channel.send("**All votes have been used! Day is now over!**")
                 self.can_vote = False
             else:
                 await self.village_channel.send(
-                    "**{}**/**{}** of today's votes have been used!\n"
-                    "Nominate carefully..".format(self.used_votes, self.day_vote_count)
+                    f"**{self.used_votes}**/**{self.day_vote_count}** of today's votes have been used!\n"
+                    "Nominate carefully.."
                 )
 
         self.ongoing_vote = False
@@ -513,14 +516,14 @@ class Game:
                 status = "*[Dead]*-"
             if with_roles or not player.alive:
                 embed.add_field(
-                    name="ID# **{}**".format(i),
-                    value="{}{}-{}".format(status, player.member.display_name, str(player.role)),
+                    name=f"ID# **{i}**",
+                    value=f"{status}{player.member.display_name}-{player.role}",
                     inline=True,
                 )
             else:
                 embed.add_field(
-                    name="ID# **{}**".format(i),
-                    value="{}{}".format(status, player.member.display_name),
+                    name=f"ID# **{i}**",
+                    value=f"{status}{player.member.display_name}",
                     inline=True,
                 )
 
@@ -553,7 +556,7 @@ class Game:
             return
 
         if await self.get_player_by_member(member) is not None:
-            await channel.send("{} is already in the game!".format(member.mention))
+            await channel.send(f"{member.display_name} is already in the game!")
             return
 
         self.players.append(Player(member))
@@ -563,14 +566,12 @@ class Game:
                 await member.add_roles(*[self.game_role])
             except discord.Forbidden:
                 await channel.send(
-                    "Unable to add role **{}**\nBot is missing `manage_roles` permissions".format(
-                        self.game_role.name
-                    )
+                    f"Unable to add role **{self.game_role.name}**\nBot is missing `manage_roles` permissions"
                 )
 
         await channel.send(
-            "{} has been added to the game, "
-            "total players is **{}**".format(member.mention, len(self.players))
+            f"{member.display_name} has been added to the game, "
+            f"total players is **{len(self.players)}**"
         )
 
     async def quit(self, member: discord.Member, channel: discord.TextChannel = None):
@@ -584,14 +585,16 @@ class Game:
 
         if self.started:
             await self._quit(player)
-            await channel.send("{} has left the game".format(member.mention))
+            await channel.send(
+                f"{member.mention} has left the game",
+                allowed_mentions=discord.AllowedMentions(everyone=False, users=[member]),
+            )
         else:
             self.players = [player for player in self.players if player.member != member]
             await member.remove_roles(*[self.game_role])
             await channel.send(
-                "{} chickened out, player count is now **{}**".format(
-                    member.mention, len(self.players)
-                )
+                f"{member.mention} chickened out, player count is now **{len(self.players)}**",
+                allowed_mentions=discord.AllowedMentions(everyone=False, users=[member]),
             )
 
     async def choose(self, ctx, data):
@@ -698,7 +701,8 @@ class Game:
                     author.mention,
                     target.member.mention,
                     required_votes - self.vote_totals[target_id],
-                )
+                ),
+                allowed_mentions=discord.AllowedMentions(everyone=False, users=[author, target]),
             )
         else:
             self.vote_totals[target_id] = 0
@@ -930,7 +934,7 @@ class Game:
         name = func.__name__ if name is None else name
 
         if not asyncio.iscoroutinefunction(func):
-            raise TypeError('Listeners must be coroutines')
+            raise TypeError("Listeners must be coroutines")
 
         if name in self.listeners:
             if priority in self.listeners[name]:
@@ -941,7 +945,6 @@ class Game:
             self.listeners[name] = {priority: [func]}
 
         # self.listeners[name].sort(reverse=True)
-
 
     # def remove_wolf_listener(self, func, name=None):
     #     """Removes a listener from the pool of listeners.

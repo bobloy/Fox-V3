@@ -1,6 +1,10 @@
+import logging
+
 from werewolf.listener import wolflistener
 from werewolf.night_powers import pick_target
 from werewolf.role import Role
+
+log = logging.getLogger("red.fox_v3.werewolf.role.shifter")
 
 
 class Shifter(Role):
@@ -130,7 +134,5 @@ class Shifter(Role):
 
         self.shift_target, target = await pick_target(self, ctx, data)
         await ctx.send(
-            "**You will attempt to see the role of {} tonight...**".format(
-                target.member.display_name
-            )
+            f"**You will attempt to see the role of {target.member.display_name} tonight...**"
         )

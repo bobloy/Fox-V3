@@ -49,7 +49,7 @@ CATEGORY_COUNT = []
 
 def role_embed(idx, role, color):
     embed = discord.Embed(
-        title="**{}** - {}".format(idx, str(role.__name__)),
+        title=f"**{idx}** - {role.__name__}",
         description=role.game_start_message,
         color=color,
     )
@@ -82,7 +82,7 @@ def setup():
         if 0 < k <= 6:
             ROLE_PAGES.append(
                 discord.Embed(
-                    title="RANDOM:Town Role", description="Town {}".format(v), color=0x008000
+                    title="RANDOM:Town Role", description=f"Town {v}", color=0x008000
                 )
             )
             CATEGORY_COUNT.append(k)
@@ -95,7 +95,7 @@ def setup():
             ROLE_PAGES.append(
                 discord.Embed(
                     title="RANDOM:Werewolf Role",
-                    description="Werewolf {}".format(v),
+                    description=f"Werewolf {v}",
                     color=0xFF0000,
                 )
             )
@@ -107,7 +107,7 @@ def setup():
         if 20 < k <= 26:
             ROLE_PAGES.append(
                 discord.Embed(
-                    title="RANDOM:Neutral Role", description="Neutral {}".format(v), color=0xC0C0C0
+                    title=f"RANDOM:Neutral Role", description="Neutral {v}", color=0xC0C0C0
                 )
             )
             CATEGORY_COUNT.append(k)
@@ -306,14 +306,14 @@ def say_role_list(code_list, rand_roles):
 
     for role in rand_roles:
         if 0 < role <= 6:
-            role_dict["Town {}".format(ROLE_CATEGORIES[role])] += 1
+            role_dict[f"Town {ROLE_CATEGORIES[role]}"] += 1
         if 10 < role <= 16:
-            role_dict["Werewolf {}".format(ROLE_CATEGORIES[role])] += 1
+            role_dict[f"Werewolf {ROLE_CATEGORIES[role]}"] += 1
         if 20 < role <= 26:
-            role_dict["Neutral {}".format(ROLE_CATEGORIES[role])] += 1
+            role_dict[f"Neutral {ROLE_CATEGORIES[role]}"] += 1
 
     for k, v in role_dict.items():
-        embed.add_field(name=k, value="Count: {}".format(v), inline=True)
+        embed.add_field(name=k, value=f"Count: {v}", inline=True)
 
     return embed
 

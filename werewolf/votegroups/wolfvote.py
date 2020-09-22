@@ -1,6 +1,9 @@
+import logging
 import random
 
 from werewolf.votegroup import VoteGroup
+
+log = logging.getLogger("red.fox_v3.werewolf.votegroup.wolfvote")
 
 
 class WolfVote(VoteGroup):
@@ -77,7 +80,7 @@ class WolfVote(VoteGroup):
         self.killer = random.choice(self.players)
 
         await self.channel.send(
-            "{} has been selected as tonight's killer".format(self.killer.member.display_name)
+            f"{self.killer.member.display_name} has been selected as tonight's killer"
         )
 
     async def _at_night_end(self, data=None):
@@ -90,7 +93,7 @@ class WolfVote(VoteGroup):
         if vote_list:
             target_id = max(set(vote_list), key=vote_list.count)
 
-        print("Target id: {}\nKiller: {}".format(target_id, self.killer.member.display_name))
+        log.debug("Target id: {target_id}\nKiller: {self.killer.member.display_name}")
         if target_id is not None and self.killer:
             await self.game.kill(target_id, self.killer, random.choice(self.kill_messages))
             await self.channel.send(

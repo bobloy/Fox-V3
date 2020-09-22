@@ -34,4 +34,4 @@ class Player:
         try:
             await self.member.send(message)  # Lets do embeds later
         except discord.Forbidden:
-            await self.role.game.village_channel.send("Couldn't DM {}, uh oh".format(self.mention))
+            await self.role.game.village_channel.send(f"Couldn't DM {self.mention}, uh oh", allowed_mentions=discord.AllowedMentions(users=[self.member]))

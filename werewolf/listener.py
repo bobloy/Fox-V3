@@ -64,13 +64,13 @@ def wolflistener(name=None, priority=0):
 
 
 class WolfListenerMeta(type):
-    def __new__(mcs, cls, *args, **kwargs):
-        name, bases = args
+    def __new__(mcs, *args, **kwargs):
+        name, bases, attrs = args
 
         listeners = {}
         need_at_msg = "Listeners must start with at_ (in method {0.__name__}.{1})"
 
-        new_cls = super().__new__(cls, name, bases, **kwargs)
+        new_cls = super().__new__(mcs, name, bases, attrs, **kwargs)
         for base in reversed(new_cls.__mro__):
             for elem, value in base.__dict__.items():
                 if elem in listeners:
@@ -85,8 +85,8 @@ class WolfListenerMeta(type):
                     except AttributeError:
                         continue
                     else:
-                        if not elem.startswith("at_"):
-                            raise TypeError(need_at_msg.format(mcs, elem))
+                        # if not elem.startswith("at_"):
+                        #     raise TypeError(need_at_msg.format(base, elem))
                         listeners[elem] = value
 
         listeners_as_list = []

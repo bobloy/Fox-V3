@@ -1,6 +1,10 @@
+import logging
+
 from werewolf.listener import wolflistener
 from werewolf.role import Role
 from werewolf.votegroups.wolfvote import WolfVote
+
+log = logging.getLogger("red.fox_v3.werewolf.role.vanillawerewolf")
 
 
 class VanillaWerewolf(Role):
@@ -56,7 +60,9 @@ class VanillaWerewolf(Role):
     async def _at_game_start(self, data=None):
         if self.channel_id:
             print("Wolf has channel_id: " + self.channel_id)
-            await self.game.register_channel(self.channel_id, self, WolfVote)  # Add VoteGroup WolfVote
+            await self.game.register_channel(
+                self.channel_id, self, WolfVote
+            )  # Add VoteGroup WolfVote
 
         await self.player.send_dm(self.game_start_message)
 

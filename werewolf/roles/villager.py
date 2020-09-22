@@ -1,4 +1,8 @@
+import logging
+
 from werewolf.role import Role
+
+log = logging.getLogger("red.fox_v3.werewolf.role.villager")
 
 
 class Villager(Role):
