@@ -84,24 +84,24 @@ class AudioTrivia(Trivia):
             self.audio: Audio = self.bot.get_cog("Audio")
 
         if self.audio is None:
-            await ctx.send("Audio is not loaded. Load it and try again")
+            await ctx.maybe_send_embed("Audio is not loaded. Load it and try again")
             return
 
         categories = [c.lower() for c in categories]
         session = self._get_trivia_session(ctx.channel)
         if session is not None:
-            await ctx.send("There is already an ongoing trivia session in this channel.")
+            await ctx.maybe_send_embed("There is already an ongoing trivia session in this channel.")
             return
         status = await self.audio.config.status()
         notify = await self.audio.config.guild(ctx.guild).notify()
 
         if status:
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 f"It is recommended to disable audio status with `{ctx.prefix}audioset status`"
             )
 
         if notify:
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 f"It is recommended to disable audio notify with `{ctx.prefix}audioset notify`"
             )
 
@@ -110,12 +110,12 @@ class AudioTrivia(Trivia):
                 if not ctx.author.voice.channel.permissions_for(
                     ctx.me
                 ).connect or self.audio.is_vc_full(ctx.author.voice.channel):
-                    return await ctx.send("I don't have permission to connect to your channel.")
+                    return await ctx.maybe_send_embed("I don't have permission to connect to your channel.")
                 await lavalink.connect(ctx.author.voice.channel)
                 lavaplayer = lavalink.get_player(ctx.guild.id)
                 lavaplayer.store("connect", datetime.datetime.utcnow())
             except AttributeError:
-                return await ctx.send("Connect to a voice channel first.")
+                return await ctx.maybe_send_embed("Connect to a voice channel first.")
 
         lavaplayer = lavalink.get_player(ctx.guild.id)
         lavaplayer.store("channel", ctx.channel.id)  # What's this for? I dunno
@@ -123,7 +123,7 @@ class AudioTrivia(Trivia):
         await self.audio.set_player_settings(ctx)
 
         if not ctx.author.voice or ctx.author.voice.channel != lavaplayer.channel:
-            return await ctx.send(
+            return await ctx.maybe_send_embed(
                 "You must be in the voice channel to use the audiotrivia command."
             )
 
@@ -135,13 +135,13 @@ class AudioTrivia(Trivia):
             try:
                 dict_ = self.get_audio_list(category)
             except FileNotFoundError:
-                await ctx.send(
+                await ctx.maybe_send_embed(
                     "Invalid category `{0}`. See `{1}audiotrivia list`"
                     " for a list of trivia categories."
                     "".format(category, ctx.prefix)
                 )
             except InvalidListError:
-                await ctx.send(
+                await ctx.maybe_send_embed(
                     "There was an error parsing the trivia list for"
                     " the `{}` category. It may be formatted"
                     " incorrectly.".format(category)
@@ -152,7 +152,7 @@ class AudioTrivia(Trivia):
                 continue
             return
         if not trivia_dict:
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 "The trivia list was parsed successfully, however it appears to be empty!"
             )
             return
