@@ -58,15 +58,18 @@ class AudioSession(TriviaSession):
                 log.info(f"Track has error: {load_result.exception_message}")
                 continue  # Skip tracks with error
             tracks = load_result.tracks
-            seconds = tracks[0].length / 1000
+
+            track = tracks[0]
+            seconds = track.length / 1000
 
             if self.settings["repeat"] and seconds < delay:
+                # Append it until it's longer than the delay
                 tot_length = seconds + 0
                 while tot_length < delay:
-                    self.player.add(self.ctx.author, tracks[0])
+                    self.player.add(self.ctx.author, track)
                     tot_length += seconds
             else:
-                self.player.add(self.ctx.author, tracks[0])
+                self.player.add(self.ctx.author, track)
 
             if not self.player.current:
                 log.debug("Pressing play")
