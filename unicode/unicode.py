@@ -2,16 +2,19 @@ import codecs as c
 
 import discord
 from redbot.core import commands
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class Unicode(Cog):
     """Encode/Decode Unicode characters!"""
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     @commands.group(name="unicode", pass_context=True)
     async def unicode(self, ctx):

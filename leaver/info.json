@@ -2,15 +2,12 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.4.0",
   "description": "Keeps track of when people leave the server, and posts a message notifying",
   "hidden": false,
   "install_msg": "Thank you for installing Leaver. Get started with `[p]load leaver`, then `[p]help Leaver`",
   "short": "Send message on leave",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "bobloy",
     "utils",

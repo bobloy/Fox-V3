@@ -1,0 +1,17 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.4.0",
+  "description": "Simple cog to jump to the first message of a channel easily",
+  "hidden": false,
+  "install_msg": "Thank you for installing FirstMessage.\nGet started with `[p]load firstmessage`, then `[p]help FirstMessage`",
+  "short": "Simple cog to jump to first message of a channel",
+  "end_user_data_statement": "This cog does not store any End User Data",
+  "tags": [
+    "bobloy",
+    "utilities",
+    "tool",
+    "tools"
+  ]
+}

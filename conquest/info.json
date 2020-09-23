@@ -1,0 +1,24 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.4.0",
+  "description": "Handle war games by filling in specified territories with colors",
+  "hidden": false,
+  "install_msg": "Thank you for installing Conquest. Get started with `[p]load conquest`, then `[p]help Conquest`",
+  "short": "War Game Map",
+  "requirements": [
+    "Pillow"
+  ],
+  "tags": [
+    "bobloy",
+    "games",
+    "game",
+    "war",
+    "map",
+    "axisandallies",
+    "heartsofiron",
+    "conquest",
+    "rpg"
+  ]
+}

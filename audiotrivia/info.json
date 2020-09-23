@@ -2,15 +2,12 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Start an Audio Trivia game",
   "hidden": false,
   "install_msg": "Thank you for installing Audio trivia!\n You **MUST** unload trivia to use this (`[p]unload trivia`)\n Then you can get started with `[p]load audiotrivia` and `[p]help AudioTrivia`",
   "short": "Start an Audio Trivia game",
+  "end_user_data_statement": "This cog expands the core Audio and Trivia cogs without collecting any additional End User Data.\nSee the core End User Data storage for more information",
   "tags": [
     "fox",
     "bobloy",

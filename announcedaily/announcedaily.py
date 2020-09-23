@@ -1,20 +1,18 @@
 import asyncio
 import random
 from datetime import datetime, timedelta
-from typing import Any
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
-from redbot.core.utils.chat_formatting import pagify, box
+from redbot.core.utils.chat_formatting import box, pagify
 
 DEFAULT_MESSAGES = [
     # "Example message. Uncomment and overwrite to use",
     # "Example message 2. Each message is in quotes and separated by a comma"
 ]
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class AnnounceDaily(Cog):
@@ -23,6 +21,7 @@ class AnnounceDaily(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.path = str(cog_data_path(self)).replace("\\", "/")
 
@@ -38,6 +37,10 @@ class AnnounceDaily(Cog):
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     async def _get_msgs(self):
         return DEFAULT_MESSAGES + await self.config.messages()

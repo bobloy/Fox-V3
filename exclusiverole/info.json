@@ -2,15 +2,12 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.4.0",
   "description": "Assign roles to be exclusive, preventing other roles from being added",
   "hidden": false,
   "install_msg": "Thank you for installing ExclusiveRole. Get started with `[p]load exclusiverole` and `[p]help ExclusiveRole`",
   "short": "Set roles to be exclusive",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "fox",
     "bobloy",

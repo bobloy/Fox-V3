@@ -2,9 +2,7 @@ import asyncio
 
 import discord
 from redbot.core import Config, checks, commands
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class ExclusiveRole(Cog):
@@ -13,11 +11,16 @@ class ExclusiveRole(Cog):
     """
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9999114111108101)
         default_guild = {"role_list": []}
 
         self.config.register_guild(**default_guild)
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     @commands.guild_only()
     @commands.group(aliases=["exclusiverole"])
@@ -86,12 +89,15 @@ class ExclusiveRole(Cog):
         to_remove = (member_set - role_set) - {member.guild.default_role.id}
 
         if to_remove and member_set & role_set:
-            to_remove = [discord.utils.get(member.guild.roles, id=id) for id in to_remove]
+            to_remove = [discord.utils.get(member.guild.roles, id=r_id) for r_id in to_remove]
             await member.remove_roles(*to_remove, reason="Exclusive roles")
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.roles == after.roles:
+            return
+
+        if await self.bot.cog_disabled_in_guild(self, after.guild):
             return
 
         await asyncio.sleep(1)

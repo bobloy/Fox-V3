@@ -2,16 +2,15 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.3.0",
   "description": "Convert any website into text and post it in chat",
   "hidden": true,
   "install_msg": "Thank you for installing SayUrl! Get started with `[p]load sayurl`, then `[p]help SayUrl",
-  "requirements": ["html2text"],
+  "requirements": [
+    "html2text"
+  ],
   "short": "Convert URL to text",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "bobloy",
     "tools"

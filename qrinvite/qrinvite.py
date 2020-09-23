@@ -6,10 +6,8 @@ from MyQR import myqr
 from PIL import Image
 from redbot.core import Config, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class QRInvite(Cog):
@@ -18,6 +16,7 @@ class QRInvite(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
@@ -25,6 +24,10 @@ class QRInvite(Cog):
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     @commands.command()
     async def qrinvite(
@@ -45,7 +48,9 @@ class QRInvite(Cog):
                     invite = await ctx.channel.invites()
                     invite = invite[0]
                 except discord.Forbidden:
-                    await ctx.send("No permission to get an invite, please provide one")
+                    await ctx.maybe_send_embed(
+                        "No permission to get an invite, please provide one"
+                    )
                     return
             invite = invite.code
 
@@ -53,14 +58,14 @@ class QRInvite(Cog):
             image_url = str(ctx.guild.icon_url)
 
         if image_url == "":  # Still
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 "Could not get an image, please provide one. *(`{}help qrinvite` for details)*".format(
                     ctx.prefix
                 )
             )
             return
 
-        eextention = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
+        extension = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
 
         path: pathlib.Path = cog_data_path(self)
         image_path = path / (ctx.guild.icon + "." + extension)
@@ -72,9 +77,15 @@ class QRInvite(Cog):
             file.write(image)
 
         if extension == "webp":
-            new_path = convert_png(str(image_path))
-        else:
+            new_path = convert_webp_to_png(str(image_path))
+        elif extension == "gif":
+            await ctx.maybe_send_embed("gif is not supported yet, stay tuned")
+            return
+        elif extension == "png":
             new_path = str(image_path)
+        else:
+            await ctx.maybe_send_embed(f"{extension} is not supported yet, stay tuned")
+            return
 
         myqr.run(
             invite,
@@ -89,7 +100,7 @@ class QRInvite(Cog):
             await ctx.send(file=discord.File(png_fp.read(), "qrcode.png"))
 
 
-def convert_png(path):
+def convert_webp_to_png(path):
     im = Image.open(path)
     im.load()
     alpha = im.split()[-1]

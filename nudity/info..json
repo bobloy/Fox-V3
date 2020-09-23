@@ -1,0 +1,22 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.4.0",
+  "description": "Monitor images for NSFW content and moves them to a nsfw channel if possible",
+  "hidden": false,
+  "install_msg": "Thank you for installing Nudity. Get started with `[p]load nudity`, then `[p]help Nudity`",
+  "requirements": [
+    "nudenet",
+    "tensorflow>=1.14,<2.0",
+    "keras>=2.4"
+  ],
+  "short": "NSFW image tracker and mover",
+  "tags": [
+    "bobloy",
+    "utils",
+    "tools",
+    "nude",
+    "nsfw"
+  ]
+}

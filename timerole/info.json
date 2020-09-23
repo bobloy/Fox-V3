@@ -2,15 +2,12 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
-  "description": "Apply roles based on the # of days on server",
+  "min_bot_version": "3.3.0",
+  "description": "Apply roles based on the # of hours or days on server",
   "hidden": false,
   "install_msg": "Thank you for installing timerole.\nGet started with `[p]load timerole`. Configure with `[p]timerole`",
-  "short": "Apply roles after # of days",
+  "short": "Apply roles after # of hours or days",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "bobloy",
     "utilities",

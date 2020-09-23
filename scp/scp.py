@@ -1,15 +1,19 @@
 import discord
 from redbot.core import commands
-from typing import Any
 
-Cog: Any = getattr(commands, "Cog", object)
+from redbot.core.commands import Cog
 
 
 class SCP(Cog):
     """Look up SCP articles. Warning: Some of them may be too creepy or gruesome."""
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
+
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
 
     @commands.command()
     async def scp(self, ctx: commands.Context, num: int):
@@ -25,7 +29,7 @@ class SCP(Cog):
             msg = "http://www.scp-wiki.net/scp-{:03}".format(num)
             c = discord.Color.green()
         else:
-            msg = "You must specify a number between 1 and 4999."
+            msg = "You must specify a number between 1 and 5999."
             c = discord.Color.red()
 
         if await ctx.embed_requested():

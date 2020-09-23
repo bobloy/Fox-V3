@@ -2,15 +2,12 @@
   "author": [
     "Bobloy"
   ],
-  "bot_version": [
-    3,
-    0,
-    0
-  ],
+  "min_bot_version": "3.4.0",
   "description": "Cog to prevent reactions on specific messages from certain users",
-  "hidden": true,
+  "hidden": false,
   "install_msg": "Thank you for installing ReactRestrict.",
-  "short": "[Incomplete] Prevent reactions",
+  "short": "Prevent reactions to messages",
+  "end_user_data_statement": "This cog does not store any End User Data",
   "tags": [
     "react",
     "reaction",

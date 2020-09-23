@@ -5,12 +5,13 @@ import datetime
 import json
 import time
 from random import choice
-from typing import Any
+from typing import Literal
 
 import discord
-from redbot.core import commands, Config, bank
+from redbot.core import Config, bank, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path
+from redbot.core.utils import AsyncIter
 
 
 class Gardener:
@@ -182,7 +183,17 @@ class PlantTycoon(commands.Cog):
 
         # self.bank = bot.get_cog('Economy').bank
 
+    async def red_delete_data_for_user(
+        self,
+        *,
+        requester: Literal["discord_deleted_user", "owner", "user", "user_strict"],
+        user_id: int,
+    ):
+
+        await self.config.user_from_id(user_id).clear()
+
     async def _load_plants_products(self):
+        """Runs in __init__.py before cog is added to the bot"""
         plant_path = bundled_data_path(self) / "plants.json"
         product_path = bundled_data_path(self) / "products.json"
         with plant_path.open() as json_data:
@@ -359,9 +370,7 @@ class PlantTycoon(commands.Cog):
             ``{0}prune``: Prune your plant.\n"""
 
             em = discord.Embed(
-                title=title,
-                description=description.format(prefix),
-                color=discord.Color.green(),
+                title=title, description=description.format(prefix), color=discord.Color.green(),
             )
             em.set_thumbnail(
                 url="https://image.prntscr.com/image/AW7GuFIBSeyEgkR2W3SeiQ.png"
@@ -532,8 +541,7 @@ class PlantTycoon(commands.Cog):
 
         if t:
             em = discord.Embed(
-                title="Plant statistics of {}".format(plant["name"]),
-                color=discord.Color.green(),
+                title="Plant statistics of {}".format(plant["name"]), color=discord.Color.green(),
             )
             em.set_thumbnail(url=plant["image"])
             em.add_field(name="**Name**", value=plant["name"])
@@ -595,8 +603,7 @@ class PlantTycoon(commands.Cog):
         author = ctx.author
         if product is None:
             em = discord.Embed(
-                title="All gardening supplies that you can buy:",
-                color=discord.Color.green(),
+                title="All gardening supplies that you can buy:", color=discord.Color.green(),
             )
             for pd in self.products:
                 em.add_field(
@@ -630,8 +637,7 @@ class PlantTycoon(commands.Cog):
                         message = "You bought {}.".format(product.lower())
                     else:
                         message = "You don't have enough Thneeds. You have {}, but need {}.".format(
-                            gardener.points,
-                            self.products[product.lower()]["cost"] * amount,
+                            gardener.points, self.products[product.lower()]["cost"] * amount,
                         )
                 else:
                     message = "I don't have this product."

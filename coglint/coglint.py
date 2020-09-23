@@ -1,12 +1,9 @@
 import discord
 from pylint import epylint as lint
-from redbot.core import Config
-from redbot.core import commands
+from redbot.core import Config, commands
 from redbot.core.bot import Red
+from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
-from typing import Any
-
-Cog: Any = getattr(commands, "Cog", object)
 
 
 class CogLint(Cog):
@@ -15,6 +12,7 @@ class CogLint(Cog):
     """
 
     def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {"lint": True}
@@ -30,6 +28,10 @@ class CogLint(Cog):
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
 
+    async def red_delete_data_for_user(self, **kwargs):
+        """Nothing to delete"""
+        return
+
     @commands.command()
     async def autolint(self, ctx: commands.Context):
         """Toggles automatically linting code"""
@@ -37,7 +39,7 @@ class CogLint(Cog):
 
         self.do_lint = not curr
         await self.config.lint.set(not curr)
-        await ctx.send("Autolinting is now set to {}".format(not curr))
+        await ctx.maybe_send_embed("Autolinting is now set to {}".format(not curr))
 
     @commands.command()
     async def lint(self, ctx: commands.Context, *, code):
@@ -46,7 +48,7 @@ class CogLint(Cog):
         Toggle autolinting with `[p]autolint`
         """
         await self.lint_message(ctx.message)
-        await ctx.send("Hello World")
+        await ctx.maybe_send_embed("Hello World")
 
     async def lint_code(self, code):
         self.counter += 1
