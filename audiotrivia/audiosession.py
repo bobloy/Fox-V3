@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 import lavalink
+from lavalink.enums import LoadType
 from redbot.cogs.trivia import TriviaSession
 from redbot.core.utils.chat_formatting import bold
 
@@ -42,6 +43,7 @@ class AudioSession(TriviaSession):
 
             msg = bold(f"Question number {self.count}!") + "\n\nName this audio!"
             await self.ctx.maybe_send_embed(msg)
+            log.debug(f"Audio question: {question}")
             # print("Audio question: {}".format(question))
 
             # await self.ctx.invoke(self.audio.play(ctx=self.ctx, query=question))
@@ -50,7 +52,8 @@ class AudioSession(TriviaSession):
             # await self.ctx.invoke(self.player.play, query=question)
             query = question.strip("<>")
             load_result = await self.player.load_tracks(query)
-            if load_result.has_error:
+            log.debug(f"{load_result.load_type=}")
+            if load_result.has_error or load_result.load_type != LoadType.TRACK_LOADED:
                 await self.ctx.maybe_send_embed(f"Track has error, skipping. See logs for details")
                 log.info(f"Track has error: {load_result.exception_message}")
                 continue  # Skip tracks with error
@@ -66,6 +69,7 @@ class AudioSession(TriviaSession):
                 self.player.add(self.ctx.author, tracks[0])
 
             if not self.player.current:
+                log.debug("Pressing play")
                 await self.player.play()
 
             continue_ = await self.wait_for_answer(answers, delay, timeout)
