@@ -9,21 +9,33 @@ import discord
 # Import all roles here
 from redbot.core import commands
 
-from .roles.seer import Seer
-from .roles.vanillawerewolf import VanillaWerewolf
-from .roles.villager import Villager
+# from .roles.seer import Seer
+# from .roles.vanillawerewolf import VanillaWerewolf
+# from .roles.villager import Villager
+
+from werewolf import roles
 from redbot.core.utils.menus import menu, prev_page, next_page, close_menu
+
+from werewolf.role import Role
 
 log = logging.getLogger("red.fox_v3.werewolf.builder")
 
 # All roles in this list for iterating
 
-ROLE_LIST = sorted([Villager, Seer, VanillaWerewolf], key=lambda x: x.alignment)
+ROLE_DICT = {name: cls for name, cls in roles.__dict__.items() if isinstance(cls, type)}
+ROLE_LIST = sorted(
+    [cls for cls in ROLE_DICT.values()],
+    key=lambda x: x.alignment,
+)
+
+log.debug(f"{ROLE_DICT=}")
 
 ALIGNMENT_COLORS = [0x008000, 0xFF0000, 0xC0C0C0]
-TOWN_ROLES = [(idx, role) for idx, role in enumerate(ROLE_LIST) if role.alignment == 1]
-WW_ROLES = [(idx, role) for idx, role in enumerate(ROLE_LIST) if role.alignment == 2]
-OTHER_ROLES = [(idx, role) for idx, role in enumerate(ROLE_LIST) if role.alignment not in [0, 1]]
+# TOWN_ROLES = [(idx, role) for idx, r_tuple in enumerate(ROLE_LIST) if role.alignment == 1]
+# WW_ROLES = [(idx, role) for idx, r_tuple in enumerate(ROLE_LIST) if role.alignment == 2]
+# OTHER_ROLES = [
+#     (idx, role) for idx, r_tuple in enumerate(ROLE_LIST) if role.alignment not in [0, 1]
+# ]
 
 ROLE_PAGES = []
 PAGE_GROUPS = [0]
@@ -81,9 +93,7 @@ def setup():
     for k, v in ROLE_CATEGORIES.items():
         if 0 < k <= 6:
             ROLE_PAGES.append(
-                discord.Embed(
-                    title="RANDOM:Town Role", description=f"Town {v}", color=0x008000
-                )
+                discord.Embed(title="RANDOM:Town Role", description=f"Town {v}", color=0x008000)
             )
             CATEGORY_COUNT.append(k)
 
