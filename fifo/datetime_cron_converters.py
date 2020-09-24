@@ -1,6 +1,7 @@
 from datetime import datetime, tzinfo
 from typing import TYPE_CHECKING
 
+from pytz import timezone
 from apscheduler.triggers.cron import CronTrigger
 from dateutil import parser, tz
 from discord.ext.commands import BadArgument, Converter
@@ -11,13 +12,14 @@ if TYPE_CHECKING:
     DatetimeConverter = datetime
     CronConverter = str
 else:
+
     class TimezoneConverter(Converter):
         async def convert(self, ctx, argument) -> tzinfo:
             tzinfos = assemble_timezones()
             if argument.upper() in tzinfos:
                 return tzinfos[argument.upper()]
 
-            timez = tz.gettz(argument)
+            timez = timezone(argument)
 
             if timez is not None:
                 return timez
