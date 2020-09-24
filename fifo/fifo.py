@@ -10,6 +10,7 @@ from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
+from redbot.core.utils.chat_formatting import pagify
 
 from .datetime_cron_converters import CronConverter, DatetimeConverter, TimezoneConverter
 from .task import Task
@@ -306,7 +307,11 @@ class FIFO(commands.Cog):
                 out += f"{task_name}: {task_data}\n"
 
             if out:
-                await ctx.maybe_send_embed(out)
+                if len(out) > 2000:
+                    for page in pagify(out):
+                        await ctx.maybe_send_embed(page)
+                else:
+                    await ctx.maybe_send_embed(out)
             else:
                 await ctx.maybe_send_embed("No tasks to list")
 

@@ -463,7 +463,7 @@ class Chatter(Cog):
         # Thank you Cog-Creators
         channel: discord.TextChannel = message.channel
 
-        if channel.id == await self.config.guild(guild).chatchannel():
+        if guild is not None and channel.id == await self.config.guild(guild).chatchannel():
             pass  # good to go
         else:
             when_mentionables = commands.when_mentioned(self.bot, message)

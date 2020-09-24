@@ -50,27 +50,27 @@ class Hangman(Cog):
             theface = await self.config.guild(guild).theface()
             self.hanglist[guild] = (
                 """>
-                   \_________
+                   \\_________
                     |/        
                     |              
                     |                
                     |                 
                     |               
                     |                   
-                    |\___                 
+                    |\\___                 
                     """,
                 """>
-                   \_________
+                   \\_________
                     |/   |      
                     |              
                     |                
                     |                 
                     |               
                     |                   
-                    |\___                 
+                    |\\___                 
                     H""",
                 """>
-                   \_________       
+                   \\_________       
                     |/   |              
                     |   """
                 + theface
@@ -79,10 +79,10 @@ class Hangman(Cog):
                     |                       
                     |                         
                     |                          
-                    |\___                       
+                    |\\___                       
                     HA""",
                 """>
-                   \________               
+                   \\________               
                     |/   |                   
                     |   """
                 + theface
@@ -91,10 +91,10 @@ class Hangman(Cog):
                     |    |                    
                     |                           
                     |                            
-                    |\___                    
+                    |\\___                    
                     HAN""",
                 """>
-                   \_________             
+                   \\_________             
                     |/   |               
                     |   """
                 + theface
@@ -103,43 +103,43 @@ class Hangman(Cog):
                     |     |                    
                     |                        
                     |                          
-                    |\___                          
+                    |\\___                          
                     HANG""",
                 """>
-                   \_________              
+                   \\_________              
                     |/   |                     
                     |   """
                 + theface
                 + """                      
-                    |   /|\                    
+                    |   /|\\                    
                     |     |                       
                     |                             
                     |                            
-                    |\___                          
+                    |\\___                          
                     HANGM""",
                 """>
-                   \________                   
+                   \\________                   
                     |/   |                         
                     |   """
                 + theface
                 + """                       
-                    |   /|\                             
+                    |   /|\\                             
                     |     |                          
                     |   /                            
                     |                                  
-                    |\___                              
+                    |\\___                              
                     HANGMA""",
                 """>
-                   \________
+                   \\________
                     |/   |     
                     |   """
                 + theface
                 + """     
-                    |   /|\           
+                    |   /|\\           
                     |     |        
-                    |   / \        
+                    |   / \\        
                     |               
-                    |\___           
+                    |\\___           
                     HANGMAN""",
             )
 
@@ -255,7 +255,7 @@ class Hangman(Cog):
             elif i in self.the_data[guild]["guesses"] or i not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
                 out_str += "__" + i + "__ "
             else:
-                out_str += "**\_** "
+                out_str += "**\\_** "
                 self.winbool[guild] = False
 
         return out_str
@@ -286,10 +286,10 @@ class Hangman(Cog):
 
         await self._reprintgame(message)
 
-    @commands.Cog.listener()
+    @commands.Cog.listener("on_reaction_add")
     async def on_react(self, reaction, user: Union[discord.User, discord.Member]):
-        """ Thanks to flapjack reactpoll for guidelines
-            https://github.com/flapjax/FlapJack-Cogs/blob/master/reactpoll/reactpoll.py"""
+        """Thanks to flapjack reactpoll for guidelines
+        https://github.com/flapjax/FlapJack-Cogs/blob/master/reactpoll/reactpoll.py"""
         guild: discord.Guild = getattr(user, "guild", None)
         if guild is None:
             return

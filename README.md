@@ -14,11 +14,13 @@ Cog Function
 | exclusiverole | **Alpha** | <details><summary>Prevent certain roles from getting any other roles</summary>Fully functional, but pretty simple</details> |
 | fifo | **Alpha** | <details><summary>Schedule commands to be run at certain times or intervals</summary>Just released, please report bugs as you find them. Only works for bot owner for now</details> |
 | fight | **Incomplete** | <details><summary>Organize bracket tournaments within discord</summary>Still in-progress, a massive project</details> |
+| firstmessage | **Release** | <details><summary>Simple cog to provide a jump link to the first message in a channel/summary>Just released, please report bugs as you find them.</details> |
 | flag | **Alpha** | <details><summary>Create temporary marks on users that expire after specified time</summary>Ported, will not import old data. Please report bugs</details> |
 | forcemention | **Alpha** | <details><summary>Mentions unmentionable roles</summary>Very simple cog, mention doesn't persist</details> |
 | hangman | **Beta** | <details><summary>Play a game of hangman</summary>Some visual glitches and needs more customization</details> |
 | howdoi | **Incomplete** | <details><summary>Ask coding questions and get results from StackExchange</summary>Not yet functional</details> |
-| infochannel | **Beta** | <details><summary>Create a channel to display server info</summary>Just released, please report bugs</details> |
+| infochannel | **Beta** | <details><summary>Create a channel to display server info</summary>Due to rate limits, this does not update as often as it once did</details> |
+| isitdown | **Beta** | <details><summary>Check if a website/url is down</summary>Just released, please report bugs</details> |
 | launchlib | **Beta** | <details><summary>Access rocket launch data</summary>Just released, please report bugs</details> |
 | leaver | **Beta** | <details><summary>Send a message in a channel when a user leaves the server</summary>Seems to be functional, please report any bugs or suggestions</details> |
 | lovecalculator | **Alpha** | <details><summary>Calculate the love between two users</summary>[Snap-Ons] Just updated to V3</details> |
@@ -38,7 +40,7 @@ Cog Function
 | unicode | **Alpha** | <details><summary>Encode and Decode unicode characters</summary>[Snap-Ons] Just updated to V3</details> |
 | werewolf | **Pre-Alpha** | <details><summary>Play the classic party game Werewolf within discord</summary>Another massive project currently being developed, will be fully customizable</details> |
 
-Check out my V2 cogs at [Fox-Cogs v2](https://github.com/bobloy/Fox-Cogs)
+Check out *Deprecated* my V2 cogs at [Fox-Cogs v2](https://github.com/bobloy/Fox-Cogs)
 
 # Installation
 ### Recommended - Built-in Downloader

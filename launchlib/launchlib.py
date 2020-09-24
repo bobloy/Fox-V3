@@ -22,7 +22,9 @@ class LaunchLib(commands.Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=0, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=7697117110991047610598, force_registration=True
+        )
 
         default_guild = {}
 

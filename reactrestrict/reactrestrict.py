@@ -1,9 +1,12 @@
+import logging
 from typing import List, Union
 
 import discord
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
+
+log = logging.getLogger("red.fox_v3.reactrestrict")
 
 
 class ReactRestrictCombo:
@@ -131,10 +134,12 @@ class ReactRestrict(Cog):
             If no such channel or member can be found.
         """
         channel = self.bot.get_channel(channel_id)
+        if channel is None:
+            raise LookupError("no channel found.")
         try:
             member = channel.guild.get_member(user_id)
         except AttributeError as e:
-            raise LookupError("No channel found.") from e
+            raise LookupError("No member found.") from e
 
         if member is None:
             raise LookupError("No member found.")
@@ -168,7 +173,7 @@ class ReactRestrict(Cog):
         """
         channel = self.bot.get_channel(channel_id)
         try:
-            return await channel.get_message(message_id)
+            return await channel.fetch_message(message_id)
         except discord.NotFound:
             pass
         except AttributeError:  # VoiceChannel object has no attribute 'get_message'
@@ -186,9 +191,11 @@ class ReactRestrict(Cog):
         :param message_id:
         :return:
         """
-        for channel in ctx.guild.channels:
+
+        guild: discord.Guild = ctx.guild
+        for channel in guild.text_channels:
             try:
-                return await channel.get_message(message_id)
+                return await channel.fetch_message(message_id)
             except discord.NotFound:
                 pass
             except AttributeError:  # VoiceChannel object has no attribute 'get_message'
@@ -232,7 +239,7 @@ class ReactRestrict(Cog):
         # noinspection PyTypeChecker
         await self.add_reactrestrict(message_id, role)
 
-        await ctx.maybe_send_embed("Message|Role combo added.")
+        await ctx.maybe_send_embed("Message|Role restriction added.")
 
     @reactrestrict.command()
     async def remove(self, ctx: commands.Context, message_id: int, role: discord.Role):
@@ -248,37 +255,38 @@ class ReactRestrict(Cog):
         # noinspection PyTypeChecker
         await self.remove_react(message_id, role)
 
-        await ctx.send("Reaction removed.")
+        await ctx.send("React restriction removed.")
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(
-        self, emoji: discord.PartialEmoji, message_id: int, channel_id: int, user_id: int
-    ):
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         """
         Event handler for long term reaction watching.
-
-        :param discord.PartialReactionEmoji emoji:
-        :param int message_id:
-        :param int channel_id:
-        :param int user_id:
-        :return:
         """
-        if emoji.is_custom_emoji():
-            emoji_id = emoji.id
-        else:
-            emoji_id = emoji.name
+
+        emoji = payload.emoji
+        message_id = payload.message_id
+        channel_id = payload.channel_id
+        user_id = payload.user_id
+
+        # if emoji.is_custom_emoji():
+        #     emoji_id = emoji.id
+        # else:
+        #     emoji_id = emoji.name
 
         has_reactrestrict, combos = await self.has_reactrestrict_combo(message_id)
 
         if not has_reactrestrict:
+            log.debug("Message not react restricted")
             return
 
         try:
             member = self._get_member(channel_id, user_id)
         except LookupError:
+            log.exception("Unable to get member from guild")
             return
 
         if member.bot:
+            log.debug("Won't remove reactions added by bots")
             return
 
         if await self.bot.cog_disabled_in_guild(self, member.guild):
@@ -287,14 +295,19 @@ class ReactRestrict(Cog):
         try:
             roles = [self._get_role(member.guild, c.role_id) for c in combos]
         except LookupError:
+            log.exception("Couldn't get approved roles from combos")
             return
 
         for apprrole in roles:
             if apprrole in member.roles:
+                log.debug("Has approved role")
                 return
 
         message = await self._get_message_from_channel(channel_id, message_id)
-        await message.remove_reaction(emoji, member)
+        try:
+            await message.remove_reaction(emoji, member)
+        except (discord.Forbidden, discord.NotFound, discord.HTTPException):
+            log.exception("Unable to remove reaction")
 
     #     try:
     #         await member.add_roles(*roles)

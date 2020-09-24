@@ -360,7 +360,9 @@ class PlantTycoon(commands.Cog):
             ``{0}prune``: Prune your plant.\n"""
 
             em = discord.Embed(
-                title=title, description=description.format(prefix), color=discord.Color.green(),
+                title=title,
+                description=description.format(prefix),
+                color=discord.Color.green(),
             )
             em.set_thumbnail(url="https://image.prntscr.com/image/AW7GuFIBSeyEgkR2W3SeiQ.png")
             em.set_footer(
@@ -525,7 +527,8 @@ class PlantTycoon(commands.Cog):
 
         if t:
             em = discord.Embed(
-                title="Plant statistics of {}".format(plant["name"]), color=discord.Color.green(),
+                title="Plant statistics of {}".format(plant["name"]),
+                color=discord.Color.green(),
             )
             em.set_thumbnail(url=plant["image"])
             em.add_field(name="**Name**", value=plant["name"])
@@ -583,7 +586,8 @@ class PlantTycoon(commands.Cog):
         author = ctx.author
         if product is None:
             em = discord.Embed(
-                title="All gardening supplies that you can buy:", color=discord.Color.green(),
+                title="All gardening supplies that you can buy:",
+                color=discord.Color.green(),
             )
             for pd in self.products:
                 em.add_field(
@@ -616,8 +620,11 @@ class PlantTycoon(commands.Cog):
                         await gardener.save_gardener()
                         message = "You bought {}.".format(product.lower())
                     else:
-                        message = "You don't have enough Thneeds. You have {}, but need {}.".format(
-                            gardener.points, self.products[product.lower()]["cost"] * amount,
+                        message = (
+                            "You don't have enough Thneeds. You have {}, but need {}.".format(
+                                gardener.points,
+                                self.products[product.lower()]["cost"] * amount,
+                            )
                         )
                 else:
                     message = "I don't have this product."
