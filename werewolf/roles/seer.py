@@ -65,7 +65,7 @@ class Seer(Role):
         return "Villager"
 
     @wolflistener("at_night_start", priority=2)
-    async def _at_night_start(self, data=None):
+    async def _at_night_start(self):
         if not self.player.alive:
             return
         self.see_target = None
@@ -73,7 +73,7 @@ class Seer(Role):
         await self.player.send_dm("**Pick a target to see tonight**")
 
     @wolflistener("at_night_end", priority=4)
-    async def _at_night_end(self, data=None):
+    async def _at_night_end(self):
         if self.see_target is None:
             if self.player.alive:
                 await self.player.send_dm("You will not use your powers tonight...")

@@ -99,14 +99,14 @@ class Shifter(Role):
         """
         return "Shifter"
 
-    @wolflistener("at_night_start")
-    async def _at_night_start(self, data=None):
+    @wolflistener("at_night_start", priority=2)
+    async def _at_night_start(self):
         self.shift_target = None
         await self.game.generate_targets(self.player.member)
         await self.player.send_dm("**Pick a target to shift into**")
 
-    @wolflistener("at_night_end")
-    async def _at_night_end(self, data=None):
+    @wolflistener("at_night_end", priority=6)
+    async def _at_night_end(self):
         if self.shift_target is None:
             if self.player.alive:
                 await self.player.send_dm("You will not use your powers tonight...")
