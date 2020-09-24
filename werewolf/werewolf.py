@@ -47,7 +47,7 @@ class Werewolf(Cog):
         return
 
     def __unload(self):
-        print("Unload called")
+        log.debug("Unload called")
         for game in self.games.values():
             del game
 
@@ -182,7 +182,7 @@ class Werewolf(Cog):
         Joins a game of Werewolf
         """
 
-        game = await self._get_game(ctx)
+        game: Game = await self._get_game(ctx)
 
         if not game:
             await ctx.send("No game to join!\nCreate a new one with `[p]ww new`")

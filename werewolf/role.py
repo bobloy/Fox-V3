@@ -129,7 +129,7 @@ class Role(WolfListener):
         return "Default"
 
     @wolflistener("at_game_start", priority=1)
-    async def _at_game_start(self, data=None):
+    async def _at_game_start(self):
         if self.channel_id:
             await self.game.register_channel(self.channel_id, self)
 

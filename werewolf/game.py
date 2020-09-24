@@ -203,8 +203,7 @@ class Game:
                     reason="(BOT) New game of werewolf",
                 )
             except discord.Forbidden as e:
-                print("Unable to rename Game Channel")
-                print(e)
+                log.exception("Unable to rename Game Channel")
                 await ctx.send("Unable to rename Game Channel, ignoring")
 
             try:
@@ -222,11 +221,11 @@ class Game:
                 return
         self.started = True
         # Assuming everything worked so far
-        print("Pre at_game_start")
+        log.debug("Pre at_game_start")
         await self._at_game_start()  # This will queue channels and votegroups to be made
-        print("Post at_game_start")
+        log.debug("Post at_game_start")
         for channel_id in self.p_channels:
-            print("Channel id: " + channel_id)
+            log.debug("Setup Channel id: " + channel_id)
             overwrite = {
                 self.guild.default_role: discord.PermissionOverwrite(read_messages=False),
                 self.guild.me: discord.PermissionOverwrite(
@@ -258,7 +257,7 @@ class Game:
 
                 self.vote_groups[channel_id] = vote_group
 
-        print("Pre-cycle")
+        log.debug("Pre-cycle")
         await asyncio.sleep(1)
         await asyncio.ensure_future(self._cycle())  # Start the loop
 
@@ -566,7 +565,8 @@ class Game:
                 await member.add_roles(*[self.game_role])
             except discord.Forbidden:
                 await channel.send(
-                    f"Unable to add role **{self.game_role.name}**\nBot is missing `manage_roles` permissions"
+                    f"Unable to add role **{self.game_role.name}**\n"
+                    f"Bot is missing `manage_roles` permissions"
                 )
 
         await channel.send(
@@ -899,7 +899,7 @@ class Game:
         # Remove game_role access for potential archiving for now
         reason = "(BOT) End of WW game"
         for obj in self.to_delete:
-            print(obj)
+            log.debug(f"End_game: Deleting object {obj}")
             await obj.delete(reason=reason)
 
         try:
