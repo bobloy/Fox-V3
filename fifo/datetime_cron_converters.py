@@ -1,10 +1,10 @@
 from datetime import datetime, tzinfo
 from typing import TYPE_CHECKING
 
-from pytz import timezone
 from apscheduler.triggers.cron import CronTrigger
-from dateutil import parser, tz
+from dateutil import parser
 from discord.ext.commands import BadArgument, Converter
+from pytz import timezone
 
 from fifo.timezones import assemble_timezones
 
