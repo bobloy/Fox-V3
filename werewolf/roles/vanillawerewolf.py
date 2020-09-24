@@ -56,7 +56,7 @@ class VanillaWerewolf(Role):
         """
         return "Werewolf"
 
-    @wolflistener("at_game_start")
+    @wolflistener("at_game_start", priority=1)
     async def _at_game_start(self):
         if self.channel_id:
             log.debug("Wolf has channel_id: " + self.channel_id)
