@@ -9,6 +9,7 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from discord.utils import time_snowflake
+from pytz import timezone
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 
@@ -25,10 +26,10 @@ def get_trigger(data):
         return IntervalTrigger(days=parsed_time.days, seconds=parsed_time.seconds)
 
     if data["type"] == "date":
-        return DateTrigger(data["time_data"])
+        return DateTrigger(data["time_data"], timezone=data["tzinfo"])
 
     if data["type"] == "cron":
-        return CronTrigger.from_crontab(data["time_data"])
+        return CronTrigger.from_crontab(data["time_data"], timezone=data["tzinfo"])
 
     return False
 
@@ -70,6 +71,7 @@ class Task:
     default_trigger = {
         "type": "",
         "time_data": None,  # Used for Interval and Date Triggers
+        "tzinfo": None,
     }
 
     def __init__(
@@ -99,7 +101,13 @@ class Task:
 
             if t["type"] == "date":  # Convert into datetime
                 dt: datetime = t["time_data"]
-                triggers.append({"type": t["type"], "time_data": dt.isoformat()})
+                triggers.append(
+                    {
+                        "type": t["type"],
+                        "time_data": dt.isoformat(),
+                        "tzinfo": getattr(t["tzinfo"], "zone", None),
+                    }
+                )
                 # triggers.append(
                 #     {
                 #         "type": t["type"],
@@ -117,9 +125,18 @@ class Task:
                 continue
 
             if t["type"] == "cron":
-                triggers.append(t)  # already a string, nothing to do
-
+                if t["tzinfo"] is None:
+                    triggers.append(t)  # already a string, nothing to do
+                else:
+                    triggers.append(
+                        {
+                            "type": t["type"],
+                            "time_data": t["time_data"],
+                            "tzinfo": getattr(t["tzinfo"], "zone", None),
+                        }
+                    )
                 continue
+
             raise NotImplemented
 
         return triggers
@@ -128,18 +145,27 @@ class Task:
         if not self.data or not self.data.get("triggers", None):
             return
 
-        for n, t in enumerate(self.data["triggers"]):
+        for t in self.data["triggers"]:
+            # Backwards compatibility
+            if "tzinfo" not in t:
+                t["tzinfo"] = None
+
+            # First decode timezone if there is one
+            if t["tzinfo"] is not None:
+                t["tzinfo"] = timezone(t["tzinfo"])
+
             if t["type"] == "interval":  # Convert into timedelta
-                self.data["triggers"][n]["time_data"] = timedelta(**t["time_data"])
+                t["time_data"] = timedelta(**t["time_data"])
                 continue
 
             if t["type"] == "date":  # Convert into datetime
                 # self.data["triggers"][n]["time_data"] = datetime(**t["time_data"])
-                self.data["triggers"][n]["time_data"] = datetime.fromisoformat(t["time_data"])
+                t["time_data"] = datetime.fromisoformat(t["time_data"])
                 continue
 
             if t["type"] == "cron":
                 continue  # already a string
+
             raise NotImplemented
 
     # async def load_from_data(self, data: Dict):
@@ -300,8 +326,16 @@ class Task:
         self.data["command_str"] = command_str
         return True
 
-    async def add_trigger(self, param, parsed_time: Union[timedelta, datetime, str]):
-        trigger_data = {"type": param, "time_data": parsed_time}
+    async def add_trigger(
+        self, param, parsed_time: Union[timedelta, datetime, str], timezone=None
+    ):
+        # TODO: Save timezone separately for cron and date triggers
+        trigger_data = self.default_trigger.copy()
+        trigger_data["type"] = param
+        trigger_data["time_data"] = parsed_time
+        if timezone is not None:
+            trigger_data["tzinfo"] = timezone
+
         if not get_trigger(trigger_data):
             return False
 

@@ -3,14 +3,14 @@
     "Bobloy"
   ],
   "min_bot_version": "3.4.0",
-  "description": "[ALPHA] Schedule commands to be run at certain times or intervals",
+  "description": "[BETA] Schedule commands to be run at certain times or intervals",
   "hidden": false,
   "install_msg": "Thank you for installing FIFO.\nGet started with `[p]load fifo`, then `[p]help FIFO`",
-  "short": "[ALPHA] Schedule commands to be run at certain times or intervals",
+  "short": "[BETA] Schedule commands to be run at certain times or intervals",
   "end_user_data_statement": "This cog does not store any End User Data",
   "requirements": [
     "apscheduler",
-    "python-dateutil"
+    "pytz"
   ],
   "tags": [
     "bobloy",
@@ -24,6 +24,7 @@
     "date",
     "datetime",
     "time",
-    "calendar"
+    "calendar",
+    "timezone"
   ]
 }

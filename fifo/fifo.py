@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from typing import Optional, Union
 
 import discord
@@ -12,7 +12,7 @@ from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
 from redbot.core.utils.chat_formatting import pagify
 
-from .datetime_cron_converters import CronConverter, DatetimeConverter
+from .datetime_cron_converters import CronConverter, DatetimeConverter, TimezoneConverter
 from .task import Task
 
 schedule_log = logging.getLogger("red.fox_v3.fifo.scheduler")
@@ -57,6 +57,8 @@ class FIFO(commands.Cog):
 
         self.scheduler = None
         self.jobstore = None
+
+        self.tz_cog = None
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -132,6 +134,24 @@ class FIFO(commands.Cog):
     async def _remove_job(self, task: Task):
         return self.scheduler.remove_job(job_id=_assemble_job_id(task.name, task.guild_id))
 
+    async def _get_tz(self, user: Union[discord.User, discord.Member]) -> Union[None, tzinfo]:
+        if self.tz_cog is None:
+            self.tz_cog = self.bot.get_cog("Timezone")
+            if self.tz_cog is None:
+                self.tz_cog = False  # only try once to get the timezone cog
+
+        if not self.tz_cog:
+            return None
+        try:
+            usertime = await self.tz_cog.config.user(user).usertime()
+        except AttributeError:
+            return None
+
+        if usertime:
+            return await TimezoneConverter().convert(None, usertime)
+        else:
+            return None
+
     @checks.is_owner()
     @commands.guild_only()
     @commands.command()
@@ -140,7 +160,7 @@ class FIFO(commands.Cog):
         self.scheduler.remove_all_jobs()
         await self.config.guild(ctx.guild).tasks.clear()
         await self.config.jobs.clear()
-        await self.config.jobs_index.clear()
+        # await self.config.jobs_index.clear()
         await ctx.tick()
 
     @checks.is_owner()  # Will be reduced when I figure out permissions later
@@ -411,7 +431,7 @@ class FIFO(commands.Cog):
         job: Job = await self._process_task(task)
         delta_from_now: timedelta = job.next_run_time - datetime.now(job.next_run_time.tzinfo)
         await ctx.maybe_send_embed(
-            f"Task `{task_name}` added interval of {interval_str} to its scheduled runtimes\n"
+            f"Task `{task_name}` added interval of {interval_str} to its scheduled runtimes\n\n"
             f"Next run time: {job.next_run_time} ({delta_from_now.total_seconds()} seconds)"
         )
 
@@ -432,7 +452,9 @@ class FIFO(commands.Cog):
             )
             return
 
-        result = await task.add_trigger("date", datetime_str)
+        maybe_tz = await self._get_tz(ctx.author)
+
+        result = await task.add_trigger("date", datetime_str, maybe_tz)
         if not result:
             await ctx.maybe_send_embed(
                 "Failed to add a date trigger to this task, see console for logs"
@@ -449,7 +471,12 @@ class FIFO(commands.Cog):
 
     @fifo_trigger.command(name="cron")
     async def fifo_trigger_cron(
-        self, ctx: commands.Context, task_name: str, *, cron_str: CronConverter
+        self,
+        ctx: commands.Context,
+        task_name: str,
+        optional_tz: Optional[TimezoneConverter] = None,
+        *,
+        cron_str: CronConverter,
     ):
         """
         Add a cron "time of day" trigger to the specified task
@@ -465,7 +492,10 @@ class FIFO(commands.Cog):
             )
             return
 
-        result = await task.add_trigger("cron", cron_str)
+        if optional_tz is None:
+            optional_tz = await self._get_tz(ctx.author)  # might still be None
+
+        result = await task.add_trigger("cron", cron_str, optional_tz)
         if not result:
             await ctx.maybe_send_embed(
                 "Failed to add a cron trigger to this task, see console for logs"
