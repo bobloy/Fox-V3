@@ -65,7 +65,7 @@ class Game:
 
         self.started = False
         self.game_over = False
-        self.can_vote = False
+        self.any_votes_remaining = False
         self.used_votes = 0
 
         self.day_time = False
@@ -88,6 +88,7 @@ class Game:
         self.loop = asyncio.get_event_loop()
 
         self.action_queue = deque()
+        self.current_action = None
         self.listeners = {}
 
     # def __del__(self):
@@ -278,8 +279,12 @@ class Game:
 
         self.action_queue.append(self._at_day_start())
 
-        while self.action_queue:
-            await self.action_queue.popleft()
+        while self.action_queue and not self.game_over:
+            current_action = asyncio.create_task(self.action_queue.popleft())
+            try:
+                await current_action
+            except asyncio.CancelledError:
+                log.debug("Cancelled task")
         #
         # await self._at_day_start()
         # # Once cycle ends, this will trigger end_game
@@ -299,52 +304,57 @@ class Game:
         if self.game_over:
             return
 
+        self.action_queue.append(self._at_day_end())  # Get this ready in case day is cancelled
+
         def check():
-            return not self.can_vote or not self.day_time or self.game_over
+            return not self.any_votes_remaining or not self.day_time or self.game_over
 
         self.day_count += 1
+
+        # Print the results of who died during the night
         embed = discord.Embed(title=random.choice(self.morning_messages).format(self.day_count))
         for result in self.night_results:
             embed.add_field(name=result, value="________", inline=False)
 
-        self.day_time = True
+        self.day_time = True  # True while day
 
         self.night_results = []  # Clear for next day
 
         await self.village_channel.send(embed=embed)
-        await self.generate_targets(self.village_channel)
+        await self.generate_targets(self.village_channel)  # Print remaining players for voting
 
         await self.day_perms(self.village_channel)
-        await self._notify("at_day_start")
+        await self._notify("at_day_start")  # Wait for day_start actions
 
         await self._check_game_over()
-        if self.game_over:
+        if self.game_over:  # If game ended because of _notify
             return
-        self.can_vote = True
 
+        self.any_votes_remaining = True
+
+        # Now we sleep and let the day happen. Print the remaining daylight half way through
         await asyncio.sleep(HALF_DAY_LENGTH)  # 4 minute days FixMe to 120 later
         if check():
             return
         await self.village_channel.send(
-            embed=discord.Embed(title="**Two minutes of daylight remain...**")
+            embed=discord.Embed(title=f"**{HALF_DAY_LENGTH/60} minutes of daylight remain...**")
         )
         await asyncio.sleep(HALF_DAY_LENGTH)  # 4 minute days FixMe to 120 later
 
-        # Need a loop here to wait for trial to end (can_vote?)
+        # Need a loop here to wait for trial to end
         while self.ongoing_vote:
             await asyncio.sleep(5)
 
-        if check():
-            return
-
-        self.action_queue.append(self._at_day_end())
+        # Abruptly ends, assuming _day_end is next in queue
 
     async def _at_voted(self, target):  # ID 2
         if self.game_over:
             return
-        data = {"player": target}
+
+        # Notify that a target has been chosen
         await self._notify("at_voted", player=target)
 
+        # TODO: Support pre-vote target modifying roles
         self.ongoing_vote = True
 
         self.used_votes += 1
@@ -359,7 +369,7 @@ class Game:
 
         await self.speech_perms(self.village_channel, target.member, undo=True)  # No one can talk
 
-        message: discord.Message = await self.village_channel.send(
+        vote_message: discord.Message = await self.village_channel.send(
             f"Everyone will now vote whether to lynch {target.mention}\n"
             "👍 to save, 👎 to lynch\n"
             "*Majority rules, no-lynch on ties, "
@@ -367,41 +377,47 @@ class Game:
             allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
         )
 
-        await message.add_reaction("👍")
-        await message.add_reaction("👎")
+        await vote_message.add_reaction("👍")
+        await vote_message.add_reaction("👎")
 
         await asyncio.sleep(15)
-        reaction_list = message.reactions
+        reaction_list = vote_message.reactions
 
-        up_votes = sum(p for p in reaction_list if p.emoji == "👍" and not p.me)
-        down_votes = sum(p for p in reaction_list if p.emoji == "👎" and not p.me)
+        if True:  # TODO: Allow customizable vote history deletion.
+            await vote_message.delete()
 
-        if down_votes > up_votes:
-            embed = discord.Embed(title="Vote Results", color=0xFF0000)
+        raw_up_votes = sum(p for p in reaction_list if p.emoji == "👍" and not p.me)
+        raw_down_votes = sum(p for p in reaction_list if p.emoji == "👎" and not p.me)
+
+        # TODO: Support vote count modifying roles. (Need notify and count function)
+        voted_to_lynch = raw_down_votes > raw_up_votes
+
+        if voted_to_lynch:
+            embed = discord.Embed(
+                title="Vote Results",
+                description=f"**Voted to lynch {target.mention}!**",
+                color=0xFF0000,
+            )
         else:
-            embed = discord.Embed(title="Vote Results", color=0x80FF80)
+            embed = discord.Embed(
+                title="Vote Results",
+                description=f"**{target.mention} has been spared!**",
+                color=0x80FF80,
+            )
 
-        embed.add_field(name="👎", value=f"**{up_votes}**", inline=True)
-        embed.add_field(name="👍", value=f"**{down_votes}**", inline=True)
+        embed.add_field(name="👎", value=f"**{raw_up_votes}**", inline=True)
+        embed.add_field(name="👍", value=f"**{raw_down_votes}**", inline=True)
 
         await self.village_channel.send(embed=embed)
 
-        if down_votes > up_votes:
-            await self.village_channel.send(
-                f"**Voted to lynch {target.mention}!**",
-                allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
-            )
+        if voted_to_lynch:
             await self.lynch(target)
-            self.can_vote = False
+            self.any_votes_remaining = False
         else:
-            await self.village_channel.send(
-                f"**{target.mention} has been spared!**",
-                allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
-            )
 
             if self.used_votes >= self.day_vote_count:
                 await self.village_channel.send("**All votes have been used! Day is now over!**")
-                self.can_vote = False
+                self.any_votes_remaining = False
             else:
                 await self.village_channel.send(
                     f"**{self.used_votes}**/**{self.day_vote_count}** of today's votes have been used!\n"
@@ -410,21 +426,19 @@ class Game:
 
         self.ongoing_vote = False
 
-        if not self.can_vote:
-            self.action_queue.append(self._at_day_end())
+        if not self.any_votes_remaining and self.day_time:
+            self.current_action.cancel()
         else:
             await self.normal_perms(self.village_channel)  # No point if about to be night
 
     async def _at_kill(self, target):  # ID 3
         if self.game_over:
             return
-        data = {"player": target}
         await self._notify("at_kill", player=target)
 
     async def _at_hang(self, target):  # ID 4
         if self.game_over:
             return
-        data = {"player": target}
         await self._notify("at_hang", player=target)
 
     async def _at_day_end(self):  # ID 5
@@ -433,7 +447,7 @@ class Game:
         if self.game_over:
             return
 
-        self.can_vote = False
+        self.any_votes_remaining = False
         self.day_vote = {}
         self.vote_totals = {}
         self.day_time = False
@@ -476,7 +490,6 @@ class Game:
     async def _at_visit(self, target, source):  # ID 8
         if self.game_over:
             return
-        data = {"target": target, "source": source}
         await self._notify("at_visit", target=target, source=source)
 
     async def _notify(self, event, **kwargs):
@@ -484,6 +497,8 @@ class Game:
             tasks = []
             for event in self.listeners.get(event, {}).get(i, []):
                 tasks.append(asyncio.ensure_future(event(**kwargs), loop=self.loop))
+
+            # Run same-priority task simultaneously
             await asyncio.gather(*tasks)
 
             # self.bot.dispatch(f"red.fox.werewolf.{event}", data=data, priority=i)
@@ -507,8 +522,7 @@ class Game:
 
     async def generate_targets(self, channel, with_roles=False):
         embed = discord.Embed(title="Remaining Players")
-        for i in range(len(self.players)):
-            player = self.players[i]
+        for i, player in enumerate(self.players):
             if player.alive:
                 status = ""
             else:
@@ -653,7 +667,7 @@ class Game:
             return
 
         if channel == self.village_channel:
-            if not self.can_vote:
+            if not self.any_votes_remaining:
                 await channel.send("Voting is not allowed right now")
                 return
         elif channel.name in self.p_channels:
@@ -695,13 +709,8 @@ class Game:
 
         if self.vote_totals[target_id] < required_votes:
             await self.village_channel.send(
-                ""
-                "{} has voted to put {} to trial. "
-                "{} more votes needed".format(
-                    author.mention,
-                    target.member.mention,
-                    required_votes - self.vote_totals[target_id],
-                ),
+                f"{author.mention} has voted to put {target.member.mention} to trial. "
+                f"{required_votes - self.vote_totals[target_id]} more votes needed",
                 allowed_mentions=discord.AllowedMentions(everyone=False, users=[author, target]),
             )
         else:
@@ -771,8 +780,8 @@ class Game:
         Attempt to lynch a target
         Important to finish execution before triggering notify
         """
-        target = await self.get_day_target(target_id)
-        target.alive = False
+        target = await self.get_day_target(target_id)  # Allows target modification
+        target.alive = False  # Kill them,
         await self._at_hang(target)
         if not target.alive:  # Still dead after notifying
             await self.dead_perms(self.village_channel, target.member)
