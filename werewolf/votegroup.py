@@ -22,49 +22,31 @@ class VoteGroup(WolfListener):
         self.vote_results = {}
         self.properties = {}  # Extra data for other options
 
-        # self.action_list = [
-        #     (self._at_game_start, 1),  # (Action, Priority)
-        #     (self._at_day_start, 0),
-        #     (self._at_voted, 0),
-        #     (self._at_kill, 1),
-        #     (self._at_hang, 1),
-        #     (self._at_day_end, 0),
-        #     (self._at_night_start, 2),
-        #     (self._at_night_end, 0),
-        #     (self._at_visit, 0),
-        # ]
-
-    # async def on_event(self, event, data):
-    #     """
-    #     See Game class for event guide
-    #     """
-    #
-    #     await self.action_list[event][0](data)
-
-    @wolflistener("at_game_start")
-    async def _at_game_start(self, data=None):
+    @wolflistener("at_game_start", priority=1)
+    async def _at_game_start(self):
         await self.channel.send(" ".join(player.mention for player in self.players))
 
-    @wolflistener("at_kill")
-    async def _at_kill(self, data=None):
-        if data["player"] in self.players:
-            self.players.remove(data["player"])
+    @wolflistener("at_kill", priority=1)
+    async def _at_kill(self, player):
+        if player in self.players:
+            self.players.remove(player)
 
-    # Removed, only if they actually die
-    # @wolflistener("at_hang")
-    # async def _at_hang(self, data=None):
-    #     if data["player"] in self.players:
-    #         self.players.remove(data["player"])
+    @wolflistener("at_hang", priority=1)
+    async def _at_hang(self, player):
+        if player in self.players:
+            self.players.remove(player)
 
-    @wolflistener("at_night_start")
-    async def _at_night_start(self, data=None):
+    @wolflistener("at_night_start", priority=2)
+    async def _at_night_start(self):
         if self.channel is None:
             return
 
+        self.vote_results = {}
+
         await self.game.generate_targets(self.channel)
 
-    @wolflistener("at_night_end")
-    async def _at_night_end(self, data=None):
+    @wolflistener("at_night_end", priority=5)
+    async def _at_night_end(self):
         if self.channel is None:
             return
 
@@ -75,8 +57,8 @@ class VoteGroup(WolfListener):
             target = max(set(vote_list), key=vote_list.count)
 
         if target:
-            # Do what you voted on
-            pass
+            # Do what the votegroup votes on
+            raise NotImplementedError
 
     async def register_players(self, *players):
         """
@@ -92,7 +74,8 @@ class VoteGroup(WolfListener):
             self.players.remove(player)
 
         if not self.players:
-            # ToDo: Trigger deletion of votegroup
+            # TODO: Confirm deletion
+            self.game.to_delete.add(self)
             pass
 
     async def vote(self, target, author, target_id):
