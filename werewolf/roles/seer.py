@@ -1,5 +1,7 @@
 import logging
 
+from werewolf.constants import ALIGNMENT_TOWN, ALIGNMENT_WEREWOLF, CATEGORY_TOWN_INVESTIGATIVE, \
+    CATEGORY_TOWN_RANDOM
 from werewolf.listener import wolflistener
 from werewolf.night_powers import pick_target
 from werewolf.role import Role
@@ -8,9 +10,12 @@ log = logging.getLogger("red.fox_v3.werewolf.role.seer")
 
 
 class Seer(Role):
-    rand_choice = True  # Determines if it can be picked as a random role (False for unusually disruptive roles)
-    category = [1, 2]  # List of enrolled categories (listed above)
-    alignment = 1  # 1: Town, 2: Werewolf, 3: Neutral
+    rand_choice = True
+    category = [
+        CATEGORY_TOWN_RANDOM,
+        CATEGORY_TOWN_INVESTIGATIVE,
+    ]  # List of enrolled categories (listed above)
+    alignment = ALIGNMENT_TOWN  # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""  # Empty for no private channel
     unique = False  # Only one of this role per game
     game_start_message = (
@@ -46,23 +51,23 @@ class Seer(Role):
     async def see_alignment(self, source=None):
         """
         Interaction for investigative roles attempting
-        to see team (Village, Werewolf Other)
+        to see team (Village, Werewolf, Other)
         """
-        return "Village"
+        return ALIGNMENT_TOWN
 
     async def get_role(self, source=None):
         """
         Interaction for powerful access of role
         Unlikely to be able to deceive this
         """
-        return "Villager"
+        return "Seer"
 
     async def see_role(self, source=None):
         """
         Interaction for investigative roles.
         More common to be able to deceive these roles
         """
-        return "Villager"
+        return "Seer"
 
     @wolflistener("at_night_start", priority=2)
     async def _at_night_start(self):
@@ -84,9 +89,9 @@ class Seer(Role):
         if target:
             alignment = await target.role.see_alignment(self.player)
 
-        if alignment == "Werewolf":
+        if alignment == ALIGNMENT_WEREWOLF:
             out = "Your insight reveals this player to be a **Werewolf!**"
-        else:
+        else: # Don't reveal neutrals
             out = "You fail to find anything suspicious about this player..."
 
         await self.player.send_dm(out)

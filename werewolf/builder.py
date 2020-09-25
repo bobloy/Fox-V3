@@ -1,6 +1,7 @@
 import bisect
 import logging
 from collections import defaultdict
+from operator import attrgetter
 from random import choice
 
 import discord
@@ -16,6 +17,7 @@ from redbot.core import commands
 from werewolf import roles
 from redbot.core.utils.menus import menu, prev_page, next_page, close_menu
 
+from werewolf.constants import ROLE_CATEGORY_DESCRIPTIONS
 from werewolf.role import Role
 
 log = logging.getLogger("red.fox_v3.werewolf.builder")
@@ -25,102 +27,38 @@ log = logging.getLogger("red.fox_v3.werewolf.builder")
 ROLE_DICT = {name: cls for name, cls in roles.__dict__.items() if isinstance(cls, type)}
 ROLE_LIST = sorted(
     [cls for cls in ROLE_DICT.values()],
-    key=lambda x: x.alignment,
+    key=attrgetter('alignment'),
 )
 
 log.debug(f"{ROLE_DICT=}")
 
+# Town, Werewolf, Neutral
 ALIGNMENT_COLORS = [0x008000, 0xFF0000, 0xC0C0C0]
-# TOWN_ROLES = [(idx, role) for idx, r_tuple in enumerate(ROLE_LIST) if role.alignment == 1]
-# WW_ROLES = [(idx, role) for idx, r_tuple in enumerate(ROLE_LIST) if role.alignment == 2]
-# OTHER_ROLES = [
-#     (idx, role) for idx, r_tuple in enumerate(ROLE_LIST) if role.alignment not in [0, 1]
-# ]
 
 ROLE_PAGES = []
-PAGE_GROUPS = [0]
-
-ROLE_CATEGORIES = {
-    1: "Random",
-    2: "Investigative",
-    3: "Protective",
-    4: "Government",
-    5: "Killing",
-    6: "Power (Special night action)",
-    11: "Random",
-    12: "Deception",
-    15: "Killing",
-    16: "Support",
-    21: "Benign",
-    22: "Evil",
-    23: "Killing",
-}
-
-CATEGORY_COUNT = []
 
 
-def role_embed(idx, role, color):
+def role_embed(idx, role: Role, color):
     embed = discord.Embed(
         title=f"**{idx}** - {role.__name__}",
         description=role.game_start_message,
         color=color,
     )
+    if role.icon_url is not None:
+        embed.set_thumbnail(url=role.icon_url)
+
     embed.add_field(
-        name="Alignment", value=["Town", "Werewolf", "Neutral"][role.alignment - 1], inline=True
+        name="Alignment", value=["Town", "Werewolf", "Neutral"][role.alignment - 1], inline=False
     )
-    embed.add_field(name="Multiples Allowed", value=str(not role.unique), inline=True)
+    embed.add_field(name="Multiples Allowed", value=str(not role.unique), inline=False)
     embed.add_field(
-        name="Role Type", value=", ".join(ROLE_CATEGORIES[x] for x in role.category), inline=True
+        name="Role Types",
+        value=", ".join(ROLE_CATEGORY_DESCRIPTIONS[x] for x in role.category),
+        inline=False,
     )
-    embed.add_field(name="Random Option", value=str(role.rand_choice), inline=True)
+    embed.add_field(name="Random Option", value=str(role.rand_choice), inline=False)
 
     return embed
-
-
-def setup():
-    # Roles
-    last_alignment = ROLE_LIST[0].alignment
-    for idx, role in enumerate(ROLE_LIST):
-        if role.alignment != last_alignment and len(ROLE_PAGES) - 1 not in PAGE_GROUPS:
-            PAGE_GROUPS.append(len(ROLE_PAGES) - 1)
-            last_alignment = role.alignment
-
-        ROLE_PAGES.append(role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1]))
-
-    # Random Town Roles
-    if len(ROLE_PAGES) - 1 not in PAGE_GROUPS:
-        PAGE_GROUPS.append(len(ROLE_PAGES) - 1)
-    for k, v in ROLE_CATEGORIES.items():
-        if 0 < k <= 6:
-            ROLE_PAGES.append(
-                discord.Embed(title="RANDOM:Town Role", description=f"Town {v}", color=0x008000)
-            )
-            CATEGORY_COUNT.append(k)
-
-    # Random WW Roles
-    if len(ROLE_PAGES) - 1 not in PAGE_GROUPS:
-        PAGE_GROUPS.append(len(ROLE_PAGES) - 1)
-    for k, v in ROLE_CATEGORIES.items():
-        if 10 < k <= 16:
-            ROLE_PAGES.append(
-                discord.Embed(
-                    title="RANDOM:Werewolf Role",
-                    description=f"Werewolf {v}",
-                    color=0xFF0000,
-                )
-            )
-            CATEGORY_COUNT.append(k)
-    # Random Neutral Roles
-    if len(ROLE_PAGES) - 1 not in PAGE_GROUPS:
-        PAGE_GROUPS.append(len(ROLE_PAGES) - 1)
-    for k, v in ROLE_CATEGORIES.items():
-        if 20 < k <= 26:
-            ROLE_PAGES.append(
-                discord.Embed(
-                    title=f"RANDOM:Neutral Role", description="Neutral {v}", color=0xC0C0C0
-                )
-            )
-            CATEGORY_COUNT.append(k)
 
 
 """
@@ -189,15 +127,15 @@ async def parse_code(code, game):
     return decode
 
 
-async def encode(roles, rand_roles):
+async def encode(role_list, rand_roles):
     """Convert role list to code"""
     out_code = ""
 
-    digit_sort = sorted(role for role in roles if role < 10)
+    digit_sort = sorted(role for role in role_list if role < 10)
     for role in digit_sort:
         out_code += str(role)
 
-    digit_sort = sorted(role for role in roles if 10 <= role < 100)
+    digit_sort = sorted(role for role in role_list if 10 <= role < 100)
     if digit_sort:
         out_code += "-"
         for role in digit_sort:
@@ -227,51 +165,6 @@ async def encode(roles, rand_roles):
                 out_code += str(role)
 
     return out_code
-
-
-async def next_group(
-    ctx: commands.Context,
-    pages: list,
-    controls: dict,
-    message: discord.Message,
-    page: int,
-    timeout: float,
-    emoji: str,
-):
-    perms = message.channel.permissions_for(ctx.me)
-    if perms.manage_messages:  # Can manage messages, so remove react
-        try:
-            await message.remove_reaction(emoji, ctx.author)
-        except discord.NotFound:
-            pass
-    page = bisect.bisect_right(PAGE_GROUPS, page)
-
-    if page == len(PAGE_GROUPS):
-        page = PAGE_GROUPS[0]
-    else:
-        page = PAGE_GROUPS[page]
-
-    return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
-
-
-async def prev_group(
-    ctx: commands.Context,
-    pages: list,
-    controls: dict,
-    message: discord.Message,
-    page: int,
-    timeout: float,
-    emoji: str,
-):
-    perms = message.channel.permissions_for(ctx.me)
-    if perms.manage_messages:  # Can manage messages, so remove react
-        try:
-            await message.remove_reaction(emoji, ctx.author)
-        except discord.NotFound:
-            pass
-    page = PAGE_GROUPS[bisect.bisect_left(PAGE_GROUPS, page) - 1]
-
-    return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
 
 
 def role_from_alignment(alignment):
@@ -316,11 +209,11 @@ def say_role_list(code_list, rand_roles):
 
     for role in rand_roles:
         if 0 < role <= 6:
-            role_dict[f"Town {ROLE_CATEGORIES[role]}"] += 1
+            role_dict[f"Town {ROLE_CATEGORY_DESCRIPTIONS[role]}"] += 1
         if 10 < role <= 16:
-            role_dict[f"Werewolf {ROLE_CATEGORIES[role]}"] += 1
+            role_dict[f"Werewolf {ROLE_CATEGORY_DESCRIPTIONS[role]}"] += 1
         if 20 < role <= 26:
-            role_dict[f"Neutral {ROLE_CATEGORIES[role]}"] += 1
+            role_dict[f"Neutral {ROLE_CATEGORY_DESCRIPTIONS[role]}"] += 1
 
     for k, v in role_dict.items():
         embed.add_field(name=k, value=f"Count: {v}", inline=True)
@@ -332,15 +225,69 @@ class GameBuilder:
     def __init__(self):
         self.code = []
         self.rand_roles = []
-        setup()
+        self.page_groups = [0]
+        self.category_count = []
+
+        self.setup()
+
+    def setup(self):
+        # Roles
+        last_alignment = ROLE_LIST[0].alignment
+        for idx, role in enumerate(ROLE_LIST):
+            if role.alignment != last_alignment and len(ROLE_PAGES) - 1 not in self.page_groups:
+                self.page_groups.append(len(ROLE_PAGES) - 1)
+                last_alignment = role.alignment
+
+            ROLE_PAGES.append(role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1]))
+
+        # Random Town Roles
+        if len(ROLE_PAGES) - 1 not in self.page_groups:
+            self.page_groups.append(len(ROLE_PAGES) - 1)
+        for k, v in ROLE_CATEGORY_DESCRIPTIONS.items():
+            if 0 < k <= 9:
+                ROLE_PAGES.append(
+                    discord.Embed(
+                        title="RANDOM:Town Role",
+                        description=f"Town {v}",
+                        color=ALIGNMENT_COLORS[0],
+                    )
+                )
+                self.category_count.append(k)
+
+        # Random WW Roles
+        if len(ROLE_PAGES) - 1 not in self.page_groups:
+            self.page_groups.append(len(ROLE_PAGES) - 1)
+        for k, v in ROLE_CATEGORY_DESCRIPTIONS.items():
+            if 10 < k <= 19:
+                ROLE_PAGES.append(
+                    discord.Embed(
+                        title="RANDOM:Werewolf Role",
+                        description=f"Werewolf {v}",
+                        color=ALIGNMENT_COLORS[1],
+                    )
+                )
+                self.category_count.append(k)
+        # Random Neutral Roles
+        if len(ROLE_PAGES) - 1 not in self.page_groups:
+            self.page_groups.append(len(ROLE_PAGES) - 1)
+        for k, v in ROLE_CATEGORY_DESCRIPTIONS.items():
+            if 20 < k <= 29:
+                ROLE_PAGES.append(
+                    discord.Embed(
+                        title=f"RANDOM:Neutral Role",
+                        description=f"Neutral {v}",
+                        color=ALIGNMENT_COLORS[2],
+                    )
+                )
+                self.category_count.append(k)
 
     async def build_game(self, ctx: commands.Context):
         new_controls = {
-            "⏪": prev_group,
+            "⏪": self.prev_group,
             "⬅": prev_page,
             "☑": self.select_page,
             "➡": next_page,
-            "⏩": next_group,
+            "⏩": self.next_group,
             "📇": self.list_roles,
             "❌": close_menu,
         }
@@ -391,8 +338,53 @@ class GameBuilder:
                 pass
 
         if page >= len(ROLE_LIST):
-            self.rand_roles.append(CATEGORY_COUNT[page - len(ROLE_LIST)])
+            self.rand_roles.append(self.category_count[page - len(ROLE_LIST)])
         else:
             self.code.append(page)
+
+        return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
+
+    async def next_group(
+        self,
+        ctx: commands.Context,
+        pages: list,
+        controls: dict,
+        message: discord.Message,
+        page: int,
+        timeout: float,
+        emoji: str,
+    ):
+        perms = message.channel.permissions_for(ctx.me)
+        if perms.manage_messages:  # Can manage messages, so remove react
+            try:
+                await message.remove_reaction(emoji, ctx.author)
+            except discord.NotFound:
+                pass
+        page = bisect.bisect_right(self.page_groups, page)
+
+        if page == len(self.page_groups):
+            page = self.page_groups[0]
+        else:
+            page = self.page_groups[page]
+
+        return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
+
+    async def prev_group(
+        self,
+        ctx: commands.Context,
+        pages: list,
+        controls: dict,
+        message: discord.Message,
+        page: int,
+        timeout: float,
+        emoji: str,
+    ):
+        perms = message.channel.permissions_for(ctx.me)
+        if perms.manage_messages:  # Can manage messages, so remove react
+            try:
+                await message.remove_reaction(emoji, ctx.author)
+            except discord.NotFound:
+                pass
+        page = self.page_groups[bisect.bisect_left(self.page_groups, page) - 1]
 
         return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)

@@ -26,6 +26,8 @@ class Role(WolfListener):
         category = [1, 5, 6] Could be Veteran
         category = [1, 5] Could be Bodyguard
         category = [11, 16] Could be Werewolf Silencer
+        category = [22] Could be Blob (non-killing)
+        category = [22, 23] Could be Serial-Killer
 
 
     Action priority guide as follows (on_event function):
@@ -44,10 +46,12 @@ class Role(WolfListener):
         6. Role altering actions (Cult / Mason / Shifter)
     """
 
-    rand_choice = False  # Determines if it can be picked as a random role (False for unusually disruptive roles)
+    # Determines if it can be picked as a random role (False for unusually disruptive roles)
+    rand_choice = False  # TODO: Rework random with categories
+    town_balance = 0  # Guess at power level and it's balance on the town
     category = [0]  # List of enrolled categories (listed above)
     alignment = 0  # 1: Town, 2: Werewolf, 3: Neutral
-    channel_id = ""  # Empty for no private channel
+    channel_name = ""  # Empty for no private channel
     unique = False  # Only one of this role per game
     game_start_message = (
         "Your role is **Default**\n"
@@ -68,27 +72,8 @@ class Role(WolfListener):
         self.blocked = False
         self.properties = {}  # Extra data for other roles (i.e. arsonist)
 
-        # self.action_list = [
-        #     (self._at_game_start, 1),  # (Action, Priority)
-        #     (self._at_day_start, 0),
-        #     (self._at_voted, 0),
-        #     (self._at_kill, 0),
-        #     (self._at_hang, 0),
-        #     (self._at_day_end, 0),
-        #     (self._at_night_start, 0),
-        #     (self._at_night_end, 0),
-        #     (self._at_visit, 0),
-        # ]
-
     def __repr__(self):
         return self.__class__.__name__
-
-    # async def on_event(self, event, data):
-    #     """
-    #     See Game class for event guide
-    #     """
-    #
-    #     await self.action_list[event][0](data)
 
     async def assign_player(self, player):
         """
@@ -110,7 +95,7 @@ class Role(WolfListener):
     async def see_alignment(self, source=None):
         """
         Interaction for investigative roles attempting
-        to see alignment (Village, Werewolf Other)
+        to see alignment (Village, Werewolf, Other)
         """
         return "Other"
 
@@ -128,36 +113,12 @@ class Role(WolfListener):
         """
         return "Default"
 
-    @wolflistener("at_game_start", priority=1)
+    @wolflistener("at_game_start", priority=2)
     async def _at_game_start(self):
-        if self.channel_id:
-            await self.game.register_channel(self.channel_id, self)
+        if self.channel_name:
+            await self.game.register_channel(self.channel_name, self)
 
         await self.player.send_dm(self.game_start_message)  # Maybe embeds eventually
-
-    # async def _at_day_start(self, data=None):
-    #     pass
-    #
-    # async def _at_voted(self, data=None):
-    #     pass
-    #
-    # async def _at_kill(self, data=None):
-    #     pass
-    #
-    # async def _at_hang(self, data=None):
-    #     pass
-    #
-    # async def _at_day_end(self, data=None):
-    #     pass
-    #
-    # async def _at_night_start(self, data=None):
-    #     pass
-    #
-    # async def _at_night_end(self, data=None):
-    #     pass
-    #
-    # async def _at_visit(self, data=None):
-    #     pass
 
     async def kill(self, source):
         """

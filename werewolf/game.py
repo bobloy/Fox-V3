@@ -639,14 +639,14 @@ class Game:
         await target.role.visit(source)
         await self._at_visit(target, source)
 
-    async def visit(self, target_id, source):
+    async def visit(self, target_id, source) -> Union[Player, None]:
         """
         Night visit target_id
         Returns a target for role information (i.e. Seer)
         """
         if source.role.blocked:
             # Blocker handles text
-            return
+            return None
         target = await self.get_night_target(target_id, source)
         await self._visit(target, source)
         return target
@@ -786,10 +786,10 @@ class Game:
         if not target.alive:  # Still dead after notifying
             await self.dead_perms(self.village_channel, target.member)
 
-    async def get_night_target(self, target_id, source=None):
+    async def get_night_target(self, target_id, source=None) -> Player:
         return self.players[target_id]  # ToDo check source
 
-    async def get_day_target(self, target_id, source=None):
+    async def get_day_target(self, target_id, source=None) -> Player:
         return self.players[target_id]  # ToDo check source
 
     async def set_code(self, ctx: commands.Context, game_code):
@@ -829,7 +829,7 @@ class Game:
             # Sorted players, now assign id's
             await self.players[idx].assign_id(idx)
 
-    async def get_player_by_member(self, member):
+    async def get_player_by_member(self, member: discord.Member):
         for player in self.players:
             if player.member == member:
                 return player

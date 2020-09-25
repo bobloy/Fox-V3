@@ -33,7 +33,7 @@ class Werewolf(Cog):
         default_guild = {
             "role_id": None,
             "category_id": None,
-            "channel_id": None,
+            "channel_name": None,
             "log_channel_id": None,
         }
 

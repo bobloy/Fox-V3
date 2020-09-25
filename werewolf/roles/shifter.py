@@ -1,5 +1,6 @@
 import logging
 
+from werewolf.constants import ALIGNMENT_NEUTRAL, CATEGORY_NEUTRAL_BENIGN
 from werewolf.listener import wolflistener
 from werewolf.night_powers import pick_target
 from werewolf.role import Role
@@ -46,8 +47,9 @@ class Shifter(Role):
     """
 
     rand_choice = False  # Determines if it can be picked as a random role (False for unusually disruptive roles)
-    category = [22]  # List of enrolled categories (listed above)
-    alignment = 3  # 1: Town, 2: Werewolf, 3: Neutral
+    town_balance = -3
+    category = [CATEGORY_NEUTRAL_BENIGN]  # List of enrolled categories (listed above)
+    alignment = ALIGNMENT_NEUTRAL  # 1: Town, 2: Werewolf, 3: Neutral
     channel_id = ""  # Empty for no private channel
     unique = False  # Only one of this role per game
     game_start_message = (
@@ -81,7 +83,7 @@ class Shifter(Role):
     async def see_alignment(self, source=None):
         """
         Interaction for investigative roles attempting
-        to see alignment (Village, Werewolf, Other)
+        to see alignment (Village, Werewolf,, Other)
         """
         return "Other"
 
