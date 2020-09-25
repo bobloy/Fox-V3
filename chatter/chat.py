@@ -15,6 +15,8 @@ from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
+from chatter.trainers import TwitterCorpusTrainer
+
 log = logging.getLogger("red.fox_v3.chatter")
 
 
@@ -105,15 +107,7 @@ class Chatter(Cog):
             return msg.clean_content
 
         def new_conversation(msg, sent, out_in, delta):
-            # if sent is None:
-            #     return False
-
-            # Don't do "too short" processing here. Sometimes people don't respond.
-            # if len(out_in) < 2:
-            #     return False
-
-            # print(msg.created_at - sent)
-
+            # Should always be positive numbers
             return msg.created_at - sent >= delta
 
         for channel in ctx.guild.text_channels:
@@ -157,6 +151,11 @@ class Chatter(Cog):
                 break
 
         return out
+
+    def _train_twitter(self, *args, **kwargs):
+        trainer = TwitterCorpusTrainer(self.chatbot)
+        trainer.train(*args, **kwargs)
+        return True
 
     def _train_ubuntu(self):
         trainer = UbuntuCorpusTrainer(self.chatbot)
@@ -479,7 +478,9 @@ class Chatter(Cog):
         text = message.clean_content
 
         async with channel.typing():
-            future = await self.loop.run_in_executor(None, self.chatbot.get_response, text)
+            # Switched to `generate_response` from `get_result`
+            # Switch back once better conversation detection is used.
+            future = await self.loop.run_in_executor(None, self.chatbot.generate_response, text)
 
             if future and str(future):
                 await channel.send(str(future))
