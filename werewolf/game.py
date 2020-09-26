@@ -8,6 +8,7 @@ from typing import List, Any, Dict, Set, Union
 import discord
 from redbot.core import commands
 from redbot.core.bot import Red
+from redbot.core.utils import AsyncIter
 
 from werewolf.builder import parse_code
 from werewolf.player import Player
@@ -913,10 +914,13 @@ class Game:
 
         try:
             await self.village_channel.edit(reason=reason, name="Werewolf")
-            for target, overwrites in self.save_perms[self.village_channel]:
-                await self.village_channel.set_permissions(
-                    target, overwrite=overwrites, reason=reason
-                )
+            async for channel, overwrites in AsyncIter(self.save_perms.items()):
+                async for target, overwrite in AsyncIter(overwrites.items()):
+                    await channel.set_permissions(target, overwrite=overwrite, reason=reason)
+            # for target, overwrites in self.save_perms[self.village_channel]:
+            #     await self.village_channel.set_permissions(
+            #         target, overwrite=overwrites, reason=reason
+            #     )
             await self.village_channel.set_permissions(
                 self.game_role, overwrite=None, reason=reason
             )
