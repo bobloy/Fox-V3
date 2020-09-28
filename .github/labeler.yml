@@ -1,0 +1,62 @@
+'cog: announcedaily':
+  - announcedaily/*
+'cog: audiotrivia':
+  - audiotrivia/*
+'cog: ccrole':
+  - ccrole/*
+'cog: chatter':
+  - chatter/*
+'cog: conquest':
+  - conquest/*
+'cog: dad':
+  - dad/*
+'cog: exclusiverole':
+  - exclusiverole/*
+'cog: fifo':
+  - fifo/*
+'cog: firstmessage':
+  - firstmessage/*
+'cog: flag':
+  - flag/*
+'cog: forcemention':
+  - forcemention/*
+'cog: hangman':
+  - hangman
+'cog: infochannel':
+  - infochannel/*
+'cog: isitdown':
+  - isitdown/*
+'cog: launchlib':
+  - launchlib/*
+'cog: leaver':
+  - leaver/*
+'cog: lovecalculator':
+  - lovecalculator/*
+'cog: lseen':
+  - lseen/*
+'cog: nudity':
+  - nudity/*
+'cog: planttycoon':
+  - planttycoon/*
+'cog: qrinvite':
+  - qrinvite/*
+'cog: reactrestrict':
+  - reactrestrict/*
+'cog: recyclingplant':
+  - recyclingplant/*
+'cog: rpsls':
+  - rpsls/*
+'cog: sayurl':
+  - sayurl/*
+'cog: scp':
+  - scp/*
+'cog: stealemoji':
+  - stealemoji/*
+'cog: timerole':
+  - timerole/*
+'cog: tts':
+  - tts/*
+'cog: unicode':
+  - unicode/*
+'cog: werewolf':
+  - werewolf
