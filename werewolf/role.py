@@ -73,7 +73,7 @@ class Role(WolfListener):
         self.properties = {}  # Extra data for other roles (i.e. arsonist)
 
     def __repr__(self):
-        return self.__class__.__name__
+        return f"{self.__class__.__name__}({self.player.__repr__()})"
 
     async def assign_player(self, player):
         """
@@ -83,6 +83,8 @@ class Role(WolfListener):
 
         player.role = self
         self.player = player
+
+        log.debug(f"Assigned {self} to {player}")
 
     async def get_alignment(self, source=None):
         """

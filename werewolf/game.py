@@ -19,6 +19,14 @@ log = logging.getLogger("red.fox_v3.werewolf.game")
 HALF_DAY_LENGTH = 24  # FixMe: to 120 later for 4 minute days
 
 
+async def anyone_has_role(
+    member_list: List[discord.Member], role: discord.Role
+) -> Union[None, discord.Member]:
+    return await AsyncIter(member_list).find(
+        lambda m: AsyncIter(m.roles).find(lambda r: r.id == role.id)
+    )
+
+
 class Game:
     """
     Base class to run a single game of Werewolf
@@ -129,6 +137,7 @@ class Game:
             self.roles = []
             return False
 
+        # If there's no game role, make the role and delete it later in `self.to_delete`
         if self.game_role is None:
             try:
                 self.game_role = await ctx.guild.create_role(
@@ -144,14 +153,25 @@ class Game:
                 )
                 self.roles = []
                 return False
-            try:
-                for player in self.players:
-                    await player.member.add_roles(*[self.game_role])
-            except discord.Forbidden:
-                await ctx.send(
-                    f"Unable to add role **{self.game_role.name}**\nBot is missing `manage_roles` permissions"
-                )
-                return False
+
+        anyone_with_role = await anyone_has_role(self.guild.members, self.game_role)
+        if anyone_with_role is not None:
+            await ctx.maybe_send_embed(
+                f"{anyone_with_role.display_name} has the game role, "
+                f"can't continue until no one has the role"
+            )
+            return False
+
+        try:
+            for player in self.players:
+                await player.member.add_roles(*[self.game_role])
+        except discord.Forbidden:
+            log.exception(f"Unable to add role **{self.game_role.name}**")
+            await ctx.send(
+                f"Unable to add role **{self.game_role.name}**\n"
+                f"Bot is missing `manage_roles` permissions"
+            )
+            return False
 
         await self.assign_roles()
 
@@ -223,9 +243,10 @@ class Game:
         self.started = True
         # Assuming everything worked so far
         log.debug("Pre at_game_start")
-        await self._at_game_start()  # This will queue channels and votegroups to be made
+        await self._at_game_start()  # This will add votegroups to self.p_channels
         log.debug("Post at_game_start")
-        for channel_id in self.p_channels:
+        log.debug(f"Private channels: {self.p_channels}")
+        for channel_id in self.p_channels.keys():
             log.debug("Setup Channel id: " + channel_id)
             overwrite = {
                 self.guild.default_role: discord.PermissionOverwrite(read_messages=False),
@@ -251,6 +272,8 @@ class Game:
 
             self.p_channels[channel_id]["channel"] = channel
 
+            self.to_delete.add(channel)
+
             if self.p_channels[channel_id]["votegroup"] is not None:
                 vote_group = self.p_channels[channel_id]["votegroup"](self, channel)
 
@@ -259,8 +282,10 @@ class Game:
                 self.vote_groups[channel_id] = vote_group
 
         log.debug("Pre-cycle")
-        await asyncio.sleep(1)
-        await asyncio.ensure_future(self._cycle())  # Start the loop
+        await asyncio.sleep(0)
+
+        asyncio.create_task(self._cycle())  # Start the loop
+        return True
 
     # ###########START Notify structure############
     async def _cycle(self):
@@ -553,12 +578,13 @@ class Game:
             try:
                 await asyncio.sleep(1)  # This will have multiple calls
                 self.p_channels[channel_id]["players"].append(role.player)
-                if votegroup is not None:
-                    self.p_channels[channel_id]["votegroup"] = votegroup
             except AttributeError:
                 continue
             else:
                 break
+
+        if votegroup is not None:
+            self.p_channels[channel_id]["votegroup"] = votegroup
 
     async def join(self, member: discord.Member, channel: discord.TextChannel):
         """
@@ -574,14 +600,15 @@ class Game:
 
         self.players.append(Player(member))
 
-        if self.game_role is not None:
-            try:
-                await member.add_roles(*[self.game_role])
-            except discord.Forbidden:
-                await channel.send(
-                    f"Unable to add role **{self.game_role.name}**\n"
-                    f"Bot is missing `manage_roles` permissions"
-                )
+        # Add the role during setup, not before
+        # if self.game_role is not None:
+        #     try:
+        #         await member.add_roles(*[self.game_role])
+        #     except discord.Forbidden:
+        #         await channel.send(
+        #             f"Unable to add role **{self.game_role.name}**\n"
+        #             f"Bot is missing `manage_roles` permissions"
+        #         )
 
         await channel.send(
             f"{member.display_name} has been added to the game, "
@@ -908,7 +935,7 @@ class Game:
         # Remove game_role access for potential archiving for now
         reason = "(BOT) End of WW game"
         for obj in self.to_delete:
-            log.debug(f"End_game: Deleting object {obj}")
+            log.debug(f"End_game: Deleting object {obj.__repr__()}")
             await obj.delete(reason=reason)
 
         try:
@@ -925,6 +952,17 @@ class Game:
             )
         except (discord.HTTPException, discord.NotFound, discord.errors.NotFound):
             pass
+
+        for player in self.players:
+            try:
+                await player.member.remove_roles(*[self.game_role])
+            except discord.Forbidden:
+                log.exception(f"Unable to add remove **{self.game_role.name}**")
+                # await ctx.send(
+                #     f"Unable to add role **{self.game_role.name}**\n"
+                #     f"Bot is missing `manage_roles` permissions"
+                # )
+                pass
 
         # Optional dynamic channels/categories
 

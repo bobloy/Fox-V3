@@ -20,6 +20,9 @@ class Player:
         self.muted = False
         self.protected = False
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.member})"
+
     async def assign_role(self, role):
         """
         Give this player a role

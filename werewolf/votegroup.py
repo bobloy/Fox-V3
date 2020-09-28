@@ -75,7 +75,6 @@ class VoteGroup(WolfListener):
 
         if not self.players:
             # TODO: Confirm deletion
-            self.game.to_delete.add(self)
             pass
 
     async def vote(self, target, author, target_id):

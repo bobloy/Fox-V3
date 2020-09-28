@@ -15,6 +15,7 @@ log = logging.getLogger("red.fox_v3.werewolf.role.seer")
 
 class Seer(Role):
     rand_choice = True
+    town_balance = 4
     category = [
         CATEGORY_TOWN_RANDOM,
         CATEGORY_TOWN_INVESTIGATIVE,

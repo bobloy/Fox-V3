@@ -1,9 +1,11 @@
 import logging
+from typing import List, Union
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
+from redbot.core.utils import AsyncIter
 from redbot.core.utils.menus import DEFAULT_CONTROLS, menu
 
 from werewolf.builder import (
@@ -16,6 +18,14 @@ from werewolf.builder import (
 from werewolf.game import Game
 
 log = logging.getLogger("red.fox_v3.werewolf")
+
+
+async def anyone_has_role(
+    member_list: List[discord.Member], role: discord.Role
+) -> Union[None, discord.Member]:
+    return await AsyncIter(member_list).find(
+        lambda m: AsyncIter(m.roles).find(lambda r: r.id == role.id)
+    )
 
 
 class Werewolf(Cog):
@@ -189,12 +199,15 @@ class Werewolf(Cog):
             return
 
         await game.join(ctx.author, ctx.channel)
+        await ctx.tick()
 
     @commands.guild_only()
     @ww.command(name="code")
     async def ww_code(self, ctx: commands.Context, code):
         """
-        Adjust game code
+        Adjusts the game code.
+
+        See `[p]buildgame` to generate a new code
         """
 
         game = await self._get_game(ctx)
@@ -204,6 +217,7 @@ class Werewolf(Cog):
             return
 
         await game.set_code(ctx, code)
+        await ctx.tick()
 
     @commands.guild_only()
     @ww.command(name="quit")
@@ -215,6 +229,7 @@ class Werewolf(Cog):
         game = await self._get_game(ctx)
 
         await game.quit(ctx.author, ctx.channel)
+        await ctx.tick()
 
     @commands.guild_only()
     @ww.command(name="start")
@@ -228,6 +243,8 @@ class Werewolf(Cog):
 
         if not await game.setup(ctx):
             pass  # ToDo something?
+
+        await ctx.tick()
 
     @commands.guild_only()
     @ww.command(name="stop")
@@ -245,6 +262,7 @@ class Werewolf(Cog):
 
         game = await self._get_game(ctx)
         game.game_over = True
+        await game.current_action.cancel()
         await ctx.send("Game has been stopped")
 
     @commands.guild_only()
@@ -358,7 +376,7 @@ class Werewolf(Cog):
             else:
                 await ctx.send("Role ID not found")
 
-    async def _get_game(self, ctx: commands.Context, game_code=None):
+    async def _get_game(self, ctx: commands.Context, game_code=None) -> Union[Game, None]:
         guild: discord.Guild = getattr(ctx, "guild", None)
 
         if guild is None:
