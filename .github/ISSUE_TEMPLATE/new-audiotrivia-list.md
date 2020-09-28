@@ -16,11 +16,11 @@ assignees: bobloy
 **Original Content?**
 <!--Did you come up with this list yourself or did you get it from some else's work?-->
 <!--If no, be sure to include the source-->
--[ ] Yes
--[ ] No
+- [ ] Yes
+- [ ] No
 
 
 **Did I test the list?**
 <!--Did you already try out the list and find no bugs?-->
--[ ] Yes
--[ ] No
+- [ ] Yes
+- [ ] No
