@@ -1,9 +1,8 @@
 import asyncio
-import inspect
 import logging
 import random
 from collections import deque
-from typing import List, Any, Dict, Set, Union
+from typing import Dict, List, Union
 
 import discord
 from redbot.core import commands
@@ -338,7 +337,7 @@ class Game:
         if check():
             return
         await self.village_channel.send(
-            embed=discord.Embed(title=f"**{HALF_DAY_LENGTH/60} minutes of daylight remain...**")
+            embed=discord.Embed(title=f"**{HALF_DAY_LENGTH / 60} minutes of daylight remain...**")
         )
         await asyncio.sleep(HALF_DAY_LENGTH)  # 4 minute days FixMe to 120 later
 

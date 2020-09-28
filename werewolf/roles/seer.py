@@ -1,7 +1,11 @@
 import logging
 
-from werewolf.constants import ALIGNMENT_TOWN, ALIGNMENT_WEREWOLF, CATEGORY_TOWN_INVESTIGATIVE, \
-    CATEGORY_TOWN_RANDOM
+from werewolf.constants import (
+    ALIGNMENT_TOWN,
+    ALIGNMENT_WEREWOLF,
+    CATEGORY_TOWN_INVESTIGATIVE,
+    CATEGORY_TOWN_RANDOM,
+)
 from werewolf.listener import wolflistener
 from werewolf.night_powers import pick_target
 from werewolf.role import Role
@@ -91,7 +95,7 @@ class Seer(Role):
 
         if alignment == ALIGNMENT_WEREWOLF:
             out = "Your insight reveals this player to be a **Werewolf!**"
-        else: # Don't reveal neutrals
+        else:  # Don't reveal neutrals
             out = "You fail to find anything suspicious about this player..."
 
         await self.player.send_dm(out)

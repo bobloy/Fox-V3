@@ -69,5 +69,5 @@ class WolfVote(VoteGroup):
 
         await self.channel.send(
             "{} has voted to kill {}".format(author.mention, target.member.display_name),
-            allowed_mentions=discord.AllowedMentions(everyone=False, users=[author])
+            allowed_mentions=discord.AllowedMentions(everyone=False, users=[author]),
         )

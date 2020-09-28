@@ -27,7 +27,7 @@ log = logging.getLogger("red.fox_v3.werewolf.builder")
 ROLE_DICT = {name: cls for name, cls in roles.__dict__.items() if isinstance(cls, type)}
 ROLE_LIST = sorted(
     [cls for cls in ROLE_DICT.values()],
-    key=attrgetter('alignment'),
+    key=attrgetter("alignment"),
 )
 
 log.debug(f"{ROLE_DICT=}")
