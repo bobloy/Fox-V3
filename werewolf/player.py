@@ -35,9 +35,13 @@ class Player:
 
     async def send_dm(self, message):
         try:
-            await self.member.send(message)  # Lets do embeds later
+            await self.member.send(message)  # Lets ToDo embeds later
         except discord.Forbidden:
+            log.info(f"Unable to mention {self.member.__repr__()}")
             await self.role.game.village_channel.send(
                 f"Couldn't DM {self.mention}, uh oh",
                 allowed_mentions=discord.AllowedMentions(users=[self.member]),
             )
+        except AttributeError:
+            log.exception("Someone messed up and added a bot to the game (I think)")
+            await self.role.game.village_channel.send("Someone messed up and added a bot to the game :eyes:")

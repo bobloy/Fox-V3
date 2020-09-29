@@ -10,13 +10,15 @@ from redbot.core.bot import Red
 from redbot.core.utils import AsyncIter
 
 from werewolf.builder import parse_code
+from werewolf.constants import ALIGNMENT_NEUTRAL
 from werewolf.player import Player
 from werewolf.role import Role
 from werewolf.votegroup import VoteGroup
 
 log = logging.getLogger("red.fox_v3.werewolf.game")
 
-HALF_DAY_LENGTH = 24  # FixMe: to 120 later for 4 minute days
+HALF_DAY_LENGTH = 60  # FixMe: Make configurable
+HALF_NIGHT_LENGTH = 60
 
 
 async def anyone_has_role(
@@ -167,7 +169,7 @@ class Game:
                 await player.member.add_roles(*[self.game_role])
         except discord.Forbidden:
             log.exception(f"Unable to add role **{self.game_role.name}**")
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 f"Unable to add role **{self.game_role.name}**\n"
                 f"Bot is missing `manage_roles` permissions"
             )
@@ -210,7 +212,7 @@ class Game:
                     category=self.channel_category,
                 )
             except discord.Forbidden:
-                await ctx.send(
+                await ctx.maybe_send_embed(
                     "Unable to create Game Channel and none was provided\n"
                     "Grant Bot appropriate permissions or assign a game_channel"
                 )
@@ -225,7 +227,7 @@ class Game:
                 )
             except discord.Forbidden as e:
                 log.exception("Unable to rename Game Channel")
-                await ctx.send("Unable to rename Game Channel, ignoring")
+                await ctx.maybe_send_embed("Unable to rename Game Channel, ignoring")
 
             try:
                 for target, ow in overwrite.items():
@@ -235,7 +237,7 @@ class Game:
                         target=target, overwrite=curr, reason="(BOT) New game of werewolf"
                     )
             except discord.Forbidden:
-                await ctx.send(
+                await ctx.maybe_send_embed(
                     "Unable to edit Game Channel permissions\n"
                     "Grant Bot appropriate permissions to manage permissions"
                 )
@@ -406,13 +408,16 @@ class Game:
         await vote_message.add_reaction("👎")
 
         await asyncio.sleep(15)
-        reaction_list = vote_message.reactions
 
-        if True:  # TODO: Allow customizable vote history deletion.
-            await vote_message.delete()
+        # Refetch for reactions
+        vote_message = await self.village_channel.fetch_message(id=vote_message.id)
+        reaction_list = vote_message.reactions
 
         raw_up_votes = sum(p for p in reaction_list if p.emoji == "👍" and not p.me)
         raw_down_votes = sum(p for p in reaction_list if p.emoji == "👎" and not p.me)
+
+        if True:  # TODO: Allow customizable vote history deletion.
+            await vote_message.delete()
 
         # TODO: Support vote count modifying roles. (Need notify and count function)
         voted_to_lynch = raw_down_votes > raw_up_votes
@@ -492,13 +497,13 @@ class Game:
             return
         await self._notify("at_night_start")
 
-        await asyncio.sleep(12)  # 2 minutes FixMe to 120 later
+        await asyncio.sleep(HALF_NIGHT_LENGTH)  # 2 minutes FixMe to 120 later
         await self.village_channel.send(
-            embed=discord.Embed(title="**Two minutes of night remain...**")
+            embed=discord.Embed(title=f"**{HALF_NIGHT_LENGTH / 60} minutes of night remain...**")
         )
-        await asyncio.sleep(9)  # 1.5 minutes FixMe to 90 later
+        await asyncio.sleep(HALF_NIGHT_LENGTH)  # 1.5 minutes FixMe to 90 later
         await self.village_channel.send(
-            embed=discord.Embed(title="**Thirty seconds until sunrise...**")
+            embed=discord.Embed(title=f"**{HALF_NIGHT_LENGTH / 60} minutes until sunrise...**")
         )
         await asyncio.sleep(3)  # .5 minutes FixMe to 30 Later
 
@@ -560,8 +565,7 @@ class Game:
                 )
             else:
                 embed.add_field(
-                    name=f"{i} - {status}{player.member.display_name}",
-                    inline=False,
+                    name=f"{i} - {status}{player.member.display_name}", inline=False, value=""
                 )
 
         return await channel.send(embed=embed)
@@ -585,16 +589,16 @@ class Game:
         if votegroup is not None:
             self.p_channels[channel_id]["votegroup"] = votegroup
 
-    async def join(self, member: discord.Member, channel: discord.TextChannel):
+    async def join(self, ctx, member: discord.Member):
         """
         Have a member join a game
         """
         if self.started:
-            await channel.send("**Game has already started!**")
+            await ctx.maybe_send_embed("**Game has already started!**")
             return
 
         if await self.get_player_by_member(member) is not None:
-            await channel.send(f"{member.display_name} is already in the game!")
+            await ctx.maybe_send_embed(f"{member.display_name} is already in the game!")
             return
 
         self.players.append(Player(member))
@@ -609,7 +613,7 @@ class Game:
         #             f"Bot is missing `manage_roles` permissions"
         #         )
 
-        await channel.send(
+        await ctx.maybe_send_embed(
             f"{member.display_name} has been added to the game, "
             f"total players is **{len(self.players)}**"
         )
@@ -645,15 +649,15 @@ class Game:
         player = await self.get_player_by_member(ctx.author)
 
         if player is None:
-            await ctx.send("You're not in this game!")
+            await ctx.maybe_send_embed("You're not in this game!")
             return
 
         if not player.alive:
-            await ctx.send("**Corpses** can't participate...")
+            await ctx.maybe_send_embed("**Corpses** can't participate...")
             return
 
         if player.role.blocked:
-            await ctx.send("Something is preventing you from doing this...")
+            await ctx.maybe_send_embed("Something is preventing you from doing this...")
             return
 
         # Let role do target validation, might be alternate targets
@@ -821,7 +825,7 @@ class Game:
     async def set_code(self, ctx: commands.Context, game_code):
         if game_code is not None:
             self.game_code = game_code
-        await ctx.send("Code has been set")
+        await ctx.maybe_send_embed("Code has been set")
 
     async def get_roles(self, ctx, game_code=None):
         if game_code is not None:
@@ -833,10 +837,12 @@ class Game:
         try:
             self.roles = await parse_code(self.game_code, self)
         except ValueError as e:
-            await ctx.send("Invalid Code: Code contains unknown character\n{}".format(e))
+            await ctx.maybe_send_embed(
+                "Invalid Code: Code contains unknown character\n{}".format(e)
+            )
             return False
         except IndexError as e:
-            await ctx.send("Invalid Code: Code references unknown role\n{}".format(e))
+            await ctx.maybe_send_embed("Invalid Code: Code references unknown role\n{}".format(e))
 
         if not self.roles:
             return False
@@ -898,7 +904,8 @@ class Game:
             self.game_over = True
             alignment1 = alive_players[0].role.alignment
             alignment2 = alive_players[1].role.alignment
-            if alignment1 == alignment2:  # Same team
+            # Same team and not neutral
+            if alignment1 == alignment2 and alignment1 != ALIGNMENT_NEUTRAL:
                 winners = alive_players
             else:
                 winners = [max(alive_players, key=lambda p: p.role.alignment)]
