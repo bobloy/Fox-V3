@@ -221,8 +221,7 @@ class Game:
             self.save_perms[self.village_channel] = self.village_channel.overwrites
             try:
                 await self.village_channel.edit(
-                    name="🔵Werewolf",
-                    category=self.channel_category,
+                    name="🔵werewolf",
                     reason="(BOT) New game of werewolf",
                 )
             except discord.Forbidden as e:
@@ -298,7 +297,7 @@ class Game:
             _at_voted()
                 _at_kill()
         _at_day_end()
-        _at_night_begin()
+        _at_night_start()
         _at_night_end()
 
         and repeat with _at_day_start() again
@@ -331,6 +330,7 @@ class Game:
         if self.game_over:
             return
 
+        # await self.village_channel.edit(reason="WW Night Start", name="werewolf-🌞")
         self.action_queue.append(self._at_day_end())  # Get this ready in case day is cancelled
 
         def check():
@@ -413,6 +413,7 @@ class Game:
         vote_message = await self.village_channel.fetch_message(id=vote_message.id)
         reaction_list = vote_message.reactions
 
+        log.debug(f"Vote results: {[p.emoji.__repr__() for p in reaction_list]}")
         raw_up_votes = sum(p for p in reaction_list if p.emoji == "👍" and not p.me)
         raw_down_votes = sum(p for p in reaction_list if p.emoji == "👎" and not p.me)
 
@@ -495,6 +496,9 @@ class Game:
     async def _at_night_start(self):  # ID 6
         if self.game_over:
             return
+
+        # await self.village_channel.edit(reason="WW Night Start", name="werewolf-🌑")
+
         await self._notify("at_night_start")
 
         await asyncio.sleep(HALF_NIGHT_LENGTH)  # 2 minutes FixMe to 120 later
@@ -502,9 +506,7 @@ class Game:
             embed=discord.Embed(title=f"**{HALF_NIGHT_LENGTH / 60} minutes of night remain...**")
         )
         await asyncio.sleep(HALF_NIGHT_LENGTH)  # 1.5 minutes FixMe to 90 later
-        await self.village_channel.send(
-            embed=discord.Embed(title=f"**{HALF_NIGHT_LENGTH / 60} minutes until sunrise...**")
-        )
+
         await asyncio.sleep(3)  # .5 minutes FixMe to 30 Later
 
         self.action_queue.append(self._at_night_end())
@@ -522,11 +524,11 @@ class Game:
             return
         await self._notify("at_visit", target=target, source=source)
 
-    async def _notify(self, event, **kwargs):
+    async def _notify(self, event_name, **kwargs):
         for i in range(1, 7):  # action guide 1-6 (0 is no action)
             tasks = []
-            for event in self.listeners.get(event, {}).get(i, []):
-                tasks.append(asyncio.ensure_future(event(**kwargs), loop=self.loop))
+            for event in self.listeners.get(event_name, {}).get(i, []):
+                tasks.append(asyncio.create_task(event(**kwargs)))
 
             # Run same-priority task simultaneously
             await asyncio.gather(*tasks)
@@ -565,7 +567,7 @@ class Game:
                 )
             else:
                 embed.add_field(
-                    name=f"{i} - {status}{player.member.display_name}", inline=False, value=""
+                    name=f"{i} - {status}{player.member.display_name}", inline=False, value="____"
                 )
 
         return await channel.send(embed=embed)
@@ -594,7 +596,11 @@ class Game:
         Have a member join a game
         """
         if self.started:
-            await ctx.maybe_send_embed("**Game has already started!**")
+            await ctx.maybe_send_embed("Game has already started!")
+            return
+
+        if member.bot:
+            await ctx.maybe_send_embed("Bots can't play games")
             return
 
         if await self.get_player_by_member(member) is not None:
@@ -942,10 +948,14 @@ class Game:
         reason = "(BOT) End of WW game"
         for obj in self.to_delete:
             log.debug(f"End_game: Deleting object {obj.__repr__()}")
-            await obj.delete(reason=reason)
+            try:
+                await obj.delete(reason=reason)
+            except discord.NotFound:
+                # Already deleted
+                pass
 
         try:
-            await self.village_channel.edit(reason=reason, name="Werewolf")
+            asyncio.create_task(self.village_channel.edit(reason=reason, name="werewolf"))
             async for channel, overwrites in AsyncIter(self.save_perms.items()):
                 async for target, overwrite in AsyncIter(overwrites.items()):
                     await channel.set_permissions(target, overwrite=overwrite, reason=reason)
