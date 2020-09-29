@@ -929,7 +929,7 @@ class Game:
             await self._announce_winners(alive_players)
 
         # If no return, cleanup and end game
-        await self._end_game()
+        # await self._end_game()
 
     async def _announce_winners(self, winnerlist):
         await self.village_channel.send(self.game_role.mention)
