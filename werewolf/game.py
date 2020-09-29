@@ -17,7 +17,7 @@ from werewolf.votegroup import VoteGroup
 
 log = logging.getLogger("red.fox_v3.werewolf.game")
 
-HALF_DAY_LENGTH = 60  # FixMe: Make configurable
+HALF_DAY_LENGTH = 90  # FixMe: Make configurable
 HALF_NIGHT_LENGTH = 60
 
 

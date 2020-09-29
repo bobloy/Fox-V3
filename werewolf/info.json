@@ -4,10 +4,10 @@
   ],
   "min_bot_version": "3.3.0",
   "description": "Customizable Werewolf Game",
-  "hidden": true,
+  "hidden": false,
   "install_msg": "Thank you for installing Werewolf! Get started with `[p]load werewolf`\n Use `[p]wwset` to run inital setup",
   "requirements": [],
-  "short": "Werewolf Game",
+  "short": "[ALPHA] Play Werewolf (Mafia) Game in discord",
   "end_user_data_statement": "This stores user IDs in memory while they're actively using the cog, and stores no persistent End User Data.",
   "tags": [
     "mafia",
