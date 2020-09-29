@@ -42,12 +42,12 @@ class Game:
         "votegroup": None,  # uninitialized VoteGroup
     }
 
-    morning_messages = [
-        "**The sun rises on day {} in the village..**",
-        "**Morning has arrived on day {}..**",
+    day_start_messages = [
+        "*The sun rises on day {} in the village..*",
+        "*Morning has arrived on day {}..*",
     ]
 
-    night_messages = ["**Dawn falls on day {}..****"]
+    day_end_messages = ["*Dawn falls..*", "*The sun sets on the village*"]
 
     day_vote_count = 3
 
@@ -305,9 +305,9 @@ class Game:
         self.action_queue.append(self._at_day_start())
 
         while self.action_queue and not self.game_over:
-            current_action = asyncio.create_task(self.action_queue.popleft())
+            self.current_action = asyncio.create_task(self.action_queue.popleft())
             try:
-                await current_action
+                await self.current_action
             except asyncio.CancelledError:
                 log.debug("Cancelled task")
         #
@@ -337,7 +337,7 @@ class Game:
         self.day_count += 1
 
         # Print the results of who died during the night
-        embed = discord.Embed(title=random.choice(self.morning_messages).format(self.day_count))
+        embed = discord.Embed(title=random.choice(self.day_start_messages).format(self.day_count))
         for result in self.night_results:
             embed.add_field(name=result, value="________", inline=False)
 
@@ -362,7 +362,7 @@ class Game:
         if check():
             return
         await self.village_channel.send(
-            embed=discord.Embed(title=f"**{HALF_DAY_LENGTH / 60} minutes of daylight remain...**")
+            embed=discord.Embed(title=f"*{HALF_DAY_LENGTH / 60} minutes of daylight remain...*")
         )
         await asyncio.sleep(HALF_DAY_LENGTH)  # 4 minute days FixMe to 120 later
 
@@ -386,7 +386,7 @@ class Game:
 
         await self.speech_perms(self.village_channel, target.member)  # Only target can talk
         await self.village_channel.send(
-            f"**{target.mention} will be put to trial and has 30 seconds to defend themselves**",
+            f"*{target.mention} will be put to trial and has 30 seconds to defend themselves**",
             allowed_mentions=discord.AllowedMentions(everyone=False, users=[target]),
         )
 
@@ -480,7 +480,7 @@ class Game:
         await self.night_perms(self.village_channel)
 
         await self.village_channel.send(
-            embed=discord.Embed(title="**The sun sets on the village...**")
+            embed=discord.Embed(title=random.choice(self.day_end_messages))
         )
 
         await self._notify("at_day_end")
@@ -546,7 +546,7 @@ class Game:
     # ###########END Notify structure############
 
     async def generate_targets(self, channel, with_roles=False):
-        embed = discord.Embed(title="Remaining Players")
+        embed = discord.Embed(title="Remaining Players", description="[ID] - [Name]")
         for i, player in enumerate(self.players):
             if player.alive:
                 status = ""
@@ -554,15 +554,14 @@ class Game:
                 status = "*[Dead]*-"
             if with_roles or not player.alive:
                 embed.add_field(
-                    name=f"ID# **{i}**",
-                    value=f"{status}{player.member.display_name}-{player.role}",
-                    inline=True,
+                    name=f"{i} - {status}{player.member.display_name}",
+                    value=f"{player.role}",
+                    inline=False,
                 )
             else:
                 embed.add_field(
-                    name=f"ID# **{i}**",
-                    value=f"{status}{player.member.display_name}",
-                    inline=True,
+                    name=f"{i} - {status}{player.member.display_name}",
+                    inline=False,
                 )
 
         return await channel.send(embed=embed)
