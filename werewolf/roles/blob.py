@@ -98,4 +98,4 @@ class TheBlob(Role):
 
         if target is not None:
             target.role.properties["been_blobbed"] = True
-            self.game.night_messages.append("The Blob grows...")
+            self.game.night_results.append("The Blob grows...")
