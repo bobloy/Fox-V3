@@ -137,7 +137,9 @@ class Werewolf(Cog):
                 await ctx.maybe_send_embed("Category not found")
                 return
             await self.config.guild(ctx.guild).category_id.set(category.id)
-            await ctx.maybe_send_embed("Game Channel Category has been set to **{}**".format(category.name))
+            await ctx.maybe_send_embed(
+                "Game Channel Category has been set to **{}**".format(category.name)
+            )
 
     @commands.guild_only()
     @wwset.command(name="channel")
@@ -150,7 +152,9 @@ class Werewolf(Cog):
             await ctx.maybe_send_embed("Cleared Game Channel")
         else:
             await self.config.guild(ctx.guild).channel_id.set(channel.id)
-            await ctx.maybe_send_embed("Game Channel has been set to **{}**".format(channel.mention))
+            await ctx.maybe_send_embed(
+                "Game Channel has been set to **{}**".format(channel.mention)
+            )
 
     @commands.guild_only()
     @wwset.command(name="logchannel")
@@ -163,7 +167,9 @@ class Werewolf(Cog):
             await ctx.maybe_send_embed("Cleared Game Log Channel")
         else:
             await self.config.guild(ctx.guild).log_channel_id.set(channel.id)
-            await ctx.maybe_send_embed("Game Log Channel has been set to **{}**".format(channel.mention))
+            await ctx.maybe_send_embed(
+                "Game Log Channel has been set to **{}**".format(channel.mention)
+            )
 
     @commands.group()
     async def ww(self, ctx: commands.Context):

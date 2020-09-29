@@ -44,4 +44,6 @@ class Player:
             )
         except AttributeError:
             log.exception("Someone messed up and added a bot to the game (I think)")
-            await self.role.game.village_channel.send("Someone messed up and added a bot to the game :eyes:")
+            await self.role.game.village_channel.send(
+                "Someone messed up and added a bot to the game :eyes:"
+            )
