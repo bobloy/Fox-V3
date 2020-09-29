@@ -120,7 +120,11 @@ class Role(WolfListener):
         if self.channel_name:
             await self.game.register_channel(self.channel_name, self)
 
-        await self.player.send_dm(self.game_start_message)  # Maybe embeds eventually
+        try:
+            await self.player.send_dm(self.game_start_message)  # Maybe embeds eventually
+        except AttributeError as e:
+            log.exception(self.__repr__())
+            raise e
 
     async def kill(self, source):
         """
