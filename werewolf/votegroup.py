@@ -22,6 +22,9 @@ class VoteGroup(WolfListener):
         self.vote_results = {}
         self.properties = {}  # Extra data for other options
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.channel},{self.players})"
+
     @wolflistener("at_game_start", priority=1)
     async def _at_game_start(self):
         await self.channel.send(" ".join(player.mention for player in self.players))
