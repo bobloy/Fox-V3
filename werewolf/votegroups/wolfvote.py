@@ -55,10 +55,10 @@ class WolfVote(VoteGroup):
         if target_id is not None and self.killer:
             await self.game.kill(target_id, self.killer, random.choice(self.kill_messages))
             await self.channel.send(
-                "**{} has left to complete the kill...**".format(self.killer.member.display_name)
+                "*{} has left to complete the kill...*".format(self.killer.member.display_name)
             )
         else:
-            await self.channel.send("**No kill will be attempted tonight...**")
+            await self.channel.send("*No kill will be attempted tonight...*")
 
     async def vote(self, target, author, target_id):
         """
