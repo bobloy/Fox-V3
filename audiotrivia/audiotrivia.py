@@ -90,7 +90,9 @@ class AudioTrivia(Trivia):
         categories = [c.lower() for c in categories]
         session = self._get_trivia_session(ctx.channel)
         if session is not None:
-            await ctx.maybe_send_embed("There is already an ongoing trivia session in this channel.")
+            await ctx.maybe_send_embed(
+                "There is already an ongoing trivia session in this channel."
+            )
             return
         status = await self.audio.config.status()
         notify = await self.audio.config.guild(ctx.guild).notify()
@@ -110,7 +112,9 @@ class AudioTrivia(Trivia):
                 if not ctx.author.voice.channel.permissions_for(
                     ctx.me
                 ).connect or self.audio.is_vc_full(ctx.author.voice.channel):
-                    return await ctx.maybe_send_embed("I don't have permission to connect to your channel.")
+                    return await ctx.maybe_send_embed(
+                        "I don't have permission to connect to your channel."
+                    )
                 await lavalink.connect(ctx.author.voice.channel)
                 lavaplayer = lavalink.get_player(ctx.guild.id)
                 lavaplayer.store("connect", datetime.datetime.utcnow())
