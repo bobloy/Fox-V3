@@ -285,7 +285,8 @@ class Werewolf(Cog):
 
         game = await self._get_game(ctx)
         game.game_over = True
-        game.current_action.cancel()
+        if game.current_action:
+            game.current_action.cancel()
         await ctx.maybe_send_embed("Game has been stopped")
 
     @commands.guild_only()
