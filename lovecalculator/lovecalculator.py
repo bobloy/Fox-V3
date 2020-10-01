@@ -60,14 +60,14 @@ class LoveCalculator(Cog):
             else:
                 emoji = "💔"
             title = f"Dr. Love says that the love percentage for {x} and {y} is: {emoji} {description} {emoji}"
-        except:
+        except (TypeError, ValueError):
             title = "Dr. Love has left a note for you."
 
         em = discord.Embed(
             title=title,
             description=result_text,
             color=discord.Color.red(),
-            url=f"https://www.lovecalculator.com/{result_image}",
+            url=url
         )
-
+        em.set_image(url=f"https://www.lovecalculator.com/{result_image}")
         await ctx.send(embed=em)
