@@ -159,7 +159,12 @@ class Conquest(commands.Cog):
             self.data_path / self.current_map / f"current.{self.ext}", x, y, zoom
         )
 
-        await ctx.send(file=discord.File(fp=zoomed_path, filename=f"current_zoomed.{self.ext}",))
+        await ctx.send(
+            file=discord.File(
+                fp=zoomed_path,
+                filename=f"current_zoomed.{self.ext}",
+            )
+        )
 
     async def _create_zoomed_map(self, map_path, x, y, zoom, **kwargs):
         current_map = Image.open(map_path)

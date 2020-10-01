@@ -157,7 +157,7 @@ class Timerole(Cog):
         await ctx.maybe_send_embed(out)
 
     async def timerole_update(self):
-        for guild in self.bot.guilds:
+        async for guild in AsyncIter(self.bot.guilds):
             addlist = []
             removelist = []
 
@@ -200,7 +200,7 @@ class Timerole(Cog):
 
     async def announce_roles(self, title, role_list, channel, guild, to_add: True):
         results = ""
-        for member, role_id in role_list:
+        async for member, role_id in AsyncIter(role_list):
             role = discord.utils.get(guild.roles, id=role_id)
             try:
                 if to_add:
@@ -219,7 +219,7 @@ class Timerole(Cog):
             log.info(results)
 
     async def check_required_and_date(self, role_list, check_roles, has_roles, member, role_dict):
-        for role_id in check_roles:
+        async for role_id in AsyncIter(check_roles):
             # Check for required role
             if "required" in role_dict[str(role_id)]:
                 if not set(role_dict[str(role_id)]["required"]) & set(has_roles):
@@ -242,6 +242,3 @@ class Timerole(Cog):
         while self is self.bot.get_cog("Timerole"):
             await self.timerole_update()
             await sleep_till_next_hour()
-
-
-

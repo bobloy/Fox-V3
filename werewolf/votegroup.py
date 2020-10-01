@@ -1,4 +1,11 @@
-class VoteGroup:
+import logging
+
+from werewolf.listener import WolfListener, wolflistener
+
+log = logging.getLogger("red.fox_v3.werewolf.votegroup")
+
+
+class VoteGroup(WolfListener):
     """
     Base VoteGroup class for werewolf game
     Handles secret channels and group decisions
@@ -8,58 +15,41 @@ class VoteGroup:
     channel_id = ""
 
     def __init__(self, game, channel):
+        super().__init__(game)
         self.game = game
         self.channel = channel
         self.players = []
         self.vote_results = {}
         self.properties = {}  # Extra data for other options
 
-        self.action_list = [
-            (self._at_game_start, 1),  # (Action, Priority)
-            (self._at_day_start, 0),
-            (self._at_voted, 0),
-            (self._at_kill, 1),
-            (self._at_hang, 1),
-            (self._at_day_end, 0),
-            (self._at_night_start, 2),
-            (self._at_night_end, 0),
-            (self._at_visit, 0)
-        ]
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.channel},{self.players})"
 
-    async def on_event(self, event, data):
-        """
-        See Game class for event guide
-        """
-
-        await self.action_list[event][0](data)
-
-    async def _at_game_start(self, data=None):
+    @wolflistener("at_game_start", priority=1)
+    async def _at_game_start(self):
         await self.channel.send(" ".join(player.mention for player in self.players))
 
-    async def _at_day_start(self, data=None):
-        pass
+    @wolflistener("at_kill", priority=1)
+    async def _at_kill(self, player):
+        if player in self.players:
+            self.players.remove(player)
 
-    async def _at_voted(self, data=None):
-        pass
+    @wolflistener("at_hang", priority=1)
+    async def _at_hang(self, player):
+        if player in self.players:
+            self.players.remove(player)
 
-    async def _at_kill(self, data=None):
-        if data["player"] in self.players:
-            self.players.remove(data["player"])
-
-    async def _at_hang(self, data=None):
-        if data["player"] in self.players:
-            self.players.remove(data["player"])
-
-    async def _at_day_end(self, data=None):
-        pass
-
-    async def _at_night_start(self, data=None):
+    @wolflistener("at_night_start", priority=2)
+    async def _at_night_start(self):
         if self.channel is None:
             return
 
+        self.vote_results = {}
+
         await self.game.generate_targets(self.channel)
 
-    async def _at_night_end(self, data=None):
+    @wolflistener("at_night_end", priority=5)
+    async def _at_night_end(self):
         if self.channel is None:
             return
 
@@ -70,11 +60,8 @@ class VoteGroup:
             target = max(set(vote_list), key=vote_list.count)
 
         if target:
-            # Do what you voted on
-            pass
-
-    async def _at_visit(self, data=None):
-        pass
+            # Do what the votegroup votes on
+            raise NotImplementedError
 
     async def register_players(self, *players):
         """
@@ -90,7 +77,7 @@ class VoteGroup:
             self.players.remove(player)
 
         if not self.players:
-            # ToDo: Trigger deletion of votegroup
+            # TODO: Confirm deletion
             pass
 
     async def vote(self, target, author, target_id):

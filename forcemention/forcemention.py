@@ -30,8 +30,8 @@ class ForceMention(Cog):
     @commands.command()
     async def forcemention(self, ctx: commands.Context, role: str, *, message=""):
         """
-       Mentions that role, regardless if it's unmentionable
-       """
+        Mentions that role, regardless if it's unmentionable
+        """
         role_obj = get(ctx.guild.roles, name=role)
         if role_obj is None:
             await ctx.maybe_send_embed("Couldn't find role named {}".format(role))
