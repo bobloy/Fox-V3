@@ -54,7 +54,7 @@ class Flag(Cog):
     async def flagset(self, ctx: commands.Context):
         """
         My custom cog
-       
+
         Extra information goes here
         """
         if ctx.invoked_subcommand is None:

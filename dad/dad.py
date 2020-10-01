@@ -85,6 +85,8 @@ class Dad(Cog):
 
     @commands.Cog.listener()
     async def on_message_without_command(self, message: discord.Message):
+        if message.author.bot:
+            return
         guild: discord.Guild = getattr(message, "guild", None)
         if guild is None:
             return

@@ -1,9 +1,13 @@
+import asyncio
+import logging
+from typing import Union
+
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
 
-
+log = logging.getLogger("red.fox_v3.stealemoji")
 # Replaced with discord.Asset.read()
 # async def fetch_img(session: aiohttp.ClientSession, url: StrOrURL):
 #     async with session.get(url) as response:
@@ -43,7 +47,13 @@ class StealEmoji(Cog):
         super().__init__()
         self.bot = red
         self.config = Config.get_conf(self, identifier=11511610197108101109111106105)
-        default_global = {"stolemoji": {}, "guildbanks": [], "on": False, "notify": 0}
+        default_global = {
+            "stolemoji": {},
+            "guildbanks": [],
+            "on": False,
+            "notify": 0,
+            "autobank": False,
+        }
 
         self.config.register_global(**default_global)
 
@@ -125,6 +135,17 @@ class StealEmoji(Cog):
         await ctx.maybe_send_embed("Collection is now " + str(not curr_setting))
 
     @checks.is_owner()
+    @stealemoji.command(name="autobank")
+    async def se_autobank(self, ctx):
+        """Toggles automatically creating new guilds as emoji banks"""
+        curr_setting = await self.config.autobank()
+        await self.config.autobank.set(not curr_setting)
+
+        self.is_on = await self.config.autobank()
+
+        await ctx.maybe_send_embed("AutoBanking is now " + str(not curr_setting))
+
+    @checks.is_owner()
     @commands.guild_only()
     @stealemoji.command(name="bank")
     async def se_bank(self, ctx):
@@ -193,7 +214,7 @@ class StealEmoji(Cog):
         # This is now a custom emoji that the bot doesn't have access to, time to steal it
         # First, do I have an available guildbank?
 
-        guildbank = None
+        guildbank: Union[discord.Guild, None] = None
         banklist = await self.config.guildbanks()
         for guild_id in banklist:
             guild: discord.Guild = self.bot.get_guild(guild_id)
@@ -203,9 +224,33 @@ class StealEmoji(Cog):
                 break
 
         if guildbank is None:
-            # print("No guildbank to store emoji")
-            # Eventually make a new banklist
-            return
+            if await self.config.autobank():
+                try:
+                    guildbank: discord.Guild = await self.bot.create_guild(
+                        "StealEmoji Guildbank", code="S93bqTqKQ9rM"
+                    )
+                except discord.HTTPException:
+                    await self.config.autobank.set(False)
+                    log.exception("Unable to create guilds, disabling autobank")
+                    return
+                async with self.config.guildbanks() as guildbanks:
+                    guildbanks.append(guildbank.id)
+
+                await asyncio.sleep(2)
+
+                if guildbank.text_channels:
+                    channel = guildbank.text_channels[0]
+                else:
+                    # Always hits the else.
+                    # Maybe create_guild doesn't return guild object with
+                    #    the template channel?
+                    channel = await guildbank.create_text_channel("invite-channel")
+                invite = await channel.create_invite()
+
+                await self.bot.send_to_owners(invite)
+                log.info(f"Guild created id {guildbank.id}. Invite: {invite}")
+            else:
+                return
 
         # Next, have I saved this emoji before (because uploaded emoji != orignal emoji)
 

@@ -1,4 +1,5 @@
 import asyncio
+from typing import Union
 
 import discord
 from redbot.core import Config, checks, commands
@@ -61,10 +62,9 @@ class InfoChannel(Cog):
 
         guild: discord.Guild = ctx.guild
         channel_id = await self.config.guild(guild).channel_id()
+        channel = None
         if channel_id is not None:
-            channel: discord.VoiceChannel = guild.get_channel(channel_id)
-        else:
-            channel: discord.VoiceChannel = None
+            channel: Union[discord.VoiceChannel, None] = guild.get_channel(channel_id)
 
         if channel_id is not None and channel is None:
             await ctx.send("Info channel has been deleted, recreate it?")

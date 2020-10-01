@@ -22,7 +22,9 @@ class LaunchLib(commands.Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=0, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=7697117110991047610598, force_registration=True
+        )
 
         default_guild = {}
 
@@ -34,10 +36,10 @@ class LaunchLib(commands.Cog):
         """Nothing to delete"""
         return
 
-    async def _embed_launch_data(self, launch: ll.Launch):
-        status: ll.LaunchStatus = launch.get_status()
+    async def _embed_launch_data(self, launch: ll.AsyncLaunch):
+        status: ll.AsyncLaunchStatus = await launch.get_status()
 
-        rocket: ll.Rocket = launch.rocket
+        rocket: ll.AsyncRocket = launch.rocket
 
         title = launch.name
         description = status.description
@@ -105,15 +107,13 @@ class LaunchLib(commands.Cog):
     @launchlib.command()
     async def next(self, ctx: commands.Context, num_launches: int = 1):
         # launches = await api.async_next_launches(num_launches)
-        loop = asyncio.get_running_loop()
-
-        launches = await loop.run_in_executor(
-            None, functools.partial(self.api.fetch_launch, num=num_launches)
-        )
-
-        # launches = self.api.fetch_launch(num=num_launches)
-
-        print(len(launches))
+        # loop = asyncio.get_running_loop()
+        #
+        # launches = await loop.run_in_executor(
+        #     None, functools.partial(self.api.fetch_launch, num=num_launches)
+        # )
+        #
+        launches = await self.api.async_fetch_launch(num=num_launches)
 
         async with ctx.typing():
             for x, launch in enumerate(launches):

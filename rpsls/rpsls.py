@@ -28,8 +28,8 @@ class RPSLS(Cog):
     @commands.command()
     async def rpsls(self, ctx: commands.Context, choice: str):
         """
-        Play Rock Paper Scissors Lizard Spock by Sam Kass in Discord! 
-        
+        Play Rock Paper Scissors Lizard Spock by Sam Kass in Discord!
+
         Rules:
         Scissors cuts Paper
         Paper covers Rock

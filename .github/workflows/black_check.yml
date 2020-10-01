@@ -1,0 +1,20 @@
+# GitHub Action that uses Black to reformat the Python code in an incoming pull request.
+# If all Python code in the pull request is compliant with Black then this Action does nothing.
+# Othewrwise, Black is run and its changes are committed back to the incoming pull request.
+# https://github.com/cclauss/autoblack
+
+name: black
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install Black
+        run: pip install --upgrade --no-cache-dir black
+      - name: Run black --check .
+        run: black --check --diff -l 99 .

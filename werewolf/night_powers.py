@@ -1,4 +1,8 @@
-from .role import Role
+import logging
+
+from werewolf.role import Role
+
+log = logging.getLogger("red.fox_v3.werewolf.night_powers")
 
 
 def night_immune(role: Role):

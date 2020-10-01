@@ -29,7 +29,7 @@ Chatter by default uses spaCy's `en_core_web_md` training model, which is ~50 MB
 
 Chatter can potential use spaCy's `en_core_web_lg` training model, which is ~800 MB
 
-Chatter uses as sqlite database that can potentially take up a large amount os disk space,
+Chatter uses as sqlite database that can potentially take up a large amount of disk space,
 depending on how much training Chatter has done. 
 
 The sqlite database can be safely deleted at any time. Deletion will only erase training data.
@@ -50,7 +50,9 @@ Linux is a bit easier, but only tested on Debian and Ubuntu.
 
 ## Windows Prerequisites
 
-Install these on your windows machine before attempting the installation
+**Requires 64 Bit Python to continue on Windows.**
+
+Install these on your windows machine before attempting the installation:
 
 [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
@@ -83,6 +85,7 @@ pip install --no-deps "chatterbot>=1.1"
 #### Step 3: Load Chatter
 
 ```
+[p]repo add Fox https://github.com/bobloy/Fox-V3  # If you didn't already do this in step 1
 [p]cog install Fox chatter
 [p]load chatter
 ```
@@ -92,7 +95,7 @@ pip install --no-deps "chatterbot>=1.1"
 #### Step 1: Built-in Downloader
 
 ```
-[p]cog install Chatter
+[p]cog install <Fox> Chatter
 ```
 
 #### Step 2: Install Requirements
