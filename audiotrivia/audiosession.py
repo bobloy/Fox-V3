@@ -12,13 +12,13 @@ log = logging.getLogger("red.fox_v3.audiotrivia.audiosession")
 class AudioSession(TriviaSession):
     """Class to run a session of audio trivia"""
 
-    def __init__(self, ctx, question_list: dict, settings: dict, audio = None):
+    def __init__(self, ctx, question_list: dict, settings: dict, audio=None):
         super().__init__(ctx, question_list, settings)
 
         self.audio = audio
 
     @classmethod
-    def start(cls, ctx, question_list, settings, audio = None):
+    def start(cls, ctx, question_list, settings, audio=None):
         session = cls(ctx, question_list, settings, audio)
         loop = ctx.bot.loop
         session._task = loop.create_task(session.run())
@@ -59,8 +59,8 @@ class AudioSession(TriviaSession):
 
                 load_result = await player.load_tracks(audio_url)
                 if (
-                        load_result.has_error
-                        or load_result.load_type != lavalink.enums.LoadType.TRACK_LOADED
+                    load_result.has_error
+                    or load_result.load_type != lavalink.enums.LoadType.TRACK_LOADED
                 ):
                     await self.ctx.maybe_send_embed(
                         "Audio Track has an error, skipping. See logs for details"
