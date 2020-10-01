@@ -168,7 +168,7 @@ class CCRole(commands.Cog):
             task.cancel()
 
         if len(done) == 0:
-            return None, "Timed out, canceling"
+            return {'success': False, 'message': "Timed out, canceling"}
 
         payload_or_message = done.pop().result()
 
@@ -184,10 +184,10 @@ class CCRole(commands.Cog):
         ):
             role_list = await get_roles_from_content(ctx, payload_or_message.content)
             if role_list is None:
-                return None, "Invalid answer, canceling"
+                return {'success': False, 'message': "Invalid answer, canceling"}
 
         # Either it was a reaction or None
-        return role_list, None
+        return {'success': True, 'roles': role_list, 'message': "Success"}
 
     @commands.guild_only()
     @commands.group()
@@ -232,40 +232,43 @@ class CCRole(commands.Cog):
             return m.author == ctx.author and m.channel == ctx.channel
 
         # Roles to add
-        arole_list, error_message = await self._query_for_roles(
+        results = await self._query_for_roles(
             ctx,
             "What roles should it add? (Must be **comma separated**)\n"
             "Say `None` or react with tick to skip adding roles",
             120,
             check,
         )
-        if arole_list is None:
-            await ctx.send(error_message)
+        if not results['success']:
+            await ctx.send(results['message'])
             return
+        arole_list = results['roles']
 
         # Roles to remove
-        rrole_list, error_message = await self._query_for_roles(
+        results = await self._query_for_roles(
             ctx,
             "What roles should it remove? (Must be comma separated)\n"
             "Say `None` or react with tick to skip removing roles",
             120,
             check,
         )
-        if rrole_list is None:
-            await ctx.send(error_message)
+        if not results['success']:
+            await ctx.send(results['message'])
             return
+        rrole_list = results['roles']
 
         # Roles to allow use
-        prole_list, error_message = await self._query_for_roles(
+        results = await self._query_for_roles(
             ctx,
             "What roles are allowed to use this command? (Must be comma separated)\n"
             "Say `None` or react with tick to allow all roles",
             120,
             check,
         )
-        if prole_list is None:
-            await ctx.send(error_message)
+        if not results['success']:
+            await ctx.send(results['message'])
             return
+        prole_list = results['roles']
 
         # Selfrole
         await ctx.send(
