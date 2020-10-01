@@ -64,10 +64,7 @@ class LoveCalculator(Cog):
             title = "Dr. Love has left a note for you."
 
         em = discord.Embed(
-            title=title,
-            description=result_text,
-            color=discord.Color.red(),
-            url=url
+            title=title, description=result_text, color=discord.Color.red(), url=url
         )
         em.set_image(url=f"https://www.lovecalculator.com/{result_image}")
         await ctx.send(embed=em)
