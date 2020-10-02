@@ -178,11 +178,14 @@ class Timerole(Cog):
         utcnow = datetime.utcnow()
         all_guilds = await self.config.all_guilds()
 
-        all_mrs = await self.config.custom("MemberRole").all()
+        # all_mrs = await self.config.custom("MemberRole").all()
+
+        log.debug(f"Begin timerole update")
 
         for guild in self.bot.guilds:
-            guild_id = str(guild.id)
+            guild_id = guild.id
             if guild_id not in all_guilds:
+                log.debug(f"Guild has no configured settings: {guild}")
                 continue
 
             add_results = ""
@@ -191,6 +194,7 @@ class Timerole(Cog):
             role_dict = all_guilds[guild_id]["roles"]
 
             if not any(role_data for role_data in role_dict.values()):  # No roles
+                log.debug(f"No roles are configured for guild: {guild}")
                 continue
 
             async for member in AsyncIter(guild.members, steps=100):
@@ -198,7 +202,7 @@ class Timerole(Cog):
                 removelist = []
 
                 for role_id, role_data in role_dict.items():
-                    mr_dict = all_mrs[str(member.id)][role_id]
+                    mr_dict = await self.config.custom("MemberRole", member.id, role_id).all()
 
                     # Stop if they've had the role and reapplying is disabled
                     if not reapply and mr_dict["had_role"]:
@@ -222,7 +226,9 @@ class Timerole(Cog):
                         continue
 
                     # Stop if they don't have all the required roles
-                    if "required" in role_data and not set(role_data["required"]) & has_roles:
+                    if role_data is None or (
+                        "required" in role_data and not set(role_data["required"]) & has_roles
+                    ):
                         # Doesn't have required role
                         continue
 
