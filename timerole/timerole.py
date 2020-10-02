@@ -27,10 +27,15 @@ class Timerole(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {"announce": None, "roles": {}}
+        default_guild = {"announce": None}
+        default_memberrole = {"had_role": False, "check_again_time": None}
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
+
+        self.config.init_custom("MemberRole", 2)
+        self.config.register_custom("MemberRole", **default_memberrole)
+
         self.updating = asyncio.create_task(self.check_hour())
 
     async def red_delete_data_for_user(self, **kwargs):
