@@ -19,6 +19,15 @@ async def sleep_till_next_hour():
     await asyncio.sleep((next_hour - datetime.utcnow()).seconds)
 
 
+async def announce_to_channel(channel, remove_results, title):
+    if channel is not None and remove_results:
+        await channel.send(title)
+        for page in pagify(remove_results, shorten_by=50):
+            await channel.send(page)
+    elif remove_results:  # Channel is None, log the results
+        log.info(remove_results)
+
+
 class Timerole(Cog):
     """Add roles to users based on time on server"""
 
@@ -27,7 +36,7 @@ class Timerole(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {"announce": None}
+        default_guild = {"announce": None, "reapply": True, "roles": {}}
         default_memberrole = {"had_role": False, "check_again_time": None}
 
         self.config.register_global(**default_global)
@@ -89,9 +98,7 @@ class Timerole(Cog):
 
         await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
         await ctx.maybe_send_embed(
-            "Time Role for {0} set to {1} days  and {2} hours until added".format(
-                role.name, days, hours
-            )
+            f"Time Role for {role.name} set to {days} days  and {hours} hours until added"
         )
 
     @timerole.command()
@@ -119,9 +126,7 @@ class Timerole(Cog):
 
         await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
         await ctx.maybe_send_embed(
-            "Time Role for {0} set to {1} days and {2} hours until removed".format(
-                role.name, days, hours
-            )
+            f"Time Role for {role.name} set to {days} days  and {hours} hours until removed"
         )
 
     @timerole.command()
@@ -130,7 +135,15 @@ class Timerole(Cog):
         guild = ctx.guild
 
         await self.config.guild(guild).announce.set(channel.id)
-        await ctx.send("Announce channel set to {0}".format(channel.mention))
+        await ctx.send(f"Announce channel set to {channel.mention}")
+
+    @timerole.command()
+    async def reapply(self, ctx: commands.Context):
+        """Toggle reapplying roles if the member loses it somehow. Defaults to True"""
+        guild = ctx.guild
+        current_setting = await self.config.guild(guild).reapply()
+        await self.config.guild(guild).reapply.set(not current_setting)
+        await ctx.send(f"Reapplying roles is now set to: {not current_setting}")
 
     @timerole.command()
     async def delrole(self, ctx: commands.Context, role: discord.Role):
@@ -138,7 +151,7 @@ class Timerole(Cog):
         guild = ctx.guild
 
         await self.config.guild(guild).roles.set_raw(role.id, value=None)
-        await ctx.send("{0} will no longer be applied".format(role.name))
+        await ctx.send(f"{role.name} will no longer be applied")
 
     @timerole.command()
     async def list(self, ctx: commands.Context):
@@ -158,89 +171,152 @@ class Timerole(Cog):
                         str(discord.utils.get(guild.roles, id=int(new_id)))
                         for new_id in r_data["required"]
                     ]
-                out += "{} | {} days | requires: {}\n".format(str(role), r_data["days"], r_roles)
+                out += f"{role} | {r_data['days']} days | requires: {r_roles}\n"
         await ctx.maybe_send_embed(out)
 
     async def timerole_update(self):
-        async for guild in AsyncIter(self.bot.guilds):
-            addlist = []
-            removelist = []
+        utcnow = datetime.utcnow()
+        all_guilds = await self.config.all_guilds()
 
-            role_dict = await self.config.guild(guild).roles()
+        all_mrs = await self.config.custom("MemberRole").all()
+
+        for guild in self.bot.guilds:
+            guild_id = str(guild.id)
+            if guild_id not in all_guilds:
+                continue
+
+            add_results = ""
+            remove_results = ""
+            reapply = all_guilds[guild_id]["reapply"]
+            role_dict = all_guilds[guild_id]["roles"]
+
             if not any(role_data for role_data in role_dict.values()):  # No roles
                 continue
 
-            async for member in AsyncIter(guild.members):
-                has_roles = [r.id for r in member.roles]
+            async for member in AsyncIter(guild.members, steps=100):
+                addlist = []
+                removelist = []
 
-                add_roles = [
-                    int(rID)
-                    for rID, r_data in role_dict.items()
-                    if r_data is not None and not r_data["remove"]
-                ]
-                remove_roles = [
-                    int(rID)
-                    for rID, r_data in role_dict.items()
-                    if r_data is not None and r_data["remove"]
-                ]
+                for role_id, role_data in role_dict.items():
+                    mr_dict = all_mrs[str(member.id)][role_id]
 
-                check_add_roles = set(add_roles) - set(has_roles)
-                check_remove_roles = set(remove_roles) & set(has_roles)
+                    # Stop if they've had the role and reapplying is disabled
+                    if not reapply and mr_dict["had_role"]:
+                        continue
 
-                await self.check_required_and_date(
-                    addlist, check_add_roles, has_roles, member, role_dict
-                )
-                await self.check_required_and_date(
-                    removelist, check_remove_roles, has_roles, member, role_dict
-                )
+                    # Stop if the check_again_time hasn't passed yet
+                    if (
+                        mr_dict["check_again_time"] is not None
+                        and datetime.fromisoformat(mr_dict["check_again_time"]) >= utcnow
+                    ):
+                        continue
+                    member: discord.Member
+                    has_roles = set(r.id for r in member.roles)
 
+                    # Stop if they currently have the role (and mark they had it)
+                    if role_id in has_roles:
+                        if not mr_dict["had_role"]:
+                            await self.config.custom(
+                                "MemberRole", member.id, role_id
+                            ).had_role.set(True)
+                        continue
+
+                    # Stop if they don't have all the required roles
+                    if "required" in role_data and not set(role_data["required"]) & has_roles:
+                        # Doesn't have required role
+                        continue
+
+                    check_time = member.joined_at + timedelta(
+                        days=role_data["days"],
+                        hours=role_data.get("hours", 0),
+                    )
+
+                    # Check if enough time has passed to get the role and save the check_again_time
+                    if check_time <= utcnow:
+                        await self.config.custom(
+                            "MemberRole", member.id, role_id
+                        ).check_again_time.set(check_time.isoformat())
+                        continue
+
+                    if role_data["remove"]:
+                        removelist.append(role_id)
+                    else:
+                        addlist.append(role_id)
+
+                # Done iterating through roles, now add or remove the roles
+                addlist = [discord.utils.get(guild.roles, id=role_id) for role_id in addlist]
+                removelist = [discord.utils.get(guild.roles, id=role_id) for role_id in removelist]
+
+                if addlist:
+                    try:
+                        await member.add_roles(*addlist, reason="Timerole", atomic=False)
+                    except (discord.Forbidden, discord.NotFound) as e:
+                        log.exception("Failed Adding Roles")
+                        add_results += f"{member.display_name} : **(Failed Adding Roles)**\n"
+                    else:
+                        add_results += "\n".join(
+                            f"{member.display_name} : {role.name}" for role in addlist
+                        )
+
+                if removelist:
+                    try:
+                        await member.remove_roles(*removelist, reason="Timerole", atomic=False)
+                    except (discord.Forbidden, discord.NotFound) as e:
+                        log.exception("Failed Removing Roles")
+                        remove_results += f"{member.display_name} : **(Failed Removing Roles)**\n"
+                    else:
+                        remove_results += "\n".join(
+                            f"{member.display_name} : {role.name}" for role in removelist
+                        )
+
+            # Done iterating through members, now maybe announce to the guild
             channel = await self.config.guild(guild).announce()
             if channel is not None:
                 channel = guild.get_channel(channel)
-
             title = "**These members have received the following roles**\n"
-            await self.announce_roles(title, addlist, channel, guild, to_add=True)
+            await announce_to_channel(channel, remove_results, title)
             title = "**These members have lost the following roles**\n"
-            await self.announce_roles(title, removelist, channel, guild, to_add=False)
+            await announce_to_channel(channel, remove_results, title)
+        # End
 
-    async def announce_roles(self, title, role_list, channel, guild, to_add: True):
-        results = ""
-        async for member, role_id in AsyncIter(role_list):
-            role = discord.utils.get(guild.roles, id=role_id)
-            try:
-                if to_add:
-                    await member.add_roles(role, reason="Timerole")
-                else:
-                    await member.remove_roles(role, reason="Timerole")
-            except (discord.Forbidden, discord.NotFound) as e:
-                results += "{} : {} **(Failed)**\n".format(member.display_name, role.name)
-            else:
-                results += "{} : {}\n".format(member.display_name, role.name)
-        if channel is not None and results:
-            await channel.send(title)
-            for page in pagify(results, shorten_by=50):
-                await channel.send(page)
-        elif results:  # Channel is None, log the results
-            log.info(results)
+    # async def announce_roles(self, title, role_list, channel, guild, to_add: True):
+    #     results = ""
+    #     async for member, role_id in AsyncIter(role_list):
+    #         role = discord.utils.get(guild.roles, id=role_id)
+    #         try:
+    #             if to_add:
+    #                 await member.add_roles(role, reason="Timerole")
+    #             else:
+    #                 await member.remove_roles(role, reason="Timerole")
+    #         except (discord.Forbidden, discord.NotFound) as e:
+    #             results += f"{member.display_name} : {role.name} **(Failed)**\n"
+    #         else:
+    #             results += f"{member.display_name} : {role.name}\n"
+    #     if channel is not None and results:
+    #         await channel.send(title)
+    #         for page in pagify(results, shorten_by=50):
+    #             await channel.send(page)
+    #     elif results:  # Channel is None, log the results
+    #         log.info(results)
 
-    async def check_required_and_date(self, role_list, check_roles, has_roles, member, role_dict):
-        async for role_id in AsyncIter(check_roles):
-            # Check for required role
-            if "required" in role_dict[str(role_id)]:
-                if not set(role_dict[str(role_id)]["required"]) & set(has_roles):
-                    # Doesn't have required role
-                    continue
-
-            if (
-                member.joined_at
-                + timedelta(
-                    days=role_dict[str(role_id)]["days"],
-                    hours=role_dict[str(role_id)].get("hours", 0),
-                )
-                <= datetime.today()
-            ):
-                # Qualifies
-                role_list.append((member, role_id))
+    # async def check_required_and_date(self, role_list, check_roles, has_roles, member, role_dict):
+    #     async for role_id in AsyncIter(check_roles):
+    #         # Check for required role
+    #         if "required" in role_dict[str(role_id)]:
+    #             if not set(role_dict[str(role_id)]["required"]) & set(has_roles):
+    #                 # Doesn't have required role
+    #                 continue
+    #
+    #         if (
+    #             member.joined_at
+    #             + timedelta(
+    #                 days=role_dict[str(role_id)]["days"],
+    #                 hours=role_dict[str(role_id)].get("hours", 0),
+    #             )
+    #             <= datetime.utcnow()
+    #         ):
+    #             # Qualifies
+    #             role_list.append((member, role_id))
 
     async def check_hour(self):
         await sleep_till_next_hour()
