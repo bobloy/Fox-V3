@@ -28,10 +28,12 @@ class Timerole(Cog):
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
         default_guild = {"announce": None}
+        default_role = {"enabled": False, "days": 0, "hours": 0, "remove": False, "required": []}
         default_memberrole = {"had_role": False, "check_again_time": None}
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
+        self.config.register_role(**default_role)
 
         self.config.init_custom("MemberRole", 2)
         self.config.register_custom("MemberRole", **default_memberrole)
@@ -59,6 +61,16 @@ class Timerole(Cog):
             await self.timerole_update()
             await ctx.tick()
 
+    @commands.command()
+    @checks.guildowner()
+    @commands.guild_only()
+    async def import_timerole(self, ctx: commands.Context):
+        """
+        Run once per guild to migrate data from the old version of timerole to the new version.
+        """
+        # TODO: that ^
+        pass
+
     @commands.group()
     @checks.mod_or_permissions(administrator=True)
     @commands.guild_only()
@@ -83,11 +95,14 @@ class Timerole(Cog):
         days = parsed_time.days
         hours = parsed_time.seconds // 60 // 60
 
-        to_set = {"days": days, "hours": hours, "remove": False}
-        if requiredroles:
-            to_set["required"] = [r.id for r in requiredroles]
+        # to_set = {"days": days, "hours": hours, "remove": False}
+        requiredroles = [r.id for r in requiredroles]
 
-        await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
+        await self.config.role(role).days.set(days)
+        await self.config.role(role).hours.set(hours)
+        await self.config.role(role).remove.set(False)
+        await self.config.role(role).required.set(requiredroles)
+        await self.config.role(role).enabled.set(True)
         await ctx.maybe_send_embed(
             "Time Role for {0} set to {1} days  and {2} hours until added".format(
                 role.name, days, hours
@@ -113,11 +128,13 @@ class Timerole(Cog):
         days = parsed_time.days
         hours = parsed_time.seconds // 60 // 60
 
-        to_set = {"days": days, "hours": hours, "remove": True}
-        if requiredroles:
-            to_set["required"] = [r.id for r in requiredroles]
+        requiredroles = [r.id for r in requiredroles]
 
-        await self.config.guild(guild).roles.set_raw(role.id, value=to_set)
+        await self.config.role(role).days.set(days)
+        await self.config.role(role).hours.set(hours)
+        await self.config.role(role).remove.set(True)
+        await self.config.role(role).required.set(requiredroles)
+        await self.config.role(role).enabled.set(True)
         await ctx.maybe_send_embed(
             "Time Role for {0} set to {1} days and {2} hours until removed".format(
                 role.name, days, hours
@@ -135,10 +152,8 @@ class Timerole(Cog):
     @timerole.command()
     async def delrole(self, ctx: commands.Context, role: discord.Role):
         """Deletes a role from being added/removed after specified time"""
-        guild = ctx.guild
-
-        await self.config.guild(guild).roles.set_raw(role.id, value=None)
-        await ctx.send("{0} will no longer be applied".format(role.name))
+        await self.config.roles(role).enabled.set(False)
+        await ctx.send(f"{role.name} will no longer be processed")
 
     @timerole.command()
     async def list(self, ctx: commands.Context):
