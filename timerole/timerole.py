@@ -64,11 +64,12 @@ class Timerole(Cog):
 
         Useful for troubleshooting the initial setup
         """
-        pre_run = datetime.utcnow()
         async with ctx.typing():
+            pre_run = datetime.utcnow()
             await self.timerole_update()
+            after_run = datetime.utcnow()
             await ctx.tick()
-        after_run = datetime.utcnow()
+
         await ctx.maybe_send_embed(f"Took {after_run-pre_run} seconds")
 
     @commands.group()
@@ -187,7 +188,7 @@ class Timerole(Cog):
 
         # all_mrs = await self.config.custom("RoleMember").all()
 
-        log.debug(f"Begin timerole update")
+        # log.debug(f"Begin timerole update")
 
         for guild in self.bot.guilds:
             guild_id = guild.id
