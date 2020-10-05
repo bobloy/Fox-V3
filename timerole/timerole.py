@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
+from typing import Optional
 
 import discord
 from redbot.core import Config, checks, commands
@@ -37,13 +38,13 @@ class Timerole(Cog):
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
         default_guild = {"announce": None, "reapply": True, "roles": {}}
-        default_memberrole = {"had_role": False, "check_again_time": None}
+        default_rolemember = {"had_role": False, "check_again_time": None}
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
 
-        self.config.init_custom("MemberRole", 2)
-        self.config.register_custom("MemberRole", **default_memberrole)
+        self.config.init_custom("RoleMember", 2)
+        self.config.register_custom("RoleMember", **default_rolemember)
 
         self.updating = asyncio.create_task(self.check_hour())
 
@@ -63,10 +64,12 @@ class Timerole(Cog):
 
         Useful for troubleshooting the initial setup
         """
-
+        pre_run = datetime.utcnow()
         async with ctx.typing():
             await self.timerole_update()
             await ctx.tick()
+        after_run = datetime.utcnow()
+        await ctx.maybe_send_embed(f"Took {after_run-pre_run} seconds")
 
     @commands.group()
     @checks.mod_or_permissions(administrator=True)
@@ -130,12 +133,15 @@ class Timerole(Cog):
         )
 
     @timerole.command()
-    async def channel(self, ctx: commands.Context, channel: discord.TextChannel):
+    async def channel(self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None):
         """Sets the announce channel for role adds"""
         guild = ctx.guild
-
-        await self.config.guild(guild).announce.set(channel.id)
-        await ctx.send(f"Announce channel set to {channel.mention}")
+        if channel is None:
+            await self.config.guild(guild).announce.clear()
+            await ctx.maybe_send_embed(f"Announce channel has been cleared")
+        else:
+            await self.config.guild(guild).announce.set(channel.id)
+            await ctx.send(f"Announce channel set to {channel.mention}")
 
     @timerole.command()
     async def reapply(self, ctx: commands.Context):
@@ -143,7 +149,7 @@ class Timerole(Cog):
         guild = ctx.guild
         current_setting = await self.config.guild(guild).reapply()
         await self.config.guild(guild).reapply.set(not current_setting)
-        await ctx.send(f"Reapplying roles is now set to: {not current_setting}")
+        await ctx.maybe_send_embed(f"Reapplying roles is now set to: {not current_setting}")
 
     @timerole.command()
     async def delrole(self, ctx: commands.Context, role: discord.Role):
@@ -151,7 +157,8 @@ class Timerole(Cog):
         guild = ctx.guild
 
         await self.config.guild(guild).roles.set_raw(role.id, value=None)
-        await ctx.send(f"{role.name} will no longer be applied")
+        await self.config.custom("RoleMember", role.id).clear()
+        await ctx.maybe_send_embed(f"{role.name} will no longer be applied")
 
     @timerole.command()
     async def list(self, ctx: commands.Context):
@@ -178,7 +185,7 @@ class Timerole(Cog):
         utcnow = datetime.utcnow()
         all_guilds = await self.config.all_guilds()
 
-        # all_mrs = await self.config.custom("MemberRole").all()
+        # all_mrs = await self.config.custom("RoleMember").all()
 
         log.debug(f"Begin timerole update")
 
@@ -197,15 +204,19 @@ class Timerole(Cog):
                 log.debug(f"No roles are configured for guild: {guild}")
                 continue
 
-            # all_mr = await self.config.all_custom("MemberRole")
+            # all_mr = await self.config.all_custom("RoleMember")
             # log.debug(f"{all_mr=}")
 
-            async for member in AsyncIter(guild.members, steps=100):
+            async for member in AsyncIter(guild.members, steps=10):
                 addlist = []
                 removelist = []
 
                 for role_id, role_data in role_dict.items():
-                    mr_dict = await self.config.custom("MemberRole", member.id, role_id).all()
+                    # Skip non-configured roles
+                    if not role_data:
+                        continue
+
+                    mr_dict = await self.config.custom("RoleMember", role_id, member.id).all()
 
                     # Stop if they've had the role and reapplying is disabled
                     if not reapply and mr_dict["had_role"]:
@@ -222,23 +233,21 @@ class Timerole(Cog):
                     member: discord.Member
                     has_roles = set(r.id for r in member.roles)
 
-                    # Stop if they currently have the role (and mark they had it)
-                    if role_id in has_roles:
+                    # Stop if they currently have or don't have the role, and mark had_role
+                    if (role_id in has_roles and not role_data["remove"]) or (
+                        role_id not in has_roles and role_data["remove"]
+                    ):
                         if not mr_dict["had_role"]:
                             await self.config.custom(
-                                "MemberRole", member.id, role_id
+                                "RoleMember", role_id, member.id
                             ).had_role.set(True)
-                        log.debug(
-                            f"{member.display_name} - Already has the role, maybe applying `had_role`"
-                        )
+                        log.debug(f"{member.display_name} - applying had_role")
                         continue
 
                     # Stop if they don't have all the required roles
                     if role_data is None or (
                         "required" in role_data and not set(role_data["required"]) & has_roles
                     ):
-                        # Doesn't have required role
-                        # log.debug(f"{member.display_name} - Missing required roles")
                         continue
 
                     check_time = member.joined_at + timedelta(
@@ -249,7 +258,7 @@ class Timerole(Cog):
                     # Check if enough time has passed to get the role and save the check_again_time
                     if check_time >= utcnow:
                         await self.config.custom(
-                            "MemberRole", member.id, role_id
+                            "RoleMember", role_id, member.id
                         ).check_again_time.set(check_time.isoformat())
                         log.debug(
                             f"{member.display_name} - Not enough time has passed to qualify for the role\n"
@@ -266,7 +275,7 @@ class Timerole(Cog):
                 if not addlist and not removelist:
                     continue
 
-                log.debug(f"{addlist=}\n{removelist=}")
+                # log.debug(f"{addlist=}\n{removelist=}")
                 add_roles = [
                     discord.utils.get(guild.roles, id=int(role_id)) for role_id in addlist
                 ]
@@ -286,9 +295,13 @@ class Timerole(Cog):
                         log.exception("Failed Adding Roles")
                         add_results += f"{member.display_name} : **(Failed Adding Roles)**\n"
                     else:
-                        add_results += "\n".join(
+                        add_results += " \n".join(
                             f"{member.display_name} : {role.name}" for role in add_roles
                         )
+                        for role_id in addlist:
+                            await self.config.custom(
+                                "RoleMember", role_id, member.id
+                            ).had_role.set(True)
 
                 if removelist:
                     try:
@@ -297,9 +310,13 @@ class Timerole(Cog):
                         log.exception("Failed Removing Roles")
                         remove_results += f"{member.display_name} : **(Failed Removing Roles)**\n"
                     else:
-                        remove_results += "\n".join(
+                        remove_results += " \n".join(
                             f"{member.display_name} : {role.name}" for role in remove_roles
                         )
+                        for role_id in removelist:
+                            await self.config.custom(
+                                "RoleMember", role_id, member.id
+                            ).had_role.set(True)
 
             # Done iterating through members, now maybe announce to the guild
             channel = await self.config.guild(guild).announce()
