@@ -260,31 +260,6 @@ class ConquestMap:
         return current_numbered_img
 
 
-class ConquestGame(ConquestMap):
-    def __init__(self, map_path: pathlib.Path, game_name: str, custom_map_path: pathlib.Path):
-        super().__init__(map_path)
-        self.game_name = game_name
-        self.custom_map_path = custom_map_path
-        self.game_path = custom_map_path / game_name
-
-    def game_data_path(self):
-        return self.game_path / "data.json"
-
-    def game_current_path(self):
-        return self.game_path / "current.png"
-
-    def game_current_numbered_path(self):
-        return self.game_path / "current_numbered.png"
-
-    async def save_region(self, region):
-        if not self.custom:
-            return False
-        pass  # TODO: region data saving
-
-    async def start_game(self):
-        pass
-
-
 class MapMaker(ConquestMap):
     async def change_name(self, new_name: str, new_path: pathlib.Path):
         if new_path.exists() and new_path.is_dir():

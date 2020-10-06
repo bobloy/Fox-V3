@@ -60,7 +60,7 @@ class Conquest(commands.Cog):
         self.ext = "PNG"
         self.ext_format = "PNG"
 
-        self.mm: Union[MapMaker, None] = None
+        self.mm: Optional[MapMaker] = None
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -92,7 +92,9 @@ class Conquest(commands.Cog):
             map_name = map_data["map_name"]
             map_path = self._path_if_custom(map_data["is_custom"]) / map_name
 
-            self.current_maps[guild.id] = ConquestGame(map_path, map_name, self.current_map_folder / map_name)
+            self.current_maps[guild.id] = ConquestGame(
+                map_path, map_name, self.current_map_folder / map_name
+            )
 
     async def current_map_load(self):
         map_path = self._path_if_custom()
