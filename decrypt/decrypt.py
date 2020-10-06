@@ -1,7 +1,10 @@
 import asyncio
 import logging
 import os
+from concurrent.futures.process import ProcessPoolExecutor
+from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Optional
+
 
 import discord
 from ciphey import decrypt, iface
@@ -30,19 +33,24 @@ class Decrypt(commands.Cog):
         """Nothing to delete"""
         return
 
-    @commands.command()
-    async def decrypt(self, ctx: commands.Context, *, encrypted_string):
+    @commands.command(name="decrypt")
+    async def _decrypt(self, ctx: commands.Context, *, encrypted_string):
         """Attempt to decrypt any encrypted text"""
         async with ctx.typing():
+            iconfig = iface.Config().library_default()
+            iconfig.timeout = 10
+            iconfig.complete_config()
 
             future = self.bot.loop.run_in_executor(
-                None, decrypt, iface.Config().library_default().complete_config(), encrypted_string
+                None,
+                decrypt,
+                iconfig,
+                encrypted_string,
             )
-
 
             # TODO: This kills the bot somehow, waiting
             try:
-                result = await asyncio.wait_for(future, timeout=60, loop=self.bot.loop)
+                result = await asyncio.wait_for(future, timeout=15, loop=self.bot.loop)
             except asyncio.TimeoutError:
                 result = None
 
