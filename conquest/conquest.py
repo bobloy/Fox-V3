@@ -13,7 +13,7 @@ from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
-from conquest.regioner import ConquestGame, ConquestMap, MapMaker, composite_regions
+from conquest.regioner import ConquestMap, MapMaker, composite_regions
 
 
 class Conquest(commands.Cog):
