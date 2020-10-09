@@ -83,7 +83,7 @@ class LastSeen(Cog):
         #     description="{} was last seen at this date and time".format(member.display_name),
         #     timestamp=last_seen)
 
-        embed = discord.Embed(timestamp=last_seen, color=self.bot.get_embed_color(ctx))
+        embed = discord.Embed(timestamp=last_seen, color=await self.bot.get_embed_color(ctx))
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
