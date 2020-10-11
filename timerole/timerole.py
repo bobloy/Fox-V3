@@ -235,8 +235,8 @@ class Timerole(Cog):
                     has_roles = set(r.id for r in member.roles)
 
                     # Stop if they currently have or don't have the role, and mark had_role
-                    if (role_id in has_roles and not role_data["remove"]) or (
-                        role_id not in has_roles and role_data["remove"]
+                    if (int(role_id) in has_roles and not role_data["remove"]) or (
+                        int(role_id) not in has_roles and role_data["remove"]
                     ):
                         if not mr_dict["had_role"]:
                             await self.config.custom(
