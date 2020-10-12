@@ -1,0 +1,18 @@
+{
+  "author": [
+    "Bobloy"
+  ],
+  "min_bot_version": "3.4.0",
+  "description": "Create a template ReStructuredText file for a given loaded cog",
+  "hidden": true,
+  "install_msg": "Thank you for installing CogGuide! Get started with `[p]load cogguide` and `[p]help CogGuide`",
+  "requirements": [
+  ],
+  "short": "Create a template ReStructuredText file for a given loaded cog",
+  "end_user_data_statement": "This cog does not store any End User Data",
+  "tags": [
+    "bobloy",
+    "utils",
+    "tools"
+  ]
+}
