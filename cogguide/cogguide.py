@@ -1,5 +1,7 @@
 import logging
 import pathlib
+import re
+import string
 from typing import Optional
 
 import discord
@@ -9,6 +11,34 @@ from redbot.core.commands import Cog, PrivilegeLevel
 from redbot.core.data_manager import cog_data_path
 
 log = logging.getLogger("red.fox-v3.cogguide")
+
+
+def get_parent_tree(command: commands.Command):
+    out = f"{command.name}"
+    if command.parent:
+        # out = f"{get_parent_tree(command.parent)}-" + out
+        out = f"{'-'.join(command.full_parent_name.split())}-" + out
+    return out
+
+
+def markdown_link_replace(match, starts_with_text=None):
+    """Converts a markdown match to restructuredtext match"""
+    text = match.group(1)
+    url = match.group(2)
+    if starts_with_text and url.startswith(starts_with_text):
+        url = url[len(starts_with_text):]
+        url = url[:url.find('.')]
+        return f":ref:`{text} <{url}>`"
+
+    return f"{text}: {url}"
+
+
+def prepare_description(command: commands.Command):
+    description = command.description or command.help
+    description = description.replace("`", "``")
+    pattern = re.compile("\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#]+)\)")
+    description = pattern.sub(markdown_link_replace, description)
+    return description
 
 
 class CogGuide(commands.Cog):
@@ -21,15 +51,32 @@ class CogGuide(commands.Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=0, force_registration=True)
+        self.config = Config.get_conf(self, identifier=6711110371117105100101, force_registration=True)
 
-        default_guild = {}
-
-        self.config.register_guild(**default_guild)
+        default_global = {"starts_with": None}
+        self.config.register_global(**default_global)
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
         return
+
+    @commands.group()
+    async def cogguideset(self, ctx: commands.Context):
+        """Base command for configuring cogguide"""
+        pass
+
+    @cogguideset.command(name="url")
+    async def cogguideset_url(self, ctx: commands.Context, url: str):
+        """Sets the url of your ReadTheDocs for creating references
+
+        For example: 'https://docs.discord.red/en/stable/' for Red docs
+        """
+        if not url:
+            await self.config.starts_with.clear()
+        else:
+            await self.config.starts_with.set(url)
+
+        await ctx.tick()
 
     @commands.command()
     async def allcogguides(self, ctx: commands.Context):
@@ -110,20 +157,15 @@ Commands
 --------
 """
 
-        def get_parent_tree(command: commands.Command):
-            out = f"{command.name}"
-            if command.parent:
-                # out = f"{get_parent_tree(command.parent)}-" + out
-                out = f"{'-'.join(command.full_parent_name.split())}-" + out
-            return out
-
         def get_command_rst(command: commands.Command):
+            description = prepare_description(command)
+
             cog_command = f"""
 .. {reference}-command-{get_parent_tree(command)}:
 
-{'^' * len(command.name) if not command.parent else '"' * len(command.name)}
-{command.name}
-{'^' * len(command.name) if not command.parent else '"' * len(command.name)}
+{'^' * len(command.qualified_name) if not command.parent else '"' * len(command.qualified_name)}
+{command.qualified_name}
+{'^' * len(command.qualified_name) if not command.parent else '"' * len(command.qualified_name)}
 """
             if command.requires.privilege_level in privilege_levels:
                 cog_command += f"""
@@ -138,7 +180,7 @@ Commands
 
 **Description**
 
-{command.description or command.help}
+{description}
 """
             return cog_command
 
