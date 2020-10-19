@@ -33,7 +33,7 @@ class LoveCalculator(Cog):
             x.replace(" ", "+"), y.replace(" ", "+")
         )
         async with aiohttp.ClientSession(headers={"Connection": "keep-alive"}) as session:
-            async with session.get(url) as response:
+            async with session.get(url, ssl=False) as response:
                 assert response.status == 200
                 resp = await response.text()
 
@@ -60,14 +60,11 @@ class LoveCalculator(Cog):
             else:
                 emoji = "💔"
             title = f"Dr. Love says that the love percentage for {x} and {y} is: {emoji} {description} {emoji}"
-        except:
+        except (TypeError, ValueError):
             title = "Dr. Love has left a note for you."
 
         em = discord.Embed(
-            title=title,
-            description=result_text,
-            color=discord.Color.red(),
-            url=f"https://www.lovecalculator.com/{result_image}",
+            title=title, description=result_text, color=discord.Color.red(), url=url
         )
-
+        em.set_image(url=f"https://www.lovecalculator.com/{result_image}")
         await ctx.send(embed=em)

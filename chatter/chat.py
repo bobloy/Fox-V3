@@ -433,7 +433,7 @@ class Chatter(Cog):
         else:
             await ctx.maybe_send_embed("Error occurred :(")
 
-    @commands.Cog.listener()
+    @Cog.listener()
     async def on_message_without_command(self, message: discord.Message):
         """
         Credit to https://github.com/Twentysix26/26-Cogs/blob/master/cleverbot/cleverbot.py

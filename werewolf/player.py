@@ -1,4 +1,8 @@
+import logging
+
 import discord
+
+log = logging.getLogger("red.fox_v3.werewolf.player")
 
 
 class Player:
@@ -16,6 +20,9 @@ class Player:
         self.muted = False
         self.protected = False
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.member})"
+
     async def assign_role(self, role):
         """
         Give this player a role
@@ -28,6 +35,15 @@ class Player:
 
     async def send_dm(self, message):
         try:
-            await self.member.send(message)  # Lets do embeds later
+            await self.member.send(message)  # Lets ToDo embeds later
         except discord.Forbidden:
-            await self.role.game.village_channel.send("Couldn't DM {}, uh oh".format(self.mention))
+            log.info(f"Unable to mention {self.member.__repr__()}")
+            await self.role.game.village_channel.send(
+                f"Couldn't DM {self.mention}, uh oh",
+                allowed_mentions=discord.AllowedMentions(users=[self.member]),
+            )
+        except AttributeError:
+            log.exception("Someone messed up and added a bot to the game (I think)")
+            await self.role.game.village_channel.send(
+                "Someone messed up and added a bot to the game :eyes:"
+            )

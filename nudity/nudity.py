@@ -85,7 +85,9 @@ class Nudity(commands.Cog):
                 if r["unsafe"] > 0.7:
                     await nsfw_channel.send(
                         "NSFW Image from {}".format(message.channel.mention),
-                        file=discord.File(image,),
+                        file=discord.File(
+                            image,
+                        ),
                     )
 
     @commands.Cog.listener()
