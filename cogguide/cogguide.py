@@ -2,7 +2,7 @@ import logging
 import pathlib
 import re
 import string
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 from redbot.core import Config, commands
@@ -26,15 +26,17 @@ def markdown_link_replace(match, starts_with_text=None):
     text = match.group(1)
     url = match.group(2)
     if starts_with_text and url.startswith(starts_with_text):
-        url = url[len(starts_with_text):]
-        url = url[:url.find('.')]
+        i = len(starts_with_text)
+        url = url[i:]
+        i = url.find(".")
+        url = url[:i]
         return f":ref:`{text} <{url}>`"
 
     return f"{text}: {url}"
 
 
-def prepare_description(command: commands.Command):
-    description = command.description or command.help
+def prepare_description(comm_or_cog: Union[commands.Command, Cog]):
+    description = comm_or_cog.description or comm_or_cog.help
     description = description.replace("`", "``")
     pattern = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#]+)\)")
     description = pattern.sub(markdown_link_replace, description)
@@ -51,7 +53,9 @@ class CogGuide(commands.Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=6711110371117105100101, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=6711110371117105100101, force_registration=True
+        )
 
         default_global = {"starts_with": None}
         self.config.register_global(**default_global)
@@ -146,7 +150,7 @@ find detailed docs about usage and commands.
 Usage
 -----
 
-{cog.description if cog.description else "This is a general description of what the cog does. This should be a very basic explanation, addressing the core purpose of the cog. This is some additional information about what this cog can do. Try to answer *the* most frequently asked question."}
+{prepare_description(cog)}
 
 """
         cog_commands_intro = f"""
@@ -177,7 +181,12 @@ Commands
 .. code-block:: none
 
     [p]{command.qualified_name} {command.signature}
-
+"""
+            if command.aliases:
+                cog_command += f"""
+.. tip:: Alias{'es' if len(command.aliases)>1 else ''}: {', '.join(f"{alias}" for alias in command.aliases)}
+"""
+            cog_command += f"""
 **Description**
 
 {description}
