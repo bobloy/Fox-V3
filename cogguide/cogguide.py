@@ -36,7 +36,7 @@ def markdown_link_replace(match, starts_with_text=None):
 def prepare_description(command: commands.Command):
     description = command.description or command.help
     description = description.replace("`", "``")
-    pattern = re.compile("\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#]+)\)")
+    pattern = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#]+)\)")
     description = pattern.sub(markdown_link_replace, description)
     return description
 
