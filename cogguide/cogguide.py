@@ -194,6 +194,8 @@ Commands
             return cog_command
 
         cog_commands_list = []
+        # com_list = [com for com in cog.walk_commands()]
+        # com_list.sort()
         for com in cog.walk_commands():
             cog_commands_list.append(get_command_rst(com))
         with filepath.open("w", encoding="utf-8") as f:
