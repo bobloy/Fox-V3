@@ -5,7 +5,7 @@ import string
 from typing import Optional, Union
 
 import discord
-from redbot.core import Config, commands
+from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog, PrivilegeLevel
 from redbot.core.data_manager import cog_data_path
@@ -43,6 +43,13 @@ def prepare_description(comm_or_cog: Union[commands.Command, Cog]):
     return description
 
 
+def produce_aliases(command: commands.Command):
+    return ", ".join(
+        f"``{command.full_parent_name+' ' if command.full_parent_name else ''}{alias}``"
+        for alias in command.aliases
+    )
+
+
 class CogGuide(commands.Cog):
     """
     Cog to create cog guides
@@ -64,6 +71,7 @@ class CogGuide(commands.Cog):
         """Nothing to delete"""
         return
 
+    @checks.is_owner()
     @commands.group()
     async def cogguideset(self, ctx: commands.Context):
         """Base command for configuring cogguide"""
@@ -82,6 +90,7 @@ class CogGuide(commands.Cog):
 
         await ctx.tick()
 
+    @checks.is_owner()
     @commands.command()
     async def allcogguides(self, ctx: commands.Context):
         """
@@ -96,6 +105,7 @@ class CogGuide(commands.Cog):
             await self.create_cog_guide(cog_name, cog)
         await ctx.tick()
 
+    @checks.is_owner()
     @commands.command()
     async def cogguide(self, ctx: commands.Context, camel_cog_name: str):
         """
@@ -184,7 +194,7 @@ Commands
 """
             if command.aliases:
                 cog_command += f"""
-.. tip:: Alias{'es' if len(command.aliases)>1 else ''}: {', '.join(f"{alias}" for alias in command.aliases)}
+.. tip:: Alias{'es' if len(command.aliases)>1 else ''}: {produce_aliases(command)}
 """
             cog_command += f"""
 **Description**
@@ -194,10 +204,12 @@ Commands
             return cog_command
 
         cog_commands_list = []
-        # com_list = [com for com in cog.walk_commands()]
-        # com_list.sort()
-        for com in cog.walk_commands():
+        com_list = [com for com in cog.walk_commands()]
+        com_list.sort(key=lambda x: x.qualified_name)
+        for com in com_list:
             cog_commands_list.append(get_command_rst(com))
+        # for com in cog.walk_commands():
+        #     cog_commands_list.append(get_command_rst(com))
         with filepath.open("w", encoding="utf-8") as f:
             f.write(intro)
             f.write(cog_commands_intro)
