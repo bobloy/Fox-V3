@@ -793,7 +793,7 @@ class PlantTycoon(commands.Cog):
                             pass
             await asyncio.sleep(self.defaults["timers"]["notification"] * 60)
 
-    def __unload(self):
+    def cog_unload(self):
         self.completion_task.cancel()
         # self.degradation_task.cancel()
         self.notification_task.cancel()
