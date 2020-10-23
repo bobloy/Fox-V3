@@ -1,6 +1,8 @@
 import asyncio
 import random
+from asyncio import Task
 from datetime import datetime, timedelta
+from typing import Optional
 
 import discord
 from redbot.core import Config, checks, commands
@@ -38,9 +40,15 @@ class AnnounceDaily(Cog):
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
 
+        self.announce_task = None
+
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
         return
+
+    def __unload(self):
+        if self.announce_task is not None:
+            self.announce_task.cancel()
 
     async def _get_msgs(self):
         return DEFAULT_MESSAGES + await self.config.messages()
