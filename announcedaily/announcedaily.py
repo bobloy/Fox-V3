@@ -46,7 +46,7 @@ class AnnounceDaily(Cog):
         """Nothing to delete"""
         return
 
-    def __unload(self):
+    def cog_unload(self):
         if self.announce_task is not None:
             self.announce_task.cancel()
 
