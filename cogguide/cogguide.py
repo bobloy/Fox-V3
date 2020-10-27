@@ -45,7 +45,7 @@ def prepare_description(comm_or_cog: Union[commands.Command, Cog]):
 
 def produce_aliases(command: commands.Command):
     return ", ".join(
-        f"``{command.full_parent_name+' ' if command.full_parent_name else ''}{alias}``"
+        f"``{command.full_parent_name + ' ' if command.full_parent_name else ''}{alias}``"
         for alias in command.aliases
     )
 
@@ -194,7 +194,7 @@ Commands
 """
             if command.aliases:
                 cog_command += f"""
-.. tip:: Alias{'es' if len(command.aliases)>1 else ''}: {produce_aliases(command)}
+.. tip:: Alias{'es' if len(command.aliases) > 1 else ''}: {produce_aliases(command)}
 """
             cog_command += f"""
 **Description**
