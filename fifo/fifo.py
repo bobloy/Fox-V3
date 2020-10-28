@@ -1,5 +1,6 @@
+import itertools
 import logging
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta, tzinfo, MAXYEAR
 from typing import Optional, Union
 
 import discord
@@ -10,7 +11,7 @@ from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
-from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta, pagify
 
 from .datetime_cron_converters import CronConverter, DatetimeConverter, TimezoneConverter
 from .task import Task
@@ -35,6 +36,27 @@ def _assemble_job_id(task_name, guild_id):
 
 def _disassemble_job_id(job_id: str):
     return job_id.split("_")
+
+
+def _get_run_times(job: Job, now: datetime = None):
+    """
+    Computes the scheduled run times between ``next_run_time`` and ``now`` (inclusive).
+
+    Modified to be asynchronous and yielding instead of all-or-nothing
+
+    """
+    if not job.next_run_time:
+        raise StopIteration()
+
+    if now is None:
+        now = datetime(MAXYEAR, 12, 31, 23, 59, 59, 999999, tzinfo=job.next_run_time.tzinfo)
+        yield from _get_run_times(job, now)
+        raise StopIteration()
+
+    next_run_time = job.next_run_time
+    while next_run_time and next_run_time <= now:
+        yield next_run_time
+        next_run_time = job.trigger.get_next_fire_time(next_run_time, now)
 
 
 class FIFO(commands.Cog):
@@ -172,6 +194,30 @@ class FIFO(commands.Cog):
         """
         if ctx.invoked_subcommand is None:
             pass
+
+    @fifo.command(name="checktask", aliases=["checkjob", "check"])
+    async def fifo_checktask(self, ctx: commands.Context, task_name: str):
+        """Returns the next 10 scheduled executions of the task"""
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
+        await task.load_from_config()
+
+        if task.data is None:
+            await ctx.maybe_send_embed(
+                f"Task by the name of {task_name} is not found in this guild"
+            )
+            return
+
+        job = await self._get_job(task)
+        if job is None:
+            await ctx.maybe_send_embed("No job scheduled for this task")
+            return
+        now = datetime.now(job.next_run_time.tzinfo)
+
+        times = [
+            humanize_timedelta(timedelta=x - now)
+            for x in itertools.islice(_get_run_times(job), 10)
+        ]
+        await ctx.maybe_send_embed("\n\n".join(times))
 
     @fifo.command(name="set")
     async def fifo_set(
@@ -326,6 +372,8 @@ class FIFO(commands.Cog):
             for task_name, task_data in all_tasks.items():
                 out += f"{task_name}: {task_data}\n"
 
+            out = humanize_list(out)
+
             if out:
                 if len(out) > 2000:
                     for page in pagify(out):
@@ -394,6 +442,7 @@ class FIFO(commands.Cog):
             return
 
         await task.clear_triggers()
+        await self._remove_job(task)
         await ctx.tick()
 
     @fifo.group(name="addtrigger", aliases=["trigger"])

@@ -39,7 +39,7 @@ def parse_triggers(data: Union[Dict, None]):
         return None
 
     if len(data["triggers"]) > 1:  # Multiple triggers
-        return OrTrigger(get_trigger(t_data) for t_data in data["triggers"])
+        return OrTrigger([get_trigger(t_data) for t_data in data["triggers"]])
 
     return get_trigger(data["triggers"][0])
 
@@ -108,20 +108,6 @@ class Task:
                         "tzinfo": getattr(t["tzinfo"], "zone", None),
                     }
                 )
-                # triggers.append(
-                #     {
-                #         "type": t["type"],
-                #         "time_data": {
-                #             "year": dt.year,
-                #             "month": dt.month,
-                #             "day": dt.day,
-                #             "hour": dt.hour,
-                #             "minute": dt.minute,
-                #             "second": dt.second,
-                #             "tzinfo": dt.tzinfo,
-                #         },
-                #     }
-                # )
                 continue
 
             if t["type"] == "cron":
