@@ -370,9 +370,7 @@ class FIFO(commands.Cog):
             out = ""
             all_tasks = await self.config.guild(ctx.guild).tasks()
             for task_name, task_data in all_tasks.items():
-                out += f"{task_name}: {task_data}\n"
-
-            out = humanize_list(out)
+                out += f"{task_name}: {task_data}\n\n"
 
             if out:
                 if len(out) > 2000:
