@@ -27,6 +27,7 @@ async def _execute_task(task_state):
     task = Task(**task_state)
     if await task.load_from_config():
         return await task.execute()
+    log.warning(f"Failed to load data on {task_state=}")
     return False
 
 

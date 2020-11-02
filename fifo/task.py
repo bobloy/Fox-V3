@@ -253,15 +253,15 @@ class Task:
                     actual_message = await author.history(limit=1).flatten()
                     if not actual_message:  # Okay, the *author* has never sent a message?
                         log.warning("No message found in channel cache yet, skipping execution")
-                        return
+                        return False
                 actual_message = actual_message[0]
 
         message = FakeMessage(actual_message)
         # message = FakeMessage2
         message.author = author
-        message.guild = guild  # Just in case we got desperate
+        message.guild = guild  # Just in case we got desperate, see above
         message.channel = channel
-        message.id = time_snowflake(datetime.now())  # Pretend to be now
+        message.id = time_snowflake(datetime.utcnow(), high=False)  # Pretend to be now
         message = neuter_message(message)
 
         # absolutely weird that this takes a message object instead of guild
@@ -273,7 +273,12 @@ class Task:
 
         message.content = f"{prefix}{self.get_command_str()}"
 
-        if not message.guild or not message.author or not message.content:
+        if (
+            not message.guild
+            or not message.author
+            or not message.content
+            or message.content == prefix
+        ):
             log.warning(f"Could not execute task due to message problem: {message}")
             return False
 
