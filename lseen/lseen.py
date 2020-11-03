@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Literal
 
@@ -23,7 +24,7 @@ class LastSeen(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {"enabled": False}
+        default_guild = {"enabled": None}
         default_member = {"seen": None}
 
         self.config.register_global(**default_global)
@@ -43,6 +44,14 @@ class LastSeen(Cog):
             if user_id in guild_data:
                 await self.config.member_from_ids(guild_id, user_id).clear()
 
+    async def _initalize_tracking(self, guild: discord.Guild):
+        now = datetime.utcnow().isoformat()
+        online_members = {
+            member.id: now for member in guild.members if member.status != self.offline_status
+        }
+        async with self.config.all_members(guild) as m:
+            m.update(online_members)
+
     @staticmethod
     def get_date_time(s):
         d = dateutil.parser.parse(s)
@@ -57,8 +66,18 @@ class LastSeen(Cog):
     @lset.command(name="toggle")
     async def lset_toggle(self, ctx: commands.Context):
         """Toggles tracking seen for this server"""
-        enabled = not await self.config.guild(ctx.guild).enabled()
+        enabled = await self.config.guild(ctx.guild).enabled()
+        if enabled is None:
+            needs_init = True
+            enabled = True
+        else:
+            needs_init = False
+            enabled = not enabled
+
         await self.config.guild(ctx.guild).enabled.set(enabled)
+
+        if needs_init:
+            asyncio.create_task(self._initalize_tracking(ctx.guild))
 
         await ctx.maybe_send_embed(
             "Seen for this server is now {}".format("Enabled" if enabled else "Disabled")
