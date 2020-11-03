@@ -46,11 +46,9 @@ class LastSeen(Cog):
 
     async def _initalize_tracking(self, guild: discord.Guild):
         now = datetime.utcnow().isoformat()
-        online_members = {
-            member.id: now for member in guild.members if member.status != self.offline_status
-        }
-        async with self.config.all_members(guild) as m:
-            m.update(online_members)
+        for member in guild.members:
+            if member.status != self.offline_status:
+                await self.config.member(member).seen.set(now)
 
     @staticmethod
     def get_date_time(s):
