@@ -1,5 +1,7 @@
 from .lseen import LastSeen
 
 
-def setup(bot):
-    bot.add_cog(LastSeen(bot))
+async def setup(bot):
+    seen = LastSeen(bot)
+    bot.add_cog(seen)
+    await seen.initialize()
