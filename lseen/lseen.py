@@ -72,6 +72,8 @@ class LastSeen(Cog):
 
         if member.status != self.offline_status:
             last_seen = datetime.utcnow()
+            if await self.config.guild(ctx.guild).enabled():
+                await self.config.member(member).seen.set(last_seen.isoformat())
         else:
             last_seen = await self.config.member(member).seen()
             if last_seen is None:
