@@ -225,20 +225,26 @@ class Task:
 
     async def execute(self):
         if not self.data or not self.get_command_str():
-            log.warning(f"Could not execute task due to data problem: {self.data=}")
+            log.warning(f"Could not execute Task[{self.name}] due to data problem: {self.data=}")
             return False
 
         guild: discord.Guild = self.bot.get_guild(self.guild_id)  # used for get_prefix
         if guild is None:
-            log.warning(f"Could not execute task due to missing guild: {self.guild_id}")
+            log.warning(
+                f"Could not execute Task[{self.name}] due to missing guild: {self.guild_id}"
+            )
             return False
         channel: discord.TextChannel = guild.get_channel(self.channel_id)
         if channel is None:
-            log.warning(f"Could not execute task due to missing channel: {self.channel_id}")
+            log.warning(
+                f"Could not execute Task[{self.name}] due to missing channel: {self.channel_id}"
+            )
             return False
         author: discord.User = guild.get_member(self.author_id)
         if author is None:
-            log.warning(f"Could not execute task due to missing author: {self.author_id}")
+            log.warning(
+                f"Could not execute Task[{self.name}] due to missing author: {self.author_id}"
+            )
             return False
 
         actual_message: discord.Message = channel.last_message
@@ -279,14 +285,15 @@ class Task:
             or not message.content
             or message.content == prefix
         ):
-            log.warning(f"Could not execute task due to message problem: {message}")
+            log.warning(f"Could not execute Task[{self.name}] due to message problem: {message}")
             return False
 
         new_ctx: commands.Context = await self.bot.get_context(message)
         new_ctx.assume_yes = True
         if not new_ctx.valid:
             log.warning(
-                f"Could not execute Task[{self.name}] due invalid context: {new_ctx.invoked_with}"
+                f"Could not execute Task[{self.name}] due invalid context: "
+                f"{new_ctx.invoked_with=} {new_ctx.prefix=} {new_ctx.command=}"
             )
             return False
 
