@@ -94,7 +94,7 @@ class CogGuide(commands.Cog):
     @commands.command()
     async def allcogguides(self, ctx: commands.Context):
         """
-        Create a template ReStructuredText file for all loaded cogs.
+        Create a ReStructuredText file for all loaded cogs.
 
         Results can be found in the cog data folder.
 
@@ -109,7 +109,7 @@ class CogGuide(commands.Cog):
     @commands.command()
     async def cogguide(self, ctx: commands.Context, camel_cog_name: str):
         """
-        Create a template ReStructuredText file for a given loaded cog.
+        Create a ReStructuredText file for a given loaded cog.
 
         Result can be found in the cog data folder.
 
