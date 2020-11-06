@@ -159,7 +159,9 @@ class Chatter(Cog):
         return out
 
     def _train_ubuntu(self):
-        trainer = UbuntuCorpusTrainer(self.chatbot)
+        trainer = UbuntuCorpusTrainer(
+            self.chatbot, ubuntu_corpus_data_directory=cog_data_path(self) / "ubuntu_data"
+        )
         trainer.train()
         return True
 
