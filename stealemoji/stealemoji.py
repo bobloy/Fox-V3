@@ -50,6 +50,7 @@ class StealEmoji(Cog):
         default_global = {
             "stolemoji": {},
             "guildbanks": [],
+            "autobanked_guilds": [],
             "on": False,
             "notify": 0,
             "autobank": False,
@@ -147,9 +148,52 @@ class StealEmoji(Cog):
 
     @checks.is_owner()
     @commands.guild_only()
+    @stealemoji.command(name="deleteserver", aliases=["deleteguild"])
+    async def se_deleteserver(self, ctx: commands.Context, guild_id=None):
+        """Delete servers the bot is the owner of.
+
+        Useful for auto-generated guildbanks."""
+        if guild_id is None:
+            guild = ctx.guild
+        else:
+            guild = await self.bot.get_guild(guild_id)
+
+        if guild is None:
+            await ctx.maybe_send_embed("Failed to get guild, cancelling")
+            return
+        guild: discord.Guild
+        await ctx.maybe_send_embed(
+            f"Will attempt to delete {guild.name} ({guild.id})\n" f"Okay to continue? (yes/no)"
+        )
+
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        try:
+            answer = await self.bot.wait_for("message", timeout=120, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send("Timed out, canceling")
+            return
+
+        if answer.content.upper() not in ["Y", "YES"]:
+            await ctx.maybe_send_embed("Cancelling")
+            return
+        try:
+            await guild.delete()
+        except discord.Forbidden:
+            log.exception("No permission to delete. I'm probably not the guild owner")
+            await ctx.maybe_send_embed("No permission to delete. I'm probably not the guild owner")
+        except discord.HTTPException:
+            log.exception("Unexpected error when deleting guild")
+            await ctx.maybe_send_embed("Unexpected error when deleting guild")
+        else:
+            await self.bot.send_to_owners(f"Guild {guild.name} deleted")
+
+    @checks.is_owner()
+    @commands.guild_only()
     @stealemoji.command(name="bank")
     async def se_bank(self, ctx):
-        """Add current server as emoji bank"""
+        """Add or remove current server as emoji bank"""
 
         def check(m):
             return (
@@ -235,6 +279,9 @@ class StealEmoji(Cog):
                     return
                 async with self.config.guildbanks() as guildbanks:
                     guildbanks.append(guildbank.id)
+                # Track generated guilds for easier deletion
+                async with self.config.autobanked_guilds() as autobanked_guilds:
+                    autobanked_guilds.append(guildbank.id)
 
                 await asyncio.sleep(2)
 
