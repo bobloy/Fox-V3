@@ -12,7 +12,8 @@ from redbot.core.data_manager import cog_data_path
 
 log = logging.getLogger("red.fox-v3.cogguide")
 
-EXCLUDED_LIST = ['reinstallreqs']
+EXCLUDED_LIST = ["reinstallreqs"]
+
 
 def get_parent_tree(command: commands.Command):
     out = f"{command.name}"
@@ -22,25 +23,33 @@ def get_parent_tree(command: commands.Command):
     return out
 
 
-def markdown_link_replace(match, starts_with_text=None):
-    """Converts a markdown match to restructuredtext match"""
-    text = match.group(1)
-    url = match.group(2)
-    if starts_with_text and url.startswith(starts_with_text):
-        i = len(starts_with_text)
-        url = url[i:]
-        i = url.find(".")
-        url = url[:i]
-        return f":ref:`{text} <{url}>`"
+def markdown_link_replace(starts_with_text=None):
+    """
+    Converts a markdown match to restructuredtext match
 
-    return f"`{text} <{url}>`_"
+    re.sub needs a command with one argument, so this puts it in.
+    """
+
+    def handle_starts_with_markdown_link_replace(match):
+        text = match.group(1)
+        url = match.group(2)
+        if starts_with_text and url.startswith(starts_with_text):
+            i = len(starts_with_text)
+            url = url[i:]
+            i = url.find(".")
+            url = url[:i]
+            return f":ref:`{text} <{url}>`"
+
+        return f"`{text} <{url}>`_"
+
+    return handle_starts_with_markdown_link_replace
 
 
-def prepare_description(comm_or_cog: Union[commands.Command, Cog]):
+def prepare_description(comm_or_cog: Union[commands.Command, Cog], markdown_command):
     description = comm_or_cog.description or comm_or_cog.help
     description = description.replace("`", "``")
     pattern = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#-@]+)\)")
-    description = pattern.sub(markdown_link_replace, description)
+    description = pattern.sub(markdown_command, description)
     return description
 
 
@@ -78,8 +87,17 @@ class CogGuide(commands.Cog):
         """Base command for configuring cogguide"""
         pass
 
+    @cogguideset.command(name="list")
+    async def cogguideset_list(self, ctx: commands.Context):
+        """List current cogguide settings"""
+        await ctx.maybe_send_embed(
+            f"""**Current Settings**
+            ReadTheDocs URL: {await self.config.starts_with()}
+            """
+        )
+
     @cogguideset.command(name="url")
-    async def cogguideset_url(self, ctx: commands.Context, url: str):
+    async def cogguideset_url(self, ctx: commands.Context, url: str = None):
         """Sets the url of your ReadTheDocs for creating references
 
         For example: 'https://docs.discord.red/en/stable/' for Red docs
@@ -140,6 +158,7 @@ class CogGuide(commands.Cog):
             PrivilegeLevel.GUILD_OWNER: "|guildowner-lock|",
             PrivilegeLevel.BOT_OWNER: "|owner-lock|",
         }
+        url_command = markdown_link_replace(await self.config.starts_with())
         intro = f""".. {reference}:
 
 {'=' * len(camel_cog_name)}
@@ -161,7 +180,7 @@ find detailed docs about usage and commands.
 Usage
 -----
 
-{prepare_description(cog)}
+{prepare_description(cog, url_command)}
 
 """
         cog_commands_intro = f"""
@@ -173,7 +192,7 @@ Commands
 """
 
         def get_command_rst(command: commands.Command):
-            description = prepare_description(command)
+            description = prepare_description(command, url_command)
 
             cog_command = f"""
 .. {reference}-command-{get_parent_tree(command)}:
