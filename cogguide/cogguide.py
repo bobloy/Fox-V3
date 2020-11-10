@@ -12,6 +12,7 @@ from redbot.core.data_manager import cog_data_path
 
 log = logging.getLogger("red.fox-v3.cogguide")
 
+EXCLUDED_LIST = ['reinstallreqs']
 
 def get_parent_tree(command: commands.Command):
     out = f"{command.name}"
@@ -32,13 +33,13 @@ def markdown_link_replace(match, starts_with_text=None):
         url = url[:i]
         return f":ref:`{text} <{url}>`"
 
-    return f"{text}: {url}"
+    return f"`{text} <{url}>`_"
 
 
 def prepare_description(comm_or_cog: Union[commands.Command, Cog]):
     description = comm_or_cog.description or comm_or_cog.help
     description = description.replace("`", "``")
-    pattern = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#]+)\)")
+    pattern = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#-@]+)\)")
     description = pattern.sub(markdown_link_replace, description)
     return description
 
@@ -207,7 +208,11 @@ Commands
         com_list = [com for com in cog.walk_commands()]
         com_list.sort(key=lambda x: x.qualified_name)
         for com in com_list:
-            cog_commands_list.append(get_command_rst(com))
+            com: commands.Command
+            if com.name in EXCLUDED_LIST:
+                continue
+            if not com.hidden and com.enabled:
+                cog_commands_list.append(get_command_rst(com))
         # for com in cog.walk_commands():
         #     cog_commands_list.append(get_command_rst(com))
         with filepath.open("w", encoding="utf-8") as f:
