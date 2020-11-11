@@ -152,10 +152,16 @@ class FIFO(commands.Cog):
         return job
 
     async def _pause_job(self, task: Task):
-        return self.scheduler.pause_job(job_id=_assemble_job_id(task.name, task.guild_id))
+        try:
+            return self.scheduler.pause_job(job_id=_assemble_job_id(task.name, task.guild_id))
+        except JobLookupError:
+            return False
 
     async def _remove_job(self, task: Task):
-        return self.scheduler.remove_job(job_id=_assemble_job_id(task.name, task.guild_id))
+        try:
+            self.scheduler.remove_job(job_id=_assemble_job_id(task.name, task.guild_id))
+        except JobLookupError:
+            pass
 
     async def _get_tz(self, user: Union[discord.User, discord.Member]) -> Union[None, tzinfo]:
         if self.tz_cog is None:
@@ -480,6 +486,40 @@ class FIFO(commands.Cog):
         delta_from_now: timedelta = job.next_run_time - datetime.now(job.next_run_time.tzinfo)
         await ctx.maybe_send_embed(
             f"Task `{task_name}` added interval of {interval_str} to its scheduled runtimes\n\n"
+            f"Next run time: {job.next_run_time} ({delta_from_now.total_seconds()} seconds)"
+        )
+
+    @fifo_trigger.command(name="relative")
+    async def fifo_trigger_relative(
+            self, ctx: commands.Context, task_name: str, *, time_from_now: TimedeltaConverter
+    ):
+        """
+        Add a "run once" trigger at a time relative from now to the specified task
+        """
+
+        task = Task(task_name, ctx.guild.id, self.config)
+        await task.load_from_config()
+
+        if task.data is None:
+            await ctx.maybe_send_embed(
+                f"Task by the name of {task_name} is not found in this guild"
+            )
+            return
+
+        time_to_run = datetime.now() + time_from_now
+
+        result = await task.add_trigger("date", time_to_run, time_to_run.tzinfo)
+        if not result:
+            await ctx.maybe_send_embed(
+                "Failed to add a date trigger to this task, see console for logs"
+            )
+            return
+
+        await task.save_data()
+        job: Job = await self._process_task(task)
+        delta_from_now: timedelta = job.next_run_time - datetime.now(job.next_run_time.tzinfo)
+        await ctx.maybe_send_embed(
+            f"Task `{task_name}` added {time_to_run} to its scheduled runtimes\n"
             f"Next run time: {job.next_run_time} ({delta_from_now.total_seconds()} seconds)"
         )
 
