@@ -491,7 +491,7 @@ class FIFO(commands.Cog):
 
     @fifo_trigger.command(name="relative")
     async def fifo_trigger_relative(
-            self, ctx: commands.Context, task_name: str, *, time_from_now: TimedeltaConverter
+        self, ctx: commands.Context, task_name: str, *, time_from_now: TimedeltaConverter
     ):
         """
         Add a "run once" trigger at a time relative from now to the specified task
