@@ -272,7 +272,7 @@ class Chatter(Cog):
                 )
                 return
             else:
-                self.similarity_algo = threshold
+                self.similarity_threshold = threshold
 
         self.similarity_algo = algos[algo_number]
         async with ctx.typing():
