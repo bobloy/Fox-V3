@@ -14,6 +14,10 @@ log = logging.getLogger("red.fox-v3.cogguide")
 
 EXCLUDED_LIST = ["reinstallreqs"]
 
+LINK_PATTERN = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#-@]+)\)")
+
+BOTNAME_PATTERN = re.compile(r"\[botname]")
+
 
 def get_parent_tree(command: commands.Command):
     out = f"{command.name}"
@@ -45,11 +49,26 @@ def markdown_link_replace(starts_with_text=None):
     return handle_starts_with_markdown_link_replace
 
 
+def format_text(text):
+    """Borrowed from commands.CogCommandMixin.format_text_for_context"""
+    # formatting_pattern = re.compile(r"\[p\]|\[botname\]")
+    def replacement(m: re.Match) -> str:
+        s = m.group(0)
+        # if s == "[p]":
+        #     return ctx.clean_prefix
+        if s == "[botname]":
+            return "Red"
+        # We shouldn't get here:
+        return s
+
+    return BOTNAME_PATTERN.sub(replacement, text)
+
+
 def prepare_description(comm_or_cog: Union[commands.Command, Cog], markdown_command):
     description = comm_or_cog.description or comm_or_cog.help
+    description = format_text(description)
     description = description.replace("`", "``")
-    pattern = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#-@]+)\)")
-    description = pattern.sub(markdown_command, description)
+    description = LINK_PATTERN.sub(markdown_command, description)
     return description
 
 
