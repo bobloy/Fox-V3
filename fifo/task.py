@@ -40,8 +40,8 @@ def parse_triggers(data: Union[Dict, None]):
 
     if len(data["triggers"]) > 1:  # Multiple triggers
         return OrTrigger([get_trigger(t_data) for t_data in data["triggers"]])
-
-    return get_trigger(data["triggers"][0])
+    else:
+        return get_trigger(data["triggers"][0])
 
 
 class FakeMessage:
