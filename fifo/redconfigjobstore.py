@@ -95,16 +95,8 @@ class RedConfigJobStore(MemoryJobStore):
         job_state = in_job["job_state"]
         job_state = pickle.loads(base64.b64decode(job_state))
         if job_state["args"]:  # Backwards compatibility on args to kwargs
-            try:
-                job_state["kwargs"] = {
-                    "name": job_state["args"][0],
-                    "guild_id": job_state["args"][1],
-                    "author_id": job_state["args"][2],
-                    "channel_id": job_state["args"][3],
-                    "bot": job_state["args"][4],
-                }
-            except IndexError as e:
-                raise Exception(job_state["args"]) from e
+            job_state["kwargs"] = {**job_state["args"][0]}
+            job_state["args"] = []
         job_state["kwargs"]["config"] = self.config
         job_state["kwargs"]["bot"] = self.bot
         # new_kwargs = job_state["kwargs"]
