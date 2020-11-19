@@ -537,7 +537,7 @@ class FIFO(commands.Cog):
         Add a "run once" trigger at a time relative from now to the specified task
         """
 
-        task = Task(task_name, ctx.guild.id, self.config)
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
         await task.load_from_config()
 
         if task.data is None:
@@ -571,7 +571,7 @@ class FIFO(commands.Cog):
         Add a "run once" datetime trigger to the specified task
         """
 
-        task = Task(task_name, ctx.guild.id, self.config)
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
         await task.load_from_config()
 
         if task.data is None:
@@ -611,7 +611,7 @@ class FIFO(commands.Cog):
 
         See https://crontab.guru/ for help generating the cron_str
         """
-        task = Task(task_name, ctx.guild.id, self.config)
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
         await task.load_from_config()
 
         if task.data is None:
