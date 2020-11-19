@@ -1,6 +1,6 @@
 import itertools
 import logging
-from datetime import datetime, timedelta, tzinfo, MAXYEAR
+from datetime import MAXYEAR, datetime, timedelta, tzinfo
 from typing import Optional, Union
 
 import discord
@@ -11,7 +11,7 @@ from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
-from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta, pagify
+from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 
 from .datetime_cron_converters import CronConverter, DatetimeConverter, TimezoneConverter
 from .task import Task
@@ -108,10 +108,10 @@ class FIFO(commands.Cog):
     async def initialize(self):
 
         job_defaults = {
-            "coalesce": True,
-            "max_instances": 5,
-            "misfire_grace_time": 15,
-            "replace_existing": True,
+            "coalesce": True,  # Multiple missed triggers within the grace time will only fire once
+            "max_instances": 5,  # This is probably way too high, should likely only be one
+            "misfire_grace_time": 15,  # 15 seconds ain't much, but it's honest work
+            "replace_existing": True,  # Very important for persistent data
         }
 
         # executors = {"default": AsyncIOExecutor()}
@@ -119,7 +119,7 @@ class FIFO(commands.Cog):
         # Default executor is already AsyncIOExecutor
         self.scheduler = AsyncIOScheduler(job_defaults=job_defaults, logger=schedule_log)
 
-        from .redconfigjobstore import RedConfigJobStore
+        from .redconfigjobstore import RedConfigJobStore  # Wait to import to prevent cyclic import
 
         self.jobstore = RedConfigJobStore(self.config, self.bot)
         await self.jobstore.load_from_config()
@@ -507,7 +507,7 @@ class FIFO(commands.Cog):
         """
 
         task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
-        await task.load_from_config()
+        await task.load_from_config()  # Will set the channel and author
 
         if task.data is None:
             await ctx.maybe_send_embed(

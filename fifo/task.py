@@ -166,7 +166,7 @@ class Task:
             return
 
         self.author_id = data["author_id"]
-        self.guild_id = data["guild_id"]
+        self.guild_id = data["guild_id"]  # Weird I'm doing this, since self.guild_id was just used
         self.channel_id = data["channel_id"]
 
         self.data = data["data"]

@@ -2,17 +2,13 @@ import asyncio
 import base64
 import logging
 import pickle
-from datetime import datetime
-from typing import Tuple, Union
 
 from apscheduler.job import Job
-from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.asyncio import run_in_event_loop
 from apscheduler.util import datetime_to_utc_timestamp
 from redbot.core import Config
-
-# TODO: use get_lock on config
+# TODO: use get_lock on config maybe
 from redbot.core.bot import Red
 from redbot.core.utils import AsyncIter
 
@@ -29,13 +25,7 @@ class RedConfigJobStore(MemoryJobStore):
         self.bot = bot
         self.pickle_protocol = pickle.HIGHEST_PROTOCOL
         self._eventloop = self.bot.loop  # Used for @run_in_event_loop
-        # TODO: self.config.jobs_index is never used,
-        #  fine but maybe a sign of inefficient use of config
 
-        # task = asyncio.create_task(self.load_from_config())
-        # while not task.done():
-        #     sleep(0.1)
-        # future = asyncio.ensure_future(self.load_from_config(), loop=self.bot.loop)
 
     @run_in_event_loop
     def start(self, scheduler, alias):
