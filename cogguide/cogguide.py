@@ -42,7 +42,7 @@ def markdown_link_replace(starts_with_text=None):
             url = url[i:]
             i = url.find(".")
             url = url[:i]
-            return f":ref:`{text} <{url}>`"
+            return f":ref:`{text}<{url}>`"
 
         return f"`{text} <{url}>`_"
 
