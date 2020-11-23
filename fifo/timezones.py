@@ -5,6 +5,8 @@ All credit to https://github.com/prefrontal/dateutil-parser-timezones
 """
 
 # from dateutil.tz import gettz
+from datetime import datetime
+
 from pytz import timezone
 
 
@@ -227,4 +229,6 @@ def assemble_timezones():
     timezones["YAKT"] = timezone("Asia/Yakutsk")  # Yakutsk Time (UTC+09)
     timezones["YEKT"] = timezone("Asia/Yekaterinburg")  # Yekaterinburg Time (UTC+05)
 
+    dt = datetime(2020, 1, 1)
+    timezones.update((x, y.localize(dt).tzinfo) for x, y in timezones.items())
     return timezones

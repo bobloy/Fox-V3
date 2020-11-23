@@ -40,8 +40,8 @@ def parse_triggers(data: Union[Dict, None]):
 
     if len(data["triggers"]) > 1:  # Multiple triggers
         return OrTrigger([get_trigger(t_data) for t_data in data["triggers"]])
-
-    return get_trigger(data["triggers"][0])
+    else:
+        return get_trigger(data["triggers"][0])
 
 
 class FakeMessage:
@@ -166,7 +166,7 @@ class Task:
             return
 
         self.author_id = data["author_id"]
-        self.guild_id = data["guild_id"]
+        self.guild_id = data["guild_id"]  # Weird I'm doing this, since self.guild_id was just used
         self.channel_id = data["channel_id"]
 
         self.data = data["data"]

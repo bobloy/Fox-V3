@@ -1,6 +1,6 @@
 import itertools
 import logging
-from datetime import datetime, timedelta, tzinfo, MAXYEAR
+from datetime import MAXYEAR, datetime, timedelta, tzinfo
 from typing import Optional, Union
 
 import discord
@@ -11,7 +11,7 @@ from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
-from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta, pagify
+from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 
 from .datetime_cron_converters import CronConverter, DatetimeConverter, TimezoneConverter
 from .task import Task
@@ -22,8 +22,8 @@ schedule_log.setLevel(logging.DEBUG)
 log = logging.getLogger("red.fox_v3.fifo")
 
 
-async def _execute_task(task_state):
-    log.info(f"Executing {task_state=}")
+async def _execute_task(**task_state):
+    log.info(f"Executing {task_state.get('name')}")
     task = Task(**task_state)
     if await task.load_from_config():
         return await task.execute()
@@ -60,6 +60,19 @@ def _get_run_times(job: Job, now: datetime = None):
         next_run_time = job.trigger.get_next_fire_time(next_run_time, now)
 
 
+class CapturePrint:
+    """Silly little class to get `print` output"""
+
+    def __init__(self):
+        self.string = None
+
+    def write(self, string):
+        if self.string is None:
+            self.string = string
+        else:
+            self.string = self.string + "\n" + string
+
+
 class FIFO(commands.Cog):
     """
     Simple Scheduling Cog
@@ -78,7 +91,7 @@ class FIFO(commands.Cog):
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
 
-        self.scheduler = None
+        self.scheduler: Optional[AsyncIOScheduler] = None
         self.jobstore = None
 
         self.tz_cog = None
@@ -94,17 +107,22 @@ class FIFO(commands.Cog):
 
     async def initialize(self):
 
-        job_defaults = {"coalesce": False, "max_instances": 1}
+        job_defaults = {
+            "coalesce": True,  # Multiple missed triggers within the grace time will only fire once
+            "max_instances": 5,  # This is probably way too high, should likely only be one
+            "misfire_grace_time": 15,  # 15 seconds ain't much, but it's honest work
+            "replace_existing": True,  # Very important for persistent data
+        }
 
         # executors = {"default": AsyncIOExecutor()}
 
         # Default executor is already AsyncIOExecutor
         self.scheduler = AsyncIOScheduler(job_defaults=job_defaults, logger=schedule_log)
 
-        from .redconfigjobstore import RedConfigJobStore
+        from .redconfigjobstore import RedConfigJobStore  # Wait to import to prevent cyclic import
 
         self.jobstore = RedConfigJobStore(self.config, self.bot)
-        await self.jobstore.load_from_config(self.scheduler, "default")
+        await self.jobstore.load_from_config()
         self.scheduler.add_jobstore(self.jobstore, "default")
 
         self.scheduler.start()
@@ -139,9 +157,10 @@ class FIFO(commands.Cog):
     async def _add_job(self, task: Task):
         return self.scheduler.add_job(
             _execute_task,
-            args=[task.__getstate__()],
+            kwargs=task.__getstate__(),
             id=_assemble_job_id(task.name, task.guild_id),
             trigger=await task.get_combined_trigger(),
+            name=task.name,
         )
 
     async def _resume_job(self, task: Task):
@@ -372,7 +391,7 @@ class FIFO(commands.Cog):
         Do `[p]fifo list True` to see tasks from all guilds
         """
         if all_guilds:
-            pass
+            pass  # TODO: All guilds
         else:
             out = ""
             all_tasks = await self.config.guild(ctx.guild).tasks()
@@ -387,6 +406,27 @@ class FIFO(commands.Cog):
                     await ctx.maybe_send_embed(out)
             else:
                 await ctx.maybe_send_embed("No tasks to list")
+
+    @fifo.command(name="printschedule")
+    async def fifo_printschedule(self, ctx: commands.Context):
+        """
+        Print the current schedule of execution.
+
+        Useful for debugging.
+        """
+        cp = CapturePrint()
+        self.scheduler.print_jobs(out=cp)
+
+        out = cp.string
+
+        if out:
+            if len(out) > 2000:
+                for page in pagify(out):
+                    await ctx.maybe_send_embed(page)
+            else:
+                await ctx.maybe_send_embed(out)
+        else:
+            await ctx.maybe_send_embed("Failed to get schedule from scheduler")
 
     @fifo.command(name="add")
     async def fifo_add(self, ctx: commands.Context, task_name: str, *, command_to_execute: str):
@@ -467,7 +507,7 @@ class FIFO(commands.Cog):
         """
 
         task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
-        await task.load_from_config()
+        await task.load_from_config()  # Will set the channel and author
 
         if task.data is None:
             await ctx.maybe_send_embed(
@@ -497,7 +537,7 @@ class FIFO(commands.Cog):
         Add a "run once" trigger at a time relative from now to the specified task
         """
 
-        task = Task(task_name, ctx.guild.id, self.config)
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
         await task.load_from_config()
 
         if task.data is None:
@@ -531,7 +571,7 @@ class FIFO(commands.Cog):
         Add a "run once" datetime trigger to the specified task
         """
 
-        task = Task(task_name, ctx.guild.id, self.config)
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
         await task.load_from_config()
 
         if task.data is None:
@@ -571,7 +611,7 @@ class FIFO(commands.Cog):
 
         See https://crontab.guru/ for help generating the cron_str
         """
-        task = Task(task_name, ctx.guild.id, self.config)
+        task = Task(task_name, ctx.guild.id, self.config, bot=self.bot)
         await task.load_from_config()
 
         if task.data is None:
