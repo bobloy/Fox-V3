@@ -100,9 +100,10 @@ class Task:
 
     async def _encode_time_triggers(self):
         if not self.data or not self.data.get("triggers", None):
-            return []
+            return [], []
 
         triggers = []
+        expired_triggers = []
         for t in self.data["triggers"]:
             if t["type"] == "interval":  # Convert into timedelta
                 td: timedelta = t["time_data"]
@@ -114,13 +115,15 @@ class Task:
 
             if t["type"] == "date":  # Convert into datetime
                 dt: datetime = t["time_data"]
-                triggers.append(
-                    {
-                        "type": t["type"],
-                        "time_data": dt.isoformat(),
-                        "tzinfo": getattr(t["tzinfo"], "zone", None),
-                    }
-                )
+                data_to_append = {
+                    "type": t["type"],
+                    "time_data": dt.isoformat(),
+                    "tzinfo": getattr(t["tzinfo"], "zone", None),
+                }
+                if dt < datetime.now(pytz.utc):
+                    expired_triggers.append(data_to_append)
+                else:
+                    triggers.append(data_to_append)
                 continue
 
             if t["type"] == "cron":
@@ -138,7 +141,7 @@ class Task:
 
             raise NotImplemented
 
-        return triggers
+        return triggers, expired_triggers
 
     async def _decode_time_triggers(self):
         if not self.data or not self.data.get("triggers", None):
@@ -214,7 +217,10 @@ class Task:
         data_to_save = self.default_task_data.copy()
         if self.data:
             data_to_save["command_str"] = self.get_command_str()
-            data_to_save["triggers"] = await self._encode_time_triggers()
+            (
+                data_to_save["triggers"],
+                data_to_save["expired_triggers"],
+            ) = await self._encode_time_triggers()
 
         to_save = {
             "guild_id": self.guild_id,
@@ -230,7 +236,10 @@ class Task:
             return
 
         data_to_save = self.data.copy()
-        data_to_save["triggers"] = await self._encode_time_triggers()
+        (
+            data_to_save["triggers"],
+            data_to_save["expired_triggers"],
+        ) = await self._encode_time_triggers()
 
         await self.config.guild_from_id(self.guild_id).tasks.set_raw(
             self.name, "data", value=data_to_save
