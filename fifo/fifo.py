@@ -148,7 +148,11 @@ class FIFO(commands.Cog):
     async def _process_task(self, task: Task):
         job: Union[Job, None] = await self._get_job(task)
         if job is not None:
-            job.reschedule(await task.get_combined_trigger())
+            combined_trigger_ = await task.get_combined_trigger()
+            if combined_trigger_ is None:
+                job.remove()
+            else:
+                job.reschedule(combined_trigger_)
             return job
         return await self._add_job(task)
 
@@ -156,11 +160,15 @@ class FIFO(commands.Cog):
         return self.scheduler.get_job(_assemble_job_id(task.name, task.guild_id))
 
     async def _add_job(self, task: Task):
+        combined_trigger_ = await task.get_combined_trigger()
+        if combined_trigger_ is None:
+            return None
+
         return self.scheduler.add_job(
             _execute_task,
             kwargs=task.__getstate__(),
             id=_assemble_job_id(task.name, task.guild_id),
-            trigger=await task.get_combined_trigger(),
+            trigger=combined_trigger_,
             name=task.name,
         )
 
