@@ -4,6 +4,7 @@ from datetime import MAXYEAR, datetime, timedelta, tzinfo
 from typing import Optional, Union
 
 import discord
+import pytz
 from apscheduler.job import Job
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -220,6 +221,16 @@ class FIFO(commands.Cog):
         """
         if ctx.invoked_subcommand is None:
             pass
+
+    @fifo.command(name="wakeup")
+    async def fifo_wakeup(self, ctx: commands.Context):
+        """Debug command to fix missed executions.
+
+        If you see a negative "Next run time" when adding a trigger, this may help resolve it.
+        """
+
+        self.scheduler.wakeup()
+        await ctx.tick()
 
     @fifo.command(name="checktask", aliases=["checkjob", "check"])
     async def fifo_checktask(self, ctx: commands.Context, task_name: str):
@@ -546,7 +557,7 @@ class FIFO(commands.Cog):
             )
             return
 
-        time_to_run = datetime.now() + time_from_now
+        time_to_run = datetime.now(pytz.utc) + time_from_now
 
         result = await task.add_trigger("date", time_to_run, time_to_run.tzinfo)
         if not result:
