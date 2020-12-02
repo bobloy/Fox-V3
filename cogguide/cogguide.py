@@ -62,6 +62,7 @@ def format_text(text):
         #     return ctx.clean_prefix
         if s == "[botname]":
             return "Red"
+
         # We shouldn't get here:
         return s
 
