@@ -35,14 +35,18 @@ def markdown_link_replace(starts_with_text=None):
     """
 
     def handle_starts_with_markdown_link_replace(match):
-        text = match.group(1)
-        url = match.group(2)
+        text: str = match.group(1)
+        url: str = match.group(2)
         if starts_with_text and url.startswith(starts_with_text):
             i = len(starts_with_text)
             url = url[i:]
             i = url.find(".")
             url = url[:i]
-            return f":ref:`{text}<{url}>`"
+            i = url.find("#")
+            if i > 0:
+                url = url[:i]
+                return f"`{text}<{url}>`"  # Attempt :any: match
+            return f":doc:`{text}<../{url}>`"
 
         return f"`{text} <{url}>`_"
 
