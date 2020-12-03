@@ -38,7 +38,7 @@ class InfoChannel(Cog):
             "channels_channel_id": None,
             "onlinechannel_id": None,
             "offlinechannel_id": None,
-            "role_ids":{},
+            "role_ids": {},
             "member_count": True,
             "human_count": False,
             "bot_count": False,
@@ -46,7 +46,7 @@ class InfoChannel(Cog):
             "channels_count": False,
             "online_count": False,
             "offline_count": False,
-            "channel_names":{
+            "channel_names": {
                 "category_name": "Server Stats",
                 "members_channel": "Total Members: {count}",
                 "humans_channel": "Humans: {count}",
@@ -55,8 +55,8 @@ class InfoChannel(Cog):
                 "channels_channel": "Total Channels: {count}",
                 "online_channel": "Online: {count}",
                 "offline_channel": "Offline:{count}",
-                "role_channel": "{role}: {count}"
-            }
+                "role_channel": "{role}: {count}",
+            },
         }
 
         self.config.register_guild(**default_guild)
@@ -113,7 +113,7 @@ class InfoChannel(Cog):
         if not await ctx.tick():
             await ctx.send("Done!")
 
-    @commands.group(aliases=['icset'])
+    @commands.group(aliases=["icset"])
     @checks.admin()
     async def infochannelset(self, ctx: commands.Context):
         """
@@ -121,7 +121,7 @@ class InfoChannel(Cog):
         """
         if not ctx.invoked_subcommand:
             pass
-    
+
     @infochannelset.command(name="membercount")
     async def _infochannelset_membercount(self, ctx: commands.Context, enabled: bool = None):
         """
@@ -155,7 +155,7 @@ class InfoChannel(Cog):
             await ctx.send("InfoChannel for human user count has been enabled.")
         else:
             await ctx.send("InfoChannel for human user count has been disabled.")
-    
+
     @infochannelset.command(name="botcount")
     async def _infochannelset_botcount(self, ctx: commands.Context, enabled: bool = None):
         """
@@ -242,7 +242,9 @@ class InfoChannel(Cog):
             await ctx.send("InfoChannel for offline user count has been disabled.")
 
     @infochannelset.command(name="rolecount")
-    async def _infochannelset_rolecount(self, ctx: commands.Context, role: discord.Role, enabled: bool = None):
+    async def _infochannelset_rolecount(
+        self, ctx: commands.Context, role: discord.Role, enabled: bool = None
+    ):
         """
         Toggle an infochannel that shows the amount of users in the server with the specified role
         """
@@ -261,15 +263,15 @@ class InfoChannel(Cog):
         else:
             await ctx.send(f"InfoChannel for {role.name} count has been disabled.")
 
-    @infochannelset.group(name='name')
+    @infochannelset.group(name="name")
     async def channelname(self, ctx: commands.Context):
         """
         Change the name of the infochannels
         """
         if not ctx.invoked_subcommand:
             pass
-    
-    @channelname.command(name='category')
+
+    @channelname.command(name="category")
     async def _channelname_Category(self, ctx: commands.Context, *, text):
         """
         Change the name of the infochannel's category.
@@ -277,12 +279,12 @@ class InfoChannel(Cog):
         guild = ctx.message.guild
         category_id = await self.config.guild(guild).category_id()
         category: discord.CategoryChannel = guild.get_channel(category_id)
-        await category.edit(name = text)
+        await category.edit(name=text)
         await self.config.guild(guild).channel_names.category_name.set(text)
         if not await ctx.tick():
             await ctx.send("Done!")
 
-    @channelname.command(name='members')
+    @channelname.command(name="members")
     async def _channelname_Members(self, ctx: commands.Context, *, text=None):
         """
         Change the name of the total members infochannel.
@@ -306,7 +308,7 @@ class InfoChannel(Cog):
         if not await ctx.tick():
             await ctx.send("Done!")
 
-    @channelname.command(name='humans')
+    @channelname.command(name="humans")
     async def _channelname_Humans(self, ctx: commands.Context, *, text=None):
         """
         Change the name of the human users infochannel.
@@ -329,8 +331,8 @@ class InfoChannel(Cog):
         await self.update_infochannel(guild)
         if not await ctx.tick():
             await ctx.send("Done!")
-    
-    @channelname.command(name='bots')
+
+    @channelname.command(name="bots")
     async def _channelname_Bots(self, ctx: commands.Context, *, text=None):
         """
         Change the name of the bots infochannel.
@@ -354,7 +356,7 @@ class InfoChannel(Cog):
         if not await ctx.tick():
             await ctx.send("Done!")
 
-    @channelname.command(name='roles')
+    @channelname.command(name="roles")
     async def _channelname_Roles(self, ctx: commands.Context, *, text=None):
         """
         Change the name of the roles infochannel.
@@ -379,8 +381,8 @@ class InfoChannel(Cog):
         await self.update_infochannel(guild)
         if not await ctx.tick():
             await ctx.send("Done!")
-    
-    @channelname.command(name='channels')
+
+    @channelname.command(name="channels")
     async def _channelname_Channels(self, ctx: commands.Context, *, text=None):
         """
         Change the name of the channels infochannel.
@@ -405,7 +407,7 @@ class InfoChannel(Cog):
         if not await ctx.tick():
             await ctx.send("Done!")
 
-    @channelname.command(name='online')
+    @channelname.command(name="online")
     async def _channelname_Online(self, ctx: commands.Context, *, text=None):
         """
         Change the name of the online infochannel.
@@ -429,7 +431,7 @@ class InfoChannel(Cog):
         if not await ctx.tick():
             await ctx.send("Done!")
 
-    @channelname.command(name='offline')
+    @channelname.command(name="offline")
     async def _channelname_Offline(self, ctx: commands.Context, *, text=None):
         """
         Change the name of the offline infochannel.
@@ -453,11 +455,11 @@ class InfoChannel(Cog):
         if not await ctx.tick():
             await ctx.send("Done!")
 
-    @channelname.command(name='role')
+    @channelname.command(name="role")
     async def _channelname_Role(self, ctx: commands.Context, *, text=None):
         """
         Change the name of the infochannel for specific roles.
-        
+
         All role infochannels follow this format.
         Do NOT confuse with the roles command that counts number of roles in the server
 
@@ -501,17 +503,17 @@ class InfoChannel(Cog):
             if category is None:
                 await self.config.guild(guild).category_id.set(None)
                 category_id = None
-        
+
         if category_id is None:
             category: discord.CategoryChannel = await guild.create_category(
                 "Server Stats", reason="InfoChannel Category make"
             )
             await self.config.guild(guild).category_id.set(category.id)
-            await category.edit(position = 0)
+            await category.edit(position=0)
             category_id = category.id
-        
+
         category: discord.CategoryChannel = guild.get_channel(category_id)
-        
+
         #  Remove the old members channel first
         channel_id = await self.config.guild(guild).channel_id()
         if category_id is not None:
@@ -538,7 +540,6 @@ class InfoChannel(Cog):
             )
             await self.config.guild(guild).humanchannel_id.set(humanchannel.id)
 
-        
         # Remove the old bot channel first
         botchannel_id = await self.config.guild(guild).botchannel_id()
         if category_id is not None:
@@ -552,7 +553,6 @@ class InfoChannel(Cog):
             )
             await self.config.guild(guild).botchannel_id.set(botchannel.id)
 
-        
         # Remove the old roles channel first
         roleschannel_id = await self.config.guild(guild).roleschannel_id()
         if category_id is not None:
@@ -567,7 +567,6 @@ class InfoChannel(Cog):
             )
             await self.config.guild(guild).roleschannel_id.set(roleschannel.id)
 
-        
         # Remove the old channels channel first
         channels_channel_id = await self.config.guild(guild).channels_channel_id()
         if category_id is not None:
@@ -580,7 +579,7 @@ class InfoChannel(Cog):
                 "Total Channels:", reason="InfoChannel botcount", overwrites=overwrites
             )
             await self.config.guild(guild).channels_channel_id.set(channels_channel.id)
-        
+
         # Remove the old online channel first
         onlinechannel_id = await self.config.guild(guild).onlinechannel_id()
         if channel_id is not None:
@@ -593,7 +592,7 @@ class InfoChannel(Cog):
                 "Online:", reason="InfoChannel onlinecount", overwrites=overwrites
             )
             await self.config.guild(guild).onlinechannel_id.set(onlinechannel.id)
-        
+
         # Remove the old offline channel first
         offlinechannel_id = await self.config.guild(guild).offlinechannel_id()
         if channel_id is not None:
@@ -608,7 +607,7 @@ class InfoChannel(Cog):
             await self.config.guild(guild).offlinechannel_id.set(offlinechannel.id)
 
         async with self.config.guild(guild).role_ids() as role_data:
-            #Remove the old role channels first
+            # Remove the old role channels first
             for role_id in role_data.keys():
                 role_channel_id = role_data[role_id]
                 if role_channel_id is not None:
@@ -616,17 +615,17 @@ class InfoChannel(Cog):
                     if rolechannel:
                         await rolechannel.delete(reason="InfoChannel delete")
 
-            #The actual toggle for a role counter
+            # The actual toggle for a role counter
             if role:
                 if str(role.id) in role_data.keys():
-                    role_data.pop(str(role.id)) #if the role is there, then remove it
+                    role_data.pop(str(role.id))  # if the role is there, then remove it
                 else:
-                    role_data[role.id] = None #No channel created yet but we want one to be made
+                    role_data[role.id] = None  # No channel created yet but we want one to be made
             if role_data:
                 # Then create the new ones
                 for role_id in role_data.keys():
                     rolechannel = await category.create_voice_channel(
-                        str(role_id)+":", reason="InfoChannel rolecount", overwrites=overwrites
+                        str(role_id) + ":", reason="InfoChannel rolecount", overwrites=overwrites
                     )
                     role_data[role_id] = rolechannel.id
 
@@ -672,7 +671,7 @@ class InfoChannel(Cog):
                     rolechannel: discord.VoiceChannel = guild.get_channel(role_channel_id)
                     if rolechannel:
                         await rolechannel.delete(reason="InfoChannel delete")
-        
+
         await self.config.guild(guild).clear()
 
     async def update_infochannel(self, guild: discord.Guild):
@@ -693,12 +692,12 @@ class InfoChannel(Cog):
         bot_num = len([m for m in guild.members if m.bot])
         # bot_msg = f"Bots: {num}"
 
-        #Gets count of roles in the server
-        roles_num = len(guild.roles)-1
+        # Gets count of roles in the server
+        roles_num = len(guild.roles) - 1
         # roles_msg = f"Total Roles: {num}"
 
-        #Gets count of channels in the server
-        #<number of total channels> - <number of channels in the stats category> - <categories>
+        # Gets count of channels in the server
+        # <number of total channels> - <number of channels in the stats category> - <categories>
         channels_num = len(guild.channels) - len(category.voice_channels) - len(guild.categories)
         # channels_msg = f"Total Channels: {num}"
 
@@ -737,31 +736,31 @@ class InfoChannel(Cog):
         channel_names = await self.config.guild(guild).channel_names.all()
 
         if guild_data["member_count"]:
-            name = channel_names["members_channel"].format(count = members)
+            name = channel_names["members_channel"].format(count=members)
             await channel.edit(reason="InfoChannel update", name=name)
 
         if humancount:
-            name = channel_names["humans_channel"].format(count = human_num)
+            name = channel_names["humans_channel"].format(count=human_num)
             await humanchannel.edit(reason="InfoChannel update", name=name)
 
         if botcount:
-            name = channel_names["bots_channel"].format(count = bot_num)
+            name = channel_names["bots_channel"].format(count=bot_num)
             await botchannel.edit(reason="InfoChannel update", name=name)
-        
+
         if rolescount:
-            name = channel_names["roles_channel"].format(count = roles_num)
+            name = channel_names["roles_channel"].format(count=roles_num)
             await roleschannel.edit(reason="InfoChannel update", name=name)
-        
+
         if channelscount:
-            name = channel_names["channels_channel"].format(count = channels_num)
+            name = channel_names["channels_channel"].format(count=channels_num)
             await channels_channel.edit(reason="InfoChannel update", name=name)
 
         if onlinecount:
-            name = channel_names["online_channel"].format(count = online_num)
+            name = channel_names["online_channel"].format(count=online_num)
             await onlinechannel.edit(reason="InfoChannel update", name=name)
-        
+
         if offlinecount:
-            name = channel_names["offline_channel"].format(count = offline)
+            name = channel_names["offline_channel"].format(count=offline)
             await offlinechannel.edit(reason="InfoChannel update", name=name)
 
         async with self.config.guild(guild).role_ids() as role_data:
@@ -772,9 +771,8 @@ class InfoChannel(Cog):
 
                     role_num = len(role.members)
 
-                    name = channel_names["role_channel"].format(count = role_num, role = role.name)
+                    name = channel_names["role_channel"].format(count=role_num, role=role.name)
                     await rolechannel.edit(reason="InfoChannel update", name=name)
-
 
     async def update_infochannel_with_cooldown(self, guild):
         """My attempt at preventing rate limits, lets see how it goes"""
@@ -842,26 +840,26 @@ class InfoChannel(Cog):
         channelscount = await self.config.guild(channel.guild).channels_count()
         if channelscount:
             await self.update_infochannel_with_cooldown(channel.guild)
-    
-    @Cog.listener() 
+
+    @Cog.listener()
     async def on_guild_role_create(self, role):
         if await self.bot.cog_disabled_in_guild(self, role.guild):
             return
-        
+
         rolescount = await self.config.guild(role.guild).roles_count()
         if rolescount:
             await self.update_infochannel_with_cooldown(role.guild)
 
-    @Cog.listener() 
+    @Cog.listener()
     async def on_guild_role_delete(self, role):
         if await self.bot.cog_disabled_in_guild(self, role.guild):
             return
-        
+
         rolescount = await self.config.guild(role.guild).roles_count()
         if rolescount:
             await self.update_infochannel_with_cooldown(role.guild)
-        
-        #delete specific role counter if the role is deleted
+
+        # delete specific role counter if the role is deleted
         async with self.config.guild(role.guild).role_ids() as role_data:
             if str(role.id) in role_data.keys():
                 role_channel_id = role_data[str(role.id)]
