@@ -1,10 +1,8 @@
 import logging
 import pathlib
 import re
-import string
 from typing import Optional, Union
 
-import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog, PrivilegeLevel
@@ -17,6 +15,8 @@ EXCLUDED_LIST = ["reinstallreqs"]
 LINK_PATTERN = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#-@]+)\)")
 
 BOTNAME_PATTERN = re.compile(r"\[botname]")
+
+WARNING_PATTERN = re.compile(r"Warning: (.*)")
 
 
 def get_parent_tree(command: commands.Command):
@@ -55,8 +55,9 @@ def markdown_link_replace(starts_with_text=None):
 
 def format_text(text):
     """Borrowed from commands.CogCommandMixin.format_text_for_context"""
+
     # formatting_pattern = re.compile(r"\[p\]|\[botname\]")
-    def replacement(m: re.Match) -> str:
+    def replace_botname(m: re.Match) -> str:
         s = m.group(0)
         # if s == "[p]":
         #     return ctx.clean_prefix
@@ -66,7 +67,13 @@ def format_text(text):
         # We shouldn't get here:
         return s
 
-    return BOTNAME_PATTERN.sub(replacement, text)
+    def replace_warning(m: re.Match) -> str:
+        s = m.group(1)
+        return f".. warning:: {s}\n"
+
+    out = BOTNAME_PATTERN.sub(replace_botname, text)
+    out = WARNING_PATTERN.sub(replace_warning, out)
+    return out
 
 
 def prepare_description(comm_or_cog: Union[commands.Command, Cog], markdown_command):
