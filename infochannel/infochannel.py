@@ -261,16 +261,6 @@ class InfoChannel(Cog):
         else:
             await ctx.send(f"InfoChannel for {role.name} count has been disabled.")
 
-    #delete later
-    @infochannelset.command(name="cleardata")
-    async def _infochannelset_cleardata(self, ctx: commands.Context):
-        """
-        Clears the the servers data in case of corruption
-        """
-        guild = ctx.guild
-        await self.config.guild(guild).clear()
-        await ctx.send("The data for this server is cleared.")
-
     @infochannelset.group(name='name')
     async def channelname(self, ctx: commands.Context):
         """
