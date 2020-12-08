@@ -39,9 +39,9 @@ def parse_triggers(data: Union[Dict, None]):
         return None
 
     if len(data["triggers"]) > 1:  # Multiple triggers
-        return OrTrigger(get_trigger(t_data) for t_data in data["triggers"])
-
-    return get_trigger(data["triggers"][0])
+        return OrTrigger([get_trigger(t_data) for t_data in data["triggers"]])
+    else:
+        return get_trigger(data["triggers"][0])
 
 
 class FakeMessage:
@@ -108,20 +108,6 @@ class Task:
                         "tzinfo": getattr(t["tzinfo"], "zone", None),
                     }
                 )
-                # triggers.append(
-                #     {
-                #         "type": t["type"],
-                #         "time_data": {
-                #             "year": dt.year,
-                #             "month": dt.month,
-                #             "day": dt.day,
-                #             "hour": dt.hour,
-                #             "minute": dt.minute,
-                #             "second": dt.second,
-                #             "tzinfo": dt.tzinfo,
-                #         },
-                #     }
-                # )
                 continue
 
             if t["type"] == "cron":
@@ -180,7 +166,7 @@ class Task:
             return
 
         self.author_id = data["author_id"]
-        self.guild_id = data["guild_id"]
+        self.guild_id = data["guild_id"]  # Weird I'm doing this, since self.guild_id was just used
         self.channel_id = data["channel_id"]
 
         self.data = data["data"]
@@ -239,20 +225,26 @@ class Task:
 
     async def execute(self):
         if not self.data or not self.get_command_str():
-            log.warning(f"Could not execute task due to data problem: {self.data=}")
+            log.warning(f"Could not execute Task[{self.name}] due to data problem: {self.data=}")
             return False
 
         guild: discord.Guild = self.bot.get_guild(self.guild_id)  # used for get_prefix
         if guild is None:
-            log.warning(f"Could not execute task due to missing guild: {self.guild_id}")
+            log.warning(
+                f"Could not execute Task[{self.name}] due to missing guild: {self.guild_id}"
+            )
             return False
         channel: discord.TextChannel = guild.get_channel(self.channel_id)
         if channel is None:
-            log.warning(f"Could not execute task due to missing channel: {self.channel_id}")
+            log.warning(
+                f"Could not execute Task[{self.name}] due to missing channel: {self.channel_id}"
+            )
             return False
         author: discord.User = guild.get_member(self.author_id)
         if author is None:
-            log.warning(f"Could not execute task due to missing author: {self.author_id}")
+            log.warning(
+                f"Could not execute Task[{self.name}] due to missing author: {self.author_id}"
+            )
             return False
 
         actual_message: discord.Message = channel.last_message
@@ -267,15 +259,15 @@ class Task:
                     actual_message = await author.history(limit=1).flatten()
                     if not actual_message:  # Okay, the *author* has never sent a message?
                         log.warning("No message found in channel cache yet, skipping execution")
-                        return
+                        return False
                 actual_message = actual_message[0]
 
         message = FakeMessage(actual_message)
         # message = FakeMessage2
         message.author = author
-        message.guild = guild  # Just in case we got desperate
+        message.guild = guild  # Just in case we got desperate, see above
         message.channel = channel
-        message.id = time_snowflake(datetime.now())  # Pretend to be now
+        message.id = time_snowflake(datetime.utcnow(), high=False)  # Pretend to be now
         message = neuter_message(message)
 
         # absolutely weird that this takes a message object instead of guild
@@ -287,15 +279,21 @@ class Task:
 
         message.content = f"{prefix}{self.get_command_str()}"
 
-        if not message.guild or not message.author or not message.content:
-            log.warning(f"Could not execute task due to message problem: {message}")
+        if (
+            not message.guild
+            or not message.author
+            or not message.content
+            or message.content == prefix
+        ):
+            log.warning(f"Could not execute Task[{self.name}] due to message problem: {message}")
             return False
 
         new_ctx: commands.Context = await self.bot.get_context(message)
         new_ctx.assume_yes = True
         if not new_ctx.valid:
             log.warning(
-                f"Could not execute Task[{self.name}] due invalid context: {new_ctx.invoked_with}"
+                f"Could not execute Task[{self.name}] due invalid context: "
+                f"{new_ctx.invoked_with=} {new_ctx.prefix=} {new_ctx.command=}"
             )
             return False
 

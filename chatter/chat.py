@@ -10,7 +10,7 @@ from chatterbot import ChatBot
 from chatterbot.comparisons import JaccardSimilarity, LevenshteinDistance, SpacySimilarity
 from chatterbot.response_selection import get_random_response
 from chatterbot.trainers import ChatterBotCorpusTrainer, ListTrainer, UbuntuCorpusTrainer
-from redbot.core import Config, commands
+from redbot.core import Config, checks, commands
 from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
@@ -159,7 +159,9 @@ class Chatter(Cog):
         return out
 
     def _train_ubuntu(self):
-        trainer = UbuntuCorpusTrainer(self.chatbot)
+        trainer = UbuntuCorpusTrainer(
+            self.chatbot, ubuntu_corpus_data_directory=cog_data_path(self) / "ubuntu_data"
+        )
         trainer.train()
         return True
 
@@ -191,6 +193,7 @@ class Chatter(Cog):
         if ctx.invoked_subcommand is None:
             pass
 
+    @checks.admin()
     @chatter.command(name="channel")
     async def chatter_channel(
         self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None
@@ -210,6 +213,7 @@ class Chatter(Cog):
             await self.config.guild(ctx.guild).chatchannel.set(channel.id)
             await ctx.maybe_send_embed(f"Chat channel is now {channel.mention}")
 
+    @checks.is_owner()
     @chatter.command(name="cleardata")
     async def chatter_cleardata(self, ctx: commands.Context, confirm: bool = False):
         """
@@ -242,6 +246,7 @@ class Chatter(Cog):
 
         await ctx.tick()
 
+    @checks.is_owner()
     @chatter.command(name="algorithm", aliases=["algo"])
     async def chatter_algorithm(
         self, ctx: commands.Context, algo_number: int, threshold: float = None
@@ -267,7 +272,7 @@ class Chatter(Cog):
                 )
                 return
             else:
-                self.similarity_algo = threshold
+                self.similarity_threshold = threshold
 
         self.similarity_algo = algos[algo_number]
         async with ctx.typing():
@@ -275,6 +280,7 @@ class Chatter(Cog):
 
             await ctx.tick()
 
+    @checks.is_owner()
     @chatter.command(name="model")
     async def chatter_model(self, ctx: commands.Context, model_number: int):
         """
@@ -312,6 +318,7 @@ class Chatter(Cog):
                 f"Model has been switched to {self.tagger_language.ISO_639_1}"
             )
 
+    @checks.is_owner()
     @chatter.command(name="minutes")
     async def minutes(self, ctx: commands.Context, minutes: int):
         """
@@ -327,6 +334,7 @@ class Chatter(Cog):
 
         await ctx.tick()
 
+    @checks.is_owner()
     @chatter.command(name="age")
     async def age(self, ctx: commands.Context, days: int):
         """
@@ -341,6 +349,7 @@ class Chatter(Cog):
         await self.config.guild(ctx.guild).days.set(days)
         await ctx.tick()
 
+    @checks.is_owner()
     @chatter.command(name="backup")
     async def backup(self, ctx, backupname):
         """
@@ -362,6 +371,7 @@ class Chatter(Cog):
         else:
             await ctx.maybe_send_embed("Error occurred :(")
 
+    @checks.is_owner()
     @chatter.command(name="trainubuntu")
     async def chatter_train_ubuntu(self, ctx: commands.Context, confirmation: bool = False):
         """
@@ -383,6 +393,7 @@ class Chatter(Cog):
         else:
             await ctx.send("Error occurred :(")
 
+    @checks.is_owner()
     @chatter.command(name="trainenglish")
     async def chatter_train_english(self, ctx: commands.Context):
         """
@@ -396,6 +407,7 @@ class Chatter(Cog):
         else:
             await ctx.maybe_send_embed("Error occurred :(")
 
+    @checks.is_owner()
     @chatter.command()
     async def train(self, ctx: commands.Context, channel: discord.TextChannel):
         """

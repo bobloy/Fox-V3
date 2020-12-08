@@ -56,7 +56,7 @@ class Werewolf(Cog):
         """Nothing to delete"""
         return
 
-    def __unload(self):
+    def cog_unload(self):
         log.debug("Unload called")
         for game in self.games.values():
             del game
