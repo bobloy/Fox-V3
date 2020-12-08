@@ -15,17 +15,9 @@ from werewolf.builder import (
     role_from_id,
     role_from_name,
 )
-from werewolf.game import Game
+from werewolf.game import Game, anyone_has_role
 
 log = logging.getLogger("red.fox_v3.werewolf")
-
-
-async def anyone_has_role(
-    member_list: List[discord.Member], role: discord.Role
-) -> Union[None, discord.Member]:
-    return await AsyncIter(member_list).find(
-        lambda m: AsyncIter(m.roles).find(lambda r: r.id == role.id)
-    )
 
 
 class Werewolf(Cog):
@@ -263,6 +255,7 @@ class Werewolf(Cog):
         game = await self._get_game(ctx)
         if not game:
             await ctx.maybe_send_embed("No game running, cannot start")
+            return
 
         if not await game.setup(ctx):
             pass  # ToDo something?
@@ -285,7 +278,8 @@ class Werewolf(Cog):
 
         game = await self._get_game(ctx)
         game.game_over = True
-        game.current_action.cancel()
+        if game.current_action:
+            game.current_action.cancel()
         await ctx.maybe_send_embed("Game has been stopped")
 
     @commands.guild_only()
