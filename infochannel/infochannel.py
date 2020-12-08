@@ -1,25 +1,50 @@
 import asyncio
-from typing import Union
+import logging
+from collections import defaultdict
+from typing import Dict, Optional, Union
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
 
-# Cog: Any = getattr(commands, "Cog", object)
-# listener = getattr(commands.Cog, "listener", None)  # Trusty + Sinbad
-# if listener is None:
-#     def listener(name=None):
-#         return lambda x: x
+# 10 minutes. Rate limit is 2 per 10, so 1 per 6 is safe.
+RATE_LIMIT_DELAY = 60 * 6  # If you're willing to risk rate limiting, you can decrease the delay
 
-RATE_LIMIT_DELAY = 60 * 10  # If you're willing to risk rate limiting, you can decrease the delay
+log = logging.getLogger("red.fox_v3.infochannel")
+
+
+async def get_channel_counts(category, guild):
+    # Gets count of bots
+    bot_num = len([m for m in guild.members if m.bot])
+    # Gets count of roles in the server
+    roles_num = len(guild.roles) - 1
+    # Gets count of channels in the server
+    # <number of total channels> - <number of channels in the stats category> - <categories>
+    channels_num = len(guild.channels) - len(category.voice_channels) - len(guild.categories)
+    # Gets all counts of members
+    members = guild.member_count
+    offline_num = len(list(filter(lambda m: m.status is discord.Status.offline, guild.members)))
+    online_num = members - offline_num
+    # Gets count of actual users
+    human_num = members - bot_num
+    return {
+        "members": members,
+        "humans": human_num,
+        "bots": bot_num,
+        "roles": roles_num,
+        "channels": channels_num,
+        "online": online_num,
+        "offline": offline_num,
+    }
 
 
 class InfoChannel(Cog):
     """
     Create a channel with updating server info
 
-    Less important information about the cog
+    This relies on editing channels, which is a strictly rate-limited activity.
+    As such, updates will not be frequent. Currently capped at 1 per 5 minutes per server.
     """
 
     def __init__(self, bot: Red):
@@ -29,43 +54,54 @@ class InfoChannel(Cog):
             self, identifier=731101021116710497110110101108, force_registration=True
         )
 
+        # self. so I can get the keys from this later
+        self.default_channel_names = {
+            "members": "Members: {count}",
+            "humans": "Humans: {count}",
+            "bots": "Bots: {count}",
+            "roles": "Roles: {count}",
+            "channels": "Channels: {count}",
+            "online": "Online: {count}",
+            "offline": "Offline: {count}",
+        }
+
+        default_channel_ids = {k: None for k in self.default_channel_names.keys()}
+        # Only members is enabled by default
+        default_enabled_counts = {k: k == "members" for k in self.default_channel_names.keys()}
+
         default_guild = {
             "category_id": None,
-            "channel_id": None,
-            "humanchannel_id": None,
-            "botchannel_id": None,
-            "roleschannel_id": None,
-            "channels_channel_id": None,
-            "onlinechannel_id": None,
-            "offlinechannel_id": None,
-            "role_ids": {},
-            "member_count": True,
-            "human_count": False,
-            "bot_count": False,
-            "roles_count": False,
-            "channels_count": False,
-            "online_count": False,
-            "offline_count": False,
-            "channel_names": {
-                "category_name": "Server Stats",
-                "members_channel": "Total Members: {count}",
-                "humans_channel": "Humans: {count}",
-                "bots_channel": "Bots: {count}",
-                "roles_channel": "Total Roles: {count}",
-                "channels_channel": "Total Channels: {count}",
-                "online_channel": "Online: {count}",
-                "offline_channel": "Offline:{count}",
-                "role_channel": "{role}: {count}",
-            },
+            "channel_ids": default_channel_ids,
+            "enabled_channels": default_enabled_counts,
+            "channel_names": self.default_channel_names,
         }
 
         self.config.register_guild(**default_guild)
 
+        self.default_role = {"enabled": False, "channel_id": None, "name": "{role}: {count}"}
+
+        self.config.register_role(**self.default_role)
+
         self._critical_section_wooah_ = 0
+
+        self.channel_data = defaultdict(dict)
+
+        self.edit_queue = defaultdict(lambda: defaultdict(lambda: asyncio.Queue(maxsize=2)))
+
+        self._rate_limited_edits: Dict[int, Dict[str, Optional[asyncio.Task]]] = defaultdict(
+            lambda: defaultdict(lambda: None)
+        )
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
         return
+
+    async def initialize(self):
+        for guild in self.bot.guilds:
+            await self.update_infochannel(guild)
+
+    def cog_unload(self):
+        self.stop_all_queues()
 
     @commands.command()
     @checks.admin()
@@ -89,29 +125,33 @@ class InfoChannel(Cog):
             category: Union[discord.CategoryChannel, None] = guild.get_channel(category_id)
 
         if category_id is not None and category is None:
-            await ctx.send("Info category has been deleted, recreate it?")
+            await ctx.maybe_send_embed("Info category has been deleted, recreate it?")
         elif category_id is None:
-            await ctx.send("Enable info channels on this server?")
+            await ctx.maybe_send_embed("Enable info channels on this server?")
         else:
-            await ctx.send("Do you wish to delete current info channels?")
+            await ctx.maybe_send_embed("Do you wish to delete current info channels?")
 
         msg = await self.bot.wait_for("message", check=check)
 
         if msg.content.upper() in ["N", "NO"]:
-            await ctx.send("Cancelled")
+            await ctx.maybe_send_embed("Cancelled")
             return
 
         if category is None:
             try:
                 await self.make_infochannel(guild)
             except discord.Forbidden:
-                await ctx.send("Failure: Missing permission to create neccessary channels")
+                await ctx.maybe_send_embed(
+                    "Failure: Missing permission to create necessary channels"
+                )
                 return
         else:
             await self.delete_all_infochannels(guild)
 
+        ctx.message = msg
+
         if not await ctx.tick():
-            await ctx.send("Done!")
+            await ctx.maybe_send_embed("Done!")
 
     @commands.group(aliases=["icset"])
     @checks.admin()
@@ -122,388 +162,189 @@ class InfoChannel(Cog):
         if not ctx.invoked_subcommand:
             pass
 
-    @infochannelset.command(name="membercount")
-    async def _infochannelset_membercount(self, ctx: commands.Context, enabled: bool = None):
-        """
-        Toggle an infochannel that shows the amount of total members in the server
-        """
-        guild = ctx.guild
-        if enabled is None:
-            enabled = not await self.config.guild(guild).member_count()
+    @infochannelset.command(name="togglechannel")
+    async def _infochannelset_togglechannel(
+        self, ctx: commands.Context, channel_type: str, enabled: Optional[bool] = None
+    ):
+        """Toggles the infochannel for the specified channel type.
 
-        await self.config.guild(guild).member_count.set(enabled)
-        await self.make_infochannel(ctx.guild)
-
-        if enabled:
-            await ctx.send("InfoChannel for member count has been enabled.")
-        else:
-            await ctx.send("InfoChannel for member count has been disabled.")
-
-    @infochannelset.command(name="humancount")
-    async def _infochannelset_humancount(self, ctx: commands.Context, enabled: bool = None):
-        """
-        Toggle an infochannel that shows the amount of human users in the server
+        Valid Types are:
+        - `members`: Total members on the server
+        - `humans`: Total members that aren't bots
+        - `bots`: Total bots
+        - `roles`: Total number of roles
+        - `channels`: Total number of channels excluding infochannels,
+        - `online`: Total online members,
+        - `offline`: Total offline members,
         """
         guild = ctx.guild
-        if enabled is None:
-            enabled = not await self.config.guild(guild).human_count()
+        if channel_type not in self.default_channel_names.keys():
+            await ctx.maybe_send_embed("Invalid channel type provided.")
+            return
 
-        await self.config.guild(guild).human_count.set(enabled)
-        await self.make_infochannel(ctx.guild)
+        if enabled is None:
+            enabled = not await self.config.guild(guild).enabled_channels.get_raw(channel_type)
+
+        await self.config.guild(guild).enabled_channels.set_raw(channel_type, value=enabled)
+        await self.make_infochannel(ctx.guild, channel_type=channel_type)
 
         if enabled:
-            await ctx.send("InfoChannel for human user count has been enabled.")
+            await ctx.maybe_send_embed(f"InfoChannel `{channel_type}` has been enabled.")
         else:
-            await ctx.send("InfoChannel for human user count has been disabled.")
+            await ctx.maybe_send_embed(f"InfoChannel `{channel_type}` has been disabled.")
 
-    @infochannelset.command(name="botcount")
-    async def _infochannelset_botcount(self, ctx: commands.Context, enabled: bool = None):
-        """
-        Toggle an infochannel that shows the amount of bots in the server
-        """
-        guild = ctx.guild
-        if enabled is None:
-            enabled = not await self.config.guild(guild).bot_count()
-
-        await self.config.guild(guild).bot_count.set(enabled)
-        await self.make_infochannel(ctx.guild)
-
-        if enabled:
-            await ctx.send("InfoChannel for bot count has been enabled.")
-        else:
-            await ctx.send("InfoChannel for bot count has been disabled.")
-
-    @infochannelset.command(name="rolescount")
-    async def _infochannelset_rolescount(self, ctx: commands.Context, enabled: bool = None):
-        """
-        Toggle an infochannel that shows the amount of roles in the server
-        """
-        guild = ctx.guild
-        if enabled is None:
-            enabled = not await self.config.guild(guild).roles_count()
-
-        await self.config.guild(guild).roles_count.set(enabled)
-        await self.make_infochannel(ctx.guild)
-
-        if enabled:
-            await ctx.send("InfoChannel for roles count has been enabled.")
-        else:
-            await ctx.send("InfoChannel for roles count has been disabled.")
-
-    @infochannelset.command(name="channelscount")
-    async def _infochannelset_channelscount(self, ctx: commands.Context, enabled: bool = None):
-        """
-        Toggle an infochannel that shows the amount of channels in the server
-        """
-        guild = ctx.guild
-        if enabled is None:
-            enabled = not await self.config.guild(guild).channels_count()
-
-        await self.config.guild(guild).channels_count.set(enabled)
-        await self.make_infochannel(ctx.guild)
-
-        if enabled:
-            await ctx.send("InfoChannel for channels count has been enabled.")
-        else:
-            await ctx.send("InfoChannel for channels count has been disabled.")
-
-    @infochannelset.command(name="onlinecount")
-    async def _infochannelset_onlinecount(self, ctx: commands.Context, enabled: bool = None):
-        """
-        Toggle an infochannel that shows the amount of online users in the server
-        """
-        guild = ctx.guild
-        if enabled is None:
-            enabled = not await self.config.guild(guild).online_count()
-
-        await self.config.guild(guild).online_count.set(enabled)
-        await self.make_infochannel(ctx.guild)
-
-        if enabled:
-            await ctx.send("InfoChannel for online user count has been enabled.")
-        else:
-            await ctx.send("InfoChannel for online user count has been disabled.")
-
-    @infochannelset.command(name="offlinecount")
-    async def _infochannelset_offlinecount(self, ctx: commands.Context, enabled: bool = None):
-        """
-        Toggle an infochannel that shows the amount of offline users in the server
-        """
-        guild = ctx.guild
-        if enabled is None:
-            enabled = not await self.config.guild(guild).offline_count()
-
-        await self.config.guild(guild).offline_count.set(enabled)
-        await self.make_infochannel(ctx.guild)
-
-        if enabled:
-            await ctx.send("InfoChannel for offline user count has been enabled.")
-        else:
-            await ctx.send("InfoChannel for offline user count has been disabled.")
-
-    @infochannelset.command(name="rolecount")
+    @infochannelset.command(name="togglerole")
     async def _infochannelset_rolecount(
         self, ctx: commands.Context, role: discord.Role, enabled: bool = None
     ):
-        """
-        Toggle an infochannel that shows the amount of users in the server with the specified role
-        """
-        guild = ctx.guild
-        role_data = await self.config.guild(guild).role_ids.all()
+        """Toggle an infochannel that shows the count of users with the specified role"""
+        if enabled is None:
+            enabled = not await self.config.role(role).enabled()
 
-        if str(role.id) in role_data.keys():
-            enabled = False
-        else:
-            enabled = True
+        await self.config.role(role).enabled.set(enabled)
 
-        await self.make_infochannel(ctx.guild, role)
+        await self.make_infochannel(ctx.guild, channel_role=role)
 
         if enabled:
-            await ctx.send(f"InfoChannel for {role.name} count has been enabled.")
+            await ctx.maybe_send_embed(f"InfoChannel for {role.name} count has been enabled.")
         else:
-            await ctx.send(f"InfoChannel for {role.name} count has been disabled.")
+            await ctx.maybe_send_embed(f"InfoChannel for {role.name} count has been disabled.")
 
-    @infochannelset.group(name="name")
-    async def channelname(self, ctx: commands.Context):
+    @infochannelset.command(name="name")
+    async def _infochannelset_name(self, ctx: commands.Context, channel_type: str, *, text=None):
         """
-        Change the name of the infochannels
-        """
-        if not ctx.invoked_subcommand:
-            pass
+        Change the name of the infochannel for the specified channel type.
 
-    @channelname.command(name="category")
-    async def _channelname_Category(self, ctx: commands.Context, *, text):
+        {count} must be used to display number of total members in the server.
+        Leave blank to set back to default.
+
+        Examples:
+        - `[p]infochannelset name members Cool Cats: {count}`
+        - `[p]infochannelset name bots {count} Robot Overlords`
+
+        Valid Types are:
+        - `members`: Total members on the server
+        - `humans`: Total members that aren't bots
+        - `bots`: Total bots
+        - `roles`: Total number of roles
+        - `channels`: Total number of channels excluding infochannels
+        - `online`: Total online members
+        - `offline`: Total offline members
+
+        Warning: This command counts against the channel update rate limit and may be queued.
         """
-        Change the name of the infochannel's category.
-        """
-        guild = ctx.message.guild
-        category_id = await self.config.guild(guild).category_id()
-        category: discord.CategoryChannel = guild.get_channel(category_id)
-        await category.edit(name=text)
-        await self.config.guild(guild).channel_names.category_name.set(text)
+        guild = ctx.guild
+        if channel_type not in self.default_channel_names.keys():
+            await ctx.maybe_send_embed("Invalid channel type provided.")
+            return
+
+        if text is None:
+            text = self.default_channel_names.get(channel_type)
+        elif "{count}" not in text:
+            await ctx.maybe_send_embed(
+                "Improperly formatted. Make sure to use `{count}` in your channel name"
+            )
+            return
+        elif len(text) > 93:
+            await ctx.maybe_send_embed("Name is too long, max length is 93.")
+            return
+
+        await self.config.guild(guild).channel_names.set_raw(channel_type, value=text)
+        await self.update_infochannel(guild, channel_type=channel_type)
         if not await ctx.tick():
-            await ctx.send("Done!")
+            await ctx.maybe_send_embed("Done!")
 
-    @channelname.command(name="members")
-    async def _channelname_Members(self, ctx: commands.Context, *, text=None):
-        """
-        Change the name of the total members infochannel.
-
-        {count} can be used to display number of total members in the server.
-        Leave blank to set back to default
-        Default is set to:
-            Total Members: {count}
-
-        Example Formats:
-            Total Members: {count}
-            {count} Members
-        """
-        guild = ctx.message.guild
-        if text:
-            await self.config.guild(guild).channel_names.members_channel.set(text)
-        else:
-            await self.config.guild(guild).channel_names.members_channel.clear()
-
-        await self.update_infochannel(guild)
-        if not await ctx.tick():
-            await ctx.send("Done!")
-
-    @channelname.command(name="humans")
-    async def _channelname_Humans(self, ctx: commands.Context, *, text=None):
-        """
-        Change the name of the human users infochannel.
-
-        {count} can be used to display number of users in the server.
-        Leave blank to set back to default
-        Default is set to:
-            Humans: {count}
-
-        Example Formats:
-            Users: {count}
-            {count} Users
-        """
-        guild = ctx.message.guild
-        if text:
-            await self.config.guild(guild).channel_names.humans_channel.set(text)
-        else:
-            await self.config.guild(guild).channel_names.humans_channel.clear()
-
-        await self.update_infochannel(guild)
-        if not await ctx.tick():
-            await ctx.send("Done!")
-
-    @channelname.command(name="bots")
-    async def _channelname_Bots(self, ctx: commands.Context, *, text=None):
-        """
-        Change the name of the bots infochannel.
-
-        {count} can be used to display number of bots in the server.
-        Leave blank to set back to default
-        Default is set to:
-            Bots: {count}
-
-        Example Formats:
-            Total Bots: {count}
-            {count} Robots
-        """
-        guild = ctx.message.guild
-        if text:
-            await self.config.guild(guild).channel_names.bots_channel.set(text)
-        else:
-            await self.config.guild(guild).channel_names.bots_channel.clear()
-
-        await self.update_infochannel(guild)
-        if not await ctx.tick():
-            await ctx.send("Done!")
-
-    @channelname.command(name="roles")
-    async def _channelname_Roles(self, ctx: commands.Context, *, text=None):
-        """
-        Change the name of the roles infochannel.
-
-        Do NOT confuse with the role command that counts number of members with a specified role
-
-        {count} can be used to display number of roles in the server.
-        Leave blank to set back to default
-        Default is set to:
-            Total Roles: {count}
-
-        Example Formats:
-            Total Roles: {count}
-            {count} Roles
-        """
-        guild = ctx.message.guild
-        if text:
-            await self.config.guild(guild).channel_names.roles_channel.set(text)
-        else:
-            await self.config.guild(guild).channel_names.roles_channel.clear()
-
-        await self.update_infochannel(guild)
-        if not await ctx.tick():
-            await ctx.send("Done!")
-
-    @channelname.command(name="channels")
-    async def _channelname_Channels(self, ctx: commands.Context, *, text=None):
-        """
-        Change the name of the channels infochannel.
-
-        {count} can be used to display number of channels in the server.
-        This does not count the infochannels
-        Leave blank to set back to default
-        Default is set to:
-            Total Channels: {count}
-
-        Example Formats:
-            Total Channels: {count}
-            {count} Channels
-        """
-        guild = ctx.message.guild
-        if text:
-            await self.config.guild(guild).channel_names.channels_channel.set(text)
-        else:
-            await self.config.guild(guild).channel_names.channels_channel.clear()
-
-        await self.update_infochannel(guild)
-        if not await ctx.tick():
-            await ctx.send("Done!")
-
-    @channelname.command(name="online")
-    async def _channelname_Online(self, ctx: commands.Context, *, text=None):
-        """
-        Change the name of the online infochannel.
-
-        {count} can be used to display number online members in the server.
-        Leave blank to set back to default
-        Default is set to:
-            Online: {count}
-
-        Example Formats:
-            Total Online: {count}
-            {count} Online Members
-        """
-        guild = ctx.message.guild
-        if text:
-            await self.config.guild(guild).channel_names.online_channel.set(text)
-        else:
-            await self.config.guild(guild).channel_names.online_channel.clear()
-
-        await self.update_infochannel(guild)
-        if not await ctx.tick():
-            await ctx.send("Done!")
-
-    @channelname.command(name="offline")
-    async def _channelname_Offline(self, ctx: commands.Context, *, text=None):
-        """
-        Change the name of the offline infochannel.
-
-        {count} can be used to display number offline members in the server.
-        Leave blank to set back to default
-        Default is set to:
-            Offline: {count}
-
-        Example Formats:
-            Total Offline: {count}
-            {count} Offline Members
-        """
-        guild = ctx.message.guild
-        if text:
-            await self.config.guild(guild).channel_names.offline_channel.set(text)
-        else:
-            await self.config.guild(guild).channel_names.offline_channel.clear()
-
-        await self.update_infochannel(guild)
-        if not await ctx.tick():
-            await ctx.send("Done!")
-
-    @channelname.command(name="role")
-    async def _channelname_Role(self, ctx: commands.Context, *, text=None):
+    @infochannelset.command(name="rolename")
+    async def _infochannelset_rolename(
+        self, ctx: commands.Context, role: discord.Role, *, text=None
+    ):
         """
         Change the name of the infochannel for specific roles.
 
-        All role infochannels follow this format.
-        Do NOT confuse with the roles command that counts number of roles in the server
+        {count} must be used to display number members with the given role.
+        {role} can be used for the roles name.
+        Leave blank to set back to default.
 
-        {count} can be used to display number members with the given role.
-        {role} can be used for the roles name
-        Leave blank to set back to default
-        Default is set to:
-            {role}: {count}
+        Default is set to: `{role}: {count}`
 
-        Example Formats:
-            {role}: {count}
-            {count} with {role} role
+        Examples:
+        - `[p]infochannelset rolename @Patrons {role}: {count}`
+        - `[p]infochannelset rolename Elite {count} members with {role} role`
+        - `[p]infochannelset rolename "Space Role" Total boosters: {count}`
+
+        Warning: This command counts against the channel update rate limit and may be queued.
         """
         guild = ctx.message.guild
-        if text:
-            await self.config.guild(guild).channel_names.role_channel.set(text)
-        else:
-            await self.config.guild(guild).channel_names.role_channel.clear()
+        if text is None:
+            text = self.default_role["name"]
+        elif "{count}" not in text:
+            await ctx.maybe_send_embed(
+                "Improperly formatted. Make sure to use `{count}` in your channel name"
+            )
+            return
 
-        await self.update_infochannel(guild)
+        await self.config.role(role).name.set(text)
+        await self.update_infochannel(guild, channel_role=role)
         if not await ctx.tick():
-            await ctx.send("Done!")
+            await ctx.maybe_send_embed("Done!")
 
-    async def make_infochannel(self, guild: discord.Guild, role: discord.Role = None):
-        membercount = await self.config.guild(guild).member_count()
-        humancount = await self.config.guild(guild).human_count()
-        botcount = await self.config.guild(guild).bot_count()
-        rolescount = await self.config.guild(guild).roles_count()
-        channelscount = await self.config.guild(guild).channels_count()
-        onlinecount = await self.config.guild(guild).online_count()
-        offlinecount = await self.config.guild(guild).offline_count()
+    async def create_individual_channel(
+        self, guild, category: discord.CategoryChannel, overwrites, channel_type, count
+    ):
+        # Delete the channel if it exists
+        channel_id = await self.config.guild(guild).channel_ids.get_raw(channel_type)
+        if channel_id is not None:
+            channel: discord.VoiceChannel = guild.get_channel(channel_id)
+            if channel:
+                self.stop_queue(guild.id, channel_type)
+                await channel.delete(reason="InfoChannel delete")
+
+        # Only make the channel if it's enabled
+        if await self.config.guild(guild).enabled_channels.get_raw(channel_type):
+            name = await self.config.guild(guild).channel_names.get_raw(channel_type)
+            name = name.format(count=count)
+            channel = await category.create_voice_channel(
+                name, reason="InfoChannel make", overwrites=overwrites
+            )
+            await self.config.guild(guild).channel_ids.set_raw(channel_type, value=channel.id)
+            return channel
+        return None
+
+    async def create_role_channel(
+        self, guild, category: discord.CategoryChannel, overwrites, role: discord.Role
+    ):
+        # Delete the channel if it exists
+        channel_id = await self.config.role(role).channel_id()
+        if channel_id is not None:
+            channel: discord.VoiceChannel = guild.get_channel(channel_id)
+            if channel:
+                self.stop_queue(guild.id, role.id)
+                await channel.delete(reason="InfoChannel delete")
+
+        # Only make the channel if it's enabled
+        if await self.config.role(role).enabled():
+            count = len(role.members)
+            name = await self.config.role(role).name()
+            name = name.format(role=role.name, count=count)
+            channel = await category.create_voice_channel(
+                name, reason="InfoChannel make", overwrites=overwrites
+            )
+            await self.config.role(role).channel_id.set(channel.id)
+            return channel
+        return None
+
+    async def make_infochannel(self, guild: discord.Guild, channel_type=None, channel_role=None):
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(connect=False),
             guild.me: discord.PermissionOverwrite(manage_channels=True, connect=True),
         }
 
-        #   Check for and create the category
+        # Check for and create the Infochannel category
         category_id = await self.config.guild(guild).category_id()
         if category_id is not None:
             category: discord.CategoryChannel = guild.get_channel(category_id)
-            if category is None:
-                await self.config.guild(guild).category_id.set(None)
+            if category is None:  # Category id is invalid, probably deleted.
                 category_id = None
-
         if category_id is None:
             category: discord.CategoryChannel = await guild.create_category(
                 "Server Stats", reason="InfoChannel Category make"
@@ -514,355 +355,319 @@ class InfoChannel(Cog):
 
         category: discord.CategoryChannel = guild.get_channel(category_id)
 
-        #  Remove the old members channel first
-        channel_id = await self.config.guild(guild).channel_id()
-        if category_id is not None:
-            channel: discord.VoiceChannel = guild.get_channel(channel_id)
-            if channel:
-                await channel.delete(reason="InfoChannel delete")
-        if membercount:
-            # Then create the new one
-            channel = await category.create_voice_channel(
-                "Total Members:", reason="InfoChannel make", overwrites=overwrites
+        channel_data = await get_channel_counts(category, guild)
+
+        # Only update a single channel
+        if channel_type is not None:
+            await self.create_individual_channel(
+                guild, category, overwrites, channel_type, channel_data[channel_type]
             )
-            await self.config.guild(guild).channel_id.set(channel.id)
+            return
+        if channel_role is not None:
+            await self.create_role_channel(guild, category, overwrites, channel_role)
+            return
 
-        # Remove the old human channel first
-        humanchannel_id = await self.config.guild(guild).humanchannel_id()
-        if category_id is not None:
-            humanchannel: discord.VoiceChannel = guild.get_channel(humanchannel_id)
-            if humanchannel:
-                await humanchannel.delete(reason="InfoChannel delete")
-        if humancount:
-            # Then create the new one
-            humanchannel = await category.create_voice_channel(
-                "Humans:", reason="InfoChannel humancount", overwrites=overwrites
+        # Update all channels
+        for channel_type in self.default_channel_names.keys():
+            await self.create_individual_channel(
+                guild, category, overwrites, channel_type, channel_data[channel_type]
             )
-            await self.config.guild(guild).humanchannel_id.set(humanchannel.id)
 
-        # Remove the old bot channel first
-        botchannel_id = await self.config.guild(guild).botchannel_id()
-        if category_id is not None:
-            botchannel: discord.VoiceChannel = guild.get_channel(botchannel_id)
-            if botchannel:
-                await botchannel.delete(reason="InfoChannel delete")
-        if botcount:
-            # Then create the new one
-            botchannel = await category.create_voice_channel(
-                "Bots:", reason="InfoChannel botcount", overwrites=overwrites
-            )
-            await self.config.guild(guild).botchannel_id.set(botchannel.id)
+        for role in guild.roles:
+            await self.create_role_channel(guild, category, overwrites, role)
 
-        # Remove the old roles channel first
-        roleschannel_id = await self.config.guild(guild).roleschannel_id()
-        if category_id is not None:
-            roleschannel: discord.VoiceChannel = guild.get_channel(roleschannel_id)
-            if roleschannel:
-                await roleschannel.delete(reason="InfoChannel delete")
-
-        if rolescount:
-            # Then create the new one
-            roleschannel = await category.create_voice_channel(
-                "Total Roles:", reason="InfoChannel rolescount", overwrites=overwrites
-            )
-            await self.config.guild(guild).roleschannel_id.set(roleschannel.id)
-
-        # Remove the old channels channel first
-        channels_channel_id = await self.config.guild(guild).channels_channel_id()
-        if category_id is not None:
-            channels_channel: discord.VoiceChannel = guild.get_channel(channels_channel_id)
-            if channels_channel:
-                await channels_channel.delete(reason="InfoChannel delete")
-        if channelscount:
-            # Then create the new one
-            channels_channel = await category.create_voice_channel(
-                "Total Channels:", reason="InfoChannel botcount", overwrites=overwrites
-            )
-            await self.config.guild(guild).channels_channel_id.set(channels_channel.id)
-
-        # Remove the old online channel first
-        onlinechannel_id = await self.config.guild(guild).onlinechannel_id()
-        if channel_id is not None:
-            onlinechannel: discord.VoiceChannel = guild.get_channel(onlinechannel_id)
-            if onlinechannel:
-                await onlinechannel.delete(reason="InfoChannel delete")
-        if onlinecount:
-            # Then create the new one
-            onlinechannel = await category.create_voice_channel(
-                "Online:", reason="InfoChannel onlinecount", overwrites=overwrites
-            )
-            await self.config.guild(guild).onlinechannel_id.set(onlinechannel.id)
-
-        # Remove the old offline channel first
-        offlinechannel_id = await self.config.guild(guild).offlinechannel_id()
-        if channel_id is not None:
-            offlinechannel: discord.VoiceChannel = guild.get_channel(offlinechannel_id)
-            if offlinechannel:
-                await offlinechannel.delete(reason="InfoChannel delete")
-        if offlinecount:
-            # Then create the new one
-            offlinechannel = await category.create_voice_channel(
-                "Offline:", reason="InfoChannel offlinecount", overwrites=overwrites
-            )
-            await self.config.guild(guild).offlinechannel_id.set(offlinechannel.id)
-
-        async with self.config.guild(guild).role_ids() as role_data:
-            # Remove the old role channels first
-            for role_id in role_data.keys():
-                role_channel_id = role_data[role_id]
-                if role_channel_id is not None:
-                    rolechannel: discord.VoiceChannel = guild.get_channel(role_channel_id)
-                    if rolechannel:
-                        await rolechannel.delete(reason="InfoChannel delete")
-
-            # The actual toggle for a role counter
-            if role:
-                if str(role.id) in role_data.keys():
-                    role_data.pop(str(role.id))  # if the role is there, then remove it
-                else:
-                    role_data[role.id] = None  # No channel created yet but we want one to be made
-            if role_data:
-                # Then create the new ones
-                for role_id in role_data.keys():
-                    rolechannel = await category.create_voice_channel(
-                        str(role_id) + ":", reason="InfoChannel rolecount", overwrites=overwrites
-                    )
-                    role_data[role_id] = rolechannel.id
-
-        await self.update_infochannel(guild)
+        # await self.update_infochannel(guild)
 
     async def delete_all_infochannels(self, guild: discord.Guild):
-        guild_data = await self.config.guild(guild).all()
-        role_data = guild_data["role_ids"]
-        category_id = guild_data["category_id"]
-        humanchannel_id = guild_data["humanchannel_id"]
-        botchannel_id = guild_data["botchannel_id"]
-        roleschannel_id = guild_data["roleschannel_id"]
-        channels_channel_id = guild_data["channels_channel_id"]
-        onlinechannel_id = guild_data["onlinechannel_id"]
-        offlinechannel_id = guild_data["offlinechannel_id"]
-        category: discord.CategoryChannel = guild.get_channel(category_id)
-        humanchannel: discord.VoiceChannel = guild.get_channel(humanchannel_id)
-        botchannel: discord.VoiceChannel = guild.get_channel(botchannel_id)
-        roleschannel: discord.VoiceChannel = guild.get_channel(roleschannel_id)
-        channels_channel: discord.VoiceChannel = guild.get_channel(channels_channel_id)
-        onlinechannel: discord.VoiceChannel = guild.get_channel(onlinechannel_id)
-        offlinechannel: discord.VoiceChannel = guild.get_channel(offlinechannel_id)
-        channel_id = guild_data["channel_id"]
-        channel: discord.VoiceChannel = guild.get_channel(channel_id)
-        await channel.delete(reason="InfoChannel delete")
-        if humanchannel_id is not None:
-            await humanchannel.delete(reason="InfoChannel delete")
-        if botchannel_id is not None:
-            await botchannel.delete(reason="InfoChannel delete")
-        if roleschannel_id is not None:
-            await roleschannel.delete(reason="InfoChannel delete")
-        if channels_channel is not None:
-            await channels_channel.delete(reason="InfoChannel delete")
-        if onlinechannel_id is not None:
-            await onlinechannel.delete(reason="InfoChannel delete")
-        if offlinechannel_id is not None:
-            await offlinechannel.delete(reason="InfoChannel delete")
+        self.stop_guild_queues(guild.id)  # Stop processing edits
+
+        # Delete regular channels
+        for channel_type in self.default_channel_names.keys():
+            channel_id = await self.config.guild(guild).channel_ids.get_raw(channel_type)
+            if channel_id is not None:
+                channel = guild.get_channel(channel_id)
+                if channel is not None:
+                    await channel.delete(reason="InfoChannel delete")
+                await self.config.guild(guild).channel_ids.clear_raw(channel_type)
+
+        # Delete role channels
+        for role in guild.roles:
+            channel_id = await self.config.role(role).channel_id()
+            if channel_id is not None:
+                channel = guild.get_channel(channel_id)
+                if channel is not None:
+                    await channel.delete(reason="InfoChannel delete")
+                await self.config.role(role).channel_id.clear()
+
+        # Delete the category last
+        category_id = await self.config.guild(guild).category_id()
         if category_id is not None:
-            await category.delete(reason="InfoChannel delete")
-        async with self.config.guild(guild).role_ids() as role_data:
-            if role_data:
-                for role_channel_id in role_data.values():
-                    rolechannel: discord.VoiceChannel = guild.get_channel(role_channel_id)
-                    if rolechannel:
-                        await rolechannel.delete(reason="InfoChannel delete")
+            category = guild.get_channel(category_id)
+            if category is not None:
+                await category.delete(reason="InfoChannel delete")
 
-        await self.config.guild(guild).clear()
+    async def add_to_queue(self, guild, channel, identifier, count, formatted_name):
+        self.channel_data[guild.id][identifier] = (count, formatted_name, channel.id)
+        if not self.edit_queue[guild.id][identifier].full():
+            try:
+                self.edit_queue[guild.id][identifier].put_nowait(identifier)
+            except asyncio.QueueFull:
+                pass  # If queue is full, disregard
 
-    async def update_infochannel(self, guild: discord.Guild):
+        if self._rate_limited_edits[guild.id][identifier] is None:
+            await self.start_queue(guild.id, identifier)
+
+    async def update_individual_channel(self, guild, channel_type, count, guild_data):
+        name = guild_data["channel_names"][channel_type]
+        name = name.format(count=count)
+        channel = guild.get_channel(guild_data["channel_ids"][channel_type])
+        if channel is None:
+            return  # abort
+        await self.add_to_queue(guild, channel, channel_type, count, name)
+
+    async def update_role_channel(self, guild, role: discord.Role, role_data):
+        if not role_data["enabled"]:
+            return  # Not enabled
+        count = len(role.members)
+        name = role_data["name"]
+        name = name.format(role=role.name, count=count)
+        channel = guild.get_channel(role_data["channel_id"])
+        if channel is None:
+            return  # abort
+        await self.add_to_queue(guild, channel, role.id, count, name)
+
+    async def update_infochannel(self, guild: discord.Guild, channel_type=None, channel_role=None):
+        if channel_type is None and channel_role is None:
+            return await self.trigger_updates_for(
+                guild,
+                members=True,
+                humans=True,
+                bots=True,
+                roles=True,
+                channels=True,
+                online=True,
+                offline=True,
+                extra_roles=set(guild.roles),
+            )
+
+        if channel_type is not None:
+            return await self.trigger_updates_for(guild, **{channel_type: True})
+
+        return await self.trigger_updates_for(guild, extra_roles=set(channel_role))
+
+        # category = guild.get_channel(await self.config.guild(guild).category_id())
+        #
+        # if category is None:
+        #     return  # Nothing to update, must be off
+        #
+        # channel_counts = await get_channel_counts(category, guild)
+        #
+        # # Update individual channel
+        # if channel_type is not None:
+        #     await self.update_individual_channel(guild, channel_type, channel_counts[channel_type])
+        #     return
+        # if channel_role is not None:
+        #     await self.update_role_channel(guild, channel_role)
+        #     return
+        #
+        # # Update all channels
+        # enabled_channels = await self.config.guild(guild).enabled_channels.all()
+        # for channel_type, enabled in enabled_channels.items():
+        #     if not enabled:
+        #         continue
+        #     await self.update_individual_channel(guild, channel_type, channel_counts[channel_type])
+        #
+        # all_roles = await self.config.all_roles()
+        # guild_role_ids = set(role.id for role in guild.roles)
+        # for role_id, role_data in all_roles.values():
+        #     if int(role_id) not in guild_role_ids:
+        #         continue
+        #     role: discord.Role = guild.get_role(int(role_id))
+        #     await self.update_role_channel(guild, role)
+
+    # def _start_timer(self, guild_id):
+    #     self._stop_timer(guild_id)
+    #     self._rate_limited_edits[guild_id] = asyncio.create_task(
+    #         self.sleep_then_wakup(guild_id)
+    #     )
+    #
+    # async def sleep_then_wakup(self, guild_id, wait_seconds):
+    #     await asyncio.sleep(wait_seconds)
+    #     asyncio.create_task(self.wakeup(guild_id))
+    #
+    # def _stop_timer(self, guild_id=None):
+    #     if guild_id is None:
+    #         for guild_id in self._timeout.keys():
+    #             if self._timeout[guild_id]:
+    #                 self._timeout[guild_id].cancel()
+    #                 self._timeout[guild_id] = None
+    #         # del self._timeout
+    #     else:
+    #         if self._timeout[guild_id]:
+    #             self._timeout[guild_id].cancel()
+    #             self._timeout[guild_id] = None
+    #             # del self._timeout[guild_id]
+    #
+    # async def wakeup(self, guild_id):
+    #     self._stop_timer(guild_id)
+    #     wait_seconds = await self._process_queue(guild_id)
+    #     self._start_timer(guild_id, wait_seconds)
+
+    async def start_queue(self, guild_id, identifier):
+        self._rate_limited_edits[guild_id][identifier] = asyncio.create_task(
+            self._process_queue(guild_id, identifier)
+        )
+
+    def stop_queue(self, guild_id, identifier):
+        if self._rate_limited_edits[guild_id][identifier] is not None:
+            self._rate_limited_edits[guild_id][identifier].cancel()
+
+    def stop_guild_queues(self, guild_id):
+        for identifier in self._rate_limited_edits[guild_id].keys():
+            self.stop_queue(guild_id, identifier)
+
+    def stop_all_queues(self):
+        for guild_id in self._rate_limited_edits.keys():
+            self.stop_guild_queues(guild_id)
+
+    async def _process_queue(self, guild_id, identifier):
+        while True:
+            identifier = await self.edit_queue[guild_id][identifier].get()  # Waits forever
+
+            count, formatted_name, channel_id = self.channel_data[guild_id][identifier]
+            channel: discord.VoiceChannel = self.bot.get_channel(channel_id)
+
+            if channel.name == formatted_name:
+                continue  # Nothing to process
+
+            log.debug(f"Processing guild_id: {guild_id} - identifier: {identifier}")
+
+            try:
+                await channel.edit(reason="InfoChannel update", name=formatted_name)
+            except (discord.Forbidden, discord.HTTPException):
+                pass  # Don't bother figuring it out
+            except discord.InvalidArgument:
+                log.exception(f"Invalid formatted infochannel: {formatted_name}")
+            else:
+                await asyncio.sleep(RATE_LIMIT_DELAY)  # Wait a reasonable amount of time
+
+    # async def update_infochannel_with_cooldown(self, guild):
+    #     """My attempt at preventing rate limits, lets see how it goes"""
+    #     if self._critical_section_wooah_:
+    #         if self._critical_section_wooah_ == 2:
+    #             # print("Already pending, skipping")
+    #             return  # Another one is already pending, don't queue more than one
+    #         # print("Queuing another update")
+    #         self._critical_section_wooah_ = 2
+    #
+    #         while self._critical_section_wooah_:
+    #             await asyncio.sleep(
+    #                 RATE_LIMIT_DELAY // 4
+    #             )  # Max delay ends up as 1.25 * RATE_LIMIT_DELAY
+    #
+    #         # print("Issuing queued update")
+    #         return await self.update_infochannel_with_cooldown(guild)
+    #
+    #     # print("Entering critical")
+    #     self._critical_section_wooah_ = 1
+    #     await self.update_infochannel(guild)
+    #     await asyncio.sleep(RATE_LIMIT_DELAY)
+    #     self._critical_section_wooah_ = 0
+    #     # print("Exiting critical")
+
+    # async def trigger_updates_for_all(self, guild_id):
+    #     guild = self.bot.get_guild(guild_id)
+    #     if guild is None:
+    #         return None
+    #
+    #     if await self.bot.cog_disabled_in_guild(self, guild):
+    #         # Stop this background process if cog is disabled
+    #         return None
+    #
+    #     await self.update_infochannel(guild)  # Refills the queue with updates
+    #     return 30
+
+    async def trigger_updates_for(self, guild, **kwargs):
+        extra_roles: Optional[set] = kwargs.pop("extra_roles", False)
         guild_data = await self.config.guild(guild).all()
-        humancount = guild_data["human_count"]
-        botcount = guild_data["bot_count"]
-        rolescount = guild_data["roles_count"]
-        channelscount = guild_data["channels_count"]
-        onlinecount = guild_data["online_count"]
-        offlinecount = guild_data["offline_count"]
 
-        category = guild.get_channel(guild_data["category_id"])
+        to_update = (
+            kwargs.keys() & guild_data["enabled_channels"].keys()
+        )  # Value in kwargs doesn't matter
 
-        # Gets count of bots
-        # bots = lambda x: x.bot
-        # def bots(x): return x.bot
+        log.debug(f"{to_update=}")
 
-        bot_num = len([m for m in guild.members if m.bot])
-        # bot_msg = f"Bots: {num}"
+        if to_update or extra_roles:
+            category = guild.get_channel(guild_data["category_id"])
+            if category is None:
+                return  # Nothing to update, must be off
 
-        # Gets count of roles in the server
-        roles_num = len(guild.roles) - 1
-        # roles_msg = f"Total Roles: {num}"
+            channel_data = await get_channel_counts(category, guild)
+            if to_update:
+                for channel_type in to_update:
+                    await self.update_individual_channel(
+                        guild, channel_type, channel_data[channel_type], guild_data
+                    )
+            if extra_roles:
+                role_data = await self.config.all_roles()
+                for channel_role in extra_roles:
+                    if channel_role.id in role_data:
+                        await self.update_role_channel(
+                            guild, channel_role, role_data[channel_role.id]
+                        )
 
-        # Gets count of channels in the server
-        # <number of total channels> - <number of channels in the stats category> - <categories>
-        channels_num = len(guild.channels) - len(category.voice_channels) - len(guild.categories)
-        # channels_msg = f"Total Channels: {num}"
-
-        # Gets all counts of members
-        members = guild.member_count
-        # member_msg = f"Total Members: {num}"
-        offline = len(list(filter(lambda m: m.status is discord.Status.offline, guild.members)))
-        # offline_msg = f"Offline: {num}"
-        online_num = members - offline
-        # online_msg = f"Online: {num}"
-
-        # Gets count of actual users
-        total = lambda x: not x.bot
-        human_num = len([m for m in guild.members if total(m)])
-        # human_msg = f"Users: {num}"
-
-        channel_id = guild_data["channel_id"]
-        if channel_id is None:
-            return False
-
-        botchannel_id = guild_data["botchannel_id"]
-        roleschannel_id = guild_data["roleschannel_id"]
-        channels_channel_id = guild_data["channels_channel_id"]
-        onlinechannel_id = guild_data["onlinechannel_id"]
-        offlinechannel_id = guild_data["offlinechannel_id"]
-        humanchannel_id = guild_data["humanchannel_id"]
-        channel_id = guild_data["channel_id"]
-        channel: discord.VoiceChannel = guild.get_channel(channel_id)
-        humanchannel: discord.VoiceChannel = guild.get_channel(humanchannel_id)
-        botchannel: discord.VoiceChannel = guild.get_channel(botchannel_id)
-        roleschannel: discord.VoiceChannel = guild.get_channel(roleschannel_id)
-        channels_channel: discord.VoiceChannel = guild.get_channel(channels_channel_id)
-        onlinechannel: discord.VoiceChannel = guild.get_channel(onlinechannel_id)
-        offlinechannel: discord.VoiceChannel = guild.get_channel(offlinechannel_id)
-
-        channel_names = await self.config.guild(guild).channel_names.all()
-
-        if guild_data["member_count"]:
-            name = channel_names["members_channel"].format(count=members)
-            await channel.edit(reason="InfoChannel update", name=name)
-
-        if humancount:
-            name = channel_names["humans_channel"].format(count=human_num)
-            await humanchannel.edit(reason="InfoChannel update", name=name)
-
-        if botcount:
-            name = channel_names["bots_channel"].format(count=bot_num)
-            await botchannel.edit(reason="InfoChannel update", name=name)
-
-        if rolescount:
-            name = channel_names["roles_channel"].format(count=roles_num)
-            await roleschannel.edit(reason="InfoChannel update", name=name)
-
-        if channelscount:
-            name = channel_names["channels_channel"].format(count=channels_num)
-            await channels_channel.edit(reason="InfoChannel update", name=name)
-
-        if onlinecount:
-            name = channel_names["online_channel"].format(count=online_num)
-            await onlinechannel.edit(reason="InfoChannel update", name=name)
-
-        if offlinecount:
-            name = channel_names["offline_channel"].format(count=offline)
-            await offlinechannel.edit(reason="InfoChannel update", name=name)
-
-        async with self.config.guild(guild).role_ids() as role_data:
-            if role_data:
-                for role_id, role_channel_id in role_data.items():
-                    rolechannel: discord.VoiceChannel = guild.get_channel(role_channel_id)
-                    role: discord.Role = guild.get_role(int(role_id))
-
-                    role_num = len(role.members)
-
-                    name = channel_names["role_channel"].format(count=role_num, role=role.name)
-                    await rolechannel.edit(reason="InfoChannel update", name=name)
-
-    async def update_infochannel_with_cooldown(self, guild):
-        """My attempt at preventing rate limits, lets see how it goes"""
-        if self._critical_section_wooah_:
-            if self._critical_section_wooah_ == 2:
-                # print("Already pending, skipping")
-                return  # Another one is already pending, don't queue more than one
-            # print("Queuing another update")
-            self._critical_section_wooah_ = 2
-
-            while self._critical_section_wooah_:
-                await asyncio.sleep(
-                    RATE_LIMIT_DELAY // 4
-                )  # Max delay ends up as 1.25 * RATE_LIMIT_DELAY
-
-            # print("Issuing queued update")
-            return await self.update_infochannel_with_cooldown(guild)
-
-        # print("Entering critical")
-        self._critical_section_wooah_ = 1
-        await self.update_infochannel(guild)
-        await asyncio.sleep(RATE_LIMIT_DELAY)
-        self._critical_section_wooah_ = 0
-        # print("Exiting critical")
-
-    @Cog.listener()
-    async def on_member_join(self, member: discord.Member):
+    @Cog.listener(name="on_member_join")
+    @Cog.listener(name="on_member_remove")
+    async def on_member_join_remove(self, member: discord.Member):
         if await self.bot.cog_disabled_in_guild(self, member.guild):
             return
-        await self.update_infochannel_with_cooldown(member.guild)
 
-    @Cog.listener()
-    async def on_member_remove(self, member: discord.Member):
-        if await self.bot.cog_disabled_in_guild(self, member.guild):
-            return
-        await self.update_infochannel_with_cooldown(member.guild)
+        if member.bot:
+            await self.trigger_updates_for(
+                member.guild, members=True, bots=True, online=True, offline=True
+            )
+        else:
+            await self.trigger_updates_for(
+                member.guild, members=True, humans=True, online=True, offline=True
+            )
 
     @Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if await self.bot.cog_disabled_in_guild(self, after.guild):
             return
-        onlinecount = await self.config.guild(after.guild).online_count()
-        if onlinecount:
-            if before.status != after.status:
-                await self.update_infochannel_with_cooldown(after.guild)
-        role_data = await self.config.guild(after.guild).role_ids.all()
-        if role_data:
-            b = set(before.roles)
-            a = set(after.roles)
-            if b != a:
-                await self.update_infochannel_with_cooldown(after.guild)
 
-    @Cog.listener()
-    async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
+        if before.status != after.status:
+            return await self.trigger_updates_for(after.guild, online=True, offline=True)
+
+        # XOR
+        c = set(after.roles) ^ set(before.roles)
+
+        if c:
+            await self.trigger_updates_for(after.guild, extra_roles=c)
+
+    @Cog.listener("on_guild_channel_create")
+    @Cog.listener("on_guild_channel_delete")
+    async def on_guild_channel_create_delete(self, channel: discord.TextChannel):
         if await self.bot.cog_disabled_in_guild(self, channel.guild):
             return
-        channelscount = await self.config.guild(channel.guild).channels_count()
-        if channelscount:
-            await self.update_infochannel_with_cooldown(channel.guild)
-
-    @Cog.listener()
-    async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel):
-        if await self.bot.cog_disabled_in_guild(self, channel.guild):
-            return
-        channelscount = await self.config.guild(channel.guild).channels_count()
-        if channelscount:
-            await self.update_infochannel_with_cooldown(channel.guild)
+        await self.trigger_updates_for(channel.guild, channels=True)
 
     @Cog.listener()
     async def on_guild_role_create(self, role):
         if await self.bot.cog_disabled_in_guild(self, role.guild):
             return
-
-        rolescount = await self.config.guild(role.guild).roles_count()
-        if rolescount:
-            await self.update_infochannel_with_cooldown(role.guild)
+        await self.trigger_updates_for(role.guild, roles=True)
 
     @Cog.listener()
     async def on_guild_role_delete(self, role):
         if await self.bot.cog_disabled_in_guild(self, role.guild):
             return
+        await self.trigger_updates_for(role.guild, roles=True)
 
-        rolescount = await self.config.guild(role.guild).roles_count()
-        if rolescount:
-            await self.update_infochannel_with_cooldown(role.guild)
-
-        # delete specific role counter if the role is deleted
-        async with self.config.guild(role.guild).role_ids() as role_data:
-            if str(role.id) in role_data.keys():
-                role_channel_id = role_data[str(role.id)]
-                rolechannel: discord.VoiceChannel = role.guild.get_channel(role_channel_id)
+        role_channel_id = await self.config.role(role).channel_id()
+        if role_channel_id is not None:
+            rolechannel: discord.VoiceChannel = role.guild.get_channel(role_channel_id)
+            if rolechannel:
                 await rolechannel.delete(reason="InfoChannel delete")
-                del role_data[str(role.id)]
+
+        await self.config.role(role).clear()
