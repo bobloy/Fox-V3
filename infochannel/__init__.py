@@ -1,5 +1,3 @@
-import asyncio
-
 from .infochannel import InfoChannel
 
 
