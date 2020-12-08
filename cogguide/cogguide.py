@@ -16,7 +16,19 @@ LINK_PATTERN = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#-@]+)\)")
 
 BOTNAME_PATTERN = re.compile(r"\[botname]")
 
-WARNING_PATTERN = re.compile(r"Warning: (.*)")
+
+# Adding more as necessary.
+# Options:
+# [X] attention
+# [ ] caution
+# [ ] danger
+# [ ] error
+# [X] hint
+# [X] important
+# [X] note
+# [X] tip
+# [X] warning
+NOTICE_PATTERNS = re.compile(r"^(Warning|Note|Attention|Hint|Important|Tip): (.*)", re.MULTILINE)
 
 
 def get_parent_tree(command: commands.Command):
@@ -67,12 +79,11 @@ def format_text(text):
         # We shouldn't get here:
         return s
 
-    def replace_warning(m: re.Match) -> str:
-        s = m.group(1)
-        return f".. warning:: {s}\n"
+    def replace_notice(m: re.Match) -> str:
+        return f".. {m.group(1)}:: {m.group(2)}\n"
 
     out = BOTNAME_PATTERN.sub(replace_botname, text)
-    out = WARNING_PATTERN.sub(replace_warning, out)
+    out = NOTICE_PATTERNS.sub(replace_notice, out)
     return out
 
 
