@@ -455,64 +455,6 @@ class InfoChannel(Cog):
 
         return await self.trigger_updates_for(guild, extra_roles=set(channel_role))
 
-        # category = guild.get_channel(await self.config.guild(guild).category_id())
-        #
-        # if category is None:
-        #     return  # Nothing to update, must be off
-        #
-        # channel_counts = await get_channel_counts(category, guild)
-        #
-        # # Update individual channel
-        # if channel_type is not None:
-        #     await self.update_individual_channel(guild, channel_type, channel_counts[channel_type])
-        #     return
-        # if channel_role is not None:
-        #     await self.update_role_channel(guild, channel_role)
-        #     return
-        #
-        # # Update all channels
-        # enabled_channels = await self.config.guild(guild).enabled_channels.all()
-        # for channel_type, enabled in enabled_channels.items():
-        #     if not enabled:
-        #         continue
-        #     await self.update_individual_channel(guild, channel_type, channel_counts[channel_type])
-        #
-        # all_roles = await self.config.all_roles()
-        # guild_role_ids = set(role.id for role in guild.roles)
-        # for role_id, role_data in all_roles.values():
-        #     if int(role_id) not in guild_role_ids:
-        #         continue
-        #     role: discord.Role = guild.get_role(int(role_id))
-        #     await self.update_role_channel(guild, role)
-
-    # def _start_timer(self, guild_id):
-    #     self._stop_timer(guild_id)
-    #     self._rate_limited_edits[guild_id] = asyncio.create_task(
-    #         self.sleep_then_wakup(guild_id)
-    #     )
-    #
-    # async def sleep_then_wakup(self, guild_id, wait_seconds):
-    #     await asyncio.sleep(wait_seconds)
-    #     asyncio.create_task(self.wakeup(guild_id))
-    #
-    # def _stop_timer(self, guild_id=None):
-    #     if guild_id is None:
-    #         for guild_id in self._timeout.keys():
-    #             if self._timeout[guild_id]:
-    #                 self._timeout[guild_id].cancel()
-    #                 self._timeout[guild_id] = None
-    #         # del self._timeout
-    #     else:
-    #         if self._timeout[guild_id]:
-    #             self._timeout[guild_id].cancel()
-    #             self._timeout[guild_id] = None
-    #             # del self._timeout[guild_id]
-    #
-    # async def wakeup(self, guild_id):
-    #     self._stop_timer(guild_id)
-    #     wait_seconds = await self._process_queue(guild_id)
-    #     self._start_timer(guild_id, wait_seconds)
-
     async def start_queue(self, guild_id, identifier):
         self._rate_limited_edits[guild_id][identifier] = asyncio.create_task(
             self._process_queue(guild_id, identifier)
@@ -550,42 +492,6 @@ class InfoChannel(Cog):
                 log.exception(f"Invalid formatted infochannel: {formatted_name}")
             else:
                 await asyncio.sleep(RATE_LIMIT_DELAY)  # Wait a reasonable amount of time
-
-    # async def update_infochannel_with_cooldown(self, guild):
-    #     """My attempt at preventing rate limits, lets see how it goes"""
-    #     if self._critical_section_wooah_:
-    #         if self._critical_section_wooah_ == 2:
-    #             # print("Already pending, skipping")
-    #             return  # Another one is already pending, don't queue more than one
-    #         # print("Queuing another update")
-    #         self._critical_section_wooah_ = 2
-    #
-    #         while self._critical_section_wooah_:
-    #             await asyncio.sleep(
-    #                 RATE_LIMIT_DELAY // 4
-    #             )  # Max delay ends up as 1.25 * RATE_LIMIT_DELAY
-    #
-    #         # print("Issuing queued update")
-    #         return await self.update_infochannel_with_cooldown(guild)
-    #
-    #     # print("Entering critical")
-    #     self._critical_section_wooah_ = 1
-    #     await self.update_infochannel(guild)
-    #     await asyncio.sleep(RATE_LIMIT_DELAY)
-    #     self._critical_section_wooah_ = 0
-    #     # print("Exiting critical")
-
-    # async def trigger_updates_for_all(self, guild_id):
-    #     guild = self.bot.get_guild(guild_id)
-    #     if guild is None:
-    #         return None
-    #
-    #     if await self.bot.cog_disabled_in_guild(self, guild):
-    #         # Stop this background process if cog is disabled
-    #         return None
-    #
-    #     await self.update_infochannel(guild)  # Refills the queue with updates
-    #     return 30
 
     async def trigger_updates_for(self, guild, **kwargs):
         extra_roles: Optional[set] = kwargs.pop("extra_roles", False)
