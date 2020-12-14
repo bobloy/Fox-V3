@@ -12,7 +12,8 @@ log = logging.getLogger("red.fox-v3.cogguide")
 
 EXCLUDED_LIST = ["reinstallreqs"]
 
-LINK_PATTERN = re.compile(r"\[(.+)]\s?\((https?:\/\/[\w\d.\/?=#-@]+)\)")
+# Matches [link](https://website.com) but not `[link](https://web.com)`
+LINK_PATTERN = re.compile(r"(?<!`)\[(.+?)]\s?\((https?:\/\/[\w\d.\/?=#-@]+)\)(?!`)")
 
 BOTNAME_PATTERN = re.compile(r"\[botname]")
 
