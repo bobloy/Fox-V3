@@ -453,7 +453,7 @@ class InfoChannel(Cog):
         if channel_type is not None:
             return await self.trigger_updates_for(guild, **{channel_type: True})
 
-        return await self.trigger_updates_for(guild, extra_roles=set(channel_role))
+        return await self.trigger_updates_for(guild, extra_roles={channel_role})
 
     async def start_queue(self, guild_id, identifier):
         self._rate_limited_edits[guild_id][identifier] = asyncio.create_task(
