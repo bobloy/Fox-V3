@@ -8,6 +8,7 @@ from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.asyncio import run_in_event_loop
 from apscheduler.util import datetime_to_utc_timestamp
 from redbot.core import Config
+
 # TODO: use get_lock on config maybe
 from redbot.core.bot import Red
 from redbot.core.utils import AsyncIter
@@ -25,7 +26,6 @@ class RedConfigJobStore(MemoryJobStore):
         self.bot = bot
         self.pickle_protocol = pickle.HIGHEST_PROTOCOL
         self._eventloop = self.bot.loop  # Used for @run_in_event_loop
-
 
     @run_in_event_loop
     def start(self, scheduler, alias):
