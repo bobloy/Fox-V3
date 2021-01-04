@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import discord
 from apscheduler.triggers.base import BaseTrigger
@@ -269,20 +269,23 @@ class Task:
             )
             return False
 
-        actual_message: discord.Message = channel.last_message
+        actual_message: Optional[discord.Message] = channel.last_message
         # I'd like to present you my chain of increasingly desperate message fetching attempts
         if actual_message is None:
-            # log.warning("No message found in channel cache yet, skipping execution")
-            # return
-            actual_message = await channel.fetch_message(channel.last_message_id)
-            if actual_message is None:  # last_message_id was an invalid message I guess
-                actual_message = await channel.history(limit=1).flatten()
-                if not actual_message:  # Basically only happens if the channel has no messages
-                    actual_message = await author.history(limit=1).flatten()
-                    if not actual_message:  # Okay, the *author* has never sent a message?
-                        log.warning("No message found in channel cache yet, skipping execution")
-                        return False
-                actual_message = actual_message[0]
+            # Skip this one, never goes well
+            # try:
+            #     actual_message = await channel.fetch_message(channel.last_message_id)
+            # except discord.NotFound:
+            #     actual_message = None
+            # if actual_message is None:  # last_message_id was an invalid message I guess
+
+            actual_message = await channel.history(limit=1).flatten()
+            if not actual_message:  # Basically only happens if the channel has no messages
+                actual_message = await author.history(limit=1).flatten()
+                if not actual_message:  # Okay, the *author* has never sent a message?
+                    log.warning("No message found in channel cache yet, skipping execution")
+                    return False
+            actual_message = actual_message[0]
 
         message = FakeMessage(actual_message)
         # message = FakeMessage2
