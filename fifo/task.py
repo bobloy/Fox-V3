@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import discord
 from apscheduler.triggers.base import BaseTrigger
@@ -190,14 +190,23 @@ class Task:
         await self._decode_time_triggers()
         return self.data
 
-    async def get_triggers(self) -> List[BaseTrigger]:
+    async def get_triggers(self) -> Tuple[List[BaseTrigger], List[BaseTrigger]]:
         if not self.data:
             await self.load_from_config()
 
         if self.data is None or "triggers" not in self.data:  # No triggers
-            return []
+            return [], []
 
-        return [get_trigger(t) for t in self.data["triggers"]]
+        trigs = []
+        expired_trigs = []
+        for t in self.data["triggers"]:
+            trig = get_trigger(t)
+            if check_expired_trigger(trig):
+                expired_trigs.append(t)
+            else:
+                trigs.append(t)
+
+        return trigs, expired_trigs
 
     async def get_combined_trigger(self) -> Union[BaseTrigger, None]:
         if not self.data:
