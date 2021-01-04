@@ -52,7 +52,7 @@ def _get_run_times(job: Job, now: datetime = None):
 
     if now is None:
         now = datetime(MAXYEAR, 12, 31, 23, 59, 59, 999999, tzinfo=job.next_run_time.tzinfo)
-        yield from _get_run_times(job, now)
+        yield from _get_run_times(job, now)  # Recursion
         raise StopIteration()
 
     next_run_time = job.next_run_time
@@ -235,6 +235,7 @@ class FIFO(commands.Cog):
         """Debug command to fix missed executions.
 
         If you see a negative "Next run time" when adding a trigger, this may help resolve it.
+        Check the logs when using this command.
         """
 
         self.scheduler.wakeup()
@@ -391,10 +392,14 @@ class FIFO(commands.Cog):
 
         else:
             embed.add_field(name="Server", value="Server not found", inline=False)
+        triggers, expired_triggers = await task.get_triggers()
 
-        trigger_str = "\n".join(str(t) for t in await task.get_triggers())
+        trigger_str = "\n".join(str(t) for t in triggers)
+        expired_str = "\n".join(str(t) for t in expired_triggers)
         if trigger_str:
             embed.add_field(name="Triggers", value=trigger_str, inline=False)
+        if expired_str:
+            embed.add_field(name="Expired Triggers", value=expired_str, inline=False)
 
         job = await self._get_job(task)
         if job and job.next_run_time:
