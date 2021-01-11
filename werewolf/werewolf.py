@@ -50,15 +50,17 @@ class Werewolf(Cog):
 
     def cog_unload(self):
         log.debug("Unload called")
-        for game in self.games.values():
-            del game
+        for key in self.games.keys():
+            del self.games[key]
 
     @commands.command()
     async def buildgame(self, ctx: commands.Context):
         """
         Create game codes to run custom games.
 
-        Pick the roles or randomized roles you want to include in a game
+        Pick the roles or randomized roles you want to include in a game.
+
+        Note: The same role can be picked more than once.
         """
         gb = GameBuilder()
         code = await gb.build_game(ctx)
@@ -84,9 +86,6 @@ class Werewolf(Cog):
         Lists current guild settings
         """
         valid, role, category, channel, log_channel = await self._get_settings(ctx)
-        # if not valid:
-        #     await ctx.send("Failed to get settings")
-        #     return None
 
         embed = discord.Embed(
             title="Current Guild Settings",
