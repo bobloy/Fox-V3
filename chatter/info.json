@@ -3,7 +3,7 @@
     "Bobloy"
   ],
   "min_bot_version": "3.4.0",
-  "description": "Create an offline chatbot that talks like your average member using Machine Learning",
+  "description": "Create an offline chatbot that talks like your average member using Machine Learning. See setup instructions at https://github.com/bobloy/Fox-V3/tree/master/chatter",
   "hidden": false,
   "install_msg": "Thank you for installing Chatter! Please make sure you check the install instructions at https://github.com/bobloy/Fox-V3/blob/master/chatter/README.md\nAfter that, get started ith `[p]load chatter` and `[p]help Chatter`",
   "requirements": [
