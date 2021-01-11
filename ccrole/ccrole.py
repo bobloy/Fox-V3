@@ -292,13 +292,13 @@ class CCRole(commands.Cog):
         # Thank you Cog-Creators
 
         cmd = ctx.invoked_with
-        cmd = cmd.lower()  # Continues the proud case_insentivity tradition of ccrole
+        cmd = cmd.lower()  # Continues the proud case-insensitivity tradition of ccrole
         guild = ctx.guild
         # message = ctx.message  # Unneeded since switch to `on_message_without_command` from `on_command_error`
 
-        cmdlist = self.config.guild(guild).cmdlist
+        cmd_list = self.config.guild(guild).cmdlist
         # cmd = message.content[len(prefix) :].split()[0].lower()
-        cmd = await cmdlist.get_raw(cmd, default=None)
+        cmd = await cmd_list.get_raw(cmd, default=None)
 
         if cmd is not None:
             await self.eval_cc(cmd, message, ctx)
