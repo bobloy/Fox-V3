@@ -1,11 +1,10 @@
 import logging
-from typing import List, Union
+from typing import Optional
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
-from redbot.core.utils import AsyncIter
 from redbot.core.utils.menus import DEFAULT_CONTROLS, menu
 
 from werewolf.builder import (
@@ -392,7 +391,7 @@ class Werewolf(Cog):
             else:
                 await ctx.maybe_send_embed("Role ID not found")
 
-    async def _get_game(self, ctx: commands.Context, game_code=None) -> Union[Game, None]:
+    async def _get_game(self, ctx: commands.Context, game_code=None) -> Optional[Game]:
         guild: discord.Guild = getattr(ctx, "guild", None)
 
         if guild is None:
@@ -419,7 +418,7 @@ class Werewolf(Cog):
 
         return self.games[guild.id]
 
-    async def _game_start(self, game):
+    async def _game_start(self, game: Game):
         await game.start()
 
     async def _get_settings(self, ctx):
