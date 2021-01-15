@@ -146,14 +146,15 @@ class FIFO(commands.Cog):
         await task.delete_self()
 
     async def _process_task(self, task: Task):
-        job: Union[Job, None] = await self._get_job(task)
-        if job is not None:
-            combined_trigger_ = await task.get_combined_trigger()
-            if combined_trigger_ is None:
-                job.remove()
-            else:
-                job.reschedule(combined_trigger_)
-            return job
+        # None of this is necessar, we have `replace_existing` already
+        # job: Union[Job, None] = await self._get_job(task)
+        # if job is not None:
+        #     combined_trigger_ = await task.get_combined_trigger()
+        #     if combined_trigger_ is None:
+        #         job.remove()
+        #     else:
+        #         job.reschedule(combined_trigger_)
+        #     return job
         return await self._add_job(task)
 
     async def _get_job(self, task: Task) -> Job:
@@ -173,9 +174,10 @@ class FIFO(commands.Cog):
         )
 
     async def _resume_job(self, task: Task):
-        try:
-            job = self.scheduler.resume_job(job_id=_assemble_job_id(task.name, task.guild_id))
-        except JobLookupError:
+        job: Union[Job, None] = await self._get_job(task)
+        if job is not None:
+            job.resume()
+        else:
             job = await self._process_task(task)
         return job
 

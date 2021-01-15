@@ -6,7 +6,6 @@ import discord
 from apscheduler.triggers.base import BaseTrigger
 from apscheduler.triggers.combining import OrTrigger
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from discord.utils import time_snowflake
 import pytz
@@ -37,7 +36,7 @@ def get_trigger(data):
 
 
 def check_expired_trigger(trigger: BaseTrigger):
-    return trigger.get_next_fire_time(None, datetime.now(pytz.utc)) is not None
+    return trigger.get_next_fire_time(None, datetime.now(pytz.utc)) is None
 
 
 def parse_triggers(data: Union[Dict, None]):
