@@ -1,17 +1,18 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import discord
 from apscheduler.triggers.base import BaseTrigger
 from apscheduler.triggers.combining import OrTrigger
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from discord.utils import time_snowflake
-from pytz import timezone
+import pytz
 from redbot.core import Config, commands
 from redbot.core.bot import Red
+
+from fifo.date_trigger import CustomDateTrigger
 
 log = logging.getLogger("red.fox_v3.fifo.task")
 
@@ -26,7 +27,7 @@ def get_trigger(data):
         return IntervalTrigger(days=parsed_time.days, seconds=parsed_time.seconds)
 
     if data["type"] == "date":
-        return DateTrigger(data["time_data"], timezone=data["tzinfo"])
+        return CustomDateTrigger(data["time_data"], timezone=data["tzinfo"])
 
     if data["type"] == "cron":
         return CronTrigger.from_crontab(data["time_data"], timezone=data["tzinfo"])
@@ -34,14 +35,25 @@ def get_trigger(data):
     return False
 
 
+def check_expired_trigger(trigger: BaseTrigger):
+    return trigger.get_next_fire_time(None, datetime.now(pytz.utc)) is None
+
+
 def parse_triggers(data: Union[Dict, None]):
     if data is None or not data.get("triggers", False):  # No triggers
         return None
 
     if len(data["triggers"]) > 1:  # Multiple triggers
-        return OrTrigger([get_trigger(t_data) for t_data in data["triggers"]])
+        triggers_list = [get_trigger(t_data) for t_data in data["triggers"]]
+        triggers_list = [t for t in triggers_list if not check_expired_trigger(t)]
+        if not triggers_list:
+            return None
+        return OrTrigger(triggers_list)
     else:
-        return get_trigger(data["triggers"][0])
+        trigger = get_trigger(data["triggers"][0])
+        if check_expired_trigger(trigger):
+            return None
+        return trigger
 
 
 class FakeMessage:
@@ -66,11 +78,11 @@ def neuter_message(message: FakeMessage):
 
 
 class Task:
-    default_task_data = {"triggers": [], "command_str": ""}
+    default_task_data = {"triggers": [], "command_str": "", "expired_triggers": []}
 
     default_trigger = {
         "type": "",
-        "time_data": None,  # Used for Interval and Date Triggers
+        "time_data": None,
         "tzinfo": None,
     }
 
@@ -87,9 +99,10 @@ class Task:
 
     async def _encode_time_triggers(self):
         if not self.data or not self.data.get("triggers", None):
-            return []
+            return [], []
 
         triggers = []
+        expired_triggers = []
         for t in self.data["triggers"]:
             if t["type"] == "interval":  # Convert into timedelta
                 td: timedelta = t["time_data"]
@@ -101,13 +114,15 @@ class Task:
 
             if t["type"] == "date":  # Convert into datetime
                 dt: datetime = t["time_data"]
-                triggers.append(
-                    {
-                        "type": t["type"],
-                        "time_data": dt.isoformat(),
-                        "tzinfo": getattr(t["tzinfo"], "zone", None),
-                    }
-                )
+                data_to_append = {
+                    "type": t["type"],
+                    "time_data": dt.isoformat(),
+                    "tzinfo": getattr(t["tzinfo"], "zone", None),
+                }
+                if dt < datetime.now(pytz.utc):
+                    expired_triggers.append(data_to_append)
+                else:
+                    triggers.append(data_to_append)
                 continue
 
             if t["type"] == "cron":
@@ -125,7 +140,7 @@ class Task:
 
             raise NotImplemented
 
-        return triggers
+        return triggers, expired_triggers
 
     async def _decode_time_triggers(self):
         if not self.data or not self.data.get("triggers", None):
@@ -138,7 +153,7 @@ class Task:
 
             # First decode timezone if there is one
             if t["tzinfo"] is not None:
-                t["tzinfo"] = timezone(t["tzinfo"])
+                t["tzinfo"] = pytz.timezone(t["tzinfo"])
 
             if t["type"] == "interval":  # Convert into timedelta
                 t["time_data"] = timedelta(**t["time_data"])
@@ -174,14 +189,23 @@ class Task:
         await self._decode_time_triggers()
         return self.data
 
-    async def get_triggers(self) -> List[Union[IntervalTrigger, DateTrigger]]:
+    async def get_triggers(self) -> Tuple[List[BaseTrigger], List[BaseTrigger]]:
         if not self.data:
             await self.load_from_config()
 
         if self.data is None or "triggers" not in self.data:  # No triggers
-            return []
+            return [], []
 
-        return [get_trigger(t) for t in self.data["triggers"]]
+        trigs = []
+        expired_trigs = []
+        for t in self.data["triggers"]:
+            trig = get_trigger(t)
+            if check_expired_trigger(trig):
+                expired_trigs.append(t)
+            else:
+                trigs.append(t)
+
+        return trigs, expired_trigs
 
     async def get_combined_trigger(self) -> Union[BaseTrigger, None]:
         if not self.data:
@@ -201,7 +225,10 @@ class Task:
         data_to_save = self.default_task_data.copy()
         if self.data:
             data_to_save["command_str"] = self.get_command_str()
-            data_to_save["triggers"] = await self._encode_time_triggers()
+            (
+                data_to_save["triggers"],
+                data_to_save["expired_triggers"],
+            ) = await self._encode_time_triggers()
 
         to_save = {
             "guild_id": self.guild_id,
@@ -217,7 +244,10 @@ class Task:
             return
 
         data_to_save = self.data.copy()
-        data_to_save["triggers"] = await self._encode_time_triggers()
+        (
+            data_to_save["triggers"],
+            data_to_save["expired_triggers"],
+        ) = await self._encode_time_triggers()
 
         await self.config.guild_from_id(self.guild_id).tasks.set_raw(
             self.name, "data", value=data_to_save
@@ -247,12 +277,16 @@ class Task:
             )
             return False
 
-        actual_message: discord.Message = channel.last_message
+        actual_message: Optional[discord.Message] = channel.last_message
         # I'd like to present you my chain of increasingly desperate message fetching attempts
         if actual_message is None:
             # log.warning("No message found in channel cache yet, skipping execution")
             # return
-            actual_message = await channel.fetch_message(channel.last_message_id)
+            if channel.last_message_id is not None:
+                try:
+                    actual_message = await channel.fetch_message(channel.last_message_id)
+                except discord.NotFound:
+                    actual_message = None
             if actual_message is None:  # last_message_id was an invalid message I guess
                 actual_message = await channel.history(limit=1).flatten()
                 if not actual_message:  # Basically only happens if the channel has no messages
