@@ -171,6 +171,7 @@ class FIFO(commands.Cog):
             id=_assemble_job_id(task.name, task.guild_id),
             trigger=combined_trigger_,
             name=task.name,
+            replace_existing=True,
         )
 
     async def _resume_job(self, task: Task):
