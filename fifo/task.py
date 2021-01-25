@@ -3,12 +3,12 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Union
 
 import discord
+import pytz
 from apscheduler.triggers.base import BaseTrigger
 from apscheduler.triggers.combining import OrTrigger
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from discord.utils import time_snowflake
-import pytz
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 
@@ -56,10 +56,67 @@ def parse_triggers(data: Union[Dict, None]):
         return trigger
 
 
-class FakeMessage:
-    def __init__(self, message: discord.Message):
+# class FakeMessage:
+#     def __init__(self, message: discord.Message):
+#         d = {k: getattr(message, k, None) for k in dir(message)}
+#         self.__dict__.update(**d)
+
+
+# Potential FakeMessage subclass of Message
+# class DeleteSlots(type):
+#     @classmethod
+#     def __prepare__(metacls, name, bases):
+#         """Borrowed a bit from https://stackoverflow.com/q/56579348"""
+#         super_prepared = super().__prepare__(name, bases)
+#         print(super_prepared)
+#         return super_prepared
+
+
+class FakeMessage(discord.Message):
+    def __init__(self, *args, message: discord.Message, **kwargs):
         d = {k: getattr(message, k, None) for k in dir(message)}
-        self.__dict__.update(**d)
+        for k, v in d.items():
+            if k.lower().startswith("_handle"):
+                continue
+            try:
+                # log.debug(f"{k=} {v=}")
+                setattr(self, k, v)
+            except TypeError:
+                # log.exception("This is fine")
+                pass
+            except AttributeError:
+                # log.exception("This is fine")
+                pass
+
+        self.id = time_snowflake(datetime.utcnow(), high=False)  # Pretend to be now
+        self.type = discord.MessageType.default
+
+    def process_the_rest(
+        self,
+        author: discord.Member,
+        channel: discord.TextChannel,
+        content,
+    ):
+        # self.content = content
+        # log.debug(self.content)
+        self._handle_content(content)
+        # log.debug(self.content)
+
+        self.mention_everyone = "@everyone" in self.content or "@here" in self.content
+
+        # for handler in ('author', 'member', 'mentions', 'mention_roles', 'call', 'flags'):
+        #     try:
+        #         getattr(self, '_handle_%s' % handler)(data[handler])
+        #     except KeyError:
+        #         continue
+        self.author = author
+        # self._handle_author(author._user._to_minimal_user_json())
+        # self._handle_member(author)
+        self._rebind_channel_reference(channel)
+        self._handle_mention_roles(self.raw_role_mentions)
+        self._handle_mentions(self.raw_mentions)
+
+        # self.__dict__.update(**d)
 
 
 def neuter_message(message: FakeMessage):
@@ -270,7 +327,7 @@ class Task:
                 f"Could not execute Task[{self.name}] due to missing channel: {self.channel_id}"
             )
             return False
-        author: discord.User = guild.get_member(self.author_id)
+        author: discord.Member = guild.get_member(self.author_id)
         if author is None:
             log.warning(
                 f"Could not execute Task[{self.name}] due to missing author: {self.author_id}"
@@ -296,22 +353,27 @@ class Task:
                         return False
                 actual_message = actual_message[0]
 
-        message = FakeMessage(actual_message)
-        # message = FakeMessage2
-        message.author = author
-        message.guild = guild  # Just in case we got desperate, see above
-        message.channel = channel
-        message.id = time_snowflake(datetime.utcnow(), high=False)  # Pretend to be now
-        message = neuter_message(message)
+        # message._handle_author(author)  # Option when message is subclass
+        # message._state = self.bot._get_state()
+        # Time to set the relevant attributes
+        # message.author = author
+        # Don't need guild with subclass, guild is just channel.guild
+        # message.guild = guild  # Just in case we got desperate, see above
+        # message.channel = channel
 
         # absolutely weird that this takes a message object instead of guild
-        prefixes = await self.bot.get_prefix(message)
+        prefixes = await self.bot.get_prefix(actual_message)
         if isinstance(prefixes, str):
             prefix = prefixes
         else:
             prefix = prefixes[0]
 
-        message.content = f"{prefix}{self.get_command_str()}"
+        new_content = f"{prefix}{self.get_command_str()}"
+        # log.debug(f"{new_content=}")
+
+        message = FakeMessage(message=actual_message)
+        message = neuter_message(message)
+        message.process_the_rest(author=author, channel=channel, content=new_content)
 
         if (
             not message.guild
@@ -319,7 +381,10 @@ class Task:
             or not message.content
             or message.content == prefix
         ):
-            log.warning(f"Could not execute Task[{self.name}] due to message problem: {message}")
+            log.warning(
+                f"Could not execute Task[{self.name}] due to message problem: "
+                f"{message.guild=}, {message.author=}, {message.content=}"
+            )
             return False
 
         new_ctx: commands.Context = await self.bot.get_context(message)
