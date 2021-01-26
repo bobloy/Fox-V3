@@ -71,13 +71,32 @@ def parse_triggers(data: Union[Dict, None]):
 #         print(super_prepared)
 #         return super_prepared
 
+things_for_fakemessage_to_steal = [
+    "_state",
+    "id",
+    "webhook_id",
+    "reactions",
+    "attachments",
+    "embeds",
+    "application",
+    "activity",
+    "channel",
+    "_edited_time",
+    "type",
+    "pinned",
+    "flags",
+    "mention_everyone",
+    "tts",
+    "content",
+    "nonce",
+    "reference",
+]
+
 
 class FakeMessage(discord.Message):
     def __init__(self, *args, message: discord.Message, **kwargs):
-        d = {k: getattr(message, k, None) for k in dir(message)}
+        d = {k: getattr(message, k, None) for k in things_for_fakemessage_to_steal}
         for k, v in d.items():
-            if k.lower().startswith("_handle"):
-                continue
             try:
                 # log.debug(f"{k=} {v=}")
                 setattr(self, k, v)
@@ -99,10 +118,6 @@ class FakeMessage(discord.Message):
     ):
         # self.content = content
         # log.debug(self.content)
-        self._handle_content(content)
-        # log.debug(self.content)
-
-        self.mention_everyone = "@everyone" in self.content or "@here" in self.content
 
         # for handler in ('author', 'member', 'mentions', 'mention_roles', 'call', 'flags'):
         #     try:
@@ -113,8 +128,25 @@ class FakeMessage(discord.Message):
         # self._handle_author(author._user._to_minimal_user_json())
         # self._handle_member(author)
         self._rebind_channel_reference(channel)
-        self._handle_mention_roles(self.raw_role_mentions)
-        self._handle_mentions(self.raw_mentions)
+        self._update(
+            {
+                "content": content,
+            }
+        )
+        self._update(
+            {
+                "mention_roles": self.raw_role_mentions,
+                "mentions": self.raw_mentions,
+            }
+        )
+
+        # self._handle_content(content)
+        # log.debug(self.content)
+
+        self.mention_everyone = "@everyone" in self.content or "@here" in self.content
+
+        # self._handle_mention_roles(self.raw_role_mentions)
+        # self._handle_mentions(self.raw_mentions)
 
         # self.__dict__.update(**d)
 
