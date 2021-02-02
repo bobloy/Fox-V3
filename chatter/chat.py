@@ -2,8 +2,10 @@ import asyncio
 import logging
 import os
 import pathlib
+from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Optional
+from functools import partial
+from typing import Dict, Optional
 
 import discord
 from chatterbot import ChatBot
@@ -74,6 +76,10 @@ class Chatter(Cog):
         self.config.register_guild(**default_guild)
 
         self.loop = asyncio.get_event_loop()
+
+        self._guild_cache = defaultdict(dict)
+
+        self._last_message_per_channel: Dict[Optional[discord.Message]] = defaultdict(lambda: None)
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -190,6 +196,7 @@ class Chatter(Cog):
         if ctx.invoked_subcommand is None:
             pass
 
+    @commands.admin()
     @chatter.command(name="channel")
     async def chatter_channel(
         self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None
@@ -209,6 +216,7 @@ class Chatter(Cog):
             await self.config.guild(ctx.guild).chatchannel.set(channel.id)
             await ctx.maybe_send_embed(f"Chat channel is now {channel.mention}")
 
+    @commands.is_owner()
     @chatter.command(name="cleardata")
     async def chatter_cleardata(self, ctx: commands.Context, confirm: bool = False):
         """
@@ -241,6 +249,7 @@ class Chatter(Cog):
 
         await ctx.tick()
 
+    @commands.is_owner()
     @chatter.command(name="algorithm", aliases=["algo"])
     async def chatter_algorithm(
         self, ctx: commands.Context, algo_number: int, threshold: float = None
@@ -274,6 +283,7 @@ class Chatter(Cog):
 
             await ctx.tick()
 
+    @commands.is_owner()
     @chatter.command(name="model")
     async def chatter_model(self, ctx: commands.Context, model_number: int):
         """
@@ -311,6 +321,7 @@ class Chatter(Cog):
                 f"Model has been switched to {self.tagger_language.ISO_639_1}"
             )
 
+    @commands.is_owner()
     @chatter.command(name="minutes")
     async def minutes(self, ctx: commands.Context, minutes: int):
         """
@@ -322,10 +333,12 @@ class Chatter(Cog):
             await ctx.send_help()
             return
 
-        await self.config.guild(ctx.guild).convo_length.set(minutes)
+        await self.config.guild(ctx.guild).convo_delta.set(minutes)
+        self._guild_cache[ctx.guild.id]["convo_delta"] = minutes
 
         await ctx.tick()
 
+    @commands.is_owner()
     @chatter.command(name="age")
     async def age(self, ctx: commands.Context, days: int):
         """
@@ -340,6 +353,7 @@ class Chatter(Cog):
         await self.config.guild(ctx.guild).days.set(days)
         await ctx.tick()
 
+    @commands.is_owner()
     @chatter.command(name="backup")
     async def backup(self, ctx, backupname):
         """
@@ -361,6 +375,7 @@ class Chatter(Cog):
         else:
             await ctx.maybe_send_embed("Error occurred :(")
 
+    @commands.is_owner()
     @chatter.command(name="trainubuntu")
     async def chatter_train_ubuntu(self, ctx: commands.Context, confirmation: bool = False):
         """
@@ -382,6 +397,7 @@ class Chatter(Cog):
         else:
             await ctx.send("Error occurred :(")
 
+    @commands.is_owner()
     @chatter.command(name="trainenglish")
     async def chatter_train_english(self, ctx: commands.Context):
         """
@@ -395,6 +411,7 @@ class Chatter(Cog):
         else:
             await ctx.maybe_send_embed("Error occurred :(")
 
+    @commands.is_owner()
     @chatter.command()
     async def train(self, ctx: commands.Context, channel: discord.TextChannel):
         """
@@ -477,12 +494,34 @@ class Chatter(Cog):
 
         text = message.clean_content
 
-        async with channel.typing():
-            # Switched to `generate_response` from `get_result`
-            # Switch back once better conversation detection is used.
-            future = await self.loop.run_in_executor(None, self.chatbot.generate_response, text)
+        async with ctx.typing():
+
+            if not self._guild_cache[ctx.guild.id]:
+                self._guild_cache[ctx.guild.id] = await self.config.guild(ctx.guild).all()
+
+            if self._last_message_per_channel[ctx.channel.id] is not None:
+                last_m: discord.Message = self._last_message_per_channel[ctx.channel.id]
+                minutes = self._guild_cache[ctx.guild.id]["convo_delta"]
+                if (datetime.utcnow() - last_m.created_at).seconds > minutes*60:
+                    in_response_to = None
+                else:
+                    in_response_to = last_m.content
+            else:
+                in_response_to = None
+
+            if in_response_to is None:
+                log.debug("Generating response")
+                Statement = self.chatbot.storage.get_object('statement')
+                future = await self.loop.run_in_executor(
+                    None, self.chatbot.generate_response, Statement(text)
+                )
+            else:
+                log.debug("Getting response")
+                future = await self.loop.run_in_executor(
+                    None, partial(self.chatbot.get_response, text, in_response_to=in_response_to)
+                )
 
             if future and str(future):
-                await channel.send(str(future))
+                self._last_message_per_channel[ctx.channel.id] = await ctx.send(str(future))
             else:
-                await channel.send(":thinking:")
+                await ctx.send(":thinking:")
