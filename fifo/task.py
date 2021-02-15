@@ -75,8 +75,8 @@ things_for_fakemessage_to_steal = [
     "_state",
     "id",
     "webhook_id",
-    "reactions",
-    "attachments",
+    # "reactions",
+    # "attachments",
     "embeds",
     "application",
     "activity",
@@ -92,10 +92,16 @@ things_for_fakemessage_to_steal = [
     "reference",
 ]
 
+things_fakemessage_sets_by_default = {
+    "attachments": [],
+    "reactions": [],
+}
+
 
 class FakeMessage(discord.Message):
     def __init__(self, *args, message: discord.Message, **kwargs):
         d = {k: getattr(message, k, None) for k in things_for_fakemessage_to_steal}
+        d.update(things_fakemessage_sets_by_default)
         for k, v in d.items():
             try:
                 # log.debug(f"{k=} {v=}")
