@@ -17,7 +17,7 @@ from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
-from chatter.trainers import TwitterCorpusTrainer
+from chatter.trainers import TwitterCorpusTrainer, UbuntuCorpusTrainer2
 
 log = logging.getLogger("red.fox_v3.chatter")
 
@@ -167,6 +167,10 @@ class Chatter(Cog):
         trainer = UbuntuCorpusTrainer(self.chatbot)
         trainer.train()
         return True
+
+    async def _train_ubuntu2(self):
+        trainer = UbuntuCorpusTrainer2(self.chatbot, cog_data_path(self))
+        await trainer.asynctrain()
 
     def _train_english(self):
         trainer = ChatterBotCorpusTrainer(self.chatbot)
@@ -354,6 +358,15 @@ class Chatter(Cog):
         await ctx.tick()
 
     @commands.is_owner()
+    @chatter.command(name="kaggle")
+    async def chatter_kaggle(self, ctx: commands.Context):
+        """Register with the kaggle API to download additional datasets for training"""
+        if not await self.check_for_kaggle():
+            await ctx.maybe_send_embed(
+                "[Click here for instructions to setup the kaggle api](https://github.com/Kaggle/kaggle-api#api-credentials)"
+            )
+
+    @commands.is_owner()
     @chatter.command(name="backup")
     async def backup(self, ctx, backupname):
         """
@@ -376,7 +389,13 @@ class Chatter(Cog):
             await ctx.maybe_send_embed("Error occurred :(")
 
     @commands.is_owner()
-    @chatter.command(name="trainubuntu")
+    @chatter.group(name="train")
+    async def chatter_train(self, ctx: commands.Context):
+        """Commands for training the bot"""
+        pass
+
+    @commands.is_owner()
+    @chatter_train.command(name="ubuntu")
     async def chatter_train_ubuntu(self, ctx: commands.Context, confirmation: bool = False):
         """
         WARNING: Large Download! Trains the bot using Ubuntu Dialog Corpus data.
@@ -385,7 +404,7 @@ class Chatter(Cog):
         if not confirmation:
             await ctx.maybe_send_embed(
                 "Warning: This command downloads ~500MB then eats your CPU for training\n"
-                "If you're sure you want to continue, run `[p]chatter trainubuntu True`"
+                "If you're sure you want to continue, run `[p]chatter train ubuntu True`"
             )
             return
 
@@ -398,7 +417,29 @@ class Chatter(Cog):
             await ctx.send("Error occurred :(")
 
     @commands.is_owner()
-    @chatter.command(name="trainenglish")
+    @chatter_train.command(name="ubuntu2")
+    async def chatter_train_ubuntu2(self, ctx: commands.Context, confirmation: bool = False):
+        """
+        WARNING: Large Download! Trains the bot using *NEW* Ubuntu Dialog Corpus data.
+        """
+
+        if not confirmation:
+            await ctx.maybe_send_embed(
+                "Warning: This command downloads ~800 then eats your CPU for training\n"
+                "If you're sure you want to continue, run `[p]chatter train ubuntu2 True`"
+            )
+            return
+
+        async with ctx.typing():
+            future = await self._train_ubuntu2()
+
+        if future:
+            await ctx.send("Training successful!")
+        else:
+            await ctx.send("Error occurred :(")
+
+    @commands.is_owner()
+    @chatter_train.command(name="english")
     async def chatter_train_english(self, ctx: commands.Context):
         """
         Trains the bot in english
@@ -412,10 +453,27 @@ class Chatter(Cog):
             await ctx.maybe_send_embed("Error occurred :(")
 
     @commands.is_owner()
-    @chatter.command()
-    async def train(self, ctx: commands.Context, channel: discord.TextChannel):
+    @chatter_train.command(name="list")
+    async def chatter_train_list(self, ctx: commands.Context):
+        """Trains the bot based on an uploaded list.
+
+        Must be a file in the format of a python list: ['prompt', 'response1', 'response2']
         """
-        Trains the bot based on language in this guild
+        if not ctx.message.attachments:
+            await ctx.maybe_send_embed("You must upload a file when using this command")
+            return
+
+        attachment: discord.Attachment = ctx.message.attachments[0]
+
+        a_bytes = await attachment.read()
+
+        await ctx.send("Not yet implemented")
+
+    @commands.is_owner()
+    @chatter_train.command(name="channel")
+    async def chatter_train_channel(self, ctx: commands.Context, channel: discord.TextChannel):
+        """
+        Trains the bot based on language in this guild.
         """
 
         await ctx.maybe_send_embed(
@@ -502,7 +560,7 @@ class Chatter(Cog):
             if self._last_message_per_channel[ctx.channel.id] is not None:
                 last_m: discord.Message = self._last_message_per_channel[ctx.channel.id]
                 minutes = self._guild_cache[ctx.guild.id]["convo_delta"]
-                if (datetime.utcnow() - last_m.created_at).seconds > minutes*60:
+                if (datetime.utcnow() - last_m.created_at).seconds > minutes * 60:
                     in_response_to = None
                 else:
                     in_response_to = last_m.content
@@ -511,7 +569,7 @@ class Chatter(Cog):
 
             if in_response_to is None:
                 log.debug("Generating response")
-                Statement = self.chatbot.storage.get_object('statement')
+                Statement = self.chatbot.storage.get_object("statement")
                 future = await self.loop.run_in_executor(
                     None, self.chatbot.generate_response, Statement(text)
                 )
@@ -525,3 +583,6 @@ class Chatter(Cog):
                 self._last_message_per_channel[ctx.channel.id] = await ctx.send(str(future))
             else:
                 await ctx.send(":thinking:")
+
+    async def check_for_kaggle(self):
+        return False

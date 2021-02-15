@@ -17,7 +17,8 @@
     "pytz",
     "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz#egg=en_core_web_sm",
     "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-2.3.1/en_core_web_md-2.3.1.tar.gz#egg=en_core_web_md",
-    "spacy>=2.3,<2.4"
+    "spacy>=2.3,<2.4",
+    "kaggle"
   ],
   "short": "Local Chatbot run on machine learning",
   "end_user_data_statement": "This cog only stores anonymous conversations data; no End User Data is stored.",
