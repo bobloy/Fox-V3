@@ -16,7 +16,7 @@ log = logging.getLogger("red.fox_v3.stealemoji")
 
 
 async def check_guild(guild, emoji):
-    if len(guild.emojis) >= 2*guild.emoji_limit:
+    if len(guild.emojis) >= 2 * guild.emoji_limit:
         return False
 
     if len(guild.emojis) < 50:
