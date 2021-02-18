@@ -71,6 +71,7 @@ W1, W2, W5, W6 = Random Werewolf
 N1 = Benign Neutral
 
 0001-1112T11W112N2
+which translates to
 0,0,0,1,11,12,E1,R1,R1,R1,R2,P2
 
 pre-letter = exact role position

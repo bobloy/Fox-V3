@@ -1,11 +1,10 @@
 import logging
-from typing import List, Union
+from typing import Optional
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
-from redbot.core.utils import AsyncIter
 from redbot.core.utils.menus import DEFAULT_CONTROLS, menu
 
 from werewolf.builder import (
@@ -50,15 +49,17 @@ class Werewolf(Cog):
 
     def cog_unload(self):
         log.debug("Unload called")
-        for game in self.games.values():
-            del game
+        for key in self.games.keys():
+            del self.games[key]
 
     @commands.command()
     async def buildgame(self, ctx: commands.Context):
         """
         Create game codes to run custom games.
 
-        Pick the roles or randomized roles you want to include in a game
+        Pick the roles or randomized roles you want to include in a game.
+
+        Note: The same role can be picked more than once.
         """
         gb = GameBuilder()
         code = await gb.build_game(ctx)
@@ -84,9 +85,6 @@ class Werewolf(Cog):
         Lists current guild settings
         """
         valid, role, category, channel, log_channel = await self._get_settings(ctx)
-        # if not valid:
-        #     await ctx.send("Failed to get settings")
-        #     return None
 
         embed = discord.Embed(
             title="Current Guild Settings",
@@ -393,7 +391,7 @@ class Werewolf(Cog):
             else:
                 await ctx.maybe_send_embed("Role ID not found")
 
-    async def _get_game(self, ctx: commands.Context, game_code=None) -> Union[Game, None]:
+    async def _get_game(self, ctx: commands.Context, game_code=None) -> Optional[Game]:
         guild: discord.Guild = getattr(ctx, "guild", None)
 
         if guild is None:
@@ -420,7 +418,7 @@ class Werewolf(Cog):
 
         return self.games[guild.id]
 
-    async def _game_start(self, game):
+    async def _game_start(self, game: Game):
         await game.start()
 
     async def _get_settings(self, ctx):

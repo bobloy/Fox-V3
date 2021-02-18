@@ -4,6 +4,7 @@ from datetime import MAXYEAR, datetime, timedelta, tzinfo
 from typing import Optional, Union
 
 import discord
+import pytz
 from apscheduler.job import Job
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -51,7 +52,7 @@ def _get_run_times(job: Job, now: datetime = None):
 
     if now is None:
         now = datetime(MAXYEAR, 12, 31, 23, 59, 59, 999999, tzinfo=job.next_run_time.tzinfo)
-        yield from _get_run_times(job, now)
+        yield from _get_run_times(job, now)  # Recursion
         raise StopIteration()
 
     next_run_time = job.next_run_time
@@ -145,28 +146,39 @@ class FIFO(commands.Cog):
         await task.delete_self()
 
     async def _process_task(self, task: Task):
-        job: Union[Job, None] = await self._get_job(task)
-        if job is not None:
-            job.reschedule(await task.get_combined_trigger())
-            return job
+        # None of this is necessar, we have `replace_existing` already
+        # job: Union[Job, None] = await self._get_job(task)
+        # if job is not None:
+        #     combined_trigger_ = await task.get_combined_trigger()
+        #     if combined_trigger_ is None:
+        #         job.remove()
+        #     else:
+        #         job.reschedule(combined_trigger_)
+        #     return job
         return await self._add_job(task)
 
     async def _get_job(self, task: Task) -> Job:
         return self.scheduler.get_job(_assemble_job_id(task.name, task.guild_id))
 
     async def _add_job(self, task: Task):
+        combined_trigger_ = await task.get_combined_trigger()
+        if combined_trigger_ is None:
+            return None
+
         return self.scheduler.add_job(
             _execute_task,
             kwargs=task.__getstate__(),
             id=_assemble_job_id(task.name, task.guild_id),
-            trigger=await task.get_combined_trigger(),
+            trigger=combined_trigger_,
             name=task.name,
+            replace_existing=True,
         )
 
     async def _resume_job(self, task: Task):
-        try:
-            job = self.scheduler.resume_job(job_id=_assemble_job_id(task.name, task.guild_id))
-        except JobLookupError:
+        job: Union[Job, None] = await self._get_job(task)
+        if job is not None:
+            job.resume()
+        else:
             job = await self._process_task(task)
         return job
 
@@ -220,6 +232,17 @@ class FIFO(commands.Cog):
         """
         if ctx.invoked_subcommand is None:
             pass
+
+    @fifo.command(name="wakeup")
+    async def fifo_wakeup(self, ctx: commands.Context):
+        """Debug command to fix missed executions.
+
+        If you see a negative "Next run time" when adding a trigger, this may help resolve it.
+        Check the logs when using this command.
+        """
+
+        self.scheduler.wakeup()
+        await ctx.tick()
 
     @fifo.command(name="checktask", aliases=["checkjob", "check"])
     async def fifo_checktask(self, ctx: commands.Context, task_name: str):
@@ -372,10 +395,14 @@ class FIFO(commands.Cog):
 
         else:
             embed.add_field(name="Server", value="Server not found", inline=False)
+        triggers, expired_triggers = await task.get_triggers()
 
-        trigger_str = "\n".join(str(t) for t in await task.get_triggers())
+        trigger_str = "\n".join(str(t) for t in triggers)
+        expired_str = "\n".join(str(t) for t in expired_triggers)
         if trigger_str:
             embed.add_field(name="Triggers", value=trigger_str, inline=False)
+        if expired_str:
+            embed.add_field(name="Expired Triggers", value=expired_str, inline=False)
 
         job = await self._get_job(task)
         if job and job.next_run_time:
@@ -546,7 +573,7 @@ class FIFO(commands.Cog):
             )
             return
 
-        time_to_run = datetime.now() + time_from_now
+        time_to_run = datetime.now(pytz.utc) + time_from_now
 
         result = await task.add_trigger("date", time_to_run, time_to_run.tzinfo)
         if not result:
