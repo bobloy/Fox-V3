@@ -19,7 +19,7 @@ async def check_guild(guild, emoji):
     if len(guild.emojis) >= 2 * guild.emoji_limit:
         return False
 
-    if len(guild.emojis) < 50:
+    if len(guild.emojis) < guild.emoji_limit:
         return True
 
     if emoji.animated:
