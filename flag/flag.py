@@ -53,9 +53,7 @@ class Flag(Cog):
     @commands.group()
     async def flagset(self, ctx: commands.Context):
         """
-        My custom cog
-
-        Extra information goes here
+        Commands for managing Flag settings
         """
         if ctx.invoked_subcommand is None:
             pass
