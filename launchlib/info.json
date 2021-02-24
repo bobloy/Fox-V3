@@ -8,7 +8,7 @@
   "install_msg": "Thank you for installing LaunchLib. Get started with `[p]load launchlib`, then `[p]help LaunchLib`",
   "short": "Access launch data for space flights",
   "end_user_data_statement": "This cog does not store any End User Data",
-  "requirements": ["python-launch-library>=1.0.6"],
+  "requirements": ["python-launch-library>=2.0.3"],
   "tags": [
     "bobloy",
     "utils",
