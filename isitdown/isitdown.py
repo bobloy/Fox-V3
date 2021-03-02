@@ -10,9 +10,9 @@ log = logging.getLogger("red.fox_v3.isitdown")
 
 class IsItDown(commands.Cog):
     """
-    Cog Description
+    Cog for checking whether a website is down or not.
 
-    Less important information about the cog
+    Uses the `isitdown.site` API
     """
 
     def __init__(self, bot: Red):
@@ -36,23 +36,25 @@ class IsItDown(commands.Cog):
         Alias: iid
         """
         try:
-            resp = await self._check_if_down(url_to_check)
+            resp, url = await self._check_if_down(url_to_check)
         except AssertionError:
             await ctx.maybe_send_embed("Invalid URL provided. Make sure not to include `http://`")
             return
 
+        # log.debug(resp)
         if resp["isitdown"]:
-            await ctx.maybe_send_embed(f"{url_to_check} is DOWN!")
+            await ctx.maybe_send_embed(f"{url} is DOWN!")
         else:
-            await ctx.maybe_send_embed(f"{url_to_check} is UP!")
+            await ctx.maybe_send_embed(f"{url} is UP!")
 
     async def _check_if_down(self, url_to_check):
-        url = re.compile(r"https?://(www\.)?")
-        url.sub("", url_to_check).strip().strip("/")
+        re_compiled = re.compile(r"https?://(www\.)?")
+        url = re_compiled.sub("", url_to_check).strip().strip("/")
 
         url = f"https://isitdown.site/api/v3/{url}"
+        # log.debug(url)
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 assert response.status == 200
                 resp = await response.json()
-        return resp
+        return resp, url
