@@ -36,6 +36,7 @@ class Werewolf(Cog):
             "category_id": None,
             "channel_id": None,
             "log_channel_id": None,
+            "default_game": {"daytime": 60 * 5, "nighttime": 60 * 5},
         }
 
         self.config.register_global(**default_global)
@@ -398,6 +399,7 @@ class Werewolf(Cog):
             # Private message, can't get guild
             await ctx.maybe_send_embed("Cannot start game from DM!")
             return None
+
         if guild.id not in self.games or self.games[guild.id].game_over:
             await ctx.maybe_send_embed("Starting a new game...")
             valid, role, category, channel, log_channel = await self._get_settings(ctx)
@@ -413,7 +415,15 @@ class Werewolf(Cog):
                 )
                 return None
             self.games[guild.id] = Game(
-                self.bot, guild, role, category, channel, log_channel, game_code
+                bot=self.bot,
+                guild=guild,
+                role=role,
+                category=category,
+                village=channel,
+                log_channel=log_channel,
+                game_code=game_code,
+                day_length=await self.config.guild(guild).default_game.day_length(),
+                night_length=await self.config.guild(guild).default_game.night_length(),
             )
 
         return self.games[guild.id]

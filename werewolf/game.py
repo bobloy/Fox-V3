@@ -62,6 +62,8 @@ class Game:
         village: discord.TextChannel = None,
         log_channel: discord.TextChannel = None,
         game_code=None,
+        day_length=HALF_DAY_LENGTH * 2,
+        night_length=HALF_NIGHT_LENGTH * 2,
     ):
         self.bot = bot
         self.guild = guild
@@ -72,6 +74,9 @@ class Game:
 
         self.day_vote = {}  # author: target
         self.vote_totals = {}  # id: total_votes
+
+        self.half_day_length = day_length // 2
+        self.half_night_length = night_length // 2
 
         self.started = False
         self.game_over = False
@@ -97,6 +102,7 @@ class Game:
 
         self.loop = asyncio.get_event_loop()
 
+        self.cycle_task = None
         self.action_queue = deque()
         self.current_action = None
         self.listeners = {}
@@ -116,6 +122,13 @@ class Game:
     #     for c_data in self.p_channels.values():
     #         asyncio.ensure_future(c_data["channel"].delete("Werewolf game-over"))
 
+    def _prestart_status(self, ctx):
+        return (
+            f"Currently **{len(self.players)} / {len(self.roles)}**\n"
+            f"Use `{ctx.prefix}ww code` to pick a game setup\n"
+            f"Use `{ctx.prefix}buildgame` to generate a new game"
+        )
+
     async def setup(self, ctx: commands.Context):
         """
         Runs the initial setup
@@ -127,15 +140,20 @@ class Game:
         4. Start game
         """
         if self.game_code:
+            # Turn random roles into real roles
             await self.get_roles(ctx)
+        else:
+            await ctx.maybe_send_embed(
+                f"No game code has been assigned, cannot start\n{self._prestart_status(ctx)}"
+            )
+            return False
 
         if len(self.players) != len(self.roles):
             await ctx.maybe_send_embed(
                 f"Player count does not match role count, cannot start\n"
-                f"Currently **{len(self.players)} / {len(self.roles)}**\n"
-                f"Use `{ctx.prefix}ww code` to pick a game setup\n"
-                f"Use `{ctx.prefix}buildgame` to generate a new game"
+                f"{self._prestart_status(ctx)}"
             )
+            # Clear the roles to be randomly generated again
             self.roles = []
             return False
 
@@ -156,6 +174,7 @@ class Game:
                 self.roles = []
                 return False
 
+        # Check if the role is already in use. If so, cannot continue until removed
         anyone_with_role = await anyone_has_role(self.guild.members, self.game_role)
         if anyone_with_role is not None:
             await ctx.maybe_send_embed(
@@ -164,6 +183,7 @@ class Game:
             )
             return False
 
+        # Add the game role to those who are playing
         try:
             for player in self.players:
                 await player.member.add_roles(*[self.game_role])
@@ -175,6 +195,7 @@ class Game:
             )
             return False
 
+        # Randomly assign the roles in the game to the players
         await self.assign_roles()
 
         # Create category and channel with individual overwrites
@@ -219,14 +240,16 @@ class Game:
                 return False
         else:
             self.save_perms[self.village_channel] = self.village_channel.overwrites
-            try:
-                await self.village_channel.edit(
-                    name="🔵werewolf",
-                    reason="(BOT) New game of werewolf",
-                )
-            except discord.Forbidden as e:
-                log.exception("Unable to rename Game Channel")
-                await ctx.maybe_send_embed("Unable to rename Game Channel, ignoring")
+
+            # Disable renaming channels, too easy to get rate limited.
+            # try:
+            #     await self.village_channel.edit(
+            #         name="🔵werewolf",
+            #         reason="(BOT) New game of werewolf",
+            #     )
+            # except discord.Forbidden as e:
+            #     log.exception("Unable to rename Game Channel")
+            #     await ctx.maybe_send_embed("Unable to rename Game Channel, ignoring")
 
             try:
                 for target, ow in overwrite.items():
@@ -283,9 +306,9 @@ class Game:
                 self.vote_groups[channel_id] = vote_group
 
         log.debug("Pre-cycle")
-        await asyncio.sleep(0)
+        await asyncio.sleep(0)  # Pass back to controller to avoid heartbeat issues
 
-        asyncio.create_task(self._cycle())  # Start the loop
+        self.cycle_task = asyncio.create_task(self._cycle())  # Start the loop
         return True
 
     # ###########START Notify structure############
@@ -553,7 +576,7 @@ class Game:
     # ###########END Notify structure############
 
     async def generate_targets(self, channel, with_roles=False):
-        embed = discord.Embed(title="Remaining Players", description="[ID] - [Name]")
+        embed = discord.Embed(title="Remaining Players", description="ID || Name")
         for i, player in enumerate(self.players):
             if player.alive:
                 status = ""
@@ -561,13 +584,15 @@ class Game:
                 status = "*[Dead]*-"
             if with_roles or not player.alive:
                 embed.add_field(
-                    name=f"{i} - {status}{player.member.display_name}",
+                    name=f"{i} || {status}{player.member.display_name}",
                     value=f"{player.role}",
                     inline=False,
                 )
             else:
                 embed.add_field(
-                    name=f"{i} - {status}{player.member.display_name}", inline=False, value="____"
+                    name=f"{i} || {status}{player.member.display_name}",
+                    inline=False,
+                    value="\N{Zero Width Space}",
                 )
 
         return await channel.send(embed=embed)
@@ -859,7 +884,7 @@ class Game:
         self.players.sort(key=lambda pl: pl.member.display_name.lower())
 
         if len(self.roles) != len(self.players):
-            await self.village_channel.send("Unhandled error - roles!=players")
+            await self.village_channel.send("Unhandled error - roles != # players")
             return False
 
         for idx, role in enumerate(self.roles):
