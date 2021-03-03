@@ -383,13 +383,15 @@ class Game:
         self.any_votes_remaining = True
 
         # Now we sleep and let the day happen. Print the remaining daylight half way through
-        await asyncio.sleep(HALF_DAY_LENGTH)  # 4 minute days FixMe to 120 later
+        await asyncio.sleep(self.half_day_length)
         if check():
             return
         await self.village_channel.send(
-            embed=discord.Embed(title=f"*{HALF_DAY_LENGTH / 60} minutes of daylight remain...*")
+            embed=discord.Embed(
+                title=f"*{self.half_day_length/ 60} minutes of daylight remain...*"
+            )
         )
-        await asyncio.sleep(HALF_DAY_LENGTH)  # 4 minute days FixMe to 120 later
+        await asyncio.sleep(self.half_day_length)
 
         # Need a loop here to wait for trial to end
         while self.ongoing_vote:
@@ -524,13 +526,13 @@ class Game:
 
         await self._notify("at_night_start")
 
-        await asyncio.sleep(HALF_NIGHT_LENGTH)  # 2 minutes FixMe to 120 later
+        await asyncio.sleep(self.half_night_length)
         await self.village_channel.send(
-            embed=discord.Embed(title=f"**{HALF_NIGHT_LENGTH / 60} minutes of night remain...**")
+            embed=discord.Embed(
+                title=f"**{self.half_night_length / 60} minutes of night remain...**"
+            )
         )
-        await asyncio.sleep(HALF_NIGHT_LENGTH)  # 1.5 minutes FixMe to 90 later
-
-        await asyncio.sleep(3)  # .5 minutes FixMe to 30 Later
+        await asyncio.sleep(self.half_night_length)
 
         self.action_queue.append(self._at_night_end())
 
