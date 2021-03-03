@@ -405,7 +405,7 @@ class Werewolf(Cog):
             valid, role, category, channel, log_channel = await self._get_settings(ctx)
 
             if not valid:
-                await ctx.maybe_send_embed("Cannot start a new game")
+                await ctx.maybe_send_embed("Cannot start a new game, check server settings.")
                 return None
 
             who_has_the_role = await anyone_has_role(guild.members, role)
