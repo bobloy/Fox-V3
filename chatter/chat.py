@@ -500,7 +500,15 @@ class Chatter(Cog):
         # Thank you Cog-Creators
         channel: discord.TextChannel = message.channel
 
-        if guild is not None and channel.id == await self.config.guild(guild).chatchannel():
+        # is_reply = False # this is only useful with in_response_to
+        if (
+            message.reference is not None
+            and isinstance(message.reference.resolved,discord.Message)
+            and message.reference.resolved.author.id == self.bot.user.id
+        ):
+            # is_reply = True # this is only useful with in_response_to
+            pass  # this is a reply to the bot, good to go
+        elif guild is not None and channel.id == await self.config.guild(guild).chatchannel():
             pass  # good to go
         else:
             when_mentionables = commands.when_mentioned(self.bot, message)
