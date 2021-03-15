@@ -503,7 +503,7 @@ class Chatter(Cog):
         # is_reply = False # this is only useful with in_response_to
         if (
             message.reference is not None
-            and isinstance(message.reference.resolved,discord.Message)
+            and isinstance(message.reference.resolved, discord.Message)
             and message.reference.resolved.author.id == self.bot.user.id
         ):
             # is_reply = True # this is only useful with in_response_to
