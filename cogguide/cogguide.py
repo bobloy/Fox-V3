@@ -212,11 +212,14 @@ This is the cog guide for the {lower_cog_name} cog. You will
 find detailed docs about usage and commands.
 
 ``[p]`` is considered as your prefix.
-
+"""
+        if camel_cog_name != "Core":
+            intro += f"""
 .. note:: To use this cog, load it by typing this::
 
         [p]load {'customcom' if lower_cog_name == 'customcommands' else lower_cog_name}
-
+"""
+        intro += f"""
 .. _{lower_cog_name}-usage:
 
 -----
@@ -226,6 +229,7 @@ Usage
 {prepare_description(cog, url_command)}
 
 """
+
         cog_commands_intro = f"""
 .. {reference}-commands:
 
