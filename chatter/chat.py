@@ -620,7 +620,9 @@ class Chatter(Cog):
                     replying = message
 
             if future and str(future):
-                self._last_message_per_channel[ctx.channel.id]  = await channel.send(str(future), reference=replying)
+                self._last_message_per_channel[ctx.channel.id] = await channel.send(
+                    str(future), reference=replying
+                )
             else:
                 await ctx.send(":thinking:")
 
