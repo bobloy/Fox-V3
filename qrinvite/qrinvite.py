@@ -68,7 +68,7 @@ class QRInvite(Cog):
         extension = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
 
         path: pathlib.Path = cog_data_path(self)
-        image_path = path / (ctx.guild.icon + "." + extension)
+        image_path = path / f"{ctx.guild.id}-{ctx.author.id}.{extension}"
         async with aiohttp.ClientSession() as session:
             async with session.get(image_url) as response:
                 image = await response.read()
@@ -83,6 +83,8 @@ class QRInvite(Cog):
             return
         elif extension == "png":
             new_path = str(image_path)
+        elif extension == "jpg":
+            new_path = convert_jpg_to_png(str(image_path))
         else:
             await ctx.maybe_send_embed(f"{extension} is not supported yet, stay tuned")
             return
@@ -109,4 +111,11 @@ def convert_webp_to_png(path):
     im.paste(255, mask)
     new_path = path.replace(".webp", ".png")
     im.save(new_path, transparency=255)
+    return new_path
+
+
+def convert_jpg_to_png(path):
+    im = Image.open(path)
+    new_path = path.replace(".jpg", ".png")
+    im.save(new_path)
     return new_path
