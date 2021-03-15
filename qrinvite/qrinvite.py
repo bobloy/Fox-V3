@@ -96,8 +96,8 @@ class QRInvite(Cog):
         )
 
         png_path: pathlib.Path = path / (ctx.guild.icon + "_qrcode.png")
-        with png_path.open("rb") as png_fp:
-            await ctx.send(file=discord.File(png_fp.read(), "qrcode.png"))
+        # with png_path.open("rb") as png_fp:
+        await ctx.send(file=discord.File(png_path, "qrcode.png"))
 
 
 def convert_webp_to_png(path):
