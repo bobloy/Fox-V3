@@ -58,7 +58,7 @@ class Chatter(Cog):
             "days": 1,
             "convo_delta": 15,
             "chatchannel": None,
-            "reply": False,
+            "reply": True,
         }
         path: pathlib.Path = cog_data_path(self)
         self.data_path = path / "database.sqlite3"
