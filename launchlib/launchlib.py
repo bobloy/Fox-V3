@@ -152,7 +152,9 @@ class LaunchLib(commands.Cog):
 
             if pad_name is not None:
                 if location_url is not None:
-                    location_url = re.sub("[^a-zA-Z0-9/:.'+\"°?=,-]", "", location_url)  # Fix bad URLS
+                    location_url = re.sub(
+                        "[^a-zA-Z0-9/:.'+\"°?=,-]", "", location_url
+                    )  # Fix bad URLS
                     em.add_field(name="Launch Pad Name", value=f"[{pad_name}]({location_url})")
                 else:
                     em.add_field(name="Launch Pad Name", value=pad_name)
