@@ -59,4 +59,4 @@
 'cog: unicode':
   - unicode/*
 'cog: werewolf':
-  - werewolf
+  - werewolf/*

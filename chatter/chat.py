@@ -12,7 +12,7 @@ from chatterbot import ChatBot
 from chatterbot.comparisons import JaccardSimilarity, LevenshteinDistance, SpacySimilarity
 from chatterbot.response_selection import get_random_response
 from chatterbot.trainers import ChatterBotCorpusTrainer, ListTrainer, UbuntuCorpusTrainer
-from redbot.core import Config, commands
+from redbot.core import Config, checks, commands
 from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
@@ -57,7 +57,13 @@ class Chatter(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6710497116116101114)
         default_global = {}
-        default_guild = {"whitelist": None, "days": 1, "convo_delta": 15, "chatchannel": None}
+        default_guild = {
+            "whitelist": None,
+            "days": 1,
+            "convo_delta": 15,
+            "chatchannel": None,
+            "reply": True,
+        }
         path: pathlib.Path = cog_data_path(self)
         self.data_path = path / "database.sqlite3"
 
@@ -164,7 +170,9 @@ class Chatter(Cog):
         return True
 
     def _train_ubuntu(self):
-        trainer = UbuntuCorpusTrainer(self.chatbot)
+        trainer = UbuntuCorpusTrainer(
+            self.chatbot, ubuntu_corpus_data_directory=cog_data_path(self) / "ubuntu_data"
+        )
         trainer.train()
         return True
 
@@ -219,6 +227,25 @@ class Chatter(Cog):
                 return
             await self.config.guild(ctx.guild).chatchannel.set(channel.id)
             await ctx.maybe_send_embed(f"Chat channel is now {channel.mention}")
+
+    @commands.admin()
+    @chatter.command(name="reply")
+    async def chatter_reply(self, ctx: commands.Context, toggle: Optional[bool] = None):
+        """
+        Toggle bot reply to messages if conversation continuity is not present
+
+        """
+        reply = await self.config.guild(ctx.guild).reply()
+        if toggle is None:
+            toggle = not reply
+        await self.config.guild(ctx.guild).reply.set(toggle)
+
+        if toggle:
+            await ctx.send("I will now respond to you if conversation continuity is not present")
+        else:
+            await ctx.send(
+                "I will not reply to your message if conversation continuity is not present, anymore"
+            )
 
     @commands.is_owner()
     @chatter.command(name="cleardata")
@@ -279,7 +306,7 @@ class Chatter(Cog):
                 )
                 return
             else:
-                self.similarity_algo = threshold
+                self.similarity_threshold = threshold
 
         self.similarity_algo = algos[algo_number]
         async with ctx.typing():
@@ -537,7 +564,15 @@ class Chatter(Cog):
         # Thank you Cog-Creators
         channel: discord.TextChannel = message.channel
 
-        if guild is not None and channel.id == await self.config.guild(guild).chatchannel():
+        # is_reply = False # this is only useful with in_response_to
+        if (
+            message.reference is not None
+            and isinstance(message.reference.resolved, discord.Message)
+            and message.reference.resolved.author.id == self.bot.user.id
+        ):
+            # is_reply = True # this is only useful with in_response_to
+            pass  # this is a reply to the bot, good to go
+        elif guild is not None and channel.id == await self.config.guild(guild).chatchannel():
             pass  # good to go
         else:
             when_mentionables = commands.when_mentioned(self.bot, message)
@@ -579,8 +614,13 @@ class Chatter(Cog):
                     None, partial(self.chatbot.get_response, text, in_response_to=in_response_to)
                 )
 
+            replying = None
+            if await self.config.guild(guild).reply():
+                if message != ctx.channel.last_message:
+                    replying = message
+
             if future and str(future):
-                self._last_message_per_channel[ctx.channel.id] = await ctx.send(str(future))
+                self._last_message_per_channel[ctx.channel.id]  = await channel.send(str(future), reference=replying)
             else:
                 await ctx.send(":thinking:")
 
