@@ -564,13 +564,13 @@ class Chatter(Cog):
         # Thank you Cog-Creators
         channel: discord.TextChannel = message.channel
 
-        # is_reply = False # this is only useful with in_response_to
+        is_reply = False  # this is only useful with in_response_to
         if (
             message.reference is not None
             and isinstance(message.reference.resolved, discord.Message)
             and message.reference.resolved.author.id == self.bot.user.id
         ):
-            # is_reply = True # this is only useful with in_response_to
+            is_reply = True  # this is only useful with in_response_to
             pass  # this is a reply to the bot, good to go
         elif guild is not None and channel.id == await self.config.guild(guild).chatchannel():
             pass  # good to go
@@ -592,7 +592,9 @@ class Chatter(Cog):
             if not self._guild_cache[ctx.guild.id]:
                 self._guild_cache[ctx.guild.id] = await self.config.guild(ctx.guild).all()
 
-            if self._last_message_per_channel[ctx.channel.id] is not None:
+            if is_reply:
+                in_response_to = message.reference.resolved.content
+            elif self._last_message_per_channel[ctx.channel.id] is not None:
                 last_m: discord.Message = self._last_message_per_channel[ctx.channel.id]
                 minutes = self._guild_cache[ctx.guild.id]["convo_delta"]
                 if (datetime.utcnow() - last_m.created_at).seconds > minutes * 60:
@@ -602,16 +604,25 @@ class Chatter(Cog):
             else:
                 in_response_to = None
 
-            if in_response_to is None:
-                log.debug("Generating response")
-                Statement = self.chatbot.storage.get_object("statement")
-                future = await self.loop.run_in_executor(
-                    None, self.chatbot.generate_response, Statement(text)
-                )
-            else:
-                log.debug("Getting response")
-                future = await self.loop.run_in_executor(
-                    None, partial(self.chatbot.get_response, text, in_response_to=in_response_to)
+            # Always use generate reponse
+            # Chatterbot tries to learn based on the result it comes up with, which is dumb
+            log.debug("Generating response")
+            Statement = self.chatbot.storage.get_object("statement")
+            future = await self.loop.run_in_executor(
+                None, self.chatbot.generate_response, Statement(text)
+            )
+
+            if in_response_to is not None:
+                log.debug("learning response")
+                learning_task = asyncio.create_task(
+                    self.loop.run_in_executor(
+                        None,
+                        partial(
+                            self.chatbot.learn_response,
+                            Statement(text),
+                            previous_statement=in_response_to,
+                        ),
+                    )
                 )
 
             replying = None
