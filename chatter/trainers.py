@@ -64,7 +64,7 @@ class UbuntuCorpusTrainer2(KaggleTrainer):
             datapath,
             downloadpath="ubuntu_data_v2",
             kaggle_dataset="rtatman/ubuntu-dialogue-corpus",
-            **kwargs
+            **kwargs,
         )
 
     async def asynctrain(self, *args, **kwargs):
