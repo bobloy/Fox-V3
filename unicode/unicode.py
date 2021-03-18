@@ -19,8 +19,7 @@ class Unicode(Cog):
     @commands.group(name="unicode", pass_context=True)
     async def unicode(self, ctx):
         """Encode/Decode a Unicode character."""
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @unicode.command()
     async def decode(self, ctx: commands.Context, character):

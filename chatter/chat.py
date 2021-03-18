@@ -196,8 +196,7 @@ class Chatter(Cog):
         """
         Base command for this cog. Check help for the commands list.
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @checks.admin()
     @chatter.command(name="channel")

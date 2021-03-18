@@ -36,58 +36,6 @@ class LaunchLib(commands.Cog):
 
     async def _embed_launch_data(self, launch: ll.AsyncLaunch):
 
-        if False:
-            example_launch = ll.AsyncLaunch(
-                id="9279744e-46b2-4eca-adea-f1379672ec81",
-                name="Atlas LV-3A | Samos 2",
-                tbddate=False,
-                tbdtime=False,
-                status={"id": 3, "name": "Success"},
-                inhold=False,
-                windowstart="1961-01-31 20:21:19+00:00",
-                windowend="1961-01-31 20:21:19+00:00",
-                net="1961-01-31 20:21:19+00:00",
-                info_urls=[],
-                vid_urls=[],
-                holdreason=None,
-                failreason=None,
-                probability=0,
-                hashtag=None,
-                agency=None,
-                changed=None,
-                pad=ll.Pad(
-                    id=93,
-                    name="Space Launch Complex 3W",
-                    latitude=34.644,
-                    longitude=-120.593,
-                    map_url="http://maps.google.com/maps?q=34.644+N,+120.593+W",
-                    retired=None,
-                    total_launch_count=3,
-                    agency_id=161,
-                    wiki_url=None,
-                    info_url=None,
-                    location=ll.Location(
-                        id=11,
-                        name="Vandenberg AFB, CA, USA",
-                        country_code="USA",
-                        total_launch_count=83,
-                        total_landing_count=3,
-                        pads=None,
-                    ),
-                    map_image="https://spacelaunchnow-prod-east.nyc3.digitaloceanspaces.com/media/launch_images/pad_93_20200803143225.jpg",
-                ),
-                rocket=ll.Rocket(
-                    id=2362,
-                    name=None,
-                    default_pads=None,
-                    family=None,
-                    wiki_url=None,
-                    info_url=None,
-                    image_url=None,
-                ),
-                missions=None,
-            )
-
         # status: ll.AsyncLaunchStatus = await launch.get_status()
         status = launch.status
 
@@ -102,11 +50,7 @@ class LaunchLib(commands.Cog):
         if launch.pad:
             urls += [launch.pad.info_url, launch.pad.wiki_url]
 
-        if urls:
-            url = next((url for url in urls if urls is not None), None)
-        else:
-            url = None
-
+        url = next((url for url in urls if urls is not None), None) if urls else None
         color = discord.Color.green() if status["id"] in [1, 3] else discord.Color.red()
 
         em = discord.Embed(title=title, description=description, url=url, color=color)
@@ -171,8 +115,7 @@ class LaunchLib(commands.Cog):
     @commands.group()
     async def launchlib(self, ctx: commands.Context):
         """Base command for getting launches"""
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @launchlib.command()
     async def next(self, ctx: commands.Context, num_launches: int = 1):

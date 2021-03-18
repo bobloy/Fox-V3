@@ -69,8 +69,7 @@ class StealEmoji(Cog):
         """
         Base command for this cog. Check help for the commands list.
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @checks.is_owner()
     @stealemoji.command(name="clearemojis")
@@ -268,37 +267,36 @@ class StealEmoji(Cog):
                 break
 
         if guildbank is None:
-            if await self.config.autobank():
-                try:
-                    guildbank: discord.Guild = await self.bot.create_guild(
-                        "StealEmoji Guildbank", code="S93bqTqKQ9rM"
-                    )
-                except discord.HTTPException:
-                    await self.config.autobank.set(False)
-                    log.exception("Unable to create guilds, disabling autobank")
-                    return
-                async with self.config.guildbanks() as guildbanks:
-                    guildbanks.append(guildbank.id)
-                # Track generated guilds for easier deletion
-                async with self.config.autobanked_guilds() as autobanked_guilds:
-                    autobanked_guilds.append(guildbank.id)
-
-                await asyncio.sleep(2)
-
-                if guildbank.text_channels:
-                    channel = guildbank.text_channels[0]
-                else:
-                    # Always hits the else.
-                    # Maybe create_guild doesn't return guild object with
-                    #    the template channel?
-                    channel = await guildbank.create_text_channel("invite-channel")
-                invite = await channel.create_invite()
-
-                await self.bot.send_to_owners(invite)
-                log.info(f"Guild created id {guildbank.id}. Invite: {invite}")
-            else:
+            if not await self.config.autobank():
                 return
 
+            try:
+                guildbank: discord.Guild = await self.bot.create_guild(
+                    "StealEmoji Guildbank", code="S93bqTqKQ9rM"
+                )
+            except discord.HTTPException:
+                await self.config.autobank.set(False)
+                log.exception("Unable to create guilds, disabling autobank")
+                return
+            async with self.config.guildbanks() as guildbanks:
+                guildbanks.append(guildbank.id)
+            # Track generated guilds for easier deletion
+            async with self.config.autobanked_guilds() as autobanked_guilds:
+                autobanked_guilds.append(guildbank.id)
+
+            await asyncio.sleep(2)
+
+            if guildbank.text_channels:
+                channel = guildbank.text_channels[0]
+            else:
+                # Always hits the else.
+                # Maybe create_guild doesn't return guild object with
+                #    the template channel?
+                channel = await guildbank.create_text_channel("invite-channel")
+            invite = await channel.create_invite()
+
+            await self.bot.send_to_owners(invite)
+            log.info(f"Guild created id {guildbank.id}. Invite: {invite}")
         # Next, have I saved this emoji before (because uploaded emoji != orignal emoji)
 
         if str(emoji.id) in await self.config.stolemoji():

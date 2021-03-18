@@ -45,14 +45,12 @@ class LastSeen(Cog):
 
     @staticmethod
     def get_date_time(s):
-        d = dateutil.parser.parse(s)
-        return d
+        return dateutil.parser.parse(s)
 
     @commands.group(aliases=["setlseen"], name="lseenset")
     async def lset(self, ctx: commands.Context):
         """Change settings for lseen"""
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @lset.command(name="toggle")
     async def lset_toggle(self, ctx: commands.Context):

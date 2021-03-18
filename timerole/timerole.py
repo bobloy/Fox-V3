@@ -77,8 +77,7 @@ class Timerole(Cog):
     @commands.guild_only()
     async def timerole(self, ctx):
         """Adjust timerole settings"""
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @timerole.command()
     async def addrole(
@@ -201,7 +200,7 @@ class Timerole(Cog):
             reapply = all_guilds[guild_id]["reapply"]
             role_dict = all_guilds[guild_id]["roles"]
 
-            if not any(role_data for role_data in role_dict.values()):  # No roles
+            if not any(role_dict.values()):  # No roles
                 log.debug(f"No roles are configured for guild: {guild}")
                 continue
 
@@ -232,7 +231,7 @@ class Timerole(Cog):
                         log.debug(f"{member.display_name} - Not time to check again yet")
                         continue
                     member: discord.Member
-                    has_roles = set(r.id for r in member.roles)
+                    has_roles = {r.id for r in member.roles}
 
                     # Stop if they currently have or don't have the role, and mark had_role
                     if (int(role_id) in has_roles and not role_data["remove"]) or (

@@ -65,9 +65,9 @@ class InfoChannel(Cog):
             "offline": "Offline: {count}",
         }
 
-        default_channel_ids = {k: None for k in self.default_channel_names.keys()}
+        default_channel_ids = {k: None for k in self.default_channel_names}
         # Only members is enabled by default
-        default_enabled_counts = {k: k == "members" for k in self.default_channel_names.keys()}
+        default_enabled_counts = {k: k == "members" for k in self.default_channel_names}
 
         default_guild = {
             "category_id": None,
@@ -159,8 +159,7 @@ class InfoChannel(Cog):
         """
         Toggle different types of infochannels
         """
-        if not ctx.invoked_subcommand:
-            pass
+        pass
 
     @infochannelset.command(name="togglechannel")
     async def _infochannelset_togglechannel(

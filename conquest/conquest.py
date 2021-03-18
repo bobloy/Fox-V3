@@ -67,9 +67,8 @@ class Conquest(commands.Cog):
         """
         Base command for conquest cog. Start with `[p]conquest set map` to select a map.
         """
-        if ctx.invoked_subcommand is None:
-            if self.current_map is not None:
-                await self._conquest_current(ctx)
+        if ctx.invoked_subcommand is None and self.current_map is not None:
+            await self._conquest_current(ctx)
 
     @conquest.command(name="list")
     async def _conquest_list(self, ctx: commands.Context):
@@ -80,14 +79,13 @@ class Conquest(commands.Cog):
 
         with maps_json.open() as maps:
             maps_json = json.load(maps)
-            map_list = "\n".join(map_name for map_name in maps_json["maps"])
+            map_list = "\n".join(maps_json["maps"])
             await ctx.maybe_send_embed(f"Current maps:\n{map_list}")
 
     @conquest.group(name="set")
     async def conquest_set(self, ctx: commands.Context):
         """Base command for admin actions like selecting a map"""
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @conquest_set.command(name="resetzoom")
     async def _conquest_set_resetzoom(self, ctx: commands.Context):
