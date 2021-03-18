@@ -168,7 +168,7 @@ class AudioTrivia(Trivia):
     @commands.guild_only()
     async def audiotrivia_list(self, ctx: commands.Context):
         """List available trivia including audio categories."""
-        lists = set(p.stem for p in self._all_audio_lists())
+        lists = {p.stem for p in self._all_audio_lists()}
         if await ctx.embed_requested():
             await ctx.send(
                 embed=discord.Embed(

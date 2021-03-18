@@ -27,8 +27,7 @@ class ExclusiveRole(Cog):
     async def exclusive(self, ctx):
         """Base command for managing exclusive roles"""
 
-        if not ctx.invoked_subcommand:
-            pass
+        pass
 
     @exclusive.command(name="add")
     @checks.mod_or_permissions(administrator=True)
@@ -85,7 +84,7 @@ class ExclusiveRole(Cog):
         if role_set is None:
             role_set = set(await self.config.guild(member.guild).role_list())
 
-        member_set = set([role.id for role in member.roles])
+        member_set = {role.id for role in member.roles}
         to_remove = (member_set - role_set) - {member.guild.default_role.id}
 
         if to_remove and member_set & role_set:
@@ -103,7 +102,7 @@ class ExclusiveRole(Cog):
         await asyncio.sleep(1)
 
         role_set = set(await self.config.guild(after.guild).role_list())
-        member_set = set([role.id for role in after.roles])
+        member_set = {role.id for role in after.roles}
 
         if role_set & member_set:
             try:

@@ -526,9 +526,10 @@ class Game:
 
     async def _notify(self, event_name, **kwargs):
         for i in range(1, 7):  # action guide 1-6 (0 is no action)
-            tasks = []
-            for event in self.listeners.get(event_name, {}).get(i, []):
-                tasks.append(asyncio.create_task(event(**kwargs)))
+            tasks = [
+                asyncio.create_task(event(**kwargs))
+                for event in self.listeners.get(event_name, {}).get(i, [])
+            ]
 
             # Run same-priority task simultaneously
             await asyncio.gather(*tasks)
@@ -555,10 +556,7 @@ class Game:
     async def generate_targets(self, channel, with_roles=False):
         embed = discord.Embed(title="Remaining Players", description="[ID] - [Name]")
         for i, player in enumerate(self.players):
-            if player.alive:
-                status = ""
-            else:
-                status = "*[Dead]*-"
+            status = "" if player.alive else "*[Dead]*-"
             if with_roles or not player.alive:
                 embed.add_field(
                     name=f"{i} - {status}{player.member.display_name}",
@@ -579,7 +577,7 @@ class Game:
         if channel_id not in self.p_channels:
             self.p_channels[channel_id] = self.default_secret_channel.copy()
 
-        for x in range(10):  # Retry 10 times
+        for _ in range(10):  # Retry 10 times
             try:
                 await asyncio.sleep(1)  # This will have multiple calls
                 self.p_channels[channel_id]["players"].append(role.player)
@@ -706,9 +704,7 @@ class Game:
             if not self.any_votes_remaining:
                 await channel.send("Voting is not allowed right now")
                 return
-        elif channel.name in self.p_channels:
-            pass
-        else:
+        elif channel.name not in self.p_channels:
             # Not part of the game
             await channel.send("Cannot vote in this channel")
             return
@@ -757,13 +753,13 @@ class Game:
             await self._at_voted(target)
 
     async def eval_results(self, target, source=None, method=None):
-        if method is not None:
-            out = "**{ID}** - " + method
-            return out.format(ID=target.id, target=target.member.display_name)
-        else:
+        if method is None:
             return "**{ID}** - {target} the {role} was found dead".format(
                 ID=target.id, target=target.member.display_name, role=await target.role.get_role()
             )
+
+        out = "**{ID}** - " + method
+        return out.format(ID=target.id, target=target.member.display_name)
 
     async def _quit(self, player):
         """

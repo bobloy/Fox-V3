@@ -30,8 +30,7 @@ class MapMaker(commands.Cog):
         """
         Base command for managing current maps or creating new ones
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @mapmaker.command(name="upload")
     async def _mapmaker_upload(self, ctx: commands.Context, map_path=""):

@@ -111,9 +111,8 @@ async def _withdraw_points(gardener: Gardener, amount):
 
     if (gardener.points - amount) < 0:
         return False
-    else:
-        gardener.points -= amount
-        return True
+    gardener.points -= amount
+    return True
 
 
 class PlantTycoon(commands.Cog):
@@ -245,11 +244,9 @@ class PlantTycoon(commands.Cog):
             await self._load_plants_products()
 
         modifiers = sum(
-            [
-                self.products[product]["modifier"]
-                for product in gardener.products
-                if gardener.products[product] > 0
-            ]
+            self.products[product]["modifier"]
+            for product in gardener.products
+            if gardener.products[product] > 0
         )
 
         degradation = (
@@ -290,38 +287,31 @@ class PlantTycoon(commands.Cog):
         product = product.lower()
         product_category = product_category.lower()
         if product in self.products and self.products[product]["category"] == product_category:
-            if product in gardener.products:
-                if gardener.products[product] > 0:
-                    gardener.current["health"] += self.products[product]["health"]
-                    gardener.products[product] -= 1
-                    if gardener.products[product] == 0:
-                        del gardener.products[product.lower()]
-                    if product_category == "water":
-                        emoji = ":sweat_drops:"
-                    elif product_category == "fertilizer":
-                        emoji = ":poop:"
-                    # elif product_category == "tool":
+            if product in gardener.products and gardener.products[product] > 0:
+                gardener.current["health"] += self.products[product]["health"]
+                gardener.products[product] -= 1
+                if gardener.products[product] == 0:
+                    del gardener.products[product.lower()]
+                if product_category == "fertilizer":
+                    emoji = ":poop:"
+                elif product_category == "water":
+                    emoji = ":sweat_drops:"
+                else:
+                    emoji = ":scissors:"
+                message = "Your plant got some health back! {}".format(emoji)
+                if gardener.current["health"] > gardener.current["threshold"]:
+                    gardener.current["health"] -= self.products[product]["damage"]
+                    if product_category == "tool":
+                        damage_msg = "You used {} too many times!".format(product)
                     else:
-                        emoji = ":scissors:"
-                    message = "Your plant got some health back! {}".format(emoji)
-                    if gardener.current["health"] > gardener.current["threshold"]:
-                        gardener.current["health"] -= self.products[product]["damage"]
-                        if product_category == "tool":
-                            damage_msg = "You used {} too many times!".format(product)
-                        else:
-                            damage_msg = "You gave too much of {}.".format(product)
-                        message = "{} Your plant lost some health. :wilted_rose:".format(
-                            damage_msg
-                        )
-                    gardener.points += self.defaults["points"]["add_health"]
-                    await gardener.save_gardener()
-                else:
-                    message = "You have no {}. Go buy some!".format(product)
+                        damage_msg = "You gave too much of {}.".format(product)
+                    message = "{} Your plant lost some health. :wilted_rose:".format(damage_msg)
+                gardener.points += self.defaults["points"]["add_health"]
+                await gardener.save_gardener()
+            elif product in gardener.products or product_category != "tool":
+                message = "You have no {}. Go buy some!".format(product)
             else:
-                if product_category == "tool":
-                    message = "You don't have a {}. Go buy one!".format(product)
-                else:
-                    message = "You have no {}. Go buy some!".format(product)
+                message = "You don't have a {}. Go buy one!".format(product)
         else:
             message = "Are you sure you are using {}?".format(product_category)
 
@@ -412,24 +402,18 @@ class PlantTycoon(commands.Cog):
             gardener.current = plant
             await gardener.save_gardener()
 
-            em = discord.Embed(description=message, color=discord.Color.green())
         else:
             plant = gardener.current
             message = "You're already growing {} **{}**, silly.".format(
                 plant["article"], plant["name"]
             )
-            em = discord.Embed(description=message, color=discord.Color.green())
-
+        em = discord.Embed(description=message, color=discord.Color.green())
         await ctx.send(embed=em)
 
     @_gardening.command(name="profile")
     async def _profile(self, ctx: commands.Context, *, member: discord.Member = None):
         """Check your gardening profile."""
-        if member is not None:
-            author = member
-        else:
-            author = ctx.author
-
+        author = member if member is not None else ctx.author
         gardener = await self._gardener(author)
         try:
             await self._apply_degradation(gardener)
@@ -440,9 +424,7 @@ class PlantTycoon(commands.Cog):
         avatar = author.avatar_url if author.avatar else author.default_avatar_url
         em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
         em.add_field(name="**Thneeds**", value=str(gardener.points))
-        if not gardener.current:
-            em.add_field(name="**Currently growing**", value="None")
-        else:
+        if gardener.current:
             em.set_thumbnail(url=gardener.current["image"])
             em.add_field(
                 name="**Currently growing**",
@@ -450,16 +432,15 @@ class PlantTycoon(commands.Cog):
                     gardener.current["name"], gardener.current["health"]
                 ),
             )
+        else:
+            em.add_field(name="**Currently growing**", value="None")
         if not gardener.badges:
             em.add_field(name="**Badges**", value="None")
         else:
-            badges = ""
-            for badge in gardener.badges:
-                badges += "{}\n".format(badge.capitalize())
+            badges = "".join("{}\n".format(badge.capitalize()) for badge in gardener.badges)
+
             em.add_field(name="**Badges**", value=badges)
-        if not gardener.products:
-            em.add_field(name="**Products**", value="None")
-        else:
+        if gardener.products:
             products = ""
             for product_name, product_data in gardener.products.items():
                 if self.products[product_name] is None:
@@ -470,6 +451,8 @@ class PlantTycoon(commands.Cog):
                     self.products[product_name]["modifier"],
                 )
             em.add_field(name="**Products**", value=products)
+        else:
+            em.add_field(name="**Products**", value="None")
         if gardener.current:
             degradation = await self._degradation(gardener)
             die_in = await _die_in(gardener, degradation)
@@ -600,7 +583,6 @@ class PlantTycoon(commands.Cog):
                         self.products[pd]["category"],
                     ),
                 )
-            await ctx.send(embed=em)
         else:
             if amount <= 0:
                 message = "Invalid amount! Must be greater than 1"
@@ -629,7 +611,8 @@ class PlantTycoon(commands.Cog):
                 else:
                     message = "I don't have this product."
             em = discord.Embed(description=message, color=discord.Color.green())
-            await ctx.send(embed=em)
+
+        await ctx.send(embed=em)
 
     @_gardening.command(name="convert")
     async def _convert(self, ctx: commands.Context, amount: int):
@@ -663,8 +646,7 @@ class PlantTycoon(commands.Cog):
         else:
             gardener.current = {}
             message = "You successfully shovelled your plant out."
-            if gardener.points < 0:
-                gardener.points = 0
+            gardener.points = max(gardener.points, 0)
             await gardener.save_gardener()
 
         em = discord.Embed(description=message, color=discord.Color.dark_grey())
@@ -681,12 +663,12 @@ class PlantTycoon(commands.Cog):
         except discord.Forbidden:
             # Couldn't DM the degradation
             await ctx.send("ERROR\nYou blocked me, didn't you?")
-        product = "water"
-        product_category = "water"
         if not gardener.current:
             message = "You're currently not growing a plant."
             await _send_message(channel, message)
         else:
+            product = "water"
+            product_category = "water"
             await self._add_health(channel, gardener, product, product_category)
 
     @commands.command(name="fertilize")
@@ -700,11 +682,11 @@ class PlantTycoon(commands.Cog):
             await ctx.send("ERROR\nYou blocked me, didn't you?")
         channel = ctx.channel
         product = fertilizer
-        product_category = "fertilizer"
         if not gardener.current:
             message = "You're currently not growing a plant."
             await _send_message(channel, message)
         else:
+            product_category = "fertilizer"
             await self._add_health(channel, gardener, product, product_category)
 
     @commands.command(name="prune")
@@ -717,12 +699,12 @@ class PlantTycoon(commands.Cog):
             # Couldn't DM the degradation
             await ctx.send("ERROR\nYou blocked me, didn't you?")
         channel = ctx.channel
-        product = "pruner"
-        product_category = "tool"
         if not gardener.current:
             message = "You're currently not growing a plant."
             await _send_message(channel, message)
         else:
+            product = "pruner"
+            product_category = "tool"
             await self._add_health(channel, gardener, product, product_category)
 
     # async def check_degradation(self):
