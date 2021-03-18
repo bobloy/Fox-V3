@@ -97,12 +97,7 @@ class ReactRestrict(Cog):
         """
         current_combos = await self.combo_list()
 
-        to_keep = [
-            c
-            for c in current_combos
-            if c.message_id != message_id or c.role_id != role.id
-        ]
-
+        to_keep = [c for c in current_combos if c.message_id != message_id or c.role_id != role.id]
 
         if to_keep != current_combos:
             await self.set_combo_list(to_keep)

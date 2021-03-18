@@ -249,7 +249,6 @@ class PlantTycoon(commands.Cog):
             if gardener.products[product] > 0
         )
 
-
         degradation = (
             100
             / (gardener.current["time"] / 60)
@@ -306,9 +305,7 @@ class PlantTycoon(commands.Cog):
                         damage_msg = "You used {} too many times!".format(product)
                     else:
                         damage_msg = "You gave too much of {}.".format(product)
-                    message = "{} Your plant lost some health. :wilted_rose:".format(
-                        damage_msg
-                    )
+                    message = "{} Your plant lost some health. :wilted_rose:".format(damage_msg)
                 gardener.points += self.defaults["points"]["add_health"]
                 await gardener.save_gardener()
             elif product in gardener.products or product_category != "tool":
@@ -440,9 +437,7 @@ class PlantTycoon(commands.Cog):
         if not gardener.badges:
             em.add_field(name="**Badges**", value="None")
         else:
-            badges = "".join(
-                "{}\n".format(badge.capitalize()) for badge in gardener.badges
-            )
+            badges = "".join("{}\n".format(badge.capitalize()) for badge in gardener.badges)
 
             em.add_field(name="**Badges**", value=badges)
         if gardener.products:
