@@ -58,11 +58,7 @@ class CogLint(Cog):
 
         future = await self.bot.loop.run_in_executor(None, lint.py_run, path, "return_std=True")
 
-        if future:
-            (pylint_stdout, pylint_stderr) = future
-        else:
-            (pylint_stdout, pylint_stderr) = None, None
-
+        (pylint_stdout, pylint_stderr) = future or (None, None)
         # print(pylint_stderr)
         # print(pylint_stdout)
 

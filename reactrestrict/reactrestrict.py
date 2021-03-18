@@ -98,8 +98,11 @@ class ReactRestrict(Cog):
         current_combos = await self.combo_list()
 
         to_keep = [
-            c for c in current_combos if not (c.message_id == message_id and c.role_id == role.id)
+            c
+            for c in current_combos
+            if c.message_id != message_id or c.role_id != role.id
         ]
+
 
         if to_keep != current_combos:
             await self.set_combo_list(to_keep)
@@ -210,8 +213,7 @@ class ReactRestrict(Cog):
         """
         Base command for this cog. Check help for the commands list.
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @reactrestrict.command()
     async def add(self, ctx: commands.Context, message_id: int, *, role: discord.Role):

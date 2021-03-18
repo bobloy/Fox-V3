@@ -54,8 +54,7 @@ class AnnounceDaily(Cog):
 
         Do `[p]help annd <subcommand>` for more details
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @commands.command()
     @checks.guildowner()

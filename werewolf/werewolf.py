@@ -75,8 +75,7 @@ class Werewolf(Cog):
         """
         Base command to adjust settings. Check help for command list.
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @commands.guild_only()
     @wwset.command(name="list")
@@ -166,8 +165,7 @@ class Werewolf(Cog):
         """
         Base command for this cog. Check help for the commands list.
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @commands.guild_only()
     @ww.command(name="new")
@@ -348,8 +346,7 @@ class Werewolf(Cog):
         """
         Find custom roles by name, alignment, category, or ID
         """
-        if ctx.invoked_subcommand is None or ctx.invoked_subcommand == self.ww_search:
-            pass
+        pass
 
     @ww_search.command(name="name")
     async def ww_search_name(self, ctx: commands.Context, *, name):
