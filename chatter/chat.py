@@ -613,15 +613,13 @@ class Chatter(Cog):
 
             if in_response_to is not None:
                 log.debug("learning response")
-                learning_task = asyncio.create_task(
-                    self.loop.run_in_executor(
-                        None,
-                        partial(
-                            self.chatbot.learn_response,
-                            Statement(text),
-                            previous_statement=in_response_to,
-                        ),
-                    )
+                await self.loop.run_in_executor(
+                    None,
+                    partial(
+                        self.chatbot.learn_response,
+                        Statement(text),
+                        previous_statement=in_response_to,
+                    ),
                 )
 
             replying = None
@@ -637,4 +635,6 @@ class Chatter(Cog):
                 await ctx.send(":thinking:")
 
     async def check_for_kaggle(self):
+        """Check whether Kaggle is installed and configured properly"""
+        # TODO: This
         return False
