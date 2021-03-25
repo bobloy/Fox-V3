@@ -142,6 +142,8 @@ class MovieTrainer(KaggleTrainer):
         # # lines_dict = {row[0].strip('"'): row[4] for row in reader_list}
 
         statements_from_file = []
+        save_every = 50
+        count = 0
 
         # [characterID of first, characterID of second, movieID, list of utterances]
         async for lines in AsyncIter(conv):
@@ -167,9 +169,15 @@ class MovieTrainer(KaggleTrainer):
 
                 statements_from_file.append(statement)
 
-            if statements_from_file:
-                self.chatbot.storage.create_many(statements_from_file)
-                statements_from_file = []
+            count += 1
+            if count >= save_every:
+                if statements_from_file:
+                    self.chatbot.storage.create_many(statements_from_file)
+                    statements_from_file = []
+                count = 0
+
+        if statements_from_file:
+            self.chatbot.storage.create_many(statements_from_file)
 
         log.info("Training took", time.time() - start_time, "seconds.")
 
