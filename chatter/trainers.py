@@ -142,7 +142,7 @@ class MovieTrainer(KaggleTrainer):
         # # lines_dict = {row[0].strip('"'): row[4] for row in reader_list}
 
         statements_from_file = []
-        save_every = 50
+        save_every = 300
         count = 0
 
         # [characterID of first, characterID of second, movieID, list of utterances]
