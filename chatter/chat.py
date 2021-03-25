@@ -262,7 +262,9 @@ class Chatter(Cog):
         await self.config.guild(ctx.guild).reply.set(toggle)
 
         if toggle:
-            await ctx.maybe_send_embed("I will now respond to you if conversation continuity is not present")
+            await ctx.maybe_send_embed(
+                "I will now respond to you if conversation continuity is not present"
+            )
         else:
             await ctx.maybe_send_embed(
                 "I will not reply to your message if conversation continuity is not present, anymore"
