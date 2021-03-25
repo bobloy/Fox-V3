@@ -59,6 +59,35 @@ Install these on your windows machine before attempting the installation:
 [Pandoc - Universal Document Converter](https://pandoc.org/installing.html)
 
 ## Methods
+### Automatic
+
+This method requires some luck to pull off.
+
+#### Step 1: Add repo and install cog
+
+```
+[p]repo add Fox https://github.com/bobloy/Fox-V3
+[p]cog install Fox chatter
+```
+
+If you get an error at this step, stop and skip to one of the manual methods below.
+
+#### Step 2: Install additional dependencies
+
+Assuming the previous commands had no error, you can now use `pipinstall` to add the remaining dependencies.
+
+NOTE: This method is not the intended use case for `pipinstall` and may stop working in the future.
+
+```
+[p]pipinstall --no-deps chatterbot>=1.1
+```
+
+#### Step 3: Load the cog and get started
+
+```
+[p]load chatter
+```
+
 ### Windows - Manually
 #### Step 1: Built-in Downloader
 
