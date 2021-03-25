@@ -180,7 +180,7 @@ class Chatter(Cog):
 
     async def _train_movies(self):
         trainer = MovieTrainer(self.chatbot, cog_data_path(self))
-        await trainer.asynctrain()
+        return await trainer.asynctrain()
 
     async def _train_ubuntu2(self, intensity):
         train_kwarg = {}
