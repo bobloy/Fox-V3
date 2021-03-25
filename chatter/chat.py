@@ -17,7 +17,7 @@ from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
-from chatter.trainers import TwitterCorpusTrainer, UbuntuCorpusTrainer2
+from chatter.trainers import MovieTrainer, TwitterCorpusTrainer, UbuntuCorpusTrainer2
 
 log = logging.getLogger("red.fox_v3.chatter")
 
@@ -63,6 +63,7 @@ class Chatter(Cog):
             "convo_delta": 15,
             "chatchannel": None,
             "reply": True,
+            "learning": True,
         }
         path: pathlib.Path = cog_data_path(self)
         self.data_path = path / "database.sqlite3"
@@ -95,7 +96,8 @@ class Chatter(Cog):
 
         return ChatBot(
             "ChatterBot",
-            storage_adapter="chatterbot.storage.SQLStorageAdapter",
+            # storage_adapter="chatterbot.storage.SQLStorageAdapter",
+            storage_adapter="chatter.storage_adapters.MyDumbSQLStorageAdapter",
             database_uri="sqlite:///" + str(self.data_path),
             statement_comparison_function=self.similarity_algo,
             response_selection_method=get_random_response,
@@ -176,9 +178,29 @@ class Chatter(Cog):
         trainer.train()
         return True
 
-    async def _train_ubuntu2(self):
-        trainer = UbuntuCorpusTrainer2(self.chatbot, cog_data_path(self))
+    async def _train_movies(self):
+        trainer = MovieTrainer(self.chatbot, cog_data_path(self))
         await trainer.asynctrain()
+
+    async def _train_ubuntu2(self, intensity):
+        train_kwarg = {}
+        if intensity == 196:
+            train_kwarg["train_dialogue"] = False
+            train_kwarg["train_196"] = True
+        elif intensity == 301:
+            train_kwarg["train_dialogue"] = False
+            train_kwarg["train_301"] = True
+        elif intensity == 497:
+            train_kwarg["train_dialogue"] = False
+            train_kwarg["train_196"] = True
+            train_kwarg["train_301"] = True
+        elif intensity >= 9000:  # NOT 9000!
+            train_kwarg["train_dialogue"] = True
+            train_kwarg["train_196"] = True
+            train_kwarg["train_301"] = True
+
+        trainer = UbuntuCorpusTrainer2(self.chatbot, cog_data_path(self))
+        return await trainer.asynctrain(**train_kwarg)
 
     def _train_english(self):
         trainer = ChatterBotCorpusTrainer(self.chatbot)
@@ -205,7 +227,7 @@ class Chatter(Cog):
         """
         Base command for this cog. Check help for the commands list.
         """
-        pass
+        self._guild_cache[ctx.guild.id] = {}  # Clear cache when modifying values
 
     @commands.admin()
     @chatter.command(name="channel")
@@ -240,19 +262,39 @@ class Chatter(Cog):
         await self.config.guild(ctx.guild).reply.set(toggle)
 
         if toggle:
-            await ctx.send("I will now respond to you if conversation continuity is not present")
+            await ctx.maybe_send_embed("I will now respond to you if conversation continuity is not present")
         else:
-            await ctx.send(
+            await ctx.maybe_send_embed(
                 "I will not reply to your message if conversation continuity is not present, anymore"
             )
+
+    @commands.admin()
+    @chatter.command(name="learning")
+    async def chatter_learning(self, ctx: commands.Context, toggle: Optional[bool] = None):
+        """
+        Toggle the bot learning from its conversations.
+
+        This is on by default.
+        """
+        learning = await self.config.guild(ctx.guild).learning()
+        if toggle is None:
+            toggle = not learning
+        await self.config.guild(ctx.guild).learning.set(toggle)
+
+        if toggle:
+            await ctx.maybe_send_embed("I will now learn from conversations.")
+        else:
+            await ctx.maybe_send_embed("I will no longer learn from conversations.")
 
     @commands.is_owner()
     @chatter.command(name="cleardata")
     async def chatter_cleardata(self, ctx: commands.Context, confirm: bool = False):
         """
-        This command will erase all training data and reset your configuration settings
+        This command will erase all training data and reset your configuration settings.
 
-        Use `[p]chatter cleardata True`
+        This applies to all guilds.
+
+        Use `[p]chatter cleardata True` to confirm.
         """
 
         if not confirm:
@@ -364,7 +406,6 @@ class Chatter(Cog):
             return
 
         await self.config.guild(ctx.guild).convo_delta.set(minutes)
-        self._guild_cache[ctx.guild.id]["convo_delta"] = minutes
 
         await ctx.tick()
 
@@ -420,7 +461,64 @@ class Chatter(Cog):
         """Commands for training the bot"""
         pass
 
-    @commands.is_owner()
+    @chatter_train.group(name="kaggle")
+    async def chatter_train_kaggle(self, ctx: commands.Context):
+        """
+        Base command for kaggle training sets.
+
+        See `[p]chatter kaggle` for details on how to enable this option
+        """
+        pass
+
+    @chatter_train_kaggle.command(name="ubuntu")
+    async def chatter_train_kaggle_ubuntu(
+        self, ctx: commands.Context, confirmation: bool = False, intensity=0
+    ):
+        """
+        WARNING: Large Download! Trains the bot using *NEW* Ubuntu Dialog Corpus data.
+        """
+
+        if not confirmation:
+            await ctx.maybe_send_embed(
+                "Warning: This command downloads ~800 then eats your CPU for training\n"
+                "If you're sure you want to continue, run `[p]chatter train kaggle ubuntu True`"
+            )
+            return
+
+        async with ctx.typing():
+            future = await self._train_ubuntu2(intensity)
+
+        if future:
+            await ctx.maybe_send_embed("Training successful!")
+        else:
+            await ctx.maybe_send_embed("Error occurred :(")
+
+    @chatter_train_kaggle.command(name="movies")
+    async def chatter_train_kaggle_movies(self, ctx: commands.Context, confirmation: bool = False):
+        """
+        WARNING: Language! Trains the bot using Cornell University's "Movie Dialog Corpus".
+
+        This training set contains dialog from a spread of movies with different MPAA.
+        This dialog includes racism, sexism, and any number of sensitive topics.
+
+        Use at your own risk.
+        """
+
+        if not confirmation:
+            await ctx.maybe_send_embed(
+                "Warning: This command downloads ~800 then eats your CPU for training\n"
+                "If you're sure you want to continue, run `[p]chatter train kaggle movies True`"
+            )
+            return
+
+        async with ctx.typing():
+            future = await self._train_movies()
+
+        if future:
+            await ctx.maybe_send_embed("Training successful!")
+        else:
+            await ctx.maybe_send_embed("Error occurred :(")
+
     @chatter_train.command(name="ubuntu")
     async def chatter_train_ubuntu(self, ctx: commands.Context, confirmation: bool = False):
         """
@@ -438,33 +536,10 @@ class Chatter(Cog):
             future = await self.loop.run_in_executor(None, self._train_ubuntu)
 
         if future:
-            await ctx.send("Training successful!")
+            await ctx.maybe_send_embed("Training successful!")
         else:
-            await ctx.send("Error occurred :(")
+            await ctx.maybe_send_embed("Error occurred :(")
 
-    @commands.is_owner()
-    @chatter_train.command(name="ubuntu2")
-    async def chatter_train_ubuntu2(self, ctx: commands.Context, confirmation: bool = False):
-        """
-        WARNING: Large Download! Trains the bot using *NEW* Ubuntu Dialog Corpus data.
-        """
-
-        if not confirmation:
-            await ctx.maybe_send_embed(
-                "Warning: This command downloads ~800 then eats your CPU for training\n"
-                "If you're sure you want to continue, run `[p]chatter train ubuntu2 True`"
-            )
-            return
-
-        async with ctx.typing():
-            future = await self._train_ubuntu2()
-
-        if future:
-            await ctx.send("Training successful!")
-        else:
-            await ctx.send("Error occurred :(")
-
-    @commands.is_owner()
     @chatter_train.command(name="english")
     async def chatter_train_english(self, ctx: commands.Context):
         """
@@ -478,7 +553,6 @@ class Chatter(Cog):
         else:
             await ctx.maybe_send_embed("Error occurred :(")
 
-    @commands.is_owner()
     @chatter_train.command(name="list")
     async def chatter_train_list(self, ctx: commands.Context):
         """Trains the bot based on an uploaded list.
@@ -495,7 +569,6 @@ class Chatter(Cog):
 
         await ctx.send("Not yet implemented")
 
-    @commands.is_owner()
     @chatter_train.command(name="channel")
     async def chatter_train_channel(self, ctx: commands.Context, channel: discord.TextChannel):
         """
@@ -563,6 +636,9 @@ class Chatter(Cog):
         # Thank you Cog-Creators
         channel: discord.TextChannel = message.channel
 
+        if not self._guild_cache[guild.id]:
+            self._guild_cache[guild.id] = await self.config.guild(guild).all()
+
         is_reply = False  # this is only useful with in_response_to
         if (
             message.reference is not None
@@ -571,7 +647,7 @@ class Chatter(Cog):
         ):
             is_reply = True  # this is only useful with in_response_to
             pass  # this is a reply to the bot, good to go
-        elif guild is not None and channel.id == await self.config.guild(guild).chatchannel():
+        elif guild is not None and channel.id == self._guild_cache[guild.id]["chatchannel"]:
             pass  # good to go
         else:
             when_mentionables = commands.when_mentioned(self.bot, message)
@@ -587,9 +663,6 @@ class Chatter(Cog):
         text = message.clean_content
 
         async with ctx.typing():
-
-            if not self._guild_cache[ctx.guild.id]:
-                self._guild_cache[ctx.guild.id] = await self.config.guild(ctx.guild).all()
 
             if is_reply:
                 in_response_to = message.reference.resolved.content
@@ -611,7 +684,7 @@ class Chatter(Cog):
                 None, self.chatbot.generate_response, Statement(text)
             )
 
-            if in_response_to is not None:
+            if in_response_to is not None and self._guild_cache[guild.id]["learning"]:
                 log.debug("learning response")
                 await self.loop.run_in_executor(
                     None,
@@ -623,7 +696,7 @@ class Chatter(Cog):
                 )
 
             replying = None
-            if await self.config.guild(guild).reply():
+            if self._guild_cache[guild.id]["reply"]:
                 if message != ctx.channel.last_message:
                     replying = message
 
