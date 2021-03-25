@@ -179,7 +179,7 @@ class MovieTrainer(KaggleTrainer):
         if statements_from_file:
             self.chatbot.storage.create_many(statements_from_file)
 
-        log.info("Training took", time.time() - start_time, "seconds.")
+        log.info(f"Training took {time.time() - start_time} seconds.")
 
     async def asynctrain(self, *args, **kwargs):
         extracted_lines = self.data_directory / "movie_lines.tsv"
@@ -302,7 +302,7 @@ class UbuntuCorpusTrainer2(KaggleTrainer):
             if statements_from_file:
                 self.chatbot.storage.create_many(statements_from_file)
 
-        log.info("Training took", time.time() - start_time, "seconds.")
+        log.info(f"Training took {time.time() - start_time} seconds.")
 
 
 class TwitterCorpusTrainer(Trainer):
