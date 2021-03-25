@@ -136,7 +136,7 @@ class MovieTrainer(KaggleTrainer):
         #         log.exception(f"Bad line: {row}")
         #         pass
         #     else:
-        #         # print(f"Good line: {row}")
+        #         # log.info(f"Good line: {row}")
         #         pass
         #
         # # lines_dict = {row[0].strip('"'): row[4] for row in reader_list}
@@ -168,11 +168,10 @@ class MovieTrainer(KaggleTrainer):
                 statements_from_file.append(statement)
 
             if statements_from_file:
-                print(statements_from_file)
                 self.chatbot.storage.create_many(statements_from_file)
                 statements_from_file = []
 
-        print("Training took", time.time() - start_time, "seconds.")
+        log.info("Training took", time.time() - start_time, "seconds.")
 
     async def asynctrain(self, *args, **kwargs):
         extracted_lines = self.data_directory / "movie_lines.tsv"
@@ -295,7 +294,7 @@ class UbuntuCorpusTrainer2(KaggleTrainer):
             if statements_from_file:
                 self.chatbot.storage.create_many(statements_from_file)
 
-        print("Training took", time.time() - start_time, "seconds.")
+        log.info("Training took", time.time() - start_time, "seconds.")
 
 
 class TwitterCorpusTrainer(Trainer):
