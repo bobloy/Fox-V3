@@ -480,7 +480,7 @@ class Chatter(Cog):
 
         if not confirmation:
             await ctx.maybe_send_embed(
-                "Warning: This command downloads ~800 then eats your CPU for training\n"
+                "Warning: This command downloads ~800MB and is CPU intensive during training\n"
                 "If you're sure you want to continue, run `[p]chatter train kaggle ubuntu True`"
             )
             return
@@ -506,7 +506,7 @@ class Chatter(Cog):
 
         if not confirmation:
             await ctx.maybe_send_embed(
-                "Warning: This command downloads ~800 then eats your CPU for training\n"
+                "Warning: This command downloads ~29MB and is CPU intensive during training\n"
                 "If you're sure you want to continue, run `[p]chatter train kaggle movies True`"
             )
             return
@@ -527,7 +527,7 @@ class Chatter(Cog):
 
         if not confirmation:
             await ctx.maybe_send_embed(
-                "Warning: This command downloads ~500MB then eats your CPU for training\n"
+                "Warning: This command downloads ~500MB and is CPU intensive during training\n"
                 "If you're sure you want to continue, run `[p]chatter train ubuntu True`"
             )
             return
