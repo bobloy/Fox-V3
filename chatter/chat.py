@@ -56,14 +56,13 @@ class Chatter(Cog):
         super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6710497116116101114)
-        default_global = {}
+        default_global = {"learning": True}
         default_guild = {
             "whitelist": None,
             "days": 1,
             "convo_delta": 15,
             "chatchannel": None,
             "reply": True,
-            "learning": True,
         }
         path: pathlib.Path = cog_data_path(self)
         self.data_path = path / "database.sqlite3"
@@ -85,6 +84,7 @@ class Chatter(Cog):
         self.loop = asyncio.get_event_loop()
 
         self._guild_cache = defaultdict(dict)
+        self._global_cache = {}
 
         self._last_message_per_channel: Dict[Optional[discord.Message]] = defaultdict(lambda: None)
 
@@ -228,6 +228,7 @@ class Chatter(Cog):
         Base command for this cog. Check help for the commands list.
         """
         self._guild_cache[ctx.guild.id] = {}  # Clear cache when modifying values
+        self._global_cache = {}
 
     @commands.admin()
     @chatter.command(name="channel")
@@ -270,18 +271,19 @@ class Chatter(Cog):
                 "I will not reply to your message if conversation continuity is not present, anymore"
             )
 
-    @commands.admin()
+    @commands.is_owner()
     @chatter.command(name="learning")
     async def chatter_learning(self, ctx: commands.Context, toggle: Optional[bool] = None):
         """
         Toggle the bot learning from its conversations.
 
+        This is a global setting.
         This is on by default.
         """
-        learning = await self.config.guild(ctx.guild).learning()
+        learning = await self.config.learning()
         if toggle is None:
             toggle = not learning
-        await self.config.guild(ctx.guild).learning.set(toggle)
+        await self.config.learning.set(toggle)
 
         if toggle:
             await ctx.maybe_send_embed("I will now learn from conversations.")
@@ -686,7 +688,10 @@ class Chatter(Cog):
                 None, self.chatbot.generate_response, Statement(text)
             )
 
-            if in_response_to is not None and self._guild_cache[guild.id]["learning"]:
+            if not self._global_cache:
+                self._global_cache = await self.config.all()
+
+            if in_response_to is not None and self._global_cache["learning"]:
                 log.debug("learning response")
                 await self.loop.run_in_executor(
                     None,
