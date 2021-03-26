@@ -5,7 +5,7 @@ import pathlib
 from collections import defaultdict
 from datetime import datetime, timedelta
 from functools import partial
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import discord
 from chatterbot import ChatBot
@@ -107,7 +107,7 @@ class Chatter(Cog):
             logger=log,
         )
 
-    async def _get_conversation(self, ctx, in_channel: discord.TextChannel = None):
+    async def _get_conversation(self, ctx, in_channels: List[discord.TextChannel]):
         """
         Compiles all conversation in the Guild this bot can get it's hands on
         Currently takes a stupid long time
@@ -124,9 +124,9 @@ class Chatter(Cog):
             # Should always be positive numbers
             return msg.created_at - sent >= delta
 
-        for channel in ctx.guild.text_channels:
-            if in_channel:
-                channel = in_channel
+        for channel in in_channels:
+            # if in_channel:
+            #     channel = in_channel
             await ctx.maybe_send_embed("Gathering {}".format(channel.mention))
             user = None
             i = 0
@@ -161,8 +161,8 @@ class Chatter(Cog):
             except discord.HTTPException:
                 pass
 
-            if in_channel:
-                break
+            # if in_channel:
+            #     break
 
         return out
 
@@ -574,10 +574,15 @@ class Chatter(Cog):
         await ctx.send("Not yet implemented")
 
     @chatter_train.command(name="channel")
-    async def chatter_train_channel(self, ctx: commands.Context, channel: discord.TextChannel):
+    async def chatter_train_channel(
+        self, ctx: commands.Context, channels: commands.Greedy[discord.TextChannel]
+    ):
         """
         Trains the bot based on language in this guild.
         """
+        if not channels:
+            await ctx.send_help()
+            return
 
         await ctx.maybe_send_embed(
             "Warning: The cog may use significant RAM or CPU if trained on large data sets.\n"
@@ -586,7 +591,7 @@ class Chatter(Cog):
         )
 
         async with ctx.typing():
-            conversation = await self._get_conversation(ctx, channel)
+            conversation = await self._get_conversation(ctx, channels)
 
         if not conversation:
             await ctx.maybe_send_embed("Failed to gather training data")
