@@ -1,12 +1,16 @@
+import logging
 from datetime import date, timedelta
-from typing import Literal
+from typing import Literal, Optional
 
 import discord
+from redbot.cogs.mutes import Mutes
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
 from redbot.core.utils import AsyncIter
 from redbot.core.utils.chat_formatting import pagify
+
+log = logging.getLogger("red.fox_v3.flag")
 
 
 class Flag(Cog):
@@ -19,7 +23,7 @@ class Flag(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {"days": 31, "dm": True, "flags": {}}
+        default_guild = {"days": 31, "dm": True, "flags": {}, "mutethreshold": 0}
 
         self.config.register_global(**default_global)
         self.config.register_guild(**default_guild)
@@ -78,6 +82,29 @@ class Flag(Cog):
             "DM-ing members when they get a flag is now set to **{}**".format(not dm)
         )
 
+    @checks.admin_or_permissions(manage_guild=True)
+    @flagset.command(name="mute")
+    async def flagset_mute(self, ctx: commands.Context, count: int):
+        """
+        Sets the threshold for flags to mute the user.
+
+        Only works when the core mute cog is configured properly.
+
+        Set to zero to disable.
+        """
+        if count < 0:
+            await ctx.send_help()
+            return
+
+        await self.config.guild(ctx.guild).mutethreshold.set(count)
+
+        if count:
+            await ctx.maybe_send_embed(
+                "Will now attempt to mute people after **{}** flags".format(count)
+            )
+        else:
+            await ctx.maybe_send_embed("Muting disabled.")
+
     @staticmethod
     def _flag_template():
         return {"reason": "", "expireyear": 0, "expiremonth": 0, "expireday": 0}
@@ -91,7 +118,8 @@ class Flag(Cog):
         await self._check_flags(guild)
 
         flag = self._flag_template()
-        expire_date = date.today() + timedelta(days=await self.config.guild(guild).days())
+        mute_days = await self.config.guild(guild).days()
+        expire_date = date.today() + timedelta(mute_days)
 
         flag["reason"] = reason
         flag["expireyear"] = expire_date.year
@@ -106,6 +134,12 @@ class Flag(Cog):
             if str(member.id) not in flags:
                 flags[str(member.id)] = []
             flags[str(member.id)].append(flag)
+            flag_count = len(flags[str(member.id)])
+
+        mute_threshold = await self.config.guild(guild).mutethreshold()
+        if 0 < mute_threshold <= flag_count:
+            able_to_mute = await self._attempt_mute(ctx, member, mute_days)
+            log.debug(f"Mute attempt: {able_to_mute}")
 
         outembed = await self._list_flags(member)
 
@@ -165,6 +199,17 @@ class Flag(Cog):
 
         for page in pagify(out):
             await ctx.send(page)
+
+    async def _attempt_mute(self, ctx, member: discord.Member, days):
+        mutes: Optional[Mutes] = self.bot.get_cog("Mutes")
+        if mutes is None:
+            log.info("Mutes cog not loaded, cannot mute")
+            return False
+
+        return await mutes.mute(ctx, member, f'{days} days [Flag] Exceeded mute threshold')
+        # return await mutes.mute_user(
+        #     member.guild, author, member, until, "[Flag] Exceeded mute threshold"
+        # )
 
     async def _list_flags(self, member: discord.Member):
         """Returns a pretty embed of flags on a member"""
