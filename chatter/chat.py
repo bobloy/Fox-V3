@@ -213,13 +213,10 @@ class Chatter(Cog):
     def _train(self, data):
         trainer = ListTrainer(self.chatbot)
         total = len(data)
-        # try:
         for c, convo in enumerate(data, 1):
+            log.info(f"{c} / {total}")
             if len(convo) > 1:  # TODO: Toggleable skipping short conversations
-                print(f"{c} / {total}")
                 trainer.train(convo)
-        # except:
-        #     return False
         return True
 
     @commands.group(invoke_without_command=False)
