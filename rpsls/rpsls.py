@@ -69,13 +69,12 @@ class RPSLS(Cog):
 
     def get_emote(self, choice):
         if choice == "rock":
-            emote = ":moyai:"
+            return ":moyai:"
         elif choice == "spock":
-            emote = ":vulcan:"
+            return ":vulcan:"
         elif choice == "paper":
-            emote = ":page_facing_up:"
+            return ":page_facing_up:"
         elif choice in ["scissors", "lizard"]:
-            emote = ":{}:".format(choice)
+            return ":{}:".format(choice)
         else:
-            emote = None
-        return emote
+            return None

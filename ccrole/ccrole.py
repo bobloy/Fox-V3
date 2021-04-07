@@ -48,8 +48,7 @@ class CCRole(commands.Cog):
         """Custom commands management with roles
 
         Highly customizable custom commands with role management."""
-        if not ctx.invoked_subcommand:
-            pass
+        pass
 
     @ccrole.command(name="add")
     @checks.mod_or_permissions(administrator=True)
@@ -228,7 +227,7 @@ class CCRole(commands.Cog):
             if not role_list:
                 return "None"
             return ", ".join(
-                [discord.utils.get(ctx.guild.roles, id=roleid).name for roleid in role_list]
+                discord.utils.get(ctx.guild.roles, id=roleid).name for roleid in role_list
             )
 
         embed.add_field(name="Text", value="```{}```".format(cmd["text"]), inline=False)
@@ -252,7 +251,7 @@ class CCRole(commands.Cog):
             )
             return
 
-        cmd_list = ", ".join([ctx.prefix + c for c in sorted(cmd_list.keys())])
+        cmd_list = ", ".join(ctx.prefix + c for c in sorted(cmd_list.keys()))
         cmd_list = "Custom commands:\n\n" + cmd_list
 
         if (
@@ -325,9 +324,7 @@ class CCRole(commands.Cog):
 
     async def eval_cc(self, cmd, message: discord.Message, ctx: commands.Context):
         """Does all the work"""
-        if cmd["proles"] and not (
-            set(role.id for role in message.author.roles) & set(cmd["proles"])
-        ):
+        if cmd["proles"] and not {role.id for role in message.author.roles} & set(cmd["proles"]):
             log.debug(f"{message.author} missing required role to execute {ctx.invoked_with}")
             return  # Not authorized, do nothing
 

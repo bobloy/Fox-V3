@@ -68,10 +68,7 @@ class CapturePrint:
         self.string = None
 
     def write(self, string):
-        if self.string is None:
-            self.string = string
-        else:
-            self.string = self.string + "\n" + string
+        self.string = string if self.string is None else self.string + "\n" + string
 
 
 class FIFO(commands.Cog):
@@ -197,8 +194,8 @@ class FIFO(commands.Cog):
     async def _get_tz(self, user: Union[discord.User, discord.Member]) -> Union[None, tzinfo]:
         if self.tz_cog is None:
             self.tz_cog = self.bot.get_cog("Timezone")
-            if self.tz_cog is None:
-                self.tz_cog = False  # only try once to get the timezone cog
+        if self.tz_cog is None:
+            self.tz_cog = False  # only try once to get the timezone cog
 
         if not self.tz_cog:
             return None
@@ -230,8 +227,7 @@ class FIFO(commands.Cog):
         """
         Base command for handling scheduling of tasks
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @fifo.command(name="wakeup")
     async def fifo_wakeup(self, ctx: commands.Context):
@@ -522,8 +518,7 @@ class FIFO(commands.Cog):
         """
         Add a new trigger for a task from the current guild.
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @fifo_trigger.command(name="interval")
     async def fifo_trigger_interval(

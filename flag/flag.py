@@ -53,12 +53,9 @@ class Flag(Cog):
     @commands.group()
     async def flagset(self, ctx: commands.Context):
         """
-        My custom cog
-
-        Extra information goes here
+        Commands for managing Flag settings
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @flagset.command(name="expire")
     async def flagset_expire(self, ctx: commands.Context, days: int):

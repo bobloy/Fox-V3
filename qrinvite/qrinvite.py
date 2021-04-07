@@ -67,8 +67,10 @@ class QRInvite(Cog):
 
         extension = pathlib.Path(image_url).parts[-1].replace(".", "?").split("?")[1]
 
+        save_as_name = f"{ctx.guild.id}-{ctx.author.id}"
+
         path: pathlib.Path = cog_data_path(self)
-        image_path = path / (ctx.guild.icon + "." + extension)
+        image_path = path / f"{save_as_name}.{extension}"
         async with aiohttp.ClientSession() as session:
             async with session.get(image_url) as response:
                 image = await response.read()
@@ -77,27 +79,29 @@ class QRInvite(Cog):
             file.write(image)
 
         if extension == "webp":
-            new_path = convert_webp_to_png(str(image_path))
+            new_image_path = convert_webp_to_png(str(image_path))
         elif extension == "gif":
             await ctx.maybe_send_embed("gif is not supported yet, stay tuned")
             return
         elif extension == "png":
-            new_path = str(image_path)
+            new_image_path = str(image_path)
+        elif extension == "jpg":
+            new_image_path = convert_jpg_to_png(str(image_path))
         else:
             await ctx.maybe_send_embed(f"{extension} is not supported yet, stay tuned")
             return
 
         myqr.run(
             invite,
-            picture=new_path,
-            save_name=ctx.guild.icon + "_qrcode.png",
+            picture=new_image_path,
+            save_name=f"{save_as_name}_qrcode.png",
             save_dir=str(cog_data_path(self)),
             colorized=colorized,
         )
 
-        png_path: pathlib.Path = path / (ctx.guild.icon + "_qrcode.png")
-        with png_path.open("rb") as png_fp:
-            await ctx.send(file=discord.File(png_fp.read(), "qrcode.png"))
+        png_path: pathlib.Path = path / f"{save_as_name}_qrcode.png"
+        # with png_path.open("rb") as png_fp:
+        await ctx.send(file=discord.File(png_path, "qrcode.png"))
 
 
 def convert_webp_to_png(path):
@@ -109,4 +113,11 @@ def convert_webp_to_png(path):
     im.paste(255, mask)
     new_path = path.replace(".webp", ".png")
     im.save(new_path, transparency=255)
+    return new_path
+
+
+def convert_jpg_to_png(path):
+    im = Image.open(path)
+    new_path = path.replace(".jpg", ".png")
+    im.save(new_path)
     return new_path
