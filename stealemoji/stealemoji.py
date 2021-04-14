@@ -100,7 +100,7 @@ class StealEmoji(Cog):
             await ctx.maybe_send_embed("No stolen emojis yet")
             return
 
-        for page in pagify(emoj):
+        for page in pagify(emoj, delims=[" "]):
             await ctx.maybe_send_embed(page)
 
     @checks.is_owner()
