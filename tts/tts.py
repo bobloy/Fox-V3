@@ -3,7 +3,6 @@ import logging
 from typing import Optional, TYPE_CHECKING
 
 import discord
-import pycountry
 from discord.ext.commands import BadArgument, Converter
 from gtts import gTTS
 from gtts.lang import _fallback_deprecated_lang, tts_langs
@@ -12,8 +11,6 @@ from redbot.core.bot import Red
 from redbot.core.commands import Cog
 
 log = logging.getLogger("red.fox_v3.tts")
-
-langs = [lang.iso639_1_code for lang in pycountry.languages if hasattr(lang, "iso639_1_code")]
 
 if TYPE_CHECKING:
     ISO639Converter = str
