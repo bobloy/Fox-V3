@@ -7,7 +7,8 @@
   "hidden": false,
   "install_msg": "Thank you for installing TTS. Get started with `[p]load tts`, then `[p]help TTS`",
   "requirements": [
-    "gTTS"
+    "gTTS",
+    "pycountry"
   ],
   "short": "Send TTS messages as uploaded mp3",
   "end_user_data_statement": "This cog does not store any End User Data",
