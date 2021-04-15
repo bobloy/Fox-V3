@@ -15,8 +15,6 @@ log = logging.getLogger("red.fox_v3.tts")
 
 langs = [lang.iso639_1_code for lang in pycountry.languages if hasattr(lang, "iso639_1_code")]
 
-print(langs)
-
 if TYPE_CHECKING:
     ISO639Converter = str
 else:
