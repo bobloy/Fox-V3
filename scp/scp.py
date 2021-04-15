@@ -177,7 +177,3 @@ class SCP(Cog):
 
         msg = "http://www.scp-wiki.net/log-of-unexplained-locations"
         await ctx.maybe_send_embed(msg)
-
-
-def setup(bot):
-    bot.add_cog(SCP(bot))
