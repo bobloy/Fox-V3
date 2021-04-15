@@ -45,14 +45,12 @@ class LastSeen(Cog):
 
     @staticmethod
     def get_date_time(s):
-        d = dateutil.parser.parse(s)
-        return d
+        return dateutil.parser.parse(s)
 
     @commands.group(aliases=["setlseen"], name="lseenset")
     async def lset(self, ctx: commands.Context):
         """Change settings for lseen"""
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @lset.command(name="toggle")
     async def lset_toggle(self, ctx: commands.Context):
@@ -83,7 +81,7 @@ class LastSeen(Cog):
         #     description="{} was last seen at this date and time".format(member.display_name),
         #     timestamp=last_seen)
 
-        embed = discord.Embed(timestamp=last_seen)
+        embed = discord.Embed(timestamp=last_seen, color=await self.bot.get_embed_color(ctx))
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()

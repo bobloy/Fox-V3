@@ -25,8 +25,7 @@ class Leaver(Cog):
     @checks.mod_or_permissions(administrator=True)
     async def leaverset(self, ctx):
         """Adjust leaver settings"""
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @leaverset.command()
     async def channel(self, ctx: Context):
@@ -57,5 +56,3 @@ class Leaver(Cog):
                 )
             else:
                 await channel.send(out)
-        else:
-            pass

@@ -147,8 +147,7 @@ class Hangman(Cog):
     @checks.mod_or_permissions(administrator=True)
     async def hangset(self, ctx):
         """Adjust hangman settings"""
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @hangset.command()
     async def face(self, ctx: commands.Context, theface):
@@ -250,7 +249,7 @@ class Hangman(Cog):
 
         self.winbool[guild] = True
         for i in self.the_data[guild]["answer"]:
-            if i == " " or i == "-":
+            if i in [" ", "-"]:
                 out_str += i * 2
             elif i in self.the_data[guild]["guesses"] or i not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
                 out_str += "__" + i + "__ "
@@ -262,9 +261,7 @@ class Hangman(Cog):
 
     def _guesslist(self, guild):
         """Returns the current letter list"""
-        out_str = ""
-        for i in self.the_data[guild]["guesses"]:
-            out_str += str(i) + ","
+        out_str = "".join(str(i) + "," for i in self.the_data[guild]["guesses"])
         out_str = out_str[:-1]
 
         return out_str

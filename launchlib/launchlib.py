@@ -1,7 +1,7 @@
 import asyncio
 import functools
 import logging
-
+import re
 import discord
 import launchlibrary as ll
 from redbot.core import Config, commands
@@ -14,9 +14,7 @@ log = logging.getLogger("red.fox_v3.launchlib")
 
 class LaunchLib(commands.Cog):
     """
-    Cog Description
-
-    Less important information about the cog
+    Cog using `thespacedevs` API to get details about rocket launches
     """
 
     def __init__(self, bot: Red):
@@ -37,27 +35,30 @@ class LaunchLib(commands.Cog):
         return
 
     async def _embed_launch_data(self, launch: ll.AsyncLaunch):
-        status: ll.AsyncLaunchStatus = await launch.get_status()
+
+        # status: ll.AsyncLaunchStatus = await launch.get_status()
+        status = launch.status
 
         rocket: ll.AsyncRocket = launch.rocket
 
         title = launch.name
-        description = status.description
+        description = status["name"]
 
         urls = launch.vid_urls + launch.info_urls
-        if not urls and rocket:
-            urls = rocket.info_urls + [rocket.wiki_url]
-        if urls:
-            url = urls[0]
-        else:
-            url = None
+        if rocket:
+            urls += [rocket.info_url, rocket.wiki_url]
+        if launch.pad:
+            urls += [launch.pad.info_url, launch.pad.wiki_url]
 
-        color = discord.Color.green() if status.id in [1, 3] else discord.Color.red()
+        url = next((url for url in urls if urls is not None), None) if urls else None
+        color = discord.Color.green() if status["id"] in [1, 3] else discord.Color.red()
 
         em = discord.Embed(title=title, description=description, url=url, color=color)
 
         if rocket and rocket.image_url and rocket.image_url != "Array":
             em.set_image(url=rocket.image_url)
+        elif launch.pad and launch.pad.map_image:
+            em.set_image(url=launch.pad.map_image)
 
         agency = getattr(launch, "agency", None)
         if agency is not None:
@@ -89,6 +90,18 @@ class LaunchLib(commands.Cog):
                     data = mission.get(f[0], None)
                     if data is not None and data:
                         em.add_field(name=f[1], value=data)
+        if launch.pad:
+            location_url = getattr(launch.pad, "map_url", None)
+            pad_name = getattr(launch.pad, "name", None)
+
+            if pad_name is not None:
+                if location_url is not None:
+                    location_url = re.sub(
+                        "[^a-zA-Z0-9/:.'+\"°?=,-]", "", location_url
+                    )  # Fix bad URLS
+                    em.add_field(name="Launch Pad Name", value=f"[{pad_name}]({location_url})")
+                else:
+                    em.add_field(name="Launch Pad Name", value=pad_name)
 
         if rocket and rocket.family:
             em.add_field(name="Rocket Family", value=rocket.family)
@@ -101,11 +114,16 @@ class LaunchLib(commands.Cog):
 
     @commands.group()
     async def launchlib(self, ctx: commands.Context):
-        if ctx.invoked_subcommand is None:
-            pass
+        """Base command for getting launches"""
+        pass
 
     @launchlib.command()
     async def next(self, ctx: commands.Context, num_launches: int = 1):
+        """
+        Show the next launches
+
+        Use `num_launches` to get more than one.
+        """
         # launches = await api.async_next_launches(num_launches)
         # loop = asyncio.get_running_loop()
         #
@@ -114,6 +132,8 @@ class LaunchLib(commands.Cog):
         # )
         #
         launches = await self.api.async_fetch_launch(num=num_launches)
+
+        # log.debug(str(launches))
 
         async with ctx.typing():
             for x, launch in enumerate(launches):

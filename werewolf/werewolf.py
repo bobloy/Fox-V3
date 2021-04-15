@@ -1,11 +1,10 @@
 import logging
-from typing import List, Union
+from typing import Optional
 
 import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
-from redbot.core.utils import AsyncIter
 from redbot.core.utils.menus import DEFAULT_CONTROLS, menu
 
 from werewolf.builder import (
@@ -15,17 +14,9 @@ from werewolf.builder import (
     role_from_id,
     role_from_name,
 )
-from werewolf.game import Game
+from werewolf.game import Game, anyone_has_role
 
 log = logging.getLogger("red.fox_v3.werewolf")
-
-
-async def anyone_has_role(
-    member_list: List[discord.Member], role: discord.Role
-) -> Union[None, discord.Member]:
-    return await AsyncIter(member_list).find(
-        lambda m: AsyncIter(m.roles).find(lambda r: r.id == role.id)
-    )
 
 
 class Werewolf(Cog):
@@ -56,17 +47,19 @@ class Werewolf(Cog):
         """Nothing to delete"""
         return
 
-    def __unload(self):
+    def cog_unload(self):
         log.debug("Unload called")
-        for game in self.games.values():
-            del game
+        for key in self.games.keys():
+            del self.games[key]
 
     @commands.command()
     async def buildgame(self, ctx: commands.Context):
         """
         Create game codes to run custom games.
 
-        Pick the roles or randomized roles you want to include in a game
+        Pick the roles or randomized roles you want to include in a game.
+
+        Note: The same role can be picked more than once.
         """
         gb = GameBuilder()
         code = await gb.build_game(ctx)
@@ -82,8 +75,7 @@ class Werewolf(Cog):
         """
         Base command to adjust settings. Check help for command list.
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @commands.guild_only()
     @wwset.command(name="list")
@@ -92,9 +84,6 @@ class Werewolf(Cog):
         Lists current guild settings
         """
         valid, role, category, channel, log_channel = await self._get_settings(ctx)
-        # if not valid:
-        #     await ctx.send("Failed to get settings")
-        #     return None
 
         embed = discord.Embed(
             title="Current Guild Settings",
@@ -176,8 +165,7 @@ class Werewolf(Cog):
         """
         Base command for this cog. Check help for the commands list.
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @commands.guild_only()
     @ww.command(name="new")
@@ -263,6 +251,7 @@ class Werewolf(Cog):
         game = await self._get_game(ctx)
         if not game:
             await ctx.maybe_send_embed("No game running, cannot start")
+            return
 
         if not await game.setup(ctx):
             pass  # ToDo something?
@@ -285,7 +274,8 @@ class Werewolf(Cog):
 
         game = await self._get_game(ctx)
         game.game_over = True
-        game.current_action.cancel()
+        if game.current_action:
+            game.current_action.cancel()
         await ctx.maybe_send_embed("Game has been stopped")
 
     @commands.guild_only()
@@ -356,8 +346,7 @@ class Werewolf(Cog):
         """
         Find custom roles by name, alignment, category, or ID
         """
-        if ctx.invoked_subcommand is None or ctx.invoked_subcommand == self.ww_search:
-            pass
+        pass
 
     @ww_search.command(name="name")
     async def ww_search_name(self, ctx: commands.Context, *, name):
@@ -399,7 +388,7 @@ class Werewolf(Cog):
             else:
                 await ctx.maybe_send_embed("Role ID not found")
 
-    async def _get_game(self, ctx: commands.Context, game_code=None) -> Union[Game, None]:
+    async def _get_game(self, ctx: commands.Context, game_code=None) -> Optional[Game]:
         guild: discord.Guild = getattr(ctx, "guild", None)
 
         if guild is None:
@@ -426,7 +415,7 @@ class Werewolf(Cog):
 
         return self.games[guild.id]
 
-    async def _game_start(self, game):
+    async def _game_start(self, game: Game):
         await game.start()
 
     async def _get_settings(self, ctx):

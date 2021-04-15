@@ -48,8 +48,7 @@ class CCRole(commands.Cog):
         """Custom commands management with roles
 
         Highly customizable custom commands with role management."""
-        if not ctx.invoked_subcommand:
-            pass
+        pass
 
     @ccrole.command(name="add")
     @checks.mod_or_permissions(administrator=True)
@@ -228,7 +227,7 @@ class CCRole(commands.Cog):
             if not role_list:
                 return "None"
             return ", ".join(
-                [discord.utils.get(ctx.guild.roles, id=roleid).name for roleid in role_list]
+                discord.utils.get(ctx.guild.roles, id=roleid).name for roleid in role_list
             )
 
         embed.add_field(name="Text", value="```{}```".format(cmd["text"]), inline=False)
@@ -252,7 +251,7 @@ class CCRole(commands.Cog):
             )
             return
 
-        cmd_list = ", ".join([ctx.prefix + c for c in sorted(cmd_list.keys())])
+        cmd_list = ", ".join(ctx.prefix + c for c in sorted(cmd_list.keys()))
         cmd_list = "Custom commands:\n\n" + cmd_list
 
         if (
@@ -292,13 +291,13 @@ class CCRole(commands.Cog):
         # Thank you Cog-Creators
 
         cmd = ctx.invoked_with
-        cmd = cmd.lower()  # Continues the proud case_insentivity tradition of ccrole
+        cmd = cmd.lower()  # Continues the proud case-insensitivity tradition of ccrole
         guild = ctx.guild
         # message = ctx.message  # Unneeded since switch to `on_message_without_command` from `on_command_error`
 
-        cmdlist = self.config.guild(guild).cmdlist
+        cmd_list = self.config.guild(guild).cmdlist
         # cmd = message.content[len(prefix) :].split()[0].lower()
-        cmd = await cmdlist.get_raw(cmd, default=None)
+        cmd = await cmd_list.get_raw(cmd, default=None)
 
         if cmd is not None:
             await self.eval_cc(cmd, message, ctx)
@@ -325,9 +324,7 @@ class CCRole(commands.Cog):
 
     async def eval_cc(self, cmd, message: discord.Message, ctx: commands.Context):
         """Does all the work"""
-        if cmd["proles"] and not (
-            set(role.id for role in message.author.roles) & set(cmd["proles"])
-        ):
+        if cmd["proles"] and not {role.id for role in message.author.roles} & set(cmd["proles"]):
             log.debug(f"{message.author} missing required role to execute {ctx.invoked_with}")
             return  # Not authorized, do nothing
 

@@ -71,6 +71,7 @@ W1, W2, W5, W6 = Random Werewolf
 N1 = Benign Neutral
 
 0001-1112T11W112N2
+which translates to
 0,0,0,1,11,12,E1,R1,R1,R1,R2,P2
 
 pre-letter = exact role position
@@ -89,7 +90,7 @@ async def parse_code(code, game):
         if len(built) < digits:
             built += c
 
-        if built == "T" or built == "W" or built == "N":
+        if built in ["T", "W", "N"]:
             # Random Towns
             category = built
             built = ""
@@ -115,8 +116,6 @@ async def parse_code(code, game):
                 options = [role for role in ROLE_LIST if 10 + idx in role.category]
             elif category == "N":
                 options = [role for role in ROLE_LIST if 20 + idx in role.category]
-                pass
-
             if not options:
                 raise IndexError("No Match Found")
 
@@ -129,11 +128,8 @@ async def parse_code(code, game):
 
 async def encode(role_list, rand_roles):
     """Convert role list to code"""
-    out_code = ""
-
     digit_sort = sorted(role for role in role_list if role < 10)
-    for role in digit_sort:
-        out_code += str(role)
+    out_code = "".join(str(role) for role in digit_sort)
 
     digit_sort = sorted(role for role in role_list if 10 <= role < 100)
     if digit_sort:

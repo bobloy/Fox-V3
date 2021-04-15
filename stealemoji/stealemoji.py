@@ -6,6 +6,7 @@ import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
+from redbot.core.utils.chat_formatting import pagify
 
 log = logging.getLogger("red.fox_v3.stealemoji")
 # Replaced with discord.Asset.read()
@@ -16,16 +17,16 @@ log = logging.getLogger("red.fox_v3.stealemoji")
 
 
 async def check_guild(guild, emoji):
-    if len(guild.emojis) >= 100:
+    if len(guild.emojis) >= 2 * guild.emoji_limit:
         return False
 
-    if len(guild.emojis) < 50:
+    if len(guild.emojis) < guild.emoji_limit:
         return True
 
     if emoji.animated:
-        return sum(e.animated for e in guild.emojis) < 50
+        return sum(e.animated for e in guild.emojis) < guild.emoji_limit
     else:
-        return sum(not e.animated for e in guild.emojis) < 50
+        return sum(not e.animated for e in guild.emojis) < guild.emoji_limit
 
 
 class StealEmoji(Cog):
@@ -50,6 +51,7 @@ class StealEmoji(Cog):
         default_global = {
             "stolemoji": {},
             "guildbanks": [],
+            "autobanked_guilds": [],
             "on": False,
             "notify": 0,
             "autobank": False,
@@ -68,8 +70,7 @@ class StealEmoji(Cog):
         """
         Base command for this cog. Check help for the commands list.
         """
-        if ctx.invoked_subcommand is None:
-            pass
+        pass
 
     @checks.is_owner()
     @stealemoji.command(name="clearemojis")
@@ -99,7 +100,8 @@ class StealEmoji(Cog):
             await ctx.maybe_send_embed("No stolen emojis yet")
             return
 
-        await ctx.maybe_send_embed(emoj)
+        for page in pagify(emoj, delims=[" "]):
+            await ctx.maybe_send_embed(page)
 
     @checks.is_owner()
     @stealemoji.command(name="notify")
@@ -147,9 +149,52 @@ class StealEmoji(Cog):
 
     @checks.is_owner()
     @commands.guild_only()
+    @stealemoji.command(name="deleteserver", aliases=["deleteguild"])
+    async def se_deleteserver(self, ctx: commands.Context, guild_id=None):
+        """Delete servers the bot is the owner of.
+
+        Useful for auto-generated guildbanks."""
+        if guild_id is None:
+            guild = ctx.guild
+        else:
+            guild = await self.bot.get_guild(guild_id)
+
+        if guild is None:
+            await ctx.maybe_send_embed("Failed to get guild, cancelling")
+            return
+        guild: discord.Guild
+        await ctx.maybe_send_embed(
+            f"Will attempt to delete {guild.name} ({guild.id})\n" f"Okay to continue? (yes/no)"
+        )
+
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        try:
+            answer = await self.bot.wait_for("message", timeout=120, check=check)
+        except asyncio.TimeoutError:
+            await ctx.send("Timed out, canceling")
+            return
+
+        if answer.content.upper() not in ["Y", "YES"]:
+            await ctx.maybe_send_embed("Cancelling")
+            return
+        try:
+            await guild.delete()
+        except discord.Forbidden:
+            log.exception("No permission to delete. I'm probably not the guild owner")
+            await ctx.maybe_send_embed("No permission to delete. I'm probably not the guild owner")
+        except discord.HTTPException:
+            log.exception("Unexpected error when deleting guild")
+            await ctx.maybe_send_embed("Unexpected error when deleting guild")
+        else:
+            await self.bot.send_to_owners(f"Guild {guild.name} deleted")
+
+    @checks.is_owner()
+    @commands.guild_only()
     @stealemoji.command(name="bank")
     async def se_bank(self, ctx):
-        """Add current server as emoji bank"""
+        """Add or remove current server as emoji bank"""
 
         def check(m):
             return (
@@ -224,34 +269,36 @@ class StealEmoji(Cog):
                 break
 
         if guildbank is None:
-            if await self.config.autobank():
-                try:
-                    guildbank: discord.Guild = await self.bot.create_guild(
-                        "StealEmoji Guildbank", code="S93bqTqKQ9rM"
-                    )
-                except discord.HTTPException:
-                    await self.config.autobank.set(False)
-                    log.exception("Unable to create guilds, disabling autobank")
-                    return
-                async with self.config.guildbanks() as guildbanks:
-                    guildbanks.append(guildbank.id)
-
-                await asyncio.sleep(2)
-
-                if guildbank.text_channels:
-                    channel = guildbank.text_channels[0]
-                else:
-                    # Always hits the else.
-                    # Maybe create_guild doesn't return guild object with
-                    #    the template channel?
-                    channel = await guildbank.create_text_channel("invite-channel")
-                invite = await channel.create_invite()
-
-                await self.bot.send_to_owners(invite)
-                log.info(f"Guild created id {guildbank.id}. Invite: {invite}")
-            else:
+            if not await self.config.autobank():
                 return
 
+            try:
+                guildbank: discord.Guild = await self.bot.create_guild(
+                    "StealEmoji Guildbank", code="S93bqTqKQ9rM"
+                )
+            except discord.HTTPException:
+                await self.config.autobank.set(False)
+                log.exception("Unable to create guilds, disabling autobank")
+                return
+            async with self.config.guildbanks() as guildbanks:
+                guildbanks.append(guildbank.id)
+            # Track generated guilds for easier deletion
+            async with self.config.autobanked_guilds() as autobanked_guilds:
+                autobanked_guilds.append(guildbank.id)
+
+            await asyncio.sleep(2)
+
+            if guildbank.text_channels:
+                channel = guildbank.text_channels[0]
+            else:
+                # Always hits the else.
+                # Maybe create_guild doesn't return guild object with
+                #    the template channel?
+                channel = await guildbank.create_text_channel("invite-channel")
+            invite = await channel.create_invite()
+
+            await self.bot.send_to_owners(invite)
+            log.info(f"Guild created id {guildbank.id}. Invite: {invite}")
         # Next, have I saved this emoji before (because uploaded emoji != orignal emoji)
 
         if str(emoji.id) in await self.config.stolemoji():
