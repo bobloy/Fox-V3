@@ -49,7 +49,11 @@ class LoveCalculator(Cog):
 
         result_image = soup_object.find("img", class_="result__image").get("src")
 
-        result_text = soup_object.find("div", class_="result-text").get_text()
+        result_text = soup_object.find("div", class_="result-text")
+        if result_text is None:
+            result_text = f"{x} and {y} aren't compatible 😔"
+        else:
+            result_text.get_text()
         result_text = " ".join(result_text.split())
 
         try:
