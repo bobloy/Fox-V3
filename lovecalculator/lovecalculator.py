@@ -53,7 +53,7 @@ class LoveCalculator(Cog):
         if result_text is None:
             result_text = f"{x} and {y} aren't compatible 😔"
         else:
-            result_text.get_text()
+            result_text = result_text.get_text()
         result_text = " ".join(result_text.split())
 
         try:
