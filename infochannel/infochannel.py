@@ -447,7 +447,7 @@ class InfoChannel(Cog):
                 guild,
                 members=True,
                 humans=True,
-				boosters=True,
+                boosters=True,
                 bots=True,
                 roles=True,
                 channels=True,
