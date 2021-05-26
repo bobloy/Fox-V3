@@ -28,7 +28,7 @@ async def get_channel_counts(category, guild):
     online_num = members - offline_num
     # Gets count of actual users
     human_num = members - bot_num
-	# count amount of premium subs/nitro subs.
+    # count amount of premium subs/nitro subs.
     boosters = guild.premium_subscription_count
     return {
         "members": members,
