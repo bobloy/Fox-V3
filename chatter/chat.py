@@ -29,6 +29,12 @@ def my_local_get_prefix(prefixes, content):
     return None
 
 
+class ENG_TRF:
+    ISO_639_1 = "en_core_web_trf"
+    ISO_639 = "eng"
+    ENGLISH_NAME = "English"
+
+
 class ENG_LG:
     ISO_639_1 = "en_core_web_lg"
     ISO_639 = "eng"
@@ -70,7 +76,7 @@ class Chatter(Cog):
         # TODO: Move training_model and similarity_algo to config
         # TODO: Add an option to see current settings
 
-        self.tagger_language = ENG_MD
+        self.tagger_language = ENG_TRF
         self.similarity_algo = SpacySimilarity
         self.similarity_threshold = 0.90
         self.chatbot = self._create_chatbot()
