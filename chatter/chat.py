@@ -63,7 +63,7 @@ class Chatter(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6710497116116101114)
         default_global = {"learning": True}
-        default_guild = {
+        self.default_guild = {
             "whitelist": None,
             "days": 1,
             "convo_delta": 15,
@@ -711,7 +711,9 @@ class Chatter(Cog):
                 )
 
             replying = None
-            if self._guild_cache[guild.id]["reply"]:
+            if (
+                "reply" not in self._guild_cache[guild.id] and self.default_guild["reply"]
+            ) or self._guild_cache[guild.id]["reply"]:
                 if message != ctx.channel.last_message:
                     replying = message
 
