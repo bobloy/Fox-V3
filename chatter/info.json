@@ -8,6 +8,7 @@
   "install_msg": "Thank you for installing Chatter! Please make sure you check the install instructions at https://github.com/bobloy/Fox-V3/blob/master/chatter/README.md\nAfter that, get started ith `[p]load chatter` and `[p]help Chatter`",
   "requirements": [
     "git+git://github.com/bobloy/ChatterBot@fox#egg=ChatterBot",
+    "en_core_web_sm",
     "kaggle"
   ],
   "short": "Local Chatbot run on machine learning",

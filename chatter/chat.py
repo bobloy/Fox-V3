@@ -76,7 +76,7 @@ class Chatter(Cog):
         # TODO: Move training_model and similarity_algo to config
         # TODO: Add an option to see current settings
 
-        self.tagger_language = ENG_TRF
+        self.tagger_language = ENG_SM
         self.similarity_algo = SpacySimilarity
         self.similarity_threshold = 0.90
         self.chatbot = self._create_chatbot()
@@ -85,7 +85,7 @@ class Chatter(Cog):
         # self.trainer = ListTrainer(self.chatbot)
 
         self.config.register_global(**default_global)
-        self.config.register_guild(**default_guild)
+        self.config.register_guild(**self.default_guild)
 
         self.loop = asyncio.get_event_loop()
 
@@ -371,11 +371,12 @@ class Chatter(Cog):
         0: Small
         1: Medium
         2: Large (Requires additional setup)
+        3. Accurate (Requires additional setup)
         """
 
-        models = [ENG_SM, ENG_MD, ENG_LG]
+        models = [ENG_SM, ENG_MD, ENG_LG, ENG_TRF]
 
-        if model_number < 0 or model_number > 2:
+        if model_number < 0 or model_number > 3:
             await ctx.send_help()
             return
 
