@@ -53,7 +53,7 @@ class RecyclingPlant(Cog):
                 return m.author == ctx.author and m.channel == ctx.channel
 
             try:
-                answer = await self.bot.wait_for("message", timeout=120, check=check)
+                answer = await self.bot.wait_for("message", timeout=20, check=check)
             except asyncio.TimeoutError:
                 answer = None
 
@@ -63,19 +63,19 @@ class RecyclingPlant(Cog):
                 )
             elif answer.content.lower().strip() == used["action"]:
                 await ctx.send(
-                    "Congratulations! You put ``{}`` down the correct chute! (**+50**)".format(
+                    "Congratulations! You put ``{}`` down the correct chute! (**+500**)".format(
                         used["object"]
                     )
                 )
-                reward += 50
+                reward += 500
                 x += 1
             elif answer.content.lower().strip() == opp:
                 await ctx.send(
-                    "{}, you little brute, you put it down the wrong chute! (**-50**)".format(
+                    "{}, you little brute, you put it down the wrong chute! (**-500**)".format(
                         ctx.author.display_name
                     )
                 )
-                reward -= 50
+                reward -= 500
             elif answer.content.lower().strip() == "exit":
                 await ctx.send(
                     "{} has been relived of their duty.".format(ctx.author.display_name)
