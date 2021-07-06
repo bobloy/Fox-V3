@@ -5,6 +5,122 @@
       "action": "trash"
     },
     {
+      "object": "Poopshitter",
+      "action": "trash"
+    },
+    {
+      "object": "Empty Milk Carton",
+      "action": "recycle"
+    },
+    {
+      "object": "Broken Computer",
+      "action": "trash"
+    },
+    {
+      "object": "Xbox 360",
+      "action": "trash"
+    },
+    {
+      "object": "Playstation 3",
+      "action": "trash"
+    },
+    {
+      "object": "Rotten Cake",
+      "action": "trash"
+    },
+    {
+      "object": "RGB Keyboard",
+      "action": "trash"
+    },
+    {
+      "object": "Tomato",
+      "action": "trash"
+    },
+    {
+      "object": "Silverware",
+      "action": "recycle"
+    },
+    {
+      "object": "Empty Mountain Dew",
+      "action": "recycle"
+    },
+    {
+      "object": "xQc's Chat",
+      "action": "trash"
+    },
+    {
+      "object": "26 Cadavers",
+      "action": "trash"
+    },
+    {
+      "object": "Too Much Peppah",
+      "action": "trash"
+    },
+    {
+      "object": "Crusader's Helmet",
+      "action": "recycle"
+    },
+    {
+      "object": "The Juice",
+      "action": "trash"
+    },
+    {
+      "object": "Rust Hard Copy",
+      "action": "trash"
+    },
+    {
+      "object": "The Bible",
+      "action": "recycle"
+    },
+    {
+      "object": "The Quran",
+      "action": "recycle"
+    },
+    {
+      "object": "The Hitchhikers Guide To The Galaxy",
+      "action": "recycle"
+    },
+    {
+      "object": "Yellow Pages",
+      "action": "recycle"
+    },
+    {
+      "object": "Pizza Box",
+      "action": "recycle"
+    },
+    {
+      "object": "Old Monitor",
+      "action": "trash"
+    },
+    {
+      "object": "4K Television",
+      "action": "trash"
+    },
+    {
+      "object": "Ragged Cloth",
+      "action": "recycle"
+    },
+    {
+      "object": "Torn Hoodie",
+      "action": "recycle"
+    },
+    {
+      "object": "Microfibre Cloth",
+      "action": "recycle"
+    },
+    {
+      "object": "1998 Honda Civic",
+      "action": "trash"
+    },
+    {
+      "object": "McDonalds Bts Meal",
+      "action": "trash"
+    },
+    {
+      "object": "Red Imposter",
+      "action": "trash"
+    },
+    {
       "object": "Paper Cup",
       "action": "recycle"
     },
