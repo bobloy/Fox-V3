@@ -402,7 +402,13 @@ class Chatter(Cog):
             )
 
     @commands.is_owner()
-    @chatter.command(name="minutes")
+    @chatter.group(name="trainset")
+    async def chatter_trainset(self, ctx: commands.Context):
+        """Commands for configuring training"""
+        pass
+
+    @commands.is_owner()
+    @chatter_trainset.command(name="minutes")
     async def minutes(self, ctx: commands.Context, minutes: int):
         """
         Sets the number of minutes the bot will consider a break in a conversation during training
@@ -418,7 +424,7 @@ class Chatter(Cog):
         await ctx.tick()
 
     @commands.is_owner()
-    @chatter.command(name="age")
+    @chatter_trainset.command(name="age")
     async def age(self, ctx: commands.Context, days: int):
         """
         Sets the number of days to look back

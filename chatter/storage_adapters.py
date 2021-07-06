@@ -5,7 +5,7 @@ class MyDumbSQLStorageAdapter(SQLStorageAdapter):
     def __init__(self, **kwargs):
         super(SQLStorageAdapter, self).__init__(**kwargs)
 
-        from sqlalchemy import create_engine
+        from sqlalchemy import create_engine, inspect
         from sqlalchemy.orm import sessionmaker
 
         self.database_uri = kwargs.get("database_uri", False)
@@ -31,7 +31,7 @@ class MyDumbSQLStorageAdapter(SQLStorageAdapter):
                 dbapi_connection.execute("PRAGMA journal_mode=WAL")
                 dbapi_connection.execute("PRAGMA synchronous=NORMAL")
 
-        if not self.engine.dialect.has_table(self.engine, "Statement"):
+        if not inspect(self.engine).has_table('Statement'):
             self.create_database()
 
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=True)
