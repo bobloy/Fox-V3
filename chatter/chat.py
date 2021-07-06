@@ -643,7 +643,7 @@ class Chatter(Cog):
 
         guild: discord.Guild = getattr(message, "guild", None)
 
-        if await self.bot.cog_disabled_in_guild(self, guild):
+        if guild is None or await self.bot.cog_disabled_in_guild(self, guild):
             return
 
         ctx: commands.Context = await self.bot.get_context(message)
