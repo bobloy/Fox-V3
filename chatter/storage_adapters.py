@@ -19,7 +19,7 @@ class MyDumbSQLStorageAdapter(SQLStorageAdapter):
             self.database_uri = "sqlite:///db.sqlite3"
 
         self.engine = create_engine(
-            self.database_uri, convert_unicode=True, connect_args={"check_same_thread": False}
+            self.database_uri, connect_args={"check_same_thread": False}
         )
 
         if self.database_uri.startswith("sqlite://"):
