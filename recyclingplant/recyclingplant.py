@@ -59,9 +59,14 @@ class RecyclingPlant(Cog):
                 answer = None
 
             if answer is None:
-                await ctx.send(
-                    "``{}`` fell down the conveyor belt to be sorted again!".format(used["object"])
-                )
+                if timeoutcount == 2:
+                    await ctx.send(
+                        "{} slacked off at work, so they were sacked with no pay.".format(ctx.author.display_name)
+                        )
+                    break
+                else:
+                    await ctx.send("{} is slacking, and if they carry on not working, they'll be fired.".format(ctx.author.display_name))
+                    timeoutcount += 1
             elif answer.content.lower().strip() == used["action"]:
                 await ctx.send(
                     "Congratulations! You put ``{}`` down the correct chute! (**+50**)".format(
