@@ -32,6 +32,7 @@ class RecyclingPlant(Cog):
 
         x = 0
         reward = 0
+        timeoutcount = 0
         await ctx.send(
             "{0} has signed up for a shift at the Recycling Plant! Type ``exit`` to terminate it early.".format(
                 ctx.author.display_name
@@ -53,7 +54,7 @@ class RecyclingPlant(Cog):
                 return m.author == ctx.author and m.channel == ctx.channel
 
             try:
-                answer = await self.bot.wait_for("message", timeout=120, check=check)
+                answer = await self.bot.wait_for("message", timeout=20, check=check)
             except asyncio.TimeoutError:
                 answer = None
 
