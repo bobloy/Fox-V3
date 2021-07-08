@@ -1,8 +1,10 @@
 from .chat import Chatter
 
 
-def setup(bot):
-    bot.add_cog(Chatter(bot))
+async def setup(bot):
+    cog = Chatter(bot)
+    await cog.initialize()
+    bot.add_cog(cog)
 
 
 # __all__ = (
