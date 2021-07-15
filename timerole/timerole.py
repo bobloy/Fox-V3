@@ -295,8 +295,11 @@ class Timerole(Cog):
                         log.exception("Failed Adding Roles")
                         add_results += f"{member.display_name} : **(Failed Adding Roles)**\n"
                     else:
-                        add_results += " \n".join(
-                            f"{member.display_name} : {role.name}" for role in add_roles
+                        add_results += (
+                            " \n".join(
+                                f"{member.display_name} : {role.name}" for role in add_roles
+                            )
+                            + "\n"
                         )
                         for role_id in addlist:
                             await self.config.custom(
@@ -310,8 +313,11 @@ class Timerole(Cog):
                         log.exception("Failed Removing Roles")
                         remove_results += f"{member.display_name} : **(Failed Removing Roles)**\n"
                     else:
-                        remove_results += " \n".join(
-                            f"{member.display_name} : {role.name}" for role in remove_roles
+                        remove_results += (
+                            " \n".join(
+                                f"{member.display_name} : {role.name}" for role in remove_roles
+                            )
+                            + "\n"
                         )
                         for role_id in removelist:
                             await self.config.custom(

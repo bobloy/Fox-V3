@@ -6,6 +6,7 @@ import discord
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
+from redbot.core.utils.chat_formatting import pagify
 
 log = logging.getLogger("red.fox_v3.stealemoji")
 # Replaced with discord.Asset.read()
@@ -99,7 +100,8 @@ class StealEmoji(Cog):
             await ctx.maybe_send_embed("No stolen emojis yet")
             return
 
-        await ctx.maybe_send_embed(emoj)
+        for page in pagify(emoj, delims=[" "]):
+            await ctx.maybe_send_embed(page)
 
     @checks.is_owner()
     @stealemoji.command(name="notify")

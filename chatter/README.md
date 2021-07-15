@@ -74,12 +74,18 @@ If you get an error at this step, stop and skip to one of the manual methods bel
 
 #### Step 2: Install additional dependencies
 
-Assuming the previous commands had no error, you can now use `pipinstall` to add the remaining dependencies.
+Here you need to decide which training models you want to have available to you.
 
-NOTE: This method is not the intended use case for `pipinstall` and may stop working in the future.
+Shutdown the bot and run any number of these in the console:
 
 ```
-[p]pipinstall --no-deps chatterbot>=1.1
+python -m spacy download en_core_web_sm  # ~15 MB
+
+python -m spacy download en_core_web_md  # ~50 MB
+
+python -m spacy download en_core_web_lg  # ~750 MB (CPU Optimized)
+
+python -m spacy download en_core_web_trf  # ~500 MB (GPU Optimized)
 ```
 
 #### Step 3: Load the cog and get started
@@ -89,62 +95,14 @@ NOTE: This method is not the intended use case for `pipinstall` and may stop wor
 ```
 
 ### Windows - Manually
-#### Step 1: Built-in Downloader
-
-You need to get a copy of the requirements.txt provided with chatter, I recommend this method.
-
-```
-[p]repo add Fox https://github.com/bobloy/Fox-V3
-```
-
-#### Step 2: Install Requirements
-
-Make sure you have your virtual environment that you installed Red on activated before starting this step. See the Red Docs for details on how.
-
-In a terminal running as an admin, navigate to the directory containing this repo. 
-
-I've used my install directory as an example.
-
-```
-cd C:\Users\Bobloy\AppData\Local\Red-DiscordBot\Red-DiscordBot\data\bobbot\cogs\RepoManager\repos\Fox\chatter
-pip install -r requirements.txt
-pip install --no-deps "chatterbot>=1.1"
-```
-
-#### Step 3: Load Chatter
-
-```
-[p]repo add Fox https://github.com/bobloy/Fox-V3  # If you didn't already do this in step 1
-[p]cog install Fox chatter
-[p]load chatter
-```
+Deprecated
 
 ### Linux - Manually
-
-#### Step 1: Built-in Downloader
-
-```
-[p]repo add Fox https://github.com/bobloy/Fox-V3
-[p]cog install Fox chatter
-```
-
-#### Step 2: Install Requirements
-
-In your console with your virtual environment activated:
-
-```
-pip install --no-deps "chatterbot>=1.1"
-```
-
-### Step 3: Load Chatter
-
-```
-[p]load chatter
-```
+Deprecated
 
 # Configuration
 
-Chatter works out the the box without any training by learning as it goes, 
+Chatter works out the box without any training by learning as it goes, 
 but will have very poor and repetitive responses at first.
 
 Initial training is recommended to speed up its learning.

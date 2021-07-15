@@ -142,7 +142,7 @@ class FakeMessage(discord.Message):
         self._update(
             {
                 "mention_roles": self.raw_role_mentions,
-                "mentions": self.raw_mentions,
+                "mentions": [{"id": _id} for _id in self.raw_mentions],
             }
         )
 
