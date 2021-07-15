@@ -92,6 +92,9 @@ class Timerole(Cog):
             await ctx.maybe_send_embed("Error: Invalid time string.")
             return
 
+        if parsed_time is None:
+            return await ctx.maybe_send_embed("Error: Invalid time string.")
+
         days = parsed_time.days
         hours = parsed_time.seconds // 60 // 60
 
