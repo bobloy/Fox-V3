@@ -13,6 +13,7 @@ from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
+from conquest.conquestgame import ConquestGame
 from conquest.regioner import ConquestMap, MapMaker, composite_regions
 
 
@@ -27,6 +28,9 @@ class Conquest(commands.Cog):
 
     # Usage: self.config.games.get_raw("game_name", "is_custom")
     default_games = {"map_name": None, "is_custom": False}
+
+    ext = "PNG"
+    ext_format = "PNG"
 
     def __init__(self, bot: Red):
         super().__init__()
@@ -54,11 +58,8 @@ class Conquest(commands.Cog):
 
         self.asset_path: Optional[pathlib.Path] = None
 
-        self.current_maps = {}  # key, value = guild.id, game_name
+        self.current_games = {}  # key, value = guild.id, game_name
         self.map_data = {}  # key, value = guild.id, ConquestGame
-
-        self.ext = "PNG"
-        self.ext_format = "PNG"
 
         self.mm: Optional[MapMaker] = None
 
@@ -82,32 +83,30 @@ class Conquest(commands.Cog):
             if game_name is not None:
                 await self.load_guild_data(guild, game_name)
 
-        if self.current_map:
-            await self.current_map_load()
+        # for guild_id, game_name in self.current_maps.items():
+        #     await self.current_map_load(guild_id, game_name)
 
     async def load_guild_data(self, guild: discord.Guild, game_name: str):
-        game_name = await self.config.guild(guild).current_game()
-        if game_name is not None:
-            map_data = self.config.games.get_raw(game_name)
-            map_name = map_data["map_name"]
-            map_path = self._path_if_custom(map_data["is_custom"]) / map_name
+        map_data = self.config.games.get_raw(game_name)
+        map_name = map_data["map_name"]
+        map_path = self._path_if_custom(map_data["is_custom"]) / map_name
 
-            self.current_maps[guild.id] = ConquestGame(
-                map_path, map_name, self.current_map_folder / map_name
-            )
+        self.current_games[guild.id] = ConquestGame(
+            map_path, map_name, self.current_map_folder / map_name
+        )
 
-    async def current_map_load(self):
-        map_path = self._path_if_custom()
-        self.map_data = ConquestMap(map_path / self.current_map)
-        await self.map_data.load_data()
-        # map_data_path = map_path / self.current_map / "data.json"
-        # try:
-        #     with map_data_path.open() as mapdata:
-        #         self.map_data: dict = json.load(mapdata)
-        # except FileNotFoundError as e:
-        #     print(e)
-        #     await self.config.current_map.set(None)
-        #     return
+    # async def current_map_load(self):
+    #     map_path = self._path_if_custom()
+    #     self.map_data = ConquestMap(map_path / self.current_map)
+    #     await self.map_data.load_data()
+    #     # map_data_path = map_path / self.current_map / "data.json"
+    #     # try:
+    #     #     with map_data_path.open() as mapdata:
+    #     #         self.map_data: dict = json.load(mapdata)
+    #     # except FileNotFoundError as e:
+    #     #     print(e)
+    #     #     await self.config.current_map.set(None)
+    #     #     return
 
     async def _get_current_map_path(self):
         return self.current_map_folder / self.current_map
@@ -406,7 +405,7 @@ class Conquest(commands.Cog):
         Base command for conquest cog. Start with `[p]conquest set map` to select a map.
         """
         if ctx.invoked_subcommand is None:
-            if self.current_map is not None:
+            if self.current_maps[ctx.guild.id] is not None:
                 await self._conquest_current(ctx)
 
     @conquest.command(name="list")
