@@ -8,9 +8,7 @@ from redbot.core.data_manager import cog_data_path
 
 
 class Nudity(commands.Cog):
-    """
-    V3 Cog Template
-    """
+    """Monitor images for NSFW content and moves them to a nsfw channel if possible"""
 
     def __init__(self, bot: Red):
         super().__init__()

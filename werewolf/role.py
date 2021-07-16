@@ -72,6 +72,9 @@ class Role(WolfListener):
         self.blocked = False
         self.properties = {}  # Extra data for other roles (i.e. arsonist)
 
+    def __str__(self):
+        return self.__repr__()
+
     def __repr__(self):
         return f"{self.__class__.__name__}({self.player.__repr__()})"
 
@@ -86,7 +89,7 @@ class Role(WolfListener):
 
         log.debug(f"Assigned {self} to {player}")
 
-    async def get_alignment(self, source=None):
+    async def get_alignment(self, source=None):  # TODO: Rework to be "strength" tiers
         """
         Interaction for powerful access of alignment
         (Village, Werewolf, Other)

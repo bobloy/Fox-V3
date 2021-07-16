@@ -53,7 +53,7 @@ Check out *Deprecated* my V2 cogs at [Fox-Cogs v2](https://github.com/bobloy/Fox
 # Contact
 Get support on the [Third Party Cog Server](https://discord.gg/GET4DVk)
 
-Feel free to @ me in the #support_othercogs channel
+Feel free to @ me in the #support_fox-v3 channel
 
 Discord: Bobloy#6513
 

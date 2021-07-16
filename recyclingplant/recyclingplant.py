@@ -32,6 +32,7 @@ class RecyclingPlant(Cog):
 
         x = 0
         reward = 0
+        timeoutcount = 0
         await ctx.send(
             "{0} has signed up for a shift at the Recycling Plant! Type ``exit`` to terminate it early.".format(
                 ctx.author.display_name
@@ -53,14 +54,25 @@ class RecyclingPlant(Cog):
                 return m.author == ctx.author and m.channel == ctx.channel
 
             try:
-                answer = await self.bot.wait_for("message", timeout=120, check=check)
+                answer = await self.bot.wait_for("message", timeout=20, check=check)
             except asyncio.TimeoutError:
                 answer = None
 
             if answer is None:
-                await ctx.send(
-                    "``{}`` fell down the conveyor belt to be sorted again!".format(used["object"])
-                )
+                if timeoutcount == 2:
+                    await ctx.send(
+                        "{} slacked off at work, so they were sacked with no pay.".format(
+                            ctx.author.display_name
+                        )
+                    )
+                    break
+                else:
+                    await ctx.send(
+                        "{} is slacking, and if they carry on not working, they'll be fired.".format(
+                            ctx.author.display_name
+                        )
+                    )
+                    timeoutcount += 1
             elif answer.content.lower().strip() == used["action"]:
                 await ctx.send(
                     "Congratulations! You put ``{}`` down the correct chute! (**+50**)".format(
