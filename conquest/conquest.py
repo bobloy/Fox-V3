@@ -1,14 +1,16 @@
 import asyncio
 import json
 import pathlib
+from collections import defaultdict
 from io import BytesIO
 from shutil import copyfile
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 
 import discord
 from PIL import Image, ImageColor, ImageOps
 from discord.ext.commands import Greedy
 from redbot.core import Config, commands
+from redbot.core.commands import Context
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
@@ -19,14 +21,12 @@ from conquest.regioner import ConquestMap, MapMaker, composite_regions
 
 class Conquest(commands.Cog):
     """
-    Cog for creating and modifying maps for RPGs and War Games
+    Create and modify maps for RPGs and War Games
     """
-
-    default_zoom_json = {"enabled": False, "x": -1, "y": -1, "zoom": 1.0}
 
     default_maps_json = {"maps": []}
 
-    # Usage: self.config.games.get_raw("game_name", "is_custom")
+    # Usage: await self.config.games.get_raw("game_name", "is_custom")
     default_games = {"map_name": None, "is_custom": False}
 
     ext = "PNG"
@@ -46,10 +46,10 @@ class Conquest(commands.Cog):
 
         self.data_path: pathlib.Path = cog_data_path(self)
 
-        self.custom_map_path = self.data_path / "custom_maps"
-        if not self.custom_map_path.exists() or not self.custom_map_path.is_dir():
-            self.custom_map_path.mkdir()
-            with (self.custom_map_path / "maps.json").open("w+") as dj:
+        self.custom_map_folder = self.data_path / "custom_maps"
+        if not self.custom_map_folder.exists() or not self.custom_map_folder.is_dir():
+            self.custom_map_folder.mkdir()
+            with (self.custom_map_folder / "maps.json").open("w+") as dj:
                 json.dump(self.default_maps_json.copy(), dj, sort_keys=True, indent=4)
 
         self.current_map_folder = self.data_path / "current_maps"
@@ -58,7 +58,7 @@ class Conquest(commands.Cog):
 
         self.asset_path: Optional[pathlib.Path] = None
 
-        self.current_games = {}  # key, value = guild.id, game_name
+        self.current_games: Dict[int, Optional[ConquestGame]] = defaultdict(lambda: None)  # key, value = guild.id, game_name
         self.map_data = {}  # key, value = guild.id, ConquestGame
 
         self.mm: Optional[MapMaker] = None
@@ -70,7 +70,7 @@ class Conquest(commands.Cog):
     def _path_if_custom(self, custom_custom: bool = None) -> pathlib.Path:
         check_value = custom_custom  # if custom_custom is not None else self.is_custom
         if check_value:
-            return self.custom_map_path
+            return self.custom_map_folder
         return self.asset_path
 
     async def load_data(self):
@@ -87,13 +87,23 @@ class Conquest(commands.Cog):
         #     await self.current_map_load(guild_id, game_name)
 
     async def load_guild_data(self, guild: discord.Guild, game_name: str):
-        map_data = self.config.games.get_raw(game_name)
+        map_data = await self.config.games.get_raw(game_name)
+        if map_data is None:
+            return False
         map_name = map_data["map_name"]
         map_path = self._path_if_custom(map_data["is_custom"]) / map_name
 
+        if (
+            not (self.current_map_folder / guild.id).exists()
+            or not (self.current_map_folder / guild.id / map_name).exists()
+        ):
+            return False
+
         self.current_games[guild.id] = ConquestGame(
-            map_path, map_name, self.current_map_folder / map_name
+            map_path, map_name, self.current_map_folder / guild.id / map_name
         )
+
+        return True
 
     # async def current_map_load(self):
     #     map_path = self._path_if_custom()
@@ -108,49 +118,16 @@ class Conquest(commands.Cog):
     #     #     await self.config.current_map.set(None)
     #     #     return
 
-    async def _get_current_map_path(self):
-        return self.current_map_folder / self.current_map
+    async def _get_current_map_folder(self, guild):
+        return self.current_map_folder / guild.id / self.current_map
 
-    async def _create_zoomed_map(self, map_path, x, y, zoom, **kwargs):
-        current_map = Image.open(map_path)
 
-        w, h = current_map.size
-        zoom2 = zoom * 2
-        zoomed_map = current_map.crop((x - w / zoom2, y - h / zoom2, x + w / zoom2, y + h / zoom2))
-        # zoomed_map = zoomed_map.resize((w, h), Image.LANCZOS)
-        current_map_path_ = await self._get_current_map_path()
-        zoomed_map.save(current_map_path_ / f"zoomed.{self.ext}", self.ext_format)
-        return current_map_path_ / f"zoomed.{self.ext}"
-
-    async def _send_maybe_zoomed_map(self, ctx, map_path, filename):
-        zoom_data = {"enabled": False}
-
-        zoom_json_path = await self._get_current_map_path() / "settings.json"
-
-        if zoom_json_path.exists():
-            with zoom_json_path.open() as zoom_json:
-                zoom_data = json.load(zoom_json)
-
-        if zoom_data["enabled"]:
-            map_path = await self._create_zoomed_map(map_path, **zoom_data)
-
-        await ctx.send(file=discord.File(fp=map_path, filename=filename))
-
-    async def _process_take_regions(self, color, ctx, regions):
-        current_img_path = await self._get_current_map_path() / f"current.{self.ext}"
-        im = Image.open(current_img_path)
-        async with ctx.typing():
-            out: Image.Image = await composite_regions(
-                im, regions, color, self._path_if_custom() / self.current_map / "masks"
-            )
-            out.save(current_img_path, self.ext_format)
-            await self._send_maybe_zoomed_map(ctx, current_img_path, f"map.{self.ext}")
 
     async def _mm_save_map(self, map_name, target_save):
         return await self.mm.change_name(map_name, target_save)
 
     @commands.group()
-    async def mapmaker(self, ctx: commands.context):
+    async def mapmaker(self, ctx: Context):
         """
         Base command for managing current maps or creating new ones
         """
@@ -158,7 +135,7 @@ class Conquest(commands.Cog):
             pass
 
     @mapmaker.command(name="numbers")
-    async def _mapmaker_numbers(self, ctx: commands.Context):
+    async def _mapmaker_numbers(self, ctx: Context):
         """Regenerates the number mask and puts it in the channel"""
         if not self.mm:
             await ctx.maybe_send_embed("No map currently being worked on")
@@ -171,14 +148,14 @@ class Conquest(commands.Cog):
             await ctx.send(file=discord.File(im, filename="map.png"))
 
     @mapmaker.command(name="close")
-    async def _mapmaker_close(self, ctx: commands.Context):
+    async def _mapmaker_close(self, ctx: Context):
         """Close the currently open map."""
         self.mm = None
 
         await ctx.tick()
 
     @mapmaker.command(name="save")
-    async def _mapmaker_save(self, ctx: commands.Context, *, map_name: str):
+    async def _mapmaker_save(self, ctx: Context, *, map_name: str):
         """Save the current map to the specified map name"""
         if not self.mm:
             await ctx.maybe_send_embed("No map currently being worked on")
@@ -188,7 +165,7 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("This map already has that name, no reason to save")
             return
 
-        target_save = self.custom_map_path / map_name
+        target_save = self.custom_map_folder / map_name
 
         result = await self._mm_save_map(map_name, target_save)
         if not result:
@@ -197,7 +174,7 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed(f"Map successfully saved to {target_save}")
 
     @mapmaker.command(name="upload")
-    async def _mapmaker_upload(self, ctx: commands.Context, map_name: str, map_path=""):
+    async def _mapmaker_upload(self, ctx: Context, map_name: str, map_path=""):
         """Load a map image to be modified. Upload one with this command or provide a path"""
         message: discord.Message = ctx.message
         if not message.attachments and not map_path:
@@ -206,7 +183,7 @@ class Conquest(commands.Cog):
             )
             return
 
-        target_save = self.custom_map_path / map_name
+        target_save = self.custom_map_folder / map_name
 
         if target_save.exists() and target_save.is_dir():
             await ctx.maybe_send_embed(f"{map_name} already exists, okay to overwrite?")
@@ -221,7 +198,7 @@ class Conquest(commands.Cog):
                 return
 
         if not self.mm:
-            self.mm = MapMaker(self.custom_map_path)
+            self.mm = MapMaker(self.custom_map_folder)
             self.mm.custom = True
 
         if map_path:
@@ -256,7 +233,7 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("Failed to upload to that name")
             return
 
-        maps_json_path = self.custom_map_path / "maps.json"
+        maps_json_path = self.custom_map_folder / "maps.json"
         with maps_json_path.open("r+") as maps:
             map_data = json.load(maps)
             map_data["maps"].append(map_name)
@@ -266,7 +243,7 @@ class Conquest(commands.Cog):
         await ctx.maybe_send_embed(f"Map successfully uploaded to {target_save}")
 
     @mapmaker.command(name="sample")
-    async def _mapmaker_sample(self, ctx: commands.Context):
+    async def _mapmaker_sample(self, ctx: Context):
         """Print the currently being modified map as a sample"""
         if not self.mm:
             await ctx.maybe_send_embed("No map currently being worked on")
@@ -280,7 +257,7 @@ class Conquest(commands.Cog):
                 await ctx.send(file=discord.File(f, filename="map.png"))
 
     @mapmaker.command(name="load")
-    async def _mapmaker_load(self, ctx: commands.Context, map_name: str):
+    async def _mapmaker_load(self, ctx: Context, map_name: str):
         """Load an existing map to be modified."""
         if self.mm:
             await ctx.maybe_send_embed(
@@ -288,10 +265,10 @@ class Conquest(commands.Cog):
             )
             return
 
-        map_path = self.custom_map_path / map_name
+        map_path = self.custom_map_folder / map_name
 
         if not map_path.exists() or not map_path.is_dir():
-            await ctx.maybe_send_embed(f"Map {map_name} not found in {self.custom_map_path}")
+            await ctx.maybe_send_embed(f"Map {map_name} not found in {self.custom_map_folder}")
             return
 
         self.mm = MapMaker(map_path)
@@ -300,13 +277,13 @@ class Conquest(commands.Cog):
         await ctx.tick()
 
     @mapmaker.group(name="masks")
-    async def _mapmaker_masks(self, ctx: commands.Context):
+    async def _mapmaker_masks(self, ctx: Context):
         """Base command for managing map masks"""
         if ctx.invoked_subcommand is None:
             pass
 
     @_mapmaker_masks.command(name="generate")
-    async def _mapmaker_masks_generate(self, ctx: commands.Context):
+    async def _mapmaker_masks_generate(self, ctx: Context):
         """
         Generate masks for the map
 
@@ -332,7 +309,7 @@ class Conquest(commands.Cog):
         await ctx.maybe_send_embed(f"{len(regions)} masks generated into {masks_dir}")
 
     @_mapmaker_masks.command(name="delete")
-    async def _mapmaker_masks_delete(self, ctx: commands.Context, mask_list: Greedy[int]):
+    async def _mapmaker_masks_delete(self, ctx: Context, mask_list: Greedy[int]):
         """
         Delete the listed masks from the map
         """
@@ -358,7 +335,7 @@ class Conquest(commands.Cog):
 
     @_mapmaker_masks.command(name="combine")
     async def _mapmaker_masks_combine(
-        self, ctx: commands.Context, mask_list: Greedy[int], recommended=False
+        self, ctx: Context, mask_list: Greedy[int], recommended=False
     ):
         """Generate masks for the map"""
         if not mask_list and not recommended:
@@ -400,25 +377,25 @@ class Conquest(commands.Cog):
         await ctx.maybe_send_embed(f"Combined masks into mask # {result}")
 
     @commands.group()
-    async def conquest(self, ctx: commands.Context):
+    async def conquest(self, ctx: Context):
         """
         Base command for conquest cog. Start with `[p]conquest set map` to select a map.
         """
-        if ctx.invoked_subcommand is None:
-            if self.current_maps[ctx.guild.id] is not None:
-                await self._conquest_current(ctx)
+        # if ctx.invoked_subcommand is None:
+        #     if self.current_maps[ctx.guild.id] is not None:
+        #         await self._conquest_current(ctx)
 
     @conquest.command(name="list")
-    async def _conquest_list(self, ctx: commands.Context):
+    async def _conquest_list(self, ctx: Context):
         """
-        List currently available maps
+        List maps available for starting a Conquest game.
         """
         maps_json = self.asset_path / "maps.json"
         with maps_json.open() as maps:
             maps_json = json.load(maps)
             map_list = maps_json["maps"]
 
-        maps_json = self.custom_map_path / "maps.json"
+        maps_json = self.custom_map_folder / "maps.json"
         if maps_json.exists():
             with maps_json.open() as maps:
                 maps_json = json.load(maps)
@@ -429,32 +406,26 @@ class Conquest(commands.Cog):
         await ctx.maybe_send_embed(f"Current maps:\n{map_list}\n\nCustom maps:\n{custom_map_list}")
 
     @conquest.group(name="set")
-    async def conquest_set(self, ctx: commands.Context):
+    async def conquest_set(self, ctx: Context):
         """Base command for admin actions like selecting a map"""
         if ctx.invoked_subcommand is None:
             pass
 
     @conquest_set.command(name="resetzoom")
-    async def _conquest_set_resetzoom(self, ctx: commands.Context):
+    async def _conquest_set_resetzoom(self, ctx: Context):
         """Resets the zoom level of the current map"""
-        if self.current_map is None:
+        if self.current_games[ctx.guild.id] is None:
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        zoom_json_path = await self._get_current_map_path() / "settings.json"
-        if not zoom_json_path.exists():
+        if not await self.current_games[ctx.guild.id].reset_zoom():
             await ctx.maybe_send_embed(
-                f"No zoom data found for {self.current_map}, reset not needed"
+                f"No zoom data found, reset not needed"
             )
-            return
-
-        with zoom_json_path.open("w+") as zoom_json:
-            json.dump({"enabled": False}, zoom_json, sort_keys=True, indent=4)
-
         await ctx.tick()
 
     @conquest_set.command(name="zoom")
-    async def _conquest_set_zoom(self, ctx: commands.Context, x: int, y: int, zoom: float):
+    async def _conquest_set_zoom(self, ctx: Context, x: int, y: int, zoom: float):
         """
         Set the zoom level and position of the current map
 
@@ -462,7 +433,7 @@ class Conquest(commands.Cog):
         y: positive integer
         zoom: float greater than or equal to 1
         """
-        if self.current_map is None:
+        if self.current_games[ctx.guild.id] is None:
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
@@ -470,21 +441,12 @@ class Conquest(commands.Cog):
             await ctx.send_help()
             return
 
-        zoom_json_path = await self._get_current_map_path() / "settings.json"
-
-        zoom_data = self.default_zoom_json.copy()
-        zoom_data["enabled"] = True
-        zoom_data["x"] = x
-        zoom_data["y"] = y
-        zoom_data["zoom"] = zoom
-
-        with zoom_json_path.open("w+") as zoom_json:
-            json.dump(zoom_data, zoom_json, sort_keys=True, indent=4)
+        await self.current_games[ctx.guild.id].set_zoom(x, y, zoom)
 
         await ctx.tick()
 
     @conquest_set.command(name="zoomtest")
-    async def _conquest_set_zoomtest(self, ctx: commands.Context, x: int, y: int, zoom: float):
+    async def _conquest_set_zoomtest(self, ctx: Context, x: int, y: int, zoom: float):
         """
         Test the zoom level and position of the current map
 
@@ -492,7 +454,7 @@ class Conquest(commands.Cog):
         y: positive integer
         zoom: float greater than or equal to 1
         """
-        if self.current_map is None:
+        if self.current_games[ctx.guild.id] is None:
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
@@ -500,20 +462,21 @@ class Conquest(commands.Cog):
             await ctx.send_help()
             return
 
+        map_folder = await self._get_current_map_folder(ctx.guild)
         zoomed_path = await self._create_zoomed_map(
-            await self._get_current_map_path() / f"current.{self.ext}", x, y, zoom
+            map_folder, map_folder / f"current.{self.ext}", x, y, zoom
         )
 
         await ctx.send(file=discord.File(fp=zoomed_path, filename=f"current_zoomed.{self.ext}"))
 
     @conquest_set.command(name="save")
-    async def _conquest_set_save(self, ctx: commands.Context, *, save_name):
+    async def _conquest_set_save(self, ctx: Context, *, save_name):
         """Save the current map to be loaded later"""
         if self.current_map is None:
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        current_map_folder = await self._get_current_map_path()
+        current_map_folder = await self._get_current_map_folder()
         current_map = current_map_folder / f"current.{self.ext}"
 
         if not current_map_folder.exists() or not current_map.exists():
@@ -524,13 +487,13 @@ class Conquest(commands.Cog):
         await ctx.tick()
 
     @conquest_set.command(name="load")
-    async def _conquest_set_load(self, ctx: commands.Context, *, save_name):
+    async def _conquest_set_load(self, ctx: Context, *, save_name):
         """Load a saved map to be the current map"""
         if self.current_map is None:
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        current_map_folder = await self._get_current_map_path()
+        current_map_folder = await self._get_current_map_folder()
         current_map = current_map_folder / f"current.{self.ext}"
         saved_map = current_map_folder / f"{save_name}.{self.ext}"
 
@@ -543,7 +506,7 @@ class Conquest(commands.Cog):
 
     @conquest_set.command(name="map")
     async def _conquest_set_map(
-        self, ctx: commands.Context, mapname: str, is_custom: bool = False, reset: bool = False
+        self, ctx: Context, mapname: str, is_custom: bool = False, reset: bool = False
     ):
         """
         Select a map from current available maps
@@ -566,7 +529,7 @@ class Conquest(commands.Cog):
 
         await self.current_map_load()
 
-        current_map_folder = await self._get_current_map_path()
+        current_map_folder = await self._get_current_map_folder()
         current_map = current_map_folder / f"current.{self.ext}"
 
         if not reset and current_map.exists():
@@ -582,7 +545,7 @@ class Conquest(commands.Cog):
         await ctx.tick()
 
     @conquest.command(name="current")
-    async def _conquest_current(self, ctx: commands.Context):
+    async def _conquest_current(self, ctx: Context):
         """
         Send the current map.
         """
@@ -590,12 +553,12 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        current_img = await self._get_current_map_path() / f"current.{self.ext}"
+        current_img = await self._get_current_map_folder() / f"current.{self.ext}"
 
         await self._send_maybe_zoomed_map(ctx, current_img, f"current_map.{self.ext}")
 
     @conquest.command("blank")
-    async def _conquest_blank(self, ctx: commands.Context):
+    async def _conquest_blank(self, ctx: Context):
         """
         Print the blank version of the current map, for reference.
         """
@@ -608,7 +571,7 @@ class Conquest(commands.Cog):
         await self._send_maybe_zoomed_map(ctx, current_blank_img, f"blank_map.{self.ext}")
 
     @conquest.command("numbered")
-    async def _conquest_numbered(self, ctx: commands.Context):
+    async def _conquest_numbered(self, ctx: Context):
         """
         Print the numbered version of the current map, for reference.
         """
@@ -626,7 +589,7 @@ class Conquest(commands.Cog):
                 )
                 return
 
-            current_map_path = await self._get_current_map_path()
+            current_map_path = await self._get_current_map_folder()
             current_map = Image.open(current_map_path / f"current.{self.ext}")
             numbers = Image.open(numbers_path).convert("L")
 
@@ -649,7 +612,7 @@ class Conquest(commands.Cog):
 
     @conquest.command(name="multitake")
     async def _conquest_multitake(
-        self, ctx: commands.Context, start_region: int, end_region: int, color: str
+        self, ctx: Context, start_region: int, end_region: int, color: str
     ):
         """
         Claim all the territories between the two provided region numbers (inclusive)
@@ -677,10 +640,10 @@ class Conquest(commands.Cog):
 
         regions = [r for r in range(start_region, end_region + 1)]
 
-        await self._process_take_regions(color, ctx, regions)
+        await self._process_take_regions(ctx, color, regions)
 
     @conquest.command(name="take")
-    async def _conquest_take(self, ctx: commands.Context, regions: Greedy[int], *, color: str):
+    async def _conquest_take(self, ctx: Context, regions: Greedy[int], *, color: str):
         """
         Claim a territory or list of territories for a specified color
 
@@ -708,4 +671,4 @@ class Conquest(commands.Cog):
                 )
                 return
 
-        await self._process_take_regions(color, ctx, regions)
+        await self._process_take_regions(ctx, color,regions)
