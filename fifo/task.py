@@ -90,6 +90,7 @@ things_for_fakemessage_to_steal = [
     "content",
     "nonce",
     "reference",
+    "_edited_timestamp"  # New 7/23/21
 ]
 
 things_fakemessage_sets_by_default = {
