@@ -58,7 +58,9 @@ class Conquest(commands.Cog):
 
         self.asset_path: Optional[pathlib.Path] = None
 
-        self.current_games: Dict[int, Optional[ConquestGame]] = defaultdict(lambda: None)  # key: guild_id
+        self.current_games: Dict[int, Optional[ConquestGame]] = defaultdict(
+            lambda: None
+        )  # key: guild_id
         self.map_data = {}  # key, value = guild.id, ConquestGame
 
         self.mm: Optional[MapMaker] = None
@@ -120,8 +122,6 @@ class Conquest(commands.Cog):
 
     async def _get_current_map_folder(self, guild):
         return self.current_map_folder / guild.id / self.current_map
-
-
 
     async def _mm_save_map(self, map_name, target_save):
         return await self.mm.change_name(map_name, target_save)
@@ -419,9 +419,7 @@ class Conquest(commands.Cog):
             return
 
         if not await self.current_games[ctx.guild.id].reset_zoom():
-            await ctx.maybe_send_embed(
-                f"No zoom data found, reset not needed"
-            )
+            await ctx.maybe_send_embed(f"No zoom data found, reset not needed")
         await ctx.tick()
 
     @conquest_set.command(name="zoom")
@@ -462,43 +460,35 @@ class Conquest(commands.Cog):
             await ctx.send_help()
             return
 
-        zoomed_path = await self.current_games[ctx.guild.id].create_zoomed_map(x, y, zoom, out_of_date=True)
+        # out_of_date marks zoom as oudated, since this overwrite the temp
+        zoomed_path = await self.current_games[ctx.guild.id].create_zoomed_map(
+            x, y, zoom, out_of_date=True
+        )
 
-        await ctx.send(file=discord.File(fp=zoomed_path, filename=f"current_zoomed.{self.ext}"))
+        await ctx.send(file=discord.File(fp=zoomed_path, filename=f"test_zoom.{self.ext}"))
 
     @conquest_set.command(name="save")
     async def _conquest_set_save(self, ctx: Context, *, save_name):
         """Save the current map to be loaded later"""
-        if self.current_map is None:
+        if self.current_games[ctx.guild.id] is None:
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        current_map_folder = await self._get_current_map_folder()
-        current_map = current_map_folder / f"current.{self.ext}"
+        await self.current_games[ctx.guild.id].save_as(save_name)
 
-        if not current_map_folder.exists() or not current_map.exists():
-            await ctx.maybe_send_embed("Current map doesn't exist! Try setting a new one")
-            return
-
-        copyfile(current_map, current_map_folder / f"{save_name}.{self.ext}")
         await ctx.tick()
 
     @conquest_set.command(name="load")
     async def _conquest_set_load(self, ctx: Context, *, save_name):
         """Load a saved map to be the current map"""
-        if self.current_map is None:
+        if self.current_games[ctx.guild.id] is None:
             await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
             return
 
-        current_map_folder = await self._get_current_map_folder()
-        current_map = current_map_folder / f"current.{self.ext}"
-        saved_map = current_map_folder / f"{save_name}.{self.ext}"
-
-        if not current_map_folder.exists() or not saved_map.exists():
-            await ctx.maybe_send_embed(f"Saved map not found in the {self.current_map} folder")
+        if not await self.current_games[ctx.guild.id].load_from(save_name):
+            await ctx.maybe_send_embed(f"Saved map not found, check your spelling")
             return
 
-        copyfile(saved_map, current_map)
         await ctx.tick()
 
     @conquest_set.command(name="map")
@@ -668,4 +658,4 @@ class Conquest(commands.Cog):
                 )
                 return
 
-        await self._process_take_regions(ctx, color,regions)
+        await self._process_take_regions(ctx, color, regions)

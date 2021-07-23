@@ -1,5 +1,6 @@
 import json
 import pathlib
+from shutil import copyfile
 
 import discord
 from PIL import Image, ImageColor, ImageOps
@@ -44,15 +45,17 @@ class ConquestGame:
         out.save(self.current_map, self.ext_format)  # Overwrite current map with new map
         self.zoom_is_out_of_date = True
 
-    async def create_zoomed_map(self, x, y, zoom, **kwargs):
+    async def create_zoomed_map(self, x, y, zoom, out_of_date=False, **kwargs):
+        """Pass out_of_date when created a zoomed map based on something other than the settings json"""
+        if out_of_date:
+            self.zoom_is_out_of_date = True
         current_map = Image.open(self.current_map_folder)
-
         w, h = current_map.size
         zoom2 = zoom * 2
         zoomed_map = current_map.crop((x - w / zoom2, y - h / zoom2, x + w / zoom2, y + h / zoom2))
         # zoomed_map = zoomed_map.resize((w, h), Image.LANCZOS)
         zoomed_map.save(self.zoomed_map, self.ext_format)
-        self.zoom_is_out_of_date = False
+
         return self.zoomed_map
 
     async def get_maybe_zoomed_map(self, filename):
@@ -68,6 +71,7 @@ class ConquestGame:
             map_path = self.zoomed_map
             if self.zoom_is_out_of_date:
                 await self.create_zoomed_map(**zoom_data)
+                self.zoom_is_out_of_date = False
 
         return discord.File(fp=map_path, filename=filename)
 
@@ -95,3 +99,14 @@ class ConquestGame:
         with self.settings_json.open("w+") as zoom_json:
             json.dump(zoom_data, zoom_json, sort_keys=True, indent=4)
 
+    async def save_as(self, save_name):
+        copyfile(self.current_map, self.current_map_folder / f"{save_name}.{self.ext}")
+
+    async def load_from(self, save_name):
+        saved_map = self.current_map_folder / f"{save_name}.{self.ext}"
+
+        if not saved_map.exists():
+            return False
+
+        copyfile(saved_map, self.current_map)  # Overwrite current map with saved map
+        return True
