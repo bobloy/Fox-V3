@@ -45,9 +45,6 @@ class ConquestGame:
         self.zoom_is_out_of_date = True
 
     async def create_zoomed_map(self, x, y, zoom, **kwargs):
-        if not self.zoom_is_out_of_date:
-            return self.zoomed_map
-
         current_map = Image.open(self.current_map_folder)
 
         w, h = current_map.size
@@ -67,8 +64,10 @@ class ConquestGame:
 
         map_path = self.current_map
 
-        if zoom_data["enabled"]:
-            map_path = await self.create_zoomed_map(**zoom_data)  # Send zoomed map instead of current map
+        if zoom_data["enabled"]:  # Send zoomed map instead of current map
+            map_path = self.zoomed_map
+            if self.zoom_is_out_of_date:
+                await self.create_zoomed_map(**zoom_data)
 
         return discord.File(fp=map_path, filename=filename)
 
@@ -79,6 +78,8 @@ class ConquestGame:
         with self.settings_json.open("w+") as zoom_json:
             json.dump({"enabled": False}, zoom_json, sort_keys=True, indent=4)
 
+        self.zoom_is_out_of_date = True
+
         return True
 
     async def set_zoom(self, x, y, zoom):
@@ -88,6 +89,8 @@ class ConquestGame:
         zoom_data["x"] = x
         zoom_data["y"] = y
         zoom_data["zoom"] = zoom
+
+        self.zoom_is_out_of_date = True
 
         with self.settings_json.open("w+") as zoom_json:
             json.dump(zoom_data, zoom_json, sort_keys=True, indent=4)

@@ -58,7 +58,7 @@ class Conquest(commands.Cog):
 
         self.asset_path: Optional[pathlib.Path] = None
 
-        self.current_games: Dict[int, Optional[ConquestGame]] = defaultdict(lambda: None)  # key, value = guild.id, game_name
+        self.current_games: Dict[int, Optional[ConquestGame]] = defaultdict(lambda: None)  # key: guild_id
         self.map_data = {}  # key, value = guild.id, ConquestGame
 
         self.mm: Optional[MapMaker] = None
@@ -462,10 +462,7 @@ class Conquest(commands.Cog):
             await ctx.send_help()
             return
 
-        map_folder = await self._get_current_map_folder(ctx.guild)
-        zoomed_path = await self._create_zoomed_map(
-            map_folder, map_folder / f"current.{self.ext}", x, y, zoom
-        )
+        zoomed_path = await self.current_games[ctx.guild.id].create_zoomed_map(x, y, zoom, out_of_date=True)
 
         await ctx.send(file=discord.File(fp=zoomed_path, filename=f"current_zoomed.{self.ext}"))
 
