@@ -509,6 +509,10 @@ class Conquest(commands.Cog):
             )
             return
 
+        self.current_games[ctx.guild.id] = ConquestGame(
+            map_dir, mapname, self.current_map_folder / ctx.guild.id / mapname
+        )
+
         self.current_map = mapname
         self.is_custom = is_custom
         await self.config.current_map.set(self.current_map)  # Save to config too
