@@ -40,12 +40,12 @@ class LoveCalculator(Cog):
         log.debug(f"{resp=}")
         soup_object = BeautifulSoup(resp, "html.parser")
 
-        description = soup_object.find("div", class_="result__score").get_text()
+        description = soup_object.find("div", class_="result__score")
 
         if description is None:
             description = "Dr. Love is busy right now"
         else:
-            description = description.strip()
+            description = description.get_text().strip()
 
         result_image = soup_object.find("img", class_="result__image").get("src")
 
