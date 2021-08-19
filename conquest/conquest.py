@@ -18,6 +18,8 @@ from redbot.core.utils.predicates import MessagePredicate
 from conquest.conquestgame import ConquestGame
 from conquest.regioner import ConquestMap, MapMaker, composite_regions
 
+ERROR_CONQUEST_SET_MAP = "No map is currently set. See `[p]conquest set map`"
+
 
 class Conquest(commands.Cog):
     """
@@ -414,11 +416,12 @@ class Conquest(commands.Cog):
     @conquest_set.command(name="resetzoom")
     async def _conquest_set_resetzoom(self, ctx: Context):
         """Resets the zoom level of the current map"""
-        if self.current_games[ctx.guild.id] is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
 
-        if not await self.current_games[ctx.guild.id].reset_zoom():
+        if not await current_game.reset_zoom():
             await ctx.maybe_send_embed(f"No zoom data found, reset not needed")
         await ctx.tick()
 
@@ -431,15 +434,16 @@ class Conquest(commands.Cog):
         y: positive integer
         zoom: float greater than or equal to 1
         """
-        if self.current_games[ctx.guild.id] is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
 
         if x < 0 or y < 0 or zoom < 1:
             await ctx.send_help()
             return
 
-        await self.current_games[ctx.guild.id].set_zoom(x, y, zoom)
+        await current_game.set_zoom(x, y, zoom)
 
         await ctx.tick()
 
@@ -452,17 +456,18 @@ class Conquest(commands.Cog):
         y: positive integer
         zoom: float greater than or equal to 1
         """
-        if self.current_games[ctx.guild.id] is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
 
         if x < 0 or y < 0 or zoom < 1:
             await ctx.send_help()
             return
 
-        # out_of_date marks zoom as oudated, since this overwrite the temp
-        zoomed_path = await self.current_games[ctx.guild.id].create_zoomed_map(
-            x, y, zoom, out_of_date=True
+        # UNUSED: out_of_date marks zoom as oudated, since this overwrite the temp
+        zoomed_path = await current_game.create_zoomed_map(
+            x, y, zoom, current_game.current_map, current_game.zoomed_current_map
         )
 
         await ctx.send(file=discord.File(fp=zoomed_path, filename=f"test_zoom.{self.ext}"))
@@ -470,22 +475,24 @@ class Conquest(commands.Cog):
     @conquest_set.command(name="save")
     async def _conquest_set_save(self, ctx: Context, *, save_name):
         """Save the current map to be loaded later"""
-        if self.current_games[ctx.guild.id] is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
 
-        await self.current_games[ctx.guild.id].save_as(save_name)
+        await current_game.save_as(save_name)
 
         await ctx.tick()
 
     @conquest_set.command(name="load")
     async def _conquest_set_load(self, ctx: Context, *, save_name):
         """Load a saved map to be the current map"""
-        if self.current_games[ctx.guild.id] is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
 
-        if not await self.current_games[ctx.guild.id].load_from(save_name):
+        if not await current_game.load_from(save_name):
             await ctx.maybe_send_embed(f"Saved map not found, check your spelling")
             return
 
@@ -513,25 +520,27 @@ class Conquest(commands.Cog):
             map_dir, mapname, self.current_map_folder / ctx.guild.id / mapname
         )
 
-        self.current_map = mapname
-        self.is_custom = is_custom
-        await self.config.current_map.set(self.current_map)  # Save to config too
-        await self.config.is_custom.set(is_custom)
+        # self.current_map = mapname
+        # self.is_custom = is_custom
+        # await self.config.current_map.set(self.current_map)  # Save to config too
+        # await self.config.is_custom.set(is_custom)
+        #
+        # await self.current_map_load()
 
-        await self.current_map_load()
+        await self.current_games[ctx.guild.id].resume_game(ctx, reset)
 
-        current_map_folder = await self._get_current_map_folder()
-        current_map = current_map_folder / f"current.{self.ext}"
-
-        if not reset and current_map.exists():
-            await ctx.maybe_send_embed(
-                "This map is already in progress, resuming from last game\n"
-                "Use `[p]conquest set map [mapname] True` to start a new game"
-            )
-        else:
-            if not current_map_folder.exists():
-                current_map_folder.mkdir()
-            copyfile(check_path / mapname / f"blank.{self.ext}", current_map)
+        # current_map_folder = await self._get_current_map_folder()
+        # current_map = current_map_folder / f"current.{self.ext}"
+        #
+        # if not reset and current_map.exists():
+        #     await ctx.maybe_send_embed(
+        #         "This map is already in progress, resuming from last game\n"
+        #         "Use `[p]conquest set map [mapname] True` to start a new game"
+        #     )
+        # else:
+        #     if not current_map_folder.exists():
+        #         current_map_folder.mkdir()
+        #     copyfile(check_path / mapname / f"blank.{self.ext}", current_map)
 
         await ctx.tick()
 
@@ -540,66 +549,39 @@ class Conquest(commands.Cog):
         """
         Send the current map.
         """
-        if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
-
-        current_img = await self._get_current_map_folder() / f"current.{self.ext}"
-
-        await self._send_maybe_zoomed_map(ctx, current_img, f"current_map.{self.ext}")
+        async with ctx.typing():
+            map_file = await current_game.get_maybe_zoomed_map("current")
+        await ctx.send(file=map_file)
 
     @conquest.command("blank")
     async def _conquest_blank(self, ctx: Context):
         """
         Print the blank version of the current map, for reference.
         """
-        if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
-
-        current_blank_img = self._path_if_custom() / self.current_map / f"blank.{self.ext}"
-
-        await self._send_maybe_zoomed_map(ctx, current_blank_img, f"blank_map.{self.ext}")
+        async with ctx.typing():
+            map_file = await current_game.get_maybe_zoomed_map("blank")
+        await ctx.send(file=map_file)
 
     @conquest.command("numbered")
     async def _conquest_numbered(self, ctx: Context):
         """
         Print the numbered version of the current map, for reference.
         """
-        if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
         async with ctx.typing():
-            numbers_path = self._path_if_custom() / self.current_map / f"numbers.{self.ext}"
-            if not numbers_path.exists():
-                await ctx.send(
-                    file=discord.File(
-                        fp=self._path_if_custom() / self.current_map / f"numbered.{self.ext}",
-                        filename=f"numbered.{self.ext}",
-                    )
-                )
-                return
-
-            current_map_path = await self._get_current_map_folder()
-            current_map = Image.open(current_map_path / f"current.{self.ext}")
-            numbers = Image.open(numbers_path).convert("L")
-
-            inverted_map = ImageOps.invert(current_map)
-
-            loop = asyncio.get_running_loop()
-            current_numbered_img = await loop.run_in_executor(
-                None, Image.composite, current_map, inverted_map, numbers
-            )
-
-            current_numbered_img.save(
-                current_map_path / f"current_numbered.{self.ext}", self.ext_format
-            )
-
-            await self._send_maybe_zoomed_map(
-                ctx,
-                current_map_path / f"current_numbered.{self.ext}",
-                f"current_numbered.{self.ext}",
-            )
+            map_file = await current_game.get_maybe_zoomed_map("numbered")
+        await ctx.send(file=map_file)
 
     @conquest.command(name="multitake")
     async def _conquest_multitake(
@@ -610,8 +592,9 @@ class Conquest(commands.Cog):
 
         :param start_region:
         """
-        if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
 
         try:
@@ -620,18 +603,22 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed(f"Invalid color {color}")
             return
 
-        if end_region > self.map_data["region_max"] or start_region < 1:
-            await ctx.maybe_send_embed(
-                f"Max region number is {self.map_data['region_max']}, minimum is 1"
-            )
-            return
-
         if start_region < end_region:
             start_region, end_region = end_region, start_region
 
+        if end_region > current_game.region_max or start_region < 1:
+            await ctx.maybe_send_embed(
+                f"Max region number is {current_game.region_max}, minimum is 1"
+            )
+            return
+
         regions = [r for r in range(start_region, end_region + 1)]
 
-        await self._process_take_regions(ctx, color, regions)
+        async with ctx.typing():
+            await current_game._process_take_regions(color, regions)
+            map_file = await current_game.get_maybe_zoomed_map("current")
+
+        await ctx.send(file=map_file)
 
     @conquest.command(name="take")
     async def _conquest_take(self, ctx: Context, regions: Greedy[int], *, color: str):
@@ -645,8 +632,9 @@ class Conquest(commands.Cog):
             await ctx.send_help()
             return
 
-        if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+        current_game = self.current_games[ctx.guild.id]
+        if current_game is None:
+            await ctx.maybe_send_embed(ERROR_CONQUEST_SET_MAP)
             return
 
         try:
@@ -656,10 +644,14 @@ class Conquest(commands.Cog):
             return
 
         for region in regions:
-            if region > self.map_data["region_max"] or region < 1:
+            if region > current_game.region_max or region < 1:
                 await ctx.maybe_send_embed(
-                    f"Max region number is {self.map_data['region_max']}, minimum is 1"
+                    f"Max region number is {current_game.region_max}, minimum is 1"
                 )
                 return
+        async with ctx.typing():
+            await current_game._process_take_regions(color, regions)
+            map_file = await current_game.get_maybe_zoomed_map("current")
 
-        await self._process_take_regions(ctx, color, regions)
+        await ctx.send(file=map_file)
+
