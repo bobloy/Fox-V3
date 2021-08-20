@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import pathlib
 from collections import defaultdict
 from io import BytesIO
@@ -19,6 +20,8 @@ from conquest.conquestgame import ConquestGame
 from conquest.regioner import ConquestMap, MapMaker, composite_regions
 
 ERROR_CONQUEST_SET_MAP = "No map is currently set. See `[p]conquest set map`"
+
+log = logging.getLogger("red.fox_v3.conquest")
 
 
 class Conquest(commands.Cog):
@@ -83,28 +86,28 @@ class Conquest(commands.Cog):
         """
         self.asset_path = bundled_data_path(self) / "assets"
         for guild in self.bot.guilds:
-            game_name = await self.config.guild(guild).current_game()
-            if game_name is not None:
-                await self.load_guild_data(guild, game_name)
+            game_data = await self.config.guild(guild).current_game()
+            if game_data is not None:
+                await self.load_guild_data(guild, **game_data)
 
         # for guild_id, game_name in self.current_maps.items():
         #     await self.current_map_load(guild_id, game_name)
 
-    async def load_guild_data(self, guild: discord.Guild, game_name: str):
-        map_data = await self.config.games.get_raw(game_name)
-        if map_data is None:
-            return False
-        map_name = map_data["map_name"]
-        map_path = self._path_if_custom(map_data["is_custom"]) / map_name
+    async def load_guild_data(self, guild: discord.Guild, map_name: str, is_custom: bool):
+        # map_data = await self.config.games.get_raw(game_name)
+        # if map_data is None:
+        #     return False
+        # map_name = map_data["map_name"]
+        map_path = self._path_if_custom(is_custom) / map_name
 
         if (
-            not (self.current_map_folder / guild.id).exists()
-            or not (self.current_map_folder / guild.id / map_name).exists()
+            not (self.current_map_folder / str(guild.id)).exists()
+            or not (self.current_map_folder / str(guild.id) / map_name).exists()
         ):
             return False
 
         self.current_games[guild.id] = ConquestGame(
-            map_path, map_name, self.current_map_folder / guild.id / map_name
+            map_path, map_name, self.current_map_folder / str(guild.id) / map_name
         )
 
         return True
@@ -274,7 +277,7 @@ class Conquest(commands.Cog):
             return
 
         self.mm = MapMaker(map_path)
-        await self.mm.load_data()
+        # await self.mm.load_data()
 
         await ctx.tick()
 
@@ -500,7 +503,7 @@ class Conquest(commands.Cog):
 
     @conquest_set.command(name="map")
     async def _conquest_set_map(
-        self, ctx: Context, mapname: str, is_custom: bool = False, reset: bool = False
+        self, ctx: Context, mapname: str, reset: bool = False, is_custom: bool = False
     ):
         """
         Select a map from current available maps
@@ -516,9 +519,10 @@ class Conquest(commands.Cog):
             )
             return
 
-        self.current_games[ctx.guild.id] = ConquestGame(
-            map_dir, mapname, self.current_map_folder / ctx.guild.id / mapname
-        )
+        guild_folder = self.current_map_folder / str(ctx.guild.id)
+        if not guild_folder.exists():
+            guild_folder.mkdir()
+        self.current_games[ctx.guild.id] = ConquestGame(map_dir, mapname, guild_folder / mapname)
 
         # self.current_map = mapname
         # self.is_custom = is_custom
@@ -528,6 +532,12 @@ class Conquest(commands.Cog):
         # await self.current_map_load()
 
         await self.current_games[ctx.guild.id].resume_game(ctx, reset)
+
+        new_game = self.default_games.copy()
+        new_game["map_name"] = mapname
+        new_game["is_custom"] = is_custom
+
+        await self.config.guild(ctx.guild).current_game.set(new_game)
 
         # current_map_folder = await self._get_current_map_folder()
         # current_map = current_map_folder / f"current.{self.ext}"
@@ -603,7 +613,7 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed(f"Invalid color {color}")
             return
 
-        if start_region < end_region:
+        if start_region > end_region:
             start_region, end_region = end_region, start_region
 
         if end_region > current_game.region_max or start_region < 1:
@@ -654,4 +664,3 @@ class Conquest(commands.Cog):
             map_file = await current_game.get_maybe_zoomed_map("current")
 
         await ctx.send(file=map_file)
-

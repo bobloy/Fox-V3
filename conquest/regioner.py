@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import pathlib
 import shutil
 from io import BytesIO
@@ -7,6 +8,8 @@ from typing import List, Union
 
 from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFont, ImageOps
 from PIL.ImageDraw import _color_diff
+
+log = logging.getLogger("red.fox_v3.conquest.regioner")
 
 
 async def composite_regions(im, regions, color, masks_path) -> Union[Image.Image, None]:
@@ -137,6 +140,8 @@ class ConquestMap:
         self.region_max = None
         self.regions = {}
 
+        self.load_data()
+
     def masks_path(self):
         return self.path / "masks"
 
@@ -152,7 +157,7 @@ class ConquestMap:
     def numbered_path(self):
         return self.path / "numbered.png"
 
-    async def load_data(self):
+    def load_data(self):
         with self.data_path().open() as dp:
             data = json.load(dp)
 

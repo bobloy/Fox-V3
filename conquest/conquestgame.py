@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import pathlib
 from shutil import copyfile
 from types import SimpleNamespace
@@ -10,6 +11,8 @@ from PIL import Image, ImageOps
 from redbot.core import commands
 
 from conquest.regioner import ConquestMap, composite_regions
+
+log = logging.getLogger("red.fox_v3.conquest.conquestgame")
 
 
 class ConquestGame:
@@ -35,7 +38,9 @@ class ConquestGame:
         self.numbered_current_map = self.current_map_folder / self.numbered_current_filename
 
         self.zoomed_numbered_current_filename = f"current_zoomed_numbered.{self.ext}"
-        self.zoomed_numbered_current_map = self.current_map_folder / self.zoomed_numbered_current_filename
+        self.zoomed_numbered_current_map = (
+            self.current_map_folder / self.zoomed_numbered_current_filename
+        )
 
         self.region_max = self.source_map.region_max
 
@@ -64,7 +69,7 @@ class ConquestGame:
     async def _process_take_regions(self, color, regions):
         im = Image.open(self.current_map)
 
-        out: Image.Image = await composite_regions(
+        out: Optional[Image.Image] = await composite_regions(
             im,
             regions,
             color,
@@ -74,7 +79,9 @@ class ConquestGame:
         # self.zoom_is_out_of_date.current = True
 
     async def create_numbered_map(self):
-        if not self.source_map.numbers_path().exists():  # No numbers map, can't add numbers to current
+        if (
+            not self.source_map.numbers_path().exists()
+        ):  # No numbers map, can't add numbers to current
             return self.source_map.numbered_path()
 
         current_map = Image.open(self.current_map)
@@ -92,7 +99,13 @@ class ConquestGame:
         return self.numbered_current_map
 
     async def create_zoomed_map(
-        self, x, y, zoom, source_map: Union[Image.Image, pathlib.Path], target_path: pathlib.Path, **kwargs
+        self,
+        x,
+        y,
+        zoom,
+        source_map: Union[Image.Image, pathlib.Path],
+        target_path: pathlib.Path,
+        **kwargs,
     ):
         """Pass out_of_date when created a zoomed map based on something other than the settings json"""
         # if out_of_date:
