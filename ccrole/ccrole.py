@@ -3,6 +3,7 @@ import logging
 import re
 
 import discord
+from discord.ext.commands import RoleConverter, Greedy, CommandError, ArgumentParsingError
 from discord.ext.commands.view import StringView
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
@@ -13,15 +14,38 @@ log = logging.getLogger("red.fox_v3.ccrole")
 
 
 async def _get_roles_from_content(ctx, content):
-    content_list = content.split(",")
-    try:
-        role_list = [
-            discord.utils.get(ctx.guild.roles, name=role.strip(" ")).id for role in content_list
-        ]
-    except (discord.HTTPException, AttributeError):  # None.id is attribute error
-        return None
-    else:
-        return role_list
+    # greedy = Greedy[RoleConverter]
+    view = StringView(content)
+    rc = RoleConverter()
+
+    # "Borrowed" from discord.ext.commands.Command._transform_greedy_pos
+    result = []
+    while not view.eof:
+        # for use with a manual undo
+        previous = view.index
+
+        view.skip_ws()
+        try:
+            argument = view.get_quoted_word()
+            value = await rc.convert(ctx, argument)
+        except (CommandError, ArgumentParsingError):
+            view.index = previous
+            break
+        else:
+            result.append(value)
+
+    return [r.id for r in result]
+
+    # Old method
+    # content_list = content.split(",")
+    # try:
+    #     role_list = [
+    #         discord.utils.get(ctx.guild.roles, name=role.strip(" ")).id for role in content_list
+    #     ]
+    # except (discord.HTTPException, AttributeError):  # None.id is attribute error
+    #     return None
+    # else:
+    #     return role_list
 
 
 class CCRole(commands.Cog):
@@ -84,7 +108,7 @@ class CCRole(commands.Cog):
 
         # Roles to add
         await ctx.send(
-            "What roles should it add? (Must be **comma separated**)\n"
+            "What roles should it add?\n"
             "Say `None` to skip adding roles"
         )
 
@@ -106,7 +130,7 @@ class CCRole(commands.Cog):
 
         # Roles to remove
         await ctx.send(
-            "What roles should it remove? (Must be comma separated)\n"
+            "What roles should it remove?\n"
             "Say `None` to skip removing roles"
         )
         try:
@@ -124,7 +148,7 @@ class CCRole(commands.Cog):
 
         # Roles to use
         await ctx.send(
-            "What roles are allowed to use this command? (Must be comma separated)\n"
+            "What roles are allowed to use this command?\n"
             "Say `None` to allow all roles"
         )
 
