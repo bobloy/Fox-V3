@@ -107,7 +107,7 @@ def floodfill(image, xy, value, border=None, thresh=0) -> set:
                         new_edge.add((s, t))
         full_edge = edge  # discard pixels processed
         edge = new_edge
-    return filled_pixels
+    return filled_pixels  # Modified to returned the filled pixels
 
 
 def create_number_mask(regions, filepath, filename):
@@ -139,8 +139,6 @@ class ConquestMap:
         self.custom = None
         self.region_max = None
         self.regions = {}
-
-        self.load_data()
 
     def masks_path(self):
         return self.path / "masks"
@@ -202,7 +200,7 @@ class ConquestMap:
 
         return lowest_num, eliminated_masks, mask
 
-    async def get_sample(self):
+    async def get_sample(self, region=None):
         files = [self.blank_path()]
 
         masks_dir = self.masks_path()
@@ -210,27 +208,34 @@ class ConquestMap:
             loop = asyncio.get_running_loop()
             current_map = Image.open(self.blank_path())
 
-            regions = list(self.regions.keys())
-            fourth = len(regions) // 4
+            if region is not None:
+                if region in self.regions:
+                    current_map = await composite_regions(
+                        current_map, [region], ImageColor.getrgb("red"), self.masks_path()
+                    )
+            else:
+                regions = list(self.regions.keys())
 
-            current_map = await composite_regions(
-                current_map, regions[:fourth], ImageColor.getrgb("red"), self.masks_path()
-            )
-            current_map = await composite_regions(
-                current_map,
-                regions[fourth : fourth * 2],
-                ImageColor.getrgb("green"),
-                self.masks_path(),
-            )
-            current_map = await composite_regions(
-                current_map,
-                regions[fourth * 2 : fourth * 3],
-                ImageColor.getrgb("blue"),
-                self.masks_path(),
-            )
-            current_map = await composite_regions(
-                current_map, regions[fourth * 3 :], ImageColor.getrgb("yellow"), self.masks_path()
-            )
+                fourth = len(regions) // 4
+
+                current_map = await composite_regions(
+                    current_map, regions[:fourth], ImageColor.getrgb("red"), self.masks_path()
+                )
+                current_map = await composite_regions(
+                    current_map,
+                    regions[fourth : fourth * 2],
+                    ImageColor.getrgb("green"),
+                    self.masks_path(),
+                )
+                current_map = await composite_regions(
+                    current_map,
+                    regions[fourth * 2 : fourth * 3],
+                    ImageColor.getrgb("blue"),
+                    self.masks_path(),
+                )
+                current_map = await composite_regions(
+                    current_map, regions[fourth * 3 :], ImageColor.getrgb("yellow"), self.masks_path()
+                )
 
             current_numbered_img = await self.get_numbered(current_map)
 

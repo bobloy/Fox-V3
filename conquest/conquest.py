@@ -161,7 +161,7 @@ class Conquest(commands.Cog):
 
     @mapmaker.command(name="save")
     async def _mapmaker_save(self, ctx: Context, *, map_name: str):
-        """Save the current map to the specified map name"""
+        """Save the current map to a different map name"""
         if not self.mm:
             await ctx.maybe_send_embed("No map currently being worked on")
             return
@@ -179,10 +179,10 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed(f"Map successfully saved to {target_save}")
 
     @mapmaker.command(name="upload")
-    async def _mapmaker_upload(self, ctx: Context, map_name: str, map_path=""):
+    async def _mapmaker_upload(self, ctx: Context, map_name: str, path_to_image=""):
         """Load a map image to be modified. Upload one with this command or provide a path"""
         message: discord.Message = ctx.message
-        if not message.attachments and not map_path:
+        if not message.attachments and not path_to_image:
             await ctx.maybe_send_embed(
                 "Either upload an image with this command or provide a path to the image"
             )
@@ -202,61 +202,71 @@ class Conquest(commands.Cog):
             if not pred.result:
                 return
 
-        if not self.mm:
-            self.mm = MapMaker(self.custom_map_folder)
+        if self.mm:  # Only one map can be worked on at a time
+            await ctx.maybe_send_embed(
+                "An existing map is in progress, close it before opening a new one. (`[p]mapmaker close`)"
+            )
+            return
+
+        async with ctx.typing():
+            self.mm = MapMaker(target_save)
             self.mm.custom = True
 
-        if map_path:
-            map_path = pathlib.Path(map_path)
+            if path_to_image:
+                path_to_image = pathlib.Path(path_to_image)
 
-            if not map_path.exists():
-                await ctx.maybe_send_embed("Map not found at that path")
+                if not path_to_image.exists():
+                    await ctx.maybe_send_embed("Map not found at that path")
+                    return
+
+                mm_img = Image.open(path_to_image)
+
+            elif message.attachments:
+                attch: discord.Attachment = message.attachments[0]
+                # attch_file = await attch.to_file()
+
+                buffer = BytesIO()
+                await attch.save(buffer)
+
+                mm_img: Image.Image = Image.open(buffer)
+            else:
+                # Wait what?
                 return
 
-            mm_img = Image.open(map_path)
+            if mm_img.mode == "P":
+                # Maybe convert to L to prevent RGB?
+                mm_img = mm_img.convert()  # No P mode, convert it
 
-        elif message.attachments:
-            attch: discord.Attachment = message.attachments[0]
-            # attch_file = await attch.to_file()
+            result = await self.mm.init_directory(map_name, target_save, mm_img)
 
-            buffer = BytesIO()
-            await attch.save(buffer)
+            if not result:
+                self.mm = None
+                await ctx.maybe_send_embed("Failed to upload to that name")
+                return
 
-            mm_img: Image.Image = Image.open(buffer)
-        else:
-            # Wait what?
-            return
+            maps_json_path = self.custom_map_folder / "maps.json"
+            with maps_json_path.open("r+") as maps:
+                map_data = json.load(maps)
+                map_data["maps"].append(map_name)
+                maps.seek(0)
+                json.dump(map_data, maps, sort_keys=True, indent=4)
 
-        if mm_img.mode == "P":
-            # Maybe convert to L to prevent RGB?
-            mm_img = mm_img.convert()  # No P mode, convert it
-
-        result = await self.mm.init_directory(map_name, target_save, mm_img)
-
-        if not result:
-            self.mm = None
-            await ctx.maybe_send_embed("Failed to upload to that name")
-            return
-
-        maps_json_path = self.custom_map_folder / "maps.json"
-        with maps_json_path.open("r+") as maps:
-            map_data = json.load(maps)
-            map_data["maps"].append(map_name)
-            maps.seek(0)
-            json.dump(map_data, maps, sort_keys=True, indent=4)
-
-        await ctx.maybe_send_embed(f"Map successfully uploaded to {target_save}")
+            await ctx.maybe_send_embed(f"Map successfully uploaded to {target_save}")
 
     @mapmaker.command(name="sample")
-    async def _mapmaker_sample(self, ctx: Context):
+    async def _mapmaker_sample(self, ctx: Context, region: int = None):
         """Print the currently being modified map as a sample"""
         if not self.mm:
             await ctx.maybe_send_embed("No map currently being worked on")
             return
 
+        if region is not None and region not in self.mm.regions:
+            await ctx.send("This region doesn't exist or was deleted")
+            return
+
         async with ctx.typing():
 
-            files = await self.mm.get_sample()
+            files = await self.mm.get_sample(region)
 
             for f in files:
                 await ctx.send(file=discord.File(f, filename="map.png"))
@@ -277,7 +287,7 @@ class Conquest(commands.Cog):
             return
 
         self.mm = MapMaker(map_path)
-        # await self.mm.load_data()
+        self.mm.load_data()
 
         await ctx.tick()
 
@@ -338,11 +348,11 @@ class Conquest(commands.Cog):
         else:
             await ctx.maybe_send_embed(f"Failed to delete masks")
 
-    @_mapmaker_masks.command(name="combine")
+    @_mapmaker_masks.command(name="merge", aliases=["combine"])
     async def _mapmaker_masks_combine(
         self, ctx: Context, mask_list: Greedy[int], recommended=False
     ):
-        """Generate masks for the map"""
+        """Merge masks into a single mask"""
         if not mask_list and not recommended:
             await ctx.send_help()
             return

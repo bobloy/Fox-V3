@@ -23,6 +23,7 @@ class ConquestGame:
 
     def __init__(self, map_path: pathlib.Path, game_name: str, custom_map_path: pathlib.Path):
         self.source_map = ConquestMap(map_path)
+        self.source_map.load_data()
         self.game_name = game_name
         self.current_map_folder = custom_map_path
 
