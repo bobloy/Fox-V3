@@ -174,7 +174,7 @@ class ConquestMap:
         )
 
     def _img_combine_masks(self, mask_list: List[int]):
-        if not mask_list:
+        if not mask_list or len(mask_list) < 2:
             return False, None, None
 
         if not self.blank_path().exists():
@@ -190,7 +190,10 @@ class ConquestMap:
         eliminated_masks = []
 
         for mask_num in mask_list:
-            if lowest_num is None or mask_num < lowest_num:
+            if lowest_num is None:
+                lowest_num = mask_num
+            elif mask_num < lowest_num:
+                eliminated_masks.append(lowest_num)
                 lowest_num = mask_num
             else:
                 eliminated_masks.append(mask_num)
