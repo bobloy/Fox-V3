@@ -4,12 +4,15 @@ import logging
 import pathlib
 import shutil
 from io import BytesIO
-from typing import List, Union
+from typing import List, Union, Optional
 
 from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFont, ImageOps
 from PIL.ImageDraw import _color_diff
 
 log = logging.getLogger("red.fox_v3.conquest.regioner")
+
+
+MAP_FONT: Optional[ImageFont.ImageFont] = None
 
 
 async def composite_regions(im, regions, color, masks_path) -> Union[Image.Image, None]:
@@ -115,19 +118,31 @@ def create_number_mask(regions, filepath, filename):
     if not base_img_path.exists():
         return False
 
-    base_img: Image.Image = Image.open(base_img_path).convert("L")
+    base_img: Image.Image = Image.open(base_img_path)
 
     number_img = Image.new("L", base_img.size, 255)
-    fnt = ImageFont.load_default()
+    background_img = Image.new("L", base_img.size, 255)
+    number2_img = Image.new("L", base_img.size, 255)
+    if MAP_FONT is None:
+        fnt = ImageFont.load_default()
+    else:
+        fnt = MAP_FONT
     d = ImageDraw.Draw(number_img)
+    d2 = ImageDraw.Draw(background_img)
+    d3 = ImageDraw.Draw(number2_img)
     for region_num, region in regions.items():
         text = getattr(region, "name", str(region_num))
 
         w1, h1 = region.center
         w2, h2 = fnt.getsize(text)
 
+        d2.rectangle((w1 - (w2 / 2), h1 - (h2 / 2)-1, w1 + (w2 / 2)-1, h1 + (h2 / 2)), fill=0)
+        d3.rectangle((w1 - (w2 / 2), h1 - (h2 / 2)-1, w1 + (w2 / 2)-1, h1 + (h2 / 2)), fill=0)
+        d3.text((w1 - (w2 / 2), h1 - (h2 / 2)), text, font=fnt, fill=255)
         d.text((w1 - (w2 / 2), h1 - (h2 / 2)), text, font=fnt, fill=0)
-    number_img.save(filepath / f"numbers.png", "PNG")
+    number_img.save(filepath / "numbers.png", "PNG")
+    background_img.save(filepath / "numbers_background.png", "PNG")
+    number2_img.save(filepath / "numbers2.png", "PNG")
     return True
 
 
@@ -154,6 +169,12 @@ class ConquestMap:
 
     def numbered_path(self):
         return self.path / "numbered.png"
+
+    def numbers_background_path(self):
+        return self.path / "numbers_background.png"
+
+    def numbers2_path(self):
+        return self.path / "numbers2.png"
 
     def load_data(self):
         with self.data_path().open() as dp:
@@ -208,7 +229,6 @@ class ConquestMap:
 
         masks_dir = self.masks_path()
         if masks_dir.exists() and masks_dir.is_dir():
-            loop = asyncio.get_running_loop()
             current_map = Image.open(self.blank_path())
 
             if region is not None:
@@ -264,12 +284,34 @@ class ConquestMap:
         return buffer1
 
     async def get_numbered(self, current_map):
+        # return await self.get_inverted_numbered(current_map)
+
+        return await self.get_numbered_with_background(current_map)
+
+    async def get_inverted_numbered(self, current_map):
         loop = asyncio.get_running_loop()
         numbers = Image.open(self.numbers_path()).convert("L")
         inverted_map = ImageOps.invert(current_map)
         current_numbered_img = await loop.run_in_executor(
             None, Image.composite, current_map, inverted_map, numbers
         )
+        return current_numbered_img
+
+    async def get_numbered_with_background(self, current_map):
+        loop = asyncio.get_running_loop()
+        current_map = current_map.convert("RGBA")
+        # numbers = Image.open(self.numbers_path()).convert("L")
+        numbers_mask = Image.open(self.numbers_background_path()).convert("L")
+        numbers_background = Image.open(self.numbers2_path()).convert("RGB")
+        # inverted_map = ImageOps.invert(current_map)
+        # current_numbered_img = await loop.run_in_executor(
+        #     None, Image.composite, current_map, inverted_map, numbers
+        # )
+
+        current_numbered_img = await loop.run_in_executor(
+            None, Image.composite, current_map, numbers_background, numbers_mask
+        )
+
         return current_numbered_img
 
 
