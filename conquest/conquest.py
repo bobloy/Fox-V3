@@ -8,7 +8,7 @@ from shutil import copyfile
 from typing import Optional, Union, Dict
 
 import discord
-from PIL import Image, ImageColor, ImageOps
+from PIL import Image, ImageColor, ImageOps, ImageFont
 from discord.ext.commands import Greedy
 from redbot.core import Config, commands
 from redbot.core.commands import Context
@@ -16,8 +16,8 @@ from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path, cog_data_path
 from redbot.core.utils.predicates import MessagePredicate
 
+from conquest import regioner
 from conquest.conquestgame import ConquestGame
-from conquest.regioner import ConquestMap, MapMaker, composite_regions
 
 ERROR_CONQUEST_SET_MAP = "No map is currently set. See `[p]conquest set map`"
 
@@ -68,7 +68,7 @@ class Conquest(commands.Cog):
         )  # key: guild_id
         self.map_data = {}  # key, value = guild.id, ConquestGame
 
-        self.mm: Optional[MapMaker] = None
+        self.mm: Optional[regioner.MapMaker] = None
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -89,6 +89,18 @@ class Conquest(commands.Cog):
             game_data = await self.config.guild(guild).current_game()
             if game_data is not None:
                 await self.load_guild_data(guild, **game_data)
+
+        # regioner.MAP_FONT = ImageFont.truetype(
+        #     str(bundled_data_path(self) / "fonts" / "smallest_pixel_7" / "smallest_pixel-7.ttf"), size=10
+        # )
+
+        # regioner.MAP_FONT = ImageFont.truetype(
+        #     str(bundled_data_path(self) / "fonts" / "bit01" / "bit01.ttf"), size=4
+        # )
+
+        regioner.MAP_FONT = ImageFont.truetype(
+            str(bundled_data_path(self) / "fonts" / "pixels" / "Pixels.ttf"), size=16
+        )
 
         # for guild_id, game_name in self.current_maps.items():
         #     await self.current_map_load(guild_id, game_name)
@@ -125,8 +137,8 @@ class Conquest(commands.Cog):
     #     #     await self.config.current_map.set(None)
     #     #     return
 
-    async def _get_current_map_folder(self, guild):
-        return self.current_map_folder / guild.id / self.current_map
+    # async def _get_current_map_folder(self, guild):
+    #     return self.current_map_folder / guild.id / self.current_map
 
     async def _mm_save_map(self, map_name, target_save):
         return await self.mm.change_name(map_name, target_save)
@@ -209,7 +221,7 @@ class Conquest(commands.Cog):
             return
 
         async with ctx.typing():
-            self.mm = MapMaker(target_save)
+            self.mm = regioner.MapMaker(target_save)
             self.mm.custom = True
 
             if path_to_image:
@@ -286,7 +298,7 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed(f"Map {map_name} not found in {self.custom_map_folder}")
             return
 
-        self.mm = MapMaker(map_path)
+        self.mm = regioner.MapMaker(map_path)
         self.mm.load_data()
 
         await ctx.tick()
