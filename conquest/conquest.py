@@ -143,6 +143,7 @@ class Conquest(commands.Cog):
     async def _mm_save_map(self, map_name, target_save):
         return await self.mm.change_name(map_name, target_save)
 
+    @commands.is_owner()
     @commands.group()
     async def mapmaker(self, ctx: Context):
         """
@@ -168,6 +169,21 @@ class Conquest(commands.Cog):
     async def _mapmaker_close(self, ctx: Context):
         """Close the currently open map."""
         self.mm = None
+
+        await ctx.tick()
+
+    @mapmaker.group(name="debug")
+    async def _mapmaker_debug(self, ctx: Context):
+        """Debug commands for making maps. Don't use unless directed to."""
+        pass
+
+    @_mapmaker_debug.command(name="recalculatecenter")
+    async def _mapmaker_debug_recalculatecenter(self, ctx: Context, region: int = None):
+        """Recaculate the center point for the given region.
+
+        Processes all regions if region isn't specified."""
+
+        await self.mm.recalculate_center(region)
 
         await ctx.tick()
 
@@ -282,6 +298,28 @@ class Conquest(commands.Cog):
 
             for f in files:
                 await ctx.send(file=discord.File(f, filename="map.png"))
+
+            await ctx.tick()
+
+    @mapmaker.command(name="region")
+    async def _mapmaker_region(self, ctx: Context, region: int, print_number: bool = False):
+        """Print the currently being modified map as a sample"""
+        if not self.mm:
+            await ctx.maybe_send_embed("No map currently being worked on")
+            return
+
+        if region not in self.mm.regions:
+            await ctx.send("This region doesn't exist or was deleted")
+            return
+
+        async with ctx.typing():
+
+            files = await self.mm.sample_region(region, print_number)
+
+            for f in files:
+                await ctx.send(file=discord.File(f, filename="map.png"))
+
+            await ctx.tick()
 
     @mapmaker.command(name="load")
     async def _mapmaker_load(self, ctx: Context, map_name: str):
