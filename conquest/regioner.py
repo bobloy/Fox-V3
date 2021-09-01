@@ -2,10 +2,12 @@ import asyncio
 import json
 import logging
 import pathlib
+import random
 import shutil
 from io import BytesIO
 from typing import List, Union, Optional
 
+import numpy
 from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFont, ImageOps
 from PIL.ImageDraw import _color_diff
 
@@ -136,8 +138,12 @@ def create_number_mask(regions, filepath, filename):
         w1, h1 = region.center
         w2, h2 = fnt.getsize(text)
 
-        d2.rectangle((w1 - (w2 / 2), h1 - (h2 / 2)-1, w1 + (w2 / 2)-1, h1 + (h2 / 2)), fill=0)
-        d3.rectangle((w1 - (w2 / 2), h1 - (h2 / 2)-1, w1 + (w2 / 2)-1, h1 + (h2 / 2)), fill=0)
+        d2.rectangle(
+            (w1 - (w2 / 2) - 1, h1 - (h2 / 2) + 5, w1 + (w2 / 2) - 1, h1 + (h2 / 2)), fill=0
+        )
+        d3.rectangle(
+            (w1 - (w2 / 2) - 1, h1 - (h2 / 2) + 5, w1 + (w2 / 2) - 1, h1 + (h2 / 2)), fill=0
+        )
         d3.text((w1 - (w2 / 2), h1 - (h2 / 2)), text, font=fnt, fill=255)
         d.text((w1 - (w2 / 2), h1 - (h2 / 2)), text, font=fnt, fill=0)
     number_img.save(filepath / "numbers.png", "PNG")
@@ -224,6 +230,31 @@ class ConquestMap:
 
         return lowest_num, eliminated_masks, mask
 
+    async def sample_region(self, region: int, include_numbered=False):
+        if region not in self.regions:
+            return []
+
+        files = []
+
+        current_map = Image.open(self.blank_path())
+        current_map = await composite_regions(
+            current_map, [region], ImageColor.getrgb("red"), self.masks_path()
+        )
+
+        buffer1 = BytesIO()
+        current_map.save(buffer1, "png")
+        buffer1.seek(0)
+        files.append(buffer1)
+
+        if include_numbered:
+            current_numbered_img = await self.get_numbered(current_map)
+            buffer2 = BytesIO()
+            current_numbered_img.save(buffer2, "png")
+            buffer2.seek(0)
+            files.append(buffer2)
+
+        return files
+
     async def get_sample(self, region=None):
         files = [self.blank_path()]
 
@@ -238,6 +269,8 @@ class ConquestMap:
                     )
             else:
                 regions = list(self.regions.keys())
+
+                random.shuffle(regions)  # random lets goo
 
                 fourth = len(regions) // 4
 
@@ -257,7 +290,10 @@ class ConquestMap:
                     self.masks_path(),
                 )
                 current_map = await composite_regions(
-                    current_map, regions[fourth * 3 :], ImageColor.getrgb("yellow"), self.masks_path()
+                    current_map,
+                    regions[fourth * 3 :],
+                    ImageColor.getrgb("yellow"),
+                    self.masks_path(),
                 )
 
             current_numbered_img = await self.get_numbered(current_map)
@@ -385,6 +421,7 @@ class MapMaker(ConquestMap):
         ]
 
         lowest_region.center = get_center(weighted_points)
+        lowest_region.weight += sum(r.weight for r in elim_regions)
 
         for key in eliminated:
             self.regions.pop(key)
@@ -439,6 +476,30 @@ class MapMaker(ConquestMap):
 
         return True
 
+    async def recalculate_center(self, region=None):
+        if region is None:
+            for num, r in self.regions.items():
+
+                points = await self.get_points_from_mask(region)
+
+                r.center = get_center(points)
+        else:
+            num = region
+            r = self.regions[num]
+
+            points = await self.get_points_from_mask(region)
+
+            r.center = get_center(points)
+
+        await self.save_data()
+
+    async def get_points_from_mask(self, region):
+        mask: Image.Image = Image.open(self.masks_path() / f"{region}.png").convert("1")
+        arr = numpy.array(mask)
+        found = numpy.where(arr == 0)
+        points = set(list(zip(found[1], found[0])))
+        return points
+
 
 class Region:
     def __init__(self, center, weight, **kwargs):
@@ -447,7 +508,7 @@ class Region:
         self.data = kwargs
 
     def get_json(self):
-        return {"center": self.center, "weight": self.weight, "data": self.data.copy()}
+        return {"center": self.center, "weight": self.weight, **self.data}
 
 
 class Regioner:
