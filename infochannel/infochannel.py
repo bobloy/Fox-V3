@@ -504,7 +504,7 @@ class InfoChannel(Cog):
         guild_data = await self.config.guild(guild).all()
 
         to_update = (
-            kwargs.keys() & guild_data["enabled_channels"].keys()
+            kwargs.keys() & [key for key, value in guild_data["enabled_channels"].items() if value]
         )  # Value in kwargs doesn't matter
 
         if to_update or extra_roles:
