@@ -10,11 +10,13 @@ from typing import List, Union, Optional
 import numpy
 from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFont, ImageOps
 from PIL.ImageDraw import _color_diff
+from redbot.core.utils import AsyncIter
 
 log = logging.getLogger("red.fox_v3.conquest.regioner")
 
 
 MAP_FONT: Optional[ImageFont.ImageFont] = None
+MASK_MODE = "1"  # "L" for 8 bit masks, "1" for 1 bit masks
 
 
 async def composite_regions(im, regions, color, masks_path) -> Union[Image.Image, None]:
@@ -24,7 +26,7 @@ async def composite_regions(im, regions, color, masks_path) -> Union[Image.Image
 
     combined_mask = None
     for region in regions:
-        mask = Image.open(masks_path / f"{region}.png").convert("1")
+        mask = Image.open(masks_path / f"{region}.png").convert(MASK_MODE)
         if combined_mask is None:
             combined_mask = mask
         else:
@@ -211,7 +213,7 @@ class ConquestMap:
             return False, None, None
 
         base_img: Image.Image = Image.open(self.blank_path())
-        mask = Image.new("1", base_img.size, 1)
+        mask = Image.new(MASK_MODE, base_img.size, 1)
 
         lowest_num = None
         eliminated_masks = []
@@ -225,7 +227,7 @@ class ConquestMap:
             else:
                 eliminated_masks.append(mask_num)
 
-            mask2 = Image.open(self.masks_path() / f"{mask_num}.png").convert("1")
+            mask2 = Image.open(self.masks_path() / f"{mask_num}.png").convert(MASK_MODE)
             mask = ImageChops.logical_and(mask, mask2)
 
         return lowest_num, eliminated_masks, mask
@@ -476,13 +478,14 @@ class MapMaker(ConquestMap):
 
         return True
 
-    async def recalculate_center(self, region=None):
+    async def recalculate_region(self, region=None):
         if region is None:
-            for num, r in self.regions.items():
+            async for num, r in AsyncIter(self.regions.items()):
 
-                points = await self.get_points_from_mask(region)
+                points = await self.get_points_from_mask(num)
 
                 r.center = get_center(points)
+                r.weight = len(points)
         else:
             num = region
             r = self.regions[num]
@@ -490,15 +493,59 @@ class MapMaker(ConquestMap):
             points = await self.get_points_from_mask(region)
 
             r.center = get_center(points)
+            r.weight = len(points)
 
         await self.save_data()
 
     async def get_points_from_mask(self, region):
-        mask: Image.Image = Image.open(self.masks_path() / f"{region}.png").convert("1")
+        mask: Image.Image = Image.open(self.masks_path() / f"{region}.png").convert(MASK_MODE)
         arr = numpy.array(mask)
         found = numpy.where(arr == 0)
         points = set(list(zip(found[1], found[0])))
         return points
+
+    async def convert_masks(self):
+        async for mask_path in AsyncIter(self.masks_path().iterdir()):
+            # Don't both checking if masks are in self.regions
+            img: Image.Image = Image.open(mask_path).convert(MASK_MODE)
+            img.save(mask_path, "PNG")
+        return True
+
+    async def prune_masks(self):
+        """Two step process:
+
+        1. Delete all mask images that aren't in self.regions
+        2. Iterate through regions numerically, renaming all mask images to that number
+            All so 1 3 4 doesn't cause 4->3 to overwrite 3->2"""
+
+        pruned = []
+        # Step 1
+        async for mask in AsyncIter(self.masks_path().iterdir(), steps=5):
+            if int(mask.stem) not in self.regions:
+                mask.unlink()
+                pruned.append(mask.stem)
+
+        # Step 2
+        new_regions = {}
+        async for newnum, (num, data) in AsyncIter(
+            enumerate(self.regions.items(), start=1), steps=5
+        ):
+            new_regions[newnum] = data
+
+            if newnum == num:
+                continue
+
+            old_mask = self.masks_path() / f"{num}.png"
+            new_mask = self.masks_path() / f"{newnum}.png"
+
+            old_mask.rename(new_mask)
+
+        self.regions = new_regions
+        self.region_max = max(self.regions.keys())  # I could use len() here, but max to be safe
+
+        await self.save_data()
+
+        return pruned
 
 
 class Region:
@@ -560,19 +607,17 @@ class Regioner:
                 ) or base_img.getpixel((x1, y1)) == self.region_color:
                     filled = floodfill(base_img, (x1, y1), self.wall_color, self.wall_color)
                     if filled:  # Pixels were updated, make them into a mask
-                        mask = Image.new("L", base_img.size, 255)
+                        mask = Image.new(MASK_MODE, base_img.size, 255)
                         for x2, y2 in filled:
                             mask.putpixel((x2, y2), 0)  # TODO: Switch to ImageDraw
 
                         mask_count += 1
-                        mask = mask.convert("L")
+                        # mask = mask.convert(MASK_MODE)  # I don't think this does anything
                         mask.save(masks_path / f"{mask_count}.png", "PNG")
 
                         regions[mask_count] = Region(center=get_center(filled), weight=len(filled))
 
                         already_processed.update(filled)
-
-        # TODO: save mask_centers
 
         create_number_mask(regions, self.filepath, self.filename)
         return regions
