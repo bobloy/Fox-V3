@@ -507,11 +507,13 @@ class InfoChannel(Cog):
             kwargs.keys() & guild_data["enabled_channels"].keys()
         )  # Value in kwargs doesn't matter
 
-        log.debug(f"{to_update=}")
+        log.debug(f"{to_update=}\n"
+                  f"{extra_roles=}")
 
         if to_update or extra_roles:
             category = guild.get_channel(guild_data["category_id"])
             if category is None:
+                log.debug('Channel category is missing, updating must be off')
                 return  # Nothing to update, must be off
 
             channel_data = await get_channel_counts(category, guild)
