@@ -177,13 +177,17 @@ class Conquest(commands.Cog):
         """Debug commands for making maps. Don't use unless directed to."""
         pass
 
-    @_mapmaker_debug.command(name="recalculatecenter")
-    async def _mapmaker_debug_recalculatecenter(self, ctx: Context, region: int = None):
-        """Recaculate the center point for the given region.
+    @_mapmaker_debug.command(name="recalculate")
+    async def _mapmaker_debug_recalculate(self, ctx: Context, region: int = None):
+        """Recaculate the center point and weight for the given region.
 
         Processes all regions if region isn't specified."""
+        if not self.mm:
+            await ctx.maybe_send_embed("No map currently being worked on")
+            return
 
-        await self.mm.recalculate_center(region)
+        async with ctx.typing():
+            await self.mm.recalculate_region(region)
 
         await ctx.tick()
 
@@ -397,6 +401,52 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed(f"Delete masks: {mask_list}")
         else:
             await ctx.maybe_send_embed(f"Failed to delete masks")
+
+    @_mapmaker_masks.command(name="cleanup", aliases=["reduce", "prune"])
+    async def _mapmaker_masks_prune(self, ctx: Context):
+        """
+        Removes deleted masks, and reduces the ID numbers down to the lowest available.
+
+        Warning: Backup your files before running this. Any errors will break your masks.
+        """
+        if not self.mm:
+            await ctx.maybe_send_embed("No map currently being worked on")
+            return
+
+        masks_dir = self.mm.masks_path()
+        if not masks_dir.exists() or not masks_dir.is_dir():
+            await ctx.maybe_send_embed("There are no masks")
+            return
+
+        async with ctx.typing():
+            result = await self.mm.prune_masks()
+        if result:
+            await ctx.maybe_send_embed(f"Pruned masks: {result}")
+        else:
+            await ctx.maybe_send_embed(f"Failed to cleanup masks")
+
+    @_mapmaker_masks.command(name="convert")
+    async def _mapmaker_masks_convert(self, ctx: Context):
+        """
+        Converts all mask images into 1-bit black-only masks.
+
+        Warning: This may take a while.
+        """
+        if not self.mm:
+            await ctx.maybe_send_embed("No map currently being worked on")
+            return
+
+        masks_dir = self.mm.masks_path()
+        if not masks_dir.exists() or not masks_dir.is_dir():
+            await ctx.maybe_send_embed("There are no masks")
+            return
+
+        async with ctx.typing():
+            result = await self.mm.convert_masks()
+        if result:
+            await ctx.maybe_send_embed(f"All masks converted")
+        else:
+            await ctx.maybe_send_embed(f"Failed to convert masks")
 
     @_mapmaker_masks.command(name="merge", aliases=["combine"])
     async def _mapmaker_masks_combine(
