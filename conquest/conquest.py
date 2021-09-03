@@ -426,9 +426,10 @@ class Conquest(commands.Cog):
             await ctx.maybe_send_embed(f"Failed to cleanup masks")
 
     @_mapmaker_masks.command(name="convert")
-    async def _mapmaker_masks_convert(self, ctx: Context):
+    async def _mapmaker_masks_convert(self, ctx: Context, mask_list: Greedy[int]):
         """
-        Converts all mask images into 1-bit black-only masks.
+        Converts the provided mask images into 1-bit black-only masks.
+        Processes all masks if mask_list is empty
 
         Warning: This may take a while.
         """
@@ -442,7 +443,7 @@ class Conquest(commands.Cog):
             return
 
         async with ctx.typing():
-            result = await self.mm.convert_masks()
+            result = await self.mm.convert_masks(mask_list)
         if result:
             await ctx.maybe_send_embed(f"All masks converted")
         else:

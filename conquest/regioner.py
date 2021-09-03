@@ -504,7 +504,7 @@ class MapMaker(ConquestMap):
         points = set(list(zip(found[1], found[0])))
         return points
 
-    async def convert_masks(self):
+    async def convert_masks(self, regions):
         async for mask_path in AsyncIter(self.masks_path().iterdir()):
             # Don't both checking if masks are in self.regions
             img: Image.Image = Image.open(mask_path).convert(MASK_MODE)
