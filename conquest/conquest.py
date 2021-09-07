@@ -178,7 +178,7 @@ class Conquest(commands.Cog):
         pass
 
     @_mapmaker_debug.command(name="recalculate")
-    async def _mapmaker_debug_recalculate(self, ctx: Context, region: int = None):
+    async def _mapmaker_debug_recalculate(self, ctx: Context, mask_list: Greedy[int]):
         """Recaculate the center point and weight for the given region.
 
         Processes all regions if region isn't specified."""
@@ -187,7 +187,19 @@ class Conquest(commands.Cog):
             return
 
         async with ctx.typing():
-            await self.mm.recalculate_region(region)
+            await self.mm.recalculate_region(mask_list)
+
+        await ctx.tick()
+
+    @_mapmaker_debug.command(name="sort")
+    async def _mapmaker_debug_sort(self, ctx: Context):
+        """Sorts the regions by position on the map."""
+        if not self.mm:
+            await ctx.maybe_send_embed("No map currently being worked on")
+            return
+
+        async with ctx.typing():
+            await self.mm.sort_regions()
 
         await ctx.tick()
 
