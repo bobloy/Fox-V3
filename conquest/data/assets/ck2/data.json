@@ -1,7 +1,7 @@
 {
-    "custom": true,
+    "custom": false,
     "name": "ck2",
-    "region_max": 2592,
+    "region_max": 2596,
     "regions": {
         "1": {
             "center": [
