@@ -56,6 +56,11 @@ def recommended_combinations(mask_centers):
     pass  # TODO: Create recommendation algo and test it
 
 
+def chunker(seq, size):
+    """https://stackoverflow.com/a/434328"""
+    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
+
 def floodfill(image, xy, value, border=None, thresh=0) -> set:
     """
     Taken and modified from PIL.ImageDraw.floodfill
@@ -478,8 +483,9 @@ class MapMaker(ConquestMap):
 
         return True
 
-    async def recalculate_region(self, region=None):
-        if region is None:
+    async def recalculate_region(self, regions=None):
+        # TODO: Refactor
+        if regions is None:
             async for num, r in AsyncIter(self.regions.items()):
 
                 points = await self.get_points_from_mask(num)
@@ -487,21 +493,59 @@ class MapMaker(ConquestMap):
                 r.center = get_center(points)
                 r.weight = len(points)
         else:
-            num = region
-            r = self.regions[num]
+            async for region in AsyncIter(regions):
+                num = region
+                r = self.regions[num]
 
-            points = await self.get_points_from_mask(region)
+                points = await self.get_points_from_mask(region)
 
-            r.center = get_center(points)
-            r.weight = len(points)
+                r.center = get_center(points)
+                r.weight = len(points)
 
+        await self.save_data()
+
+    async def sort_regions(self, fast_sort=True):
+        if fast_sort:  # Topmost, then leftmost
+            regions = []
+
+            async for num in AsyncIter(self.regions.keys()):
+                points = await self.get_points_from_mask(num)
+
+                points = list(points)
+                points.sort(key=lambda x: x[1])
+                regions.append((points[0], num))
+
+            regions.sort(key=lambda x: x[0][1])
+
+        else:  # Chunked approach from Regioner.execute (test that first)
+            raise NotImplementedError
+
+        # Rename all masks to mask_old
+        async for num in AsyncIter(self.regions.keys()):
+            old_mask = self.masks_path() / f"{num}.png"
+            new_mask = self.masks_path() / f"{num}_old.png"
+
+            old_mask.rename(new_mask)
+
+        # Rename all _old masks to their new num, and make the new dictionary of data
+        new_regions = {}
+        async for new_num, old_num in AsyncIter(enumerate((r[1] for r in regions), start=1)):
+            old_mask = self.masks_path() / f"{old_num}_old.png"
+            new_mask = self.masks_path() / f"{new_num}.png"
+
+            old_mask.rename(new_mask)
+
+            new_regions[new_num] = self.regions[old_num]
+
+        # Save the new dictionary to regions
+        self.regions = new_regions
         await self.save_data()
 
     async def get_points_from_mask(self, region):
         mask: Image.Image = Image.open(self.masks_path() / f"{region}.png").convert(MASK_MODE)
         arr = numpy.array(mask)
         found = numpy.where(arr == 0)
-        points = set(list(zip(found[1], found[0])))
+        points = set(list(zip(found[1], found[0])))  # x then y I think?
         return points
 
     async def convert_masks(self, regions):
@@ -598,26 +642,28 @@ class Regioner:
         mask_count = 0
         regions = {}
 
-        for y1 in range(base_img.height):
-            for x1 in range(base_img.width):
-                if (x1, y1) in already_processed:
-                    continue
-                if (
-                    self.region_color is None and base_img.getpixel((x1, y1)) != self.wall_color
-                ) or base_img.getpixel((x1, y1)) == self.region_color:
-                    filled = floodfill(base_img, (x1, y1), self.wall_color, self.wall_color)
-                    if filled:  # Pixels were updated, make them into a mask
-                        mask = Image.new(MASK_MODE, base_img.size, 255)
-                        for x2, y2 in filled:
-                            mask.putpixel((x2, y2), 0)  # TODO: Switch to ImageDraw
+        for y_chunk in chunker(range(base_img.height), base_img.height // 10):
+            for y1 in y_chunk:
+                for x_chunk in chunker(range(base_img.width), base_img.width // 10):
+                    for x1 in x_chunk:
+                        if (x1, y1) in already_processed:
+                            continue
+                        if (
+                            self.region_color is None and base_img.getpixel((x1, y1)) != self.wall_color
+                        ) or base_img.getpixel((x1, y1)) == self.region_color:
+                            filled = floodfill(base_img, (x1, y1), self.wall_color, self.wall_color)
+                            if filled:  # Pixels were updated, make them into a mask
+                                mask = Image.new(MASK_MODE, base_img.size, 255)
+                                for x2, y2 in filled:
+                                    mask.putpixel((x2, y2), 0)  # TODO: Switch to ImageDraw
 
-                        mask_count += 1
-                        # mask = mask.convert(MASK_MODE)  # I don't think this does anything
-                        mask.save(masks_path / f"{mask_count}.png", "PNG")
+                                mask_count += 1
+                                # mask = mask.convert(MASK_MODE)  # I don't think this does anything
+                                mask.save(masks_path / f"{mask_count}.png", "PNG")
 
-                        regions[mask_count] = Region(center=get_center(filled), weight=len(filled))
+                                regions[mask_count] = Region(center=get_center(filled), weight=len(filled))
 
-                        already_processed.update(filled)
+                                already_processed.update(filled)
 
         create_number_mask(regions, self.filepath, self.filename)
         return regions
