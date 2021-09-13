@@ -31,6 +31,9 @@ BOTNAME_PATTERN = re.compile(r"\[botname]")
 # [X] warning
 NOTICE_PATTERNS = re.compile(r"^(Warning|Note|Attention|Hint|Important|Tip): (.*)", re.MULTILINE)
 
+ZWSP_PATTERN = re.compile(r"​ ​ ​ ​ ")
+ZWSP_LINE_PATTERN = re.compile(r"(?:​ )+")
+
 
 def get_parent_tree(command: commands.Command):
     out = f"{command.name}"
@@ -83,8 +86,17 @@ def format_text(text):
     def replace_notice(m: re.Match) -> str:
         return f".. {m.group(1)}:: {m.group(2)}\n"
 
+    def newline_zwsp(m: re.match) -> str:
+        s = m.group(0)
+        return f"\n{s}"  # Add a newline in front of ZWSP lines
+
+    def replace_zwsp(m: re.Match) -> str:
+        return "    "  # Could be /t, but we use spaces not tabs
+
     out = BOTNAME_PATTERN.sub(replace_botname, text)
     out = NOTICE_PATTERNS.sub(replace_notice, out)
+    out = ZWSP_LINE_PATTERN.sub(newline_zwsp, out)
+    out = ZWSP_PATTERN.sub(replace_zwsp, out)
     return out
 
 
