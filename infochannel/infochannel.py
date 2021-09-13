@@ -28,9 +28,12 @@ async def get_channel_counts(category, guild):
     online_num = members - offline_num
     # Gets count of actual users
     human_num = members - bot_num
+    # count amount of premium subs/nitro subs.
+    boosters = guild.premium_subscription_count
     return {
         "members": members,
         "humans": human_num,
+        "boosters": boosters,
         "bots": bot_num,
         "roles": roles_num,
         "channels": channels_num,
@@ -58,6 +61,7 @@ class InfoChannel(Cog):
         self.default_channel_names = {
             "members": "Members: {count}",
             "humans": "Humans: {count}",
+            "boosters": "Boosters: {count}",
             "bots": "Bots: {count}",
             "roles": "Roles: {count}",
             "channels": "Channels: {count}",
@@ -170,6 +174,7 @@ class InfoChannel(Cog):
         Valid Types are:
         - `members`: Total members on the server
         - `humans`: Total members that aren't bots
+        - `boosters`: Total amount of boosters
         - `bots`: Total bots
         - `roles`: Total number of roles
         - `channels`: Total number of channels excluding infochannels,
@@ -224,6 +229,7 @@ class InfoChannel(Cog):
         Valid Types are:
         - `members`: Total members on the server
         - `humans`: Total members that aren't bots
+        - `boosters`: Total amount of boosters
         - `bots`: Total bots
         - `roles`: Total number of roles
         - `channels`: Total number of channels excluding infochannels
@@ -441,6 +447,7 @@ class InfoChannel(Cog):
                 guild,
                 members=True,
                 humans=True,
+                boosters=True,
                 bots=True,
                 roles=True,
                 channels=True,
@@ -497,14 +504,16 @@ class InfoChannel(Cog):
         guild_data = await self.config.guild(guild).all()
 
         to_update = (
-            kwargs.keys() & guild_data["enabled_channels"].keys()
+            kwargs.keys() & [key for key, value in guild_data["enabled_channels"].items() if value]
         )  # Value in kwargs doesn't matter
 
-        log.debug(f"{to_update=}")
-
         if to_update or extra_roles:
+            log.debug(f"{to_update=}\n"
+                      f"{extra_roles=}")
+
             category = guild.get_channel(guild_data["category_id"])
             if category is None:
+                log.debug('Channel category is missing, updating must be off')
                 return  # Nothing to update, must be off
 
             channel_data = await get_channel_counts(category, guild)

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import pathlib
 from abc import ABC
@@ -12,6 +13,8 @@ from discord.ext.commands import Greedy
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import bundled_data_path, cog_data_path
+
+log = logging.getLogger("red.fox_v3.conquest")
 
 
 class Conquest(commands.Cog):
@@ -53,14 +56,20 @@ class Conquest(commands.Cog):
         self.current_map = await self.config.current_map()
 
         if self.current_map:
-            await self.current_map_load()
+            if not await self.current_map_load():
+                await self.config.current_map.clear()
 
     async def current_map_load(self):
         map_data_path = self.asset_path / self.current_map / "data.json"
+        if not map_data_path.exists():
+            log.warning(f"{map_data_path} does not exist. Clearing current map")
+            return False
+
         with map_data_path.open() as mapdata:
             self.map_data: dict = json.load(mapdata)
         self.ext = self.map_data["extension"]
         self.ext_format = "JPEG" if self.ext.upper() == "JPG" else self.ext.upper()
+        return True
 
     @commands.group()
     async def conquest(self, ctx: commands.Context):

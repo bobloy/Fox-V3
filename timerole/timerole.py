@@ -37,7 +37,7 @@ class Timerole(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {"announce": None, "reapply": True, "roles": {}}
+        default_guild = {"announce": None, "reapply": True, "roles": {}, "skipbots": True}
         default_rolemember = {"had_role": False, "check_again_time": None}
 
         self.config.register_global(**default_global)
@@ -91,6 +91,9 @@ class Timerole(Cog):
         except commands.BadArgument:
             await ctx.maybe_send_embed("Error: Invalid time string.")
             return
+
+        if parsed_time is None:
+            return await ctx.maybe_send_embed("Error: Invalid time string.")
 
         days = parsed_time.days
         hours = parsed_time.seconds // 60 // 60
@@ -152,6 +155,14 @@ class Timerole(Cog):
         await ctx.maybe_send_embed(f"Reapplying roles is now set to: {not current_setting}")
 
     @timerole.command()
+    async def skipbots(self, ctx: commands.Context):
+        """Toggle skipping bots when adding/removing roles. Defaults to True"""
+        guild = ctx.guild
+        current_setting = await self.config.guild(guild).skipbots()
+        await self.config.guild(guild).skipbots.set(not current_setting)
+        await ctx.maybe_send_embed(f"Skipping bots is now set to: {not current_setting}")
+
+    @timerole.command()
     async def delrole(self, ctx: commands.Context, role: discord.Role):
         """Deletes a role from being added/removed after specified time"""
         guild = ctx.guild
@@ -199,6 +210,7 @@ class Timerole(Cog):
             remove_results = ""
             reapply = all_guilds[guild_id]["reapply"]
             role_dict = all_guilds[guild_id]["roles"]
+            skipbots = all_guilds[guild_id]["skipbots"]
 
             if not any(role_dict.values()):  # No roles
                 log.debug(f"No roles are configured for guild: {guild}")
@@ -208,6 +220,10 @@ class Timerole(Cog):
             # log.debug(f"{all_mr=}")
 
             async for member in AsyncIter(guild.members, steps=10):
+
+                if member.bot and skipbots:
+                    continue
+
                 addlist = []
                 removelist = []
 
