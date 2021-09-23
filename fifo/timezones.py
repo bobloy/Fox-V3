@@ -42,7 +42,7 @@ def assemble_timezones():
     timezones["AZT"] = timezone("Asia/Baku")  # Azerbaijan Time (UTC+04)
     timezones["BDT"] = timezone("Asia/Brunei")  # Brunei Time (UTC+08)
     timezones["BIOT"] = timezone("Etc/GMT+6")  # British Indian Ocean Time (UTC+06)
-    timezones["BIT"] = timezone("Pacific/Funafuti")  # Baker Island Time (UTC−12)
+    timezones["BIT"] = timezone("Etc/GMT+12")  # Baker Island Time (UTC−12)
     timezones["BOT"] = timezone("America/La_Paz")  # Bolivia Time (UTC−04)
     timezones["BRST"] = timezone("America/Sao_Paulo")  # Brasilia Summer Time (UTC−02)
     timezones["BRT"] = timezone("America/Sao_Paulo")  # Brasilia Time (UTC−03)
