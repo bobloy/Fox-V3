@@ -104,6 +104,11 @@ class StealEmoji(Cog):
             await ctx.maybe_send_embed(page)
 
     @checks.is_owner()
+    @stealemoji.command(name="cleardata")
+    async def se_notify(self):
+        await self.config.clear_all()
+            
+    @checks.is_owner()
     @stealemoji.command(name="notify")
     async def se_notify(self, ctx: commands.Context):
         """Cycles between notification settings for when an emoji is stolen
