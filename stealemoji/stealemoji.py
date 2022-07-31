@@ -105,7 +105,7 @@ class StealEmoji(Cog):
 
     @checks.is_owner()
     @stealemoji.command(name="cleardata")
-    async def se_notify(self):
+    async def se_cleardata(self, ctx: commands.Context):
         await self.config.clear_all()
             
     @checks.is_owner()
