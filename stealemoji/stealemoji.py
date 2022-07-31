@@ -107,6 +107,7 @@ class StealEmoji(Cog):
     @stealemoji.command(name="cleardata")
     async def se_cleardata(self, ctx: commands.Context):
         await self.config.clear_all()
+        await ctx.send("Data for the stealemoji cog has been cleared")
             
     @checks.is_owner()
     @stealemoji.command(name="notify")
