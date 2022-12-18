@@ -63,6 +63,7 @@ class TTS(Cog):
         await ctx.send(f"Default tts language set to {lang}")
 
     @commands.command(aliases=["t2s", "text2"])
+    @commands.guild_only()
     async def tts(
         self, ctx: commands.Context, lang: Optional[ISO639Converter] = None, *, text: str
     ):
