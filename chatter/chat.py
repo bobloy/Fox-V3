@@ -400,7 +400,7 @@ class Chatter(Cog):
             pred = MessagePredicate.yes_or_no(ctx)
             try:
                 await self.bot.wait_for("message", check=pred, timeout=30)
-            except TimeoutError:
+            except asyncio.TimeoutError:
                 await ctx.send("Response timed out, please try again later.")
                 return
             if not pred.result:
