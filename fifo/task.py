@@ -121,6 +121,7 @@ class FakeMessage(discord.Message):
         self,
         author: discord.Member,
         channel: discord.TextChannel,
+        guild: discord.Guild,
         content,
     ):
         # self.content = content
@@ -134,7 +135,7 @@ class FakeMessage(discord.Message):
         self.author = author
         # self._handle_author(author._user._to_minimal_user_json())
         # self._handle_member(author)
-        self._rebind_channel_reference(channel)
+        self._rebind_cached_references(guild, channel)
         self._update(
             {
                 "content": content,
@@ -412,7 +413,7 @@ class Task:
 
         message = FakeMessage(message=actual_message)
         message = neuter_message(message)
-        message.process_the_rest(author=author, channel=channel, content=new_content)
+        message.process_the_rest(author=author, channel=channel, guild=guild, content=new_content)
 
         if (
             not message.guild
