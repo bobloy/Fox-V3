@@ -35,15 +35,16 @@ class FirstMessage(commands.Cog):
         if channel is None:
             channel = ctx.channel
         try:
-            message: discord.Message = (
-                await channel.history(limit=1, oldest_first=True).flatten()
-            )[0]
+            message: discord.Message = next(
+                iter([message async for message in channel.history(limit=1, oldest_first=True)]),
+                None,
+            )
         except (discord.Forbidden, discord.HTTPException):
             log.exception(f"Unable to read message history for {channel.id=}")
             await ctx.maybe_send_embed("Unable to read message history for that channel")
             return
 
         em = discord.Embed(description=f"[First Message in {channel.mention}]({message.jump_url})")
-        em.set_author(name=message.author.display_name, icon_url=message.author.avatar_url)
+        em.set_author(name=message.author.display_name, icon_url=message.author.avatar.url)
 
         await ctx.send(embed=em)
