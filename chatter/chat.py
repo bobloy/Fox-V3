@@ -731,7 +731,7 @@ class Chatter(Cog):
             if not self._global_cache:
                 self._global_cache = await self.config.all()
 
-            if in_response_to is not None and self._global_cache["learning"]:
+            if in_response_to is not None and self._global_cache["learning"] and not channel.nsfw:
                 log.debug("learning response")
                 await self.loop.run_in_executor(
                     None,
