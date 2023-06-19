@@ -19,5 +19,5 @@ async def setup(bot):
     await cog.initialize()
 
 
-def teardown(bot):
+async def teardown(bot):
     pass

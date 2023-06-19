@@ -1,5 +1,8 @@
 from .sayurl import SayUrl
 
 
-def setup(bot):
-    bot.add_cog(SayUrl(bot))
+async def setup(bot):
+    cog = SayUrl(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

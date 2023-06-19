@@ -1,5 +1,8 @@
 from .forcemention import ForceMention
 
 
-def setup(bot):
-    bot.add_cog(ForceMention(bot))
+async def setup(bot):
+    cog = ForceMention(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

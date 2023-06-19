@@ -1,5 +1,8 @@
 from .coglint import CogLint
 
 
-def setup(bot):
-    bot.add_cog(CogLint(bot))
+async def setup(bot):
+    cog = CogLint(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

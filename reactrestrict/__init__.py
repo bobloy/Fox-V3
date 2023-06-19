@@ -1,5 +1,8 @@
 from .reactrestrict import ReactRestrict
 
 
-def setup(bot):
-    bot.add_cog(ReactRestrict(bot))
+async def setup(bot):
+    cog = ReactRestrict(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r
