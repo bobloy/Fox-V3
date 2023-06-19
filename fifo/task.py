@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Union
+from functools import partial
+from inspect import ismethod, signature
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import discord
 import pytz
@@ -117,10 +119,24 @@ class FakeMessage(discord.Message):
         self.id = time_snowflake(datetime.utcnow(), high=False)  # Pretend to be now
         self.type = discord.MessageType.default
 
+    def _rebind_cached_references_backport(self, guild: discord.Guild, channel: discord.TextChannel) -> Callable:
+        def check_sig(method_name, *params):
+            method = getattr(self, method_name, None)
+            return method and ismethod(method) and list(signature(method).parameters) == list(params)
+        
+        if check_sig("_rebind_cached_references", "new_guild", "new_channel"):
+            self._rebind_cached_references(guild, channel)
+        elif check_sig("_rebind_channel_reference", "new_channel"):
+            # Fallback for discord.py <2.x
+            self._rebind_channel_reference(channel)
+        else:
+            raise NotImplementedError
+
     def process_the_rest(
         self,
         author: discord.Member,
         channel: discord.TextChannel,
+        guild: discord.Guild,
         content,
     ):
         # self.content = content
@@ -134,7 +150,7 @@ class FakeMessage(discord.Message):
         self.author = author
         # self._handle_author(author._user._to_minimal_user_json())
         # self._handle_member(author)
-        self._rebind_channel_reference(channel)
+        self._rebind_cached_references_backport(guild, channel)
         self._update(
             {
                 "content": content,
@@ -412,7 +428,7 @@ class Task:
 
         message = FakeMessage(message=actual_message)
         message = neuter_message(message)
-        message.process_the_rest(author=author, channel=channel, content=new_content)
+        message.process_the_rest(author=author, channel=channel, guild=guild, content=new_content)
 
         if (
             not message.guild

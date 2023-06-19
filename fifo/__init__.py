@@ -13,7 +13,9 @@ sys.modules["CustomDateTrigger"] = CustomDateTrigger
 
 async def setup(bot):
     cog = FIFO(bot)
-    bot.add_cog(cog)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r
     await cog.initialize()
 
 
