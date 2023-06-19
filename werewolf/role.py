@@ -124,7 +124,9 @@ class Role(WolfListener):
             await self.game.register_channel(self.channel_name, self)
 
         try:
-            await self.player.send_dm(self.game_start_message)  # Maybe embeds eventually
+            await self.player.send_dm(
+                self.game_start_message
+            )  # Maybe embeds eventually
         except AttributeError as e:
             log.exception(self.__repr__())
             raise e

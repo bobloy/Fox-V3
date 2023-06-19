@@ -21,7 +21,9 @@ class LastSeen(Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=9811198108111121, force_registration=True
+        )
         default_global = {}
         default_guild = {"enabled": False}
         default_member = {"seen": None}
@@ -36,7 +38,6 @@ class LastSeen(Cog):
         requester: Literal["discord_deleted_user", "owner", "user", "user_strict"],
         user_id: int,
     ):
-
         all_members = await self.config.all_members()
 
         async for guild_id, guild_data in AsyncIter(all_members.items(), steps=100):
@@ -59,7 +60,9 @@ class LastSeen(Cog):
         await self.config.guild(ctx.guild).enabled.set(enabled)
 
         await ctx.maybe_send_embed(
-            "Seen for this server is now {}".format("Enabled" if enabled else "Disabled")
+            "Seen for this server is now {}".format(
+                "Enabled" if enabled else "Disabled"
+            )
         )
 
     @commands.command(aliases=["lastseen"])
@@ -78,7 +81,9 @@ class LastSeen(Cog):
             last_seen = self.get_date_time(last_seen)
 
         embed = discord.Embed(
-            description="{} was last seen at this date and time".format(member.display_name),
+            description="{} was last seen at this date and time".format(
+                member.display_name
+            ),
             timestamp=last_seen,
             color=await self.bot.get_embed_color(ctx),
         )

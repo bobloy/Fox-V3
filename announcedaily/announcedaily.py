@@ -27,7 +27,9 @@ class AnnounceDaily(Cog):
 
         self.image_path = self.path + "/"
 
-        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=9811198108111121, force_registration=True
+        )
         default_global = {
             "messages": [],
             "images": [],
@@ -66,7 +68,9 @@ class AnnounceDaily(Cog):
         await ctx.send("Success")
 
     @_ad.command()
-    async def setchannel(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def setchannel(
+        self, ctx: commands.Context, channel: discord.TextChannel = None
+    ):
         """
         Set the announcement channel for this server
 
@@ -74,7 +78,9 @@ class AnnounceDaily(Cog):
         """
         if channel is not None:
             await self.config.guild(ctx.guild).channelid.set(channel.id)
-            await ctx.send("Announcement channel has been set to {}".format(channel.mention))
+            await ctx.send(
+                "Announcement channel has been set to {}".format(channel.mention)
+            )
         else:
             await self.config.guild(ctx.guild).channelid.set(None)
             await ctx.send("Announcement channel has been cleared")
@@ -101,7 +107,9 @@ class AnnounceDaily(Cog):
             try:
                 att_.height
             except AttributeError:
-                await ctx.send("You must attach an image, no other file will be accepted")
+                await ctx.send(
+                    "You must attach an image, no other file will be accepted"
+                )
                 return
 
             if filename is None:
@@ -120,7 +128,9 @@ class AnnounceDaily(Cog):
             else:
                 async with self.config.images() as images:
                     if filename in images:
-                        await ctx.send("Image {} has been overwritten!".format(filename))
+                        await ctx.send(
+                            "Image {} has been overwritten!".format(filename)
+                        )
                     else:
                         images.append(filename)
                         await ctx.send("Image {} has been added!".format(filename))
@@ -134,7 +144,9 @@ class AnnounceDaily(Cog):
         """
         messages = await self.config.messages()
         for page in pagify(
-            "\n".join("{} - {}".format(key, image) for key, image in enumerate(messages))
+            "\n".join(
+                "{} - {}".format(key, image) for key, image in enumerate(messages)
+            )
         ):
             await ctx.send(box(page))
         await ctx.send("Done!")
@@ -160,7 +172,9 @@ class AnnounceDaily(Cog):
             try:
                 out = messages.pop(index)
             except IndexError:
-                await ctx.send("Invalid index, check valid indexes with `listmsg` command")
+                await ctx.send(
+                    "Invalid index, check valid indexes with `listmsg` command"
+                )
                 return
 
         await ctx.send("The following message was removed:\n```{}```".format(out))
@@ -195,7 +209,9 @@ class AnnounceDaily(Cog):
 
         await ctx.send(
             "Announcement time has been set to {}::{}::{} every day\n"
-            "**Changes will apply after next scheduled announcement or reload**".format(h, m, s)
+            "**Changes will apply after next scheduled announcement or reload**".format(
+                h, m, s
+            )
         )
 
     async def send_announcements(self):

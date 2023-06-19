@@ -1,6 +1,10 @@
 import logging
 
-from werewolf.constants import ALIGNMENT_WEREWOLF, CATEGORY_WW_KILLING, CATEGORY_WW_RANDOM
+from werewolf.constants import (
+    ALIGNMENT_WEREWOLF,
+    CATEGORY_WW_KILLING,
+    CATEGORY_WW_RANDOM,
+)
 from werewolf.listener import wolflistener
 from werewolf.role import Role
 from werewolf.votegroups.wolfvote import WolfVote

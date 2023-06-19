@@ -17,7 +17,9 @@ class Flag(Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=9811198108111121, force_registration=True
+        )
         default_global = {}
         default_guild = {"days": 31, "dm": True, "flags": {}}
 
@@ -91,7 +93,9 @@ class Flag(Cog):
         await self._check_flags(guild)
 
         flag = self._flag_template()
-        expire_date = date.today() + timedelta(days=await self.config.guild(guild).days())
+        expire_date = date.today() + timedelta(
+            days=await self.config.guild(guild).days()
+        )
 
         flag["reason"] = reason
         flag["expireyear"] = expire_date.year
@@ -168,7 +172,9 @@ class Flag(Cog):
 
     async def _list_flags(self, member: discord.Member):
         """Returns a pretty embed of flags on a member"""
-        flags = await self.config.guild(member.guild).flags.get_raw(str(member.id), default=[])
+        flags = await self.config.guild(member.guild).flags.get_raw(
+            str(member.id), default=[]
+        )
 
         embed = discord.Embed(
             title="Flags for " + member.display_name,

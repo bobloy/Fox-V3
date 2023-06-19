@@ -40,7 +40,9 @@ class TTS(Cog):
         super().__init__(*args, **kwargs)
         self.bot = bot
 
-        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=9811198108111121, force_registration=True
+        )
         default_global = {}
         default_guild = {"language": "en"}
 
@@ -65,7 +67,11 @@ class TTS(Cog):
     @commands.command(aliases=["t2s", "text2"])
     @commands.guild_only()
     async def tts(
-        self, ctx: commands.Context, lang: Optional[ISO639Converter] = None, *, text: str
+        self,
+        ctx: commands.Context,
+        lang: Optional[ISO639Converter] = None,
+        *,
+        text: str,
     ):
         """
         Send Text to speech messages as an mp3

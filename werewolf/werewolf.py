@@ -109,7 +109,9 @@ class Werewolf(Cog):
             await ctx.maybe_send_embed("Cleared Game Role")
         else:
             await self.config.guild(ctx.guild).role_id.set(role.id)
-            await ctx.maybe_send_embed("Game Role has been set to **{}**".format(role.name))
+            await ctx.maybe_send_embed(
+                "Game Role has been set to **{}**".format(role.name)
+            )
 
     @commands.guild_only()
     @wwset.command(name="category")
@@ -132,7 +134,9 @@ class Werewolf(Cog):
 
     @commands.guild_only()
     @wwset.command(name="channel")
-    async def wwset_channel(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def wwset_channel(
+        self, ctx: commands.Context, channel: discord.TextChannel = None
+    ):
         """
         Assign the village channel
         """
@@ -147,7 +151,9 @@ class Werewolf(Cog):
 
     @commands.guild_only()
     @wwset.command(name="logchannel")
-    async def wwset_log_channel(self, ctx: commands.Context, channel: discord.TextChannel = None):
+    async def wwset_log_channel(
+        self, ctx: commands.Context, channel: discord.TextChannel = None
+    ):
         """
         Assign the log channel
         """
@@ -224,7 +230,9 @@ class Werewolf(Cog):
         game = await self._get_game(ctx)
 
         if not game:
-            await ctx.maybe_send_embed("No game to join!\nCreate a new one with `[p]ww new`")
+            await ctx.maybe_send_embed(
+                "No game to join!\nCreate a new one with `[p]ww new`"
+            )
             return
 
         await game.set_code(ctx, code)

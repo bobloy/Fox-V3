@@ -116,11 +116,15 @@ class StealEmoji(Cog):
 
         if not curr_setting:
             await self.config.notify.set(1)
-            await ctx.maybe_send_embed("Bot owner will now be notified when an emoji is stolen")
+            await ctx.maybe_send_embed(
+                "Bot owner will now be notified when an emoji is stolen"
+            )
         elif curr_setting == 1:
             channel: discord.TextChannel = ctx.channel
             await self.config.notify.set(channel.id)
-            await ctx.maybe_send_embed("This channel will now be notified when an emoji is stolen")
+            await ctx.maybe_send_embed(
+                "This channel will now be notified when an emoji is stolen"
+            )
         else:
             await self.config.notify.set(0)
             await ctx.maybe_send_embed("Notifications are now off")
@@ -164,7 +168,8 @@ class StealEmoji(Cog):
             return
         guild: discord.Guild
         await ctx.maybe_send_embed(
-            f"Will attempt to delete {guild.name} ({guild.id})\n" f"Okay to continue? (yes/no)"
+            f"Will attempt to delete {guild.name} ({guild.id})\n"
+            f"Okay to continue? (yes/no)"
         )
 
         def check(m):
@@ -183,7 +188,9 @@ class StealEmoji(Cog):
             await guild.delete()
         except discord.Forbidden:
             log.exception("No permission to delete. I'm probably not the guild owner")
-            await ctx.maybe_send_embed("No permission to delete. I'm probably not the guild owner")
+            await ctx.maybe_send_embed(
+                "No permission to delete. I'm probably not the guild owner"
+            )
         except discord.HTTPException:
             log.exception("Unexpected error when deleting guild")
             await ctx.maybe_send_embed("Unexpected error when deleting guild")
@@ -229,7 +236,9 @@ class StealEmoji(Cog):
                 guildbanks.append(ctx.guild.id)
 
         if already_a_guildbank:
-            await ctx.maybe_send_embed("This server has been removed from being an emoji bank")
+            await ctx.maybe_send_embed(
+                "This server has been removed from being an emoji bank"
+            )
         else:
             await ctx.maybe_send_embed("This server has been added to be an emoji bank")
 
@@ -248,7 +257,9 @@ class StealEmoji(Cog):
             return
 
         guild: discord.Guild = getattr(user, "guild", None)
-        if await self.bot.cog_disabled_in_guild(self, guild):  # Handles None guild just fine
+        if await self.bot.cog_disabled_in_guild(
+            self, guild
+        ):  # Handles None guild just fine
             return
 
         emoji: discord.Emoji = reaction.emoji
@@ -345,4 +356,6 @@ class StealEmoji(Cog):
             else:
                 target = self.bot.get_channel(notify_settings)
 
-            await target.send(f"Just added emoji {uploaded_emoji} to server {guildbank}")
+            await target.send(
+                f"Just added emoji {uploaded_emoji} to server {guildbank}"
+            )

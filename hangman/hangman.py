@@ -227,7 +227,9 @@ class Hangman(Cog):
             self._stopgame(channel.guild)
         elif self.the_data[channel.guild]["hangman"] >= 7:
             await channel.send(
-                "You Lose!\nThe Answer was: **" + self.the_data[channel.guild]["answer"] + "**"
+                "You Lose!\nThe Answer was: **"
+                + self.the_data[channel.guild]["answer"]
+                + "**"
             )
 
             self._stopgame(channel.guild)
@@ -251,7 +253,10 @@ class Hangman(Cog):
         for i in self.the_data[guild]["answer"]:
             if i in [" ", "-"]:
                 out_str += i * 2
-            elif i in self.the_data[guild]["guesses"] or i not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+            elif (
+                i in self.the_data[guild]["guesses"]
+                or i not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            ):
                 out_str += "__" + i + "__ "
             else:
                 out_str += "**\\_** "
@@ -340,7 +345,9 @@ class Hangman(Cog):
 
         for x in range(len(self.letters)):
             if x in [
-                i for i, b in enumerate("ABCDEFGHIJKLM") if b not in self._guesslist(message.guild)
+                i
+                for i, b in enumerate("ABCDEFGHIJKLM")
+                if b not in self._guesslist(message.guild)
             ]:
                 await message.add_reaction(self.letters[x])
 
@@ -354,7 +361,9 @@ class Hangman(Cog):
 
         for x in range(len(self.letters)):
             if x in [
-                i for i, b in enumerate("NOPQRSTUVWXYZ") if b not in self._guesslist(message.guild)
+                i
+                for i, b in enumerate("NOPQRSTUVWXYZ")
+                if b not in self._guesslist(message.guild)
             ]:
                 await message.add_reaction(self.letters[x + 13])
 
@@ -365,9 +374,13 @@ class Hangman(Cog):
         c_say += "Used Letters: " + str(self._guesslist(guild)) + "\n"
         c_say += self.hanglist[guild][self.the_data[guild]["hangman"]] + "\n"
         if await self.config.guild(guild).emojis():
-            c_say += "{} for A-M, {} for N-Z".format(self.navigate[0], self.navigate[-1])
+            c_say += "{} for A-M, {} for N-Z".format(
+                self.navigate[0], self.navigate[-1]
+            )
         else:
-            c_say += "React with {} - {} to guess".format(self.letters[0], self.letters[-1])
+            c_say += "React with {} - {} to guess".format(
+                self.letters[0], self.letters[-1]
+            )
 
         return c_say
 

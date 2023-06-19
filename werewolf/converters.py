@@ -13,7 +13,6 @@ else:
 
     class PlayerConverter(Converter):
         async def convert(self, ctx, argument) -> Player:
-
             try:
                 target = await commands.MemberConverter().convert(ctx, argument)
             except BadArgument:

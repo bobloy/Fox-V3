@@ -92,7 +92,7 @@ things_for_fakemessage_to_steal = [
     "content",
     "nonce",
     "reference",
-    "_edited_timestamp"  # New 7/23/21
+    "_edited_timestamp",  # New 7/23/21
 ]
 
 things_fakemessage_sets_by_default = {
@@ -119,11 +119,17 @@ class FakeMessage(discord.Message):
         self.id = time_snowflake(datetime.utcnow(), high=False)  # Pretend to be now
         self.type = discord.MessageType.default
 
-    def _rebind_cached_references_backport(self, guild: discord.Guild, channel: discord.TextChannel) -> Callable:
+    def _rebind_cached_references_backport(
+        self, guild: discord.Guild, channel: discord.TextChannel
+    ) -> Callable:
         def check_sig(method_name, *params):
             method = getattr(self, method_name, None)
-            return method and ismethod(method) and list(signature(method).parameters) == list(params)
-        
+            return (
+                method
+                and ismethod(method)
+                and list(signature(method).parameters) == list(params)
+            )
+
         if check_sig("_rebind_cached_references", "new_guild", "new_channel"):
             self._rebind_cached_references(guild, channel)
         elif check_sig("_rebind_channel_reference", "new_channel"):
@@ -199,7 +205,13 @@ class Task:
     }
 
     def __init__(
-        self, name: str, guild_id, config: Config, author_id=None, channel_id=None, bot: Red = None
+        self,
+        name: str,
+        guild_id,
+        config: Config,
+        author_id=None,
+        channel_id=None,
+        bot: Red = None,
     ):
         self.name = name
         self.guild_id = guild_id
@@ -220,7 +232,10 @@ class Task:
                 td: timedelta = t["time_data"]
 
                 triggers.append(
-                    {"type": t["type"], "time_data": {"days": td.days, "seconds": td.seconds}}
+                    {
+                        "type": t["type"],
+                        "time_data": {"days": td.days, "seconds": td.seconds},
+                    }
                 )
                 continue
 
@@ -293,7 +308,9 @@ class Task:
             return
 
         self.author_id = data["author_id"]
-        self.guild_id = data["guild_id"]  # Weird I'm doing this, since self.guild_id was just used
+        self.guild_id = data[
+            "guild_id"
+        ]  # Weird I'm doing this, since self.guild_id was just used
         self.channel_id = data["channel_id"]
 
         self.data = data["data"]
@@ -348,7 +365,9 @@ class Task:
             "channel_id": self.channel_id,
             "data": data_to_save,
         }
-        await self.config.guild_from_id(self.guild_id).tasks.set_raw(self.name, value=to_save)
+        await self.config.guild_from_id(self.guild_id).tasks.set_raw(
+            self.name, value=to_save
+        )
 
     async def save_data(self):
         """To be used when updating triggers"""
@@ -367,7 +386,9 @@ class Task:
 
     async def execute(self):
         if not self.data or not self.get_command_str():
-            log.warning(f"Could not execute Task[{self.name}] due to data problem: {self.data=}")
+            log.warning(
+                f"Could not execute Task[{self.name}] due to data problem: {self.data=}"
+            )
             return False
 
         guild: discord.Guild = self.bot.get_guild(self.guild_id)  # used for get_prefix
@@ -396,15 +417,23 @@ class Task:
             # return
             if channel.last_message_id is not None:
                 try:
-                    actual_message = await channel.fetch_message(channel.last_message_id)
+                    actual_message = await channel.fetch_message(
+                        channel.last_message_id
+                    )
                 except discord.NotFound:
                     actual_message = None
             if actual_message is None:  # last_message_id was an invalid message I guess
                 actual_message = await channel.history(limit=1).flatten()
-                if not actual_message:  # Basically only happens if the channel has no messages
+                if (
+                    not actual_message
+                ):  # Basically only happens if the channel has no messages
                     actual_message = await author.history(limit=1).flatten()
-                    if not actual_message:  # Okay, the *author* has never sent a message?
-                        log.warning("No message found in channel cache yet, skipping execution")
+                    if (
+                        not actual_message
+                    ):  # Okay, the *author* has never sent a message?
+                        log.warning(
+                            "No message found in channel cache yet, skipping execution"
+                        )
                         return False
                 actual_message = actual_message[0]
 
@@ -428,7 +457,9 @@ class Task:
 
         message = FakeMessage(message=actual_message)
         message = neuter_message(message)
-        message.process_the_rest(author=author, channel=channel, guild=guild, content=new_content)
+        message.process_the_rest(
+            author=author, channel=channel, guild=guild, content=new_content
+        )
 
         if (
             not message.guild

@@ -3,7 +3,12 @@ import logging
 import re
 
 import discord
-from discord.ext.commands import RoleConverter, Greedy, CommandError, ArgumentParsingError
+from discord.ext.commands import (
+    RoleConverter,
+    Greedy,
+    CommandError,
+    ArgumentParsingError,
+)
 from discord.ext.commands.view import StringView
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
@@ -107,10 +112,7 @@ class CCRole(commands.Cog):
             return
 
         # Roles to add
-        await ctx.send(
-            "What roles should it add?\n"
-            "Say `None` to skip adding roles"
-        )
+        await ctx.send("What roles should it add?\n" "Say `None` to skip adding roles")
 
         def check(m):
             return m.author == author and m.channel == channel
@@ -130,8 +132,7 @@ class CCRole(commands.Cog):
 
         # Roles to remove
         await ctx.send(
-            "What roles should it remove?\n"
-            "Say `None` to skip removing roles"
+            "What roles should it remove?\n" "Say `None` to skip removing roles"
         )
         try:
             answer = await self.bot.wait_for("message", timeout=120, check=check)
@@ -167,7 +168,8 @@ class CCRole(commands.Cog):
 
         # Selfrole
         await ctx.send(
-            "Is this a targeted command?(yes/no)\n" "No will make this a selfrole command"
+            "Is this a targeted command?(yes/no)\n"
+            "No will make this a selfrole command"
         )
 
         try:
@@ -251,13 +253,20 @@ class CCRole(commands.Cog):
             if not role_list:
                 return "None"
             return ", ".join(
-                discord.utils.get(ctx.guild.roles, id=roleid).name for roleid in role_list
+                discord.utils.get(ctx.guild.roles, id=roleid).name
+                for roleid in role_list
             )
 
         embed.add_field(name="Text", value="```{}```".format(cmd["text"]), inline=False)
-        embed.add_field(name="Adds Roles", value=process_roles(cmd["aroles"]), inline=False)
-        embed.add_field(name="Removes Roles", value=process_roles(cmd["rroles"]), inline=False)
-        embed.add_field(name="Role Restrictions", value=process_roles(cmd["proles"]), inline=False)
+        embed.add_field(
+            name="Adds Roles", value=process_roles(cmd["aroles"]), inline=False
+        )
+        embed.add_field(
+            name="Removes Roles", value=process_roles(cmd["rroles"]), inline=False
+        )
+        embed.add_field(
+            name="Role Restrictions", value=process_roles(cmd["proles"]), inline=False
+        )
 
         await ctx.send(embed=embed)
 
@@ -348,8 +357,12 @@ class CCRole(commands.Cog):
 
     async def eval_cc(self, cmd, message: discord.Message, ctx: commands.Context):
         """Does all the work"""
-        if cmd["proles"] and not {role.id for role in message.author.roles} & set(cmd["proles"]):
-            log.debug(f"{message.author} missing required role to execute {ctx.invoked_with}")
+        if cmd["proles"] and not {role.id for role in message.author.roles} & set(
+            cmd["proles"]
+        ):
+            log.debug(
+                f"{message.author} missing required role to execute {ctx.invoked_with}"
+            )
             return  # Not authorized, do nothing
 
         if cmd["targeted"]:
@@ -385,7 +398,8 @@ class CCRole(commands.Cog):
 
         if cmd["aroles"]:
             arole_list = [
-                discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd["aroles"]
+                discord.utils.get(message.guild.roles, id=roleid)
+                for roleid in cmd["aroles"]
             ]
             try:
                 await target.add_roles(*arole_list, reason=reason)
@@ -395,7 +409,8 @@ class CCRole(commands.Cog):
 
         if cmd["rroles"]:
             rrole_list = [
-                discord.utils.get(message.guild.roles, id=roleid) for roleid in cmd["rroles"]
+                discord.utils.get(message.guild.roles, id=roleid)
+                for roleid in cmd["rroles"]
             ]
             try:
                 await target.remove_roles(*rrole_list, reason=reason)

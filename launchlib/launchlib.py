@@ -35,7 +35,6 @@ class LaunchLib(commands.Cog):
         return
 
     async def _embed_launch_data(self, launch: ll.AsyncLaunch):
-
         # status: ll.AsyncLaunchStatus = await launch.get_status()
         status = launch.status
 
@@ -99,7 +98,9 @@ class LaunchLib(commands.Cog):
                     location_url = re.sub(
                         "[^a-zA-Z0-9/:.'+\"°?=,-]", "", location_url
                     )  # Fix bad URLS
-                    em.add_field(name="Launch Pad Name", value=f"[{pad_name}]({location_url})")
+                    em.add_field(
+                        name="Launch Pad Name", value=f"[{pad_name}]({location_url})"
+                    )
                 else:
                     em.add_field(name="Launch Pad Name", value=pad_name)
 

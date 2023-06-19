@@ -13,7 +13,7 @@ jobs:
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.11'
       - name: Install Black
         run: pip install --upgrade --no-cache-dir black
       - name: Run black --check .

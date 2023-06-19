@@ -48,7 +48,9 @@ def role_embed(idx, role: Role, color):
         embed.set_thumbnail(url=role.icon_url)
 
     embed.add_field(
-        name="Alignment", value=["Town", "Werewolf", "Neutral"][role.alignment - 1], inline=False
+        name="Alignment",
+        value=["Town", "Werewolf", "Neutral"][role.alignment - 1],
+        inline=False,
     )
     embed.add_field(name="Multiples Allowed", value=str(not role.unique), inline=False)
     embed.add_field(
@@ -230,11 +232,16 @@ class GameBuilder:
         # Roles
         last_alignment = ROLE_LIST[0].alignment
         for idx, role in enumerate(ROLE_LIST):
-            if role.alignment != last_alignment and len(ROLE_PAGES) - 1 not in self.page_groups:
+            if (
+                role.alignment != last_alignment
+                and len(ROLE_PAGES) - 1 not in self.page_groups
+            ):
                 self.page_groups.append(len(ROLE_PAGES) - 1)
                 last_alignment = role.alignment
 
-            ROLE_PAGES.append(role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1]))
+            ROLE_PAGES.append(
+                role_embed(idx, role, ALIGNMENT_COLORS[role.alignment - 1])
+            )
 
         # Random Town Roles
         if len(ROLE_PAGES) - 1 not in self.page_groups:
@@ -288,7 +295,9 @@ class GameBuilder:
             "❌": close_menu,
         }
 
-        await ctx.send("Browse through roles and add the ones you want using the check mark")
+        await ctx.send(
+            "Browse through roles and add the ones you want using the check mark"
+        )
 
         await menu(ctx, ROLE_PAGES, new_controls, timeout=60)
 
@@ -314,7 +323,9 @@ class GameBuilder:
 
         await ctx.send(embed=say_role_list(self.code, self.rand_roles))
 
-        return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
+        return await menu(
+            ctx, pages, controls, message=message, page=page, timeout=timeout
+        )
 
     async def select_page(
         self,
@@ -338,7 +349,9 @@ class GameBuilder:
         else:
             self.code.append(page)
 
-        return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
+        return await menu(
+            ctx, pages, controls, message=message, page=page, timeout=timeout
+        )
 
     async def next_group(
         self,
@@ -363,7 +376,9 @@ class GameBuilder:
         else:
             page = self.page_groups[page]
 
-        return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
+        return await menu(
+            ctx, pages, controls, message=message, page=page, timeout=timeout
+        )
 
     async def prev_group(
         self,
@@ -383,4 +398,6 @@ class GameBuilder:
                 pass
         page = self.page_groups[bisect.bisect_left(self.page_groups, page) - 1]
 
-        return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
+        return await menu(
+            ctx, pages, controls, message=message, page=page, timeout=timeout
+        )

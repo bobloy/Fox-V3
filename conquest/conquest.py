@@ -100,7 +100,9 @@ class Conquest(commands.Cog):
     async def _conquest_set_resetzoom(self, ctx: commands.Context):
         """Resets the zoom level of the current map"""
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         zoom_json_path = self.data_path / self.current_map / "settings.json"
@@ -116,7 +118,9 @@ class Conquest(commands.Cog):
         await ctx.tick()
 
     @conquest_set.command(name="zoom")
-    async def _conquest_set_zoom(self, ctx: commands.Context, x: int, y: int, zoom: float):
+    async def _conquest_set_zoom(
+        self, ctx: commands.Context, x: int, y: int, zoom: float
+    ):
         """
         Set the zoom level and position of the current map
 
@@ -125,7 +129,9 @@ class Conquest(commands.Cog):
         zoom: float greater than or equal to 1
         """
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         if x < 0 or y < 0 or zoom < 1:
@@ -146,7 +152,9 @@ class Conquest(commands.Cog):
         await ctx.tick()
 
     @conquest_set.command(name="zoomtest")
-    async def _conquest_set_zoomtest(self, ctx: commands.Context, x: int, y: int, zoom: float):
+    async def _conquest_set_zoomtest(
+        self, ctx: commands.Context, x: int, y: int, zoom: float
+    ):
         """
         Test the zoom level and position of the current map
 
@@ -155,7 +163,9 @@ class Conquest(commands.Cog):
         zoom: float greater than or equal to 1
         """
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         if x < 0 or y < 0 or zoom < 1:
@@ -178,23 +188,31 @@ class Conquest(commands.Cog):
 
         w, h = current_map.size
         zoom2 = zoom * 2
-        zoomed_map = current_map.crop((x - w / zoom2, y - h / zoom2, x + w / zoom2, y + h / zoom2))
+        zoomed_map = current_map.crop(
+            (x - w / zoom2, y - h / zoom2, x + w / zoom2, y + h / zoom2)
+        )
         # zoomed_map = zoomed_map.resize((w, h), Image.LANCZOS)
-        zoomed_map.save(self.data_path / self.current_map / f"zoomed.{self.ext}", self.ext_format)
+        zoomed_map.save(
+            self.data_path / self.current_map / f"zoomed.{self.ext}", self.ext_format
+        )
         return self.data_path / self.current_map / f"zoomed.{self.ext}"
 
     @conquest_set.command(name="save")
     async def _conquest_set_save(self, ctx: commands.Context, *, save_name):
         """Save the current map to be loaded later"""
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         current_map_folder = self.data_path / self.current_map
         current_map = current_map_folder / f"current.{self.ext}"
 
         if not current_map_folder.exists() or not current_map.exists():
-            await ctx.maybe_send_embed("Current map doesn't exist! Try setting a new one")
+            await ctx.maybe_send_embed(
+                "Current map doesn't exist! Try setting a new one"
+            )
             return
 
         copyfile(current_map, current_map_folder / f"{save_name}.{self.ext}")
@@ -204,7 +222,9 @@ class Conquest(commands.Cog):
     async def _conquest_set_load(self, ctx: commands.Context, *, save_name):
         """Load a saved map to be the current map"""
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         current_map_folder = self.data_path / self.current_map
@@ -212,14 +232,18 @@ class Conquest(commands.Cog):
         saved_map = current_map_folder / f"{save_name}.{self.ext}"
 
         if not current_map_folder.exists() or not saved_map.exists():
-            await ctx.maybe_send_embed(f"Saved map not found in the {self.current_map} folder")
+            await ctx.maybe_send_embed(
+                f"Saved map not found in the {self.current_map} folder"
+            )
             return
 
         copyfile(saved_map, current_map)
         await ctx.tick()
 
     @conquest_set.command(name="map")
-    async def _conquest_set_map(self, ctx: commands.Context, mapname: str, reset: bool = False):
+    async def _conquest_set_map(
+        self, ctx: commands.Context, mapname: str, reset: bool = False
+    ):
         """
         Select a map from current available maps
 
@@ -264,7 +288,9 @@ class Conquest(commands.Cog):
         Send the current map.
         """
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         current_img = self.data_path / self.current_map / f"current.{self.ext}"
@@ -291,12 +317,16 @@ class Conquest(commands.Cog):
         Print the blank version of the current map, for reference.
         """
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         current_blank_img = self.asset_path / self.current_map / f"blank.{self.ext}"
 
-        await self._send_maybe_zoomed_map(ctx, current_blank_img, f"blank_map.{self.ext}")
+        await self._send_maybe_zoomed_map(
+            ctx, current_blank_img, f"blank_map.{self.ext}"
+        )
 
     @conquest.command("numbered")
     async def _conquest_numbered(self, ctx: commands.Context):
@@ -304,7 +334,9 @@ class Conquest(commands.Cog):
         Print the numbered version of the current map, for reference.
         """
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         numbers_path = self.asset_path / self.current_map / f"numbers.{self.ext}"
@@ -317,7 +349,9 @@ class Conquest(commands.Cog):
             )
             return
 
-        current_map = Image.open(self.data_path / self.current_map / f"current.{self.ext}")
+        current_map = Image.open(
+            self.data_path / self.current_map / f"current.{self.ext}"
+        )
         numbers = Image.open(numbers_path).convert("L")
 
         inverted_map = ImageOps.invert(current_map)
@@ -328,7 +362,8 @@ class Conquest(commands.Cog):
         )
 
         current_numbered_img.save(
-            self.data_path / self.current_map / f"current_numbered.{self.ext}", self.ext_format
+            self.data_path / self.current_map / f"current_numbered.{self.ext}",
+            self.ext_format,
         )
 
         await self._send_maybe_zoomed_map(
@@ -342,7 +377,9 @@ class Conquest(commands.Cog):
         self, ctx: commands.Context, start_region: int, end_region: int, color: str
     ):
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         try:
@@ -369,7 +406,9 @@ class Conquest(commands.Cog):
             await self._send_maybe_zoomed_map(ctx, current_img_path, f"map.{self.ext}")
 
     @conquest.command(name="take")
-    async def _conquest_take(self, ctx: commands.Context, regions: Greedy[int], *, color: str):
+    async def _conquest_take(
+        self, ctx: commands.Context, regions: Greedy[int], *, color: str
+    ):
         """
         Claim a territory or list of territories for a specified color
 
@@ -381,7 +420,9 @@ class Conquest(commands.Cog):
             return
 
         if self.current_map is None:
-            await ctx.maybe_send_embed("No map is currently set. See `[p]conquest set map`")
+            await ctx.maybe_send_embed(
+                "No map is currently set. See `[p]conquest set map`"
+            )
             return
 
         try:

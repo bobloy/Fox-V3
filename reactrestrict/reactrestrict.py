@@ -97,12 +97,18 @@ class ReactRestrict(Cog):
         """
         current_combos = await self.combo_list()
 
-        to_keep = [c for c in current_combos if c.message_id != message_id or c.role_id != role.id]
+        to_keep = [
+            c
+            for c in current_combos
+            if c.message_id != message_id or c.role_id != role.id
+        ]
 
         if to_keep != current_combos:
             await self.set_combo_list(to_keep)
 
-    async def has_reactrestrict_combo(self, message_id: int) -> (bool, List[ReactRestrictCombo]):
+    async def has_reactrestrict_combo(
+        self, message_id: int
+    ) -> (bool, List[ReactRestrictCombo]):
         """
          Determines if there is an existing role combo for a given message
         and emoji ID.

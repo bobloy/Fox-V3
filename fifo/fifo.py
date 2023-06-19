@@ -14,7 +14,11 @@ from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
 from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 
-from .datetime_cron_converters import CronConverter, DatetimeConverter, TimezoneConverter
+from .datetime_cron_converters import (
+    CronConverter,
+    DatetimeConverter,
+    TimezoneConverter,
+)
 from .task import Task
 
 schedule_log = logging.getLogger("red.fox_v3.fifo.scheduler")
@@ -51,7 +55,9 @@ def _get_run_times(job: Job, now: datetime = None):
         raise StopIteration()
 
     if now is None:
-        now = datetime(MAXYEAR, 12, 31, 23, 59, 59, 999999, tzinfo=job.next_run_time.tzinfo)
+        now = datetime(
+            MAXYEAR, 12, 31, 23, 59, 59, 999999, tzinfo=job.next_run_time.tzinfo
+        )
         yield from _get_run_times(job, now)  # Recursion
         raise StopIteration()
 
@@ -81,7 +87,9 @@ class FIFO(commands.Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=70737079, force_registration=True)
+        self.config = Config.get_conf(
+            self, identifier=70737079, force_registration=True
+        )
 
         default_global = {"jobs": []}
         default_guild = {"tasks": {}}
@@ -104,7 +112,6 @@ class FIFO(commands.Cog):
             self.scheduler.shutdown()
 
     async def initialize(self):
-
         job_defaults = {
             "coalesce": True,  # Multiple missed triggers within the grace time will only fire once
             "max_instances": 5,  # This is probably way too high, should likely only be one
@@ -115,9 +122,13 @@ class FIFO(commands.Cog):
         # executors = {"default": AsyncIOExecutor()}
 
         # Default executor is already AsyncIOExecutor
-        self.scheduler = AsyncIOScheduler(job_defaults=job_defaults, logger=schedule_log)
+        self.scheduler = AsyncIOScheduler(
+            job_defaults=job_defaults, logger=schedule_log
+        )
 
-        from .redconfigjobstore import RedConfigJobStore  # Wait to import to prevent cyclic import
+        from .redconfigjobstore import (
+            RedConfigJobStore,
+        )  # Wait to import to prevent cyclic import
 
         self.jobstore = RedConfigJobStore(self.config, self.bot)
         await self.jobstore.load_from_config()
@@ -125,7 +136,9 @@ class FIFO(commands.Cog):
 
         self.scheduler.start()
 
-    async def _check_parsable_command(self, ctx: commands.Context, command_to_parse: str):
+    async def _check_parsable_command(
+        self, ctx: commands.Context, command_to_parse: str
+    ):
         message: discord.Message = ctx.message
 
         message.content = ctx.prefix + command_to_parse
@@ -181,7 +194,9 @@ class FIFO(commands.Cog):
 
     async def _pause_job(self, task: Task):
         try:
-            return self.scheduler.pause_job(job_id=_assemble_job_id(task.name, task.guild_id))
+            return self.scheduler.pause_job(
+                job_id=_assemble_job_id(task.name, task.guild_id)
+            )
         except JobLookupError:
             return False
 
@@ -191,7 +206,9 @@ class FIFO(commands.Cog):
         except JobLookupError:
             pass
 
-    async def _get_tz(self, user: Union[discord.User, discord.Member]) -> Union[None, tzinfo]:
+    async def _get_tz(
+        self, user: Union[discord.User, discord.Member]
+    ) -> Union[None, tzinfo]:
         if self.tz_cog is None:
             self.tz_cog = self.bot.get_cog("Timezone")
         if self.tz_cog is None:
@@ -312,7 +329,9 @@ class FIFO(commands.Cog):
         if task_name is None:
             if self.scheduler.state == STATE_PAUSED:
                 self.scheduler.resume()
-                await ctx.maybe_send_embed("All task execution for all guilds has been resumed")
+                await ctx.maybe_send_embed(
+                    "All task execution for all guilds has been resumed"
+                )
             else:
                 await ctx.maybe_send_embed("Task execution is not paused, can't resume")
         else:
@@ -326,7 +345,9 @@ class FIFO(commands.Cog):
                 return
 
             if await self._resume_job(task):
-                await ctx.maybe_send_embed(f"Execution of {task_name=} has been resumed")
+                await ctx.maybe_send_embed(
+                    f"Execution of {task_name=} has been resumed"
+                )
             else:
                 await ctx.maybe_send_embed(f"Failed to resume {task_name=}")
 
@@ -340,7 +361,9 @@ class FIFO(commands.Cog):
         if task_name is None:
             if self.scheduler.state == STATE_RUNNING:
                 self.scheduler.pause()
-                await ctx.maybe_send_embed("All task execution for all guilds has been paused")
+                await ctx.maybe_send_embed(
+                    "All task execution for all guilds has been paused"
+                )
             else:
                 await ctx.maybe_send_embed("Task execution is not running, can't pause")
         else:
@@ -375,7 +398,9 @@ class FIFO(commands.Cog):
         embed = discord.Embed(title=f"Task: {task_name}")
 
         embed.add_field(
-            name="Task command", value=f"{ctx.prefix}{task.get_command_str()}", inline=False
+            name="Task command",
+            value=f"{ctx.prefix}{task.get_command_str()}",
+            inline=False,
         )
 
         guild: discord.Guild = self.bot.get_guild(task.guild_id)
@@ -452,11 +477,15 @@ class FIFO(commands.Cog):
             await ctx.maybe_send_embed("Failed to get schedule from scheduler")
 
     @fifo.command(name="add")
-    async def fifo_add(self, ctx: commands.Context, task_name: str, *, command_to_execute: str):
+    async def fifo_add(
+        self, ctx: commands.Context, task_name: str, *, command_to_execute: str
+    ):
         """
         Add a new task to this guild's task list
         """
-        if (await self.config.guild(ctx.guild).tasks.get_raw(task_name, default=None)) is not None:
+        if (
+            await self.config.guild(ctx.guild).tasks.get_raw(task_name, default=None)
+        ) is not None:
             await ctx.maybe_send_embed(f"Task already exists with {task_name=}")
             return
 
@@ -470,7 +499,14 @@ class FIFO(commands.Cog):
             )
             return
 
-        task = Task(task_name, ctx.guild.id, self.config, ctx.author.id, ctx.channel.id, self.bot)
+        task = Task(
+            task_name,
+            ctx.guild.id,
+            self.config,
+            ctx.author.id,
+            ctx.channel.id,
+            self.bot,
+        )
         await task.set_commmand_str(command_to_execute)
         await task.save_all()
         await ctx.tick()
@@ -490,7 +526,9 @@ class FIFO(commands.Cog):
             return
 
         await self._delete_task(task)
-        await ctx.maybe_send_embed(f"Task[{task_name}] has been deleted from this guild")
+        await ctx.maybe_send_embed(
+            f"Task[{task_name}] has been deleted from this guild"
+        )
 
     @fifo.command(name="cleartriggers", aliases=["cleartrigger"])
     async def fifo_cleartriggers(self, ctx: commands.Context, task_name: str):
@@ -545,7 +583,9 @@ class FIFO(commands.Cog):
             return
         await task.save_data()
         job: Job = await self._process_task(task)
-        delta_from_now: timedelta = job.next_run_time - datetime.now(job.next_run_time.tzinfo)
+        delta_from_now: timedelta = job.next_run_time - datetime.now(
+            job.next_run_time.tzinfo
+        )
         await ctx.maybe_send_embed(
             f"Task `{task_name}` added interval of {interval_str} to its scheduled runtimes\n\n"
             f"Next run time: {job.next_run_time} ({delta_from_now.total_seconds()} seconds)"
@@ -553,7 +593,11 @@ class FIFO(commands.Cog):
 
     @fifo_trigger.command(name="relative")
     async def fifo_trigger_relative(
-        self, ctx: commands.Context, task_name: str, *, time_from_now: TimedeltaConverter
+        self,
+        ctx: commands.Context,
+        task_name: str,
+        *,
+        time_from_now: TimedeltaConverter,
     ):
         """
         Add a "run once" trigger at a time relative from now to the specified task
@@ -579,7 +623,9 @@ class FIFO(commands.Cog):
 
         await task.save_data()
         job: Job = await self._process_task(task)
-        delta_from_now: timedelta = job.next_run_time - datetime.now(job.next_run_time.tzinfo)
+        delta_from_now: timedelta = job.next_run_time - datetime.now(
+            job.next_run_time.tzinfo
+        )
         await ctx.maybe_send_embed(
             f"Task `{task_name}` added {time_to_run} to its scheduled runtimes\n"
             f"Next run time: {job.next_run_time} ({delta_from_now.total_seconds()} seconds)"
@@ -613,7 +659,9 @@ class FIFO(commands.Cog):
 
         await task.save_data()
         job: Job = await self._process_task(task)
-        delta_from_now: timedelta = job.next_run_time - datetime.now(job.next_run_time.tzinfo)
+        delta_from_now: timedelta = job.next_run_time - datetime.now(
+            job.next_run_time.tzinfo
+        )
         await ctx.maybe_send_embed(
             f"Task `{task_name}` added {datetime_str} to its scheduled runtimes\n"
             f"Next run time: {job.next_run_time} ({delta_from_now.total_seconds()} seconds)"
@@ -654,7 +702,9 @@ class FIFO(commands.Cog):
 
         await task.save_data()
         job: Job = await self._process_task(task)
-        delta_from_now: timedelta = job.next_run_time - datetime.now(job.next_run_time.tzinfo)
+        delta_from_now: timedelta = job.next_run_time - datetime.now(
+            job.next_run_time.tzinfo
+        )
         await ctx.maybe_send_embed(
             f"Task `{task_name}` added cron_str to its scheduled runtimes\n"
             f"Next run time: {job.next_run_time} ({delta_from_now.total_seconds()} seconds)"

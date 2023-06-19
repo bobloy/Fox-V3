@@ -95,13 +95,17 @@ class RecyclingPlant(Cog):
                 break
             else:
                 await ctx.send(
-                    "``{}`` fell down the conveyor belt to be sorted again!".format(used["object"])
+                    "``{}`` fell down the conveyor belt to be sorted again!".format(
+                        used["object"]
+                    )
                 )
         else:
             if reward > 0:
                 await bank.deposit_credits(ctx.author, reward)
             await ctx.send(
                 "{} been given **{} {}s** for your services.".format(
-                    ctx.author.display_name, reward, await bank.get_currency_name(ctx.guild)
+                    ctx.author.display_name,
+                    reward,
+                    await bank.get_currency_name(ctx.guild),
                 )
             )

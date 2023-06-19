@@ -51,8 +51,8 @@ def floodfill(image, xy, value, border=None, thresh=0) -> set:
     while edge:
         filled_pixels.update(edge)
         new_edge = set()
-        for (x, y) in edge:  # 4 adjacent method
-            for (s, t) in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+        for x, y in edge:  # 4 adjacent method
+            for s, t in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
                 # If already processed, or if a coordinate is negative, skip
                 if (s, t) in full_edge or s < 0 or t < 0:
                     continue
@@ -76,7 +76,11 @@ def floodfill(image, xy, value, border=None, thresh=0) -> set:
 
 class Regioner:
     def __init__(
-        self, filepath: pathlib.Path, filename: str, wall_color="black", region_color="white"
+        self,
+        filepath: pathlib.Path,
+        filename: str,
+        wall_color="black",
+        region_color="white",
     ):
         self.filepath = filepath
         self.filename = filename

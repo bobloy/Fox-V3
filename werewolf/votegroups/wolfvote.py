@@ -53,9 +53,13 @@ class WolfVote(VoteGroup):
 
         log.debug(f"Target id: {target_id}\nKiller: {self.killer.member.display_name}")
         if target_id is not None and self.killer:
-            await self.game.kill(target_id, self.killer, random.choice(self.kill_messages))
+            await self.game.kill(
+                target_id, self.killer, random.choice(self.kill_messages)
+            )
             await self.channel.send(
-                "*{} has left to complete the kill...*".format(self.killer.member.display_name)
+                "*{} has left to complete the kill...*".format(
+                    self.killer.member.display_name
+                )
             )
         else:
             await self.channel.send("*No kill will be attempted tonight...*")
@@ -68,6 +72,8 @@ class WolfVote(VoteGroup):
         await super().vote(target, author, target_id)
 
         await self.channel.send(
-            "{} has voted to kill {}".format(author.mention, target.member.display_name),
+            "{} has voted to kill {}".format(
+                author.mention, target.member.display_name
+            ),
             allowed_mentions=discord.AllowedMentions(everyone=False, users=[author]),
         )
