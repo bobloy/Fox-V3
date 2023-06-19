@@ -1,5 +1,8 @@
 from .rpsls import RPSLS
 
 
-def setup(bot):
-    bot.add_cog(RPSLS(bot))
+async def setup(bot):
+    cog = RPSLS(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

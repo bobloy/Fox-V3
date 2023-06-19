@@ -1,5 +1,8 @@
 from .exclusiverole import ExclusiveRole
 
 
-def setup(bot):
-    bot.add_cog(ExclusiveRole(bot))
+async def setup(bot):
+    cog = ExclusiveRole(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

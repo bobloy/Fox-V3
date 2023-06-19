@@ -52,7 +52,6 @@ class Gardener:
         await self.config.user(self.user).current.set(self.current)
 
     async def is_complete(self, now):
-
         message = None
         if self.current:
             then = self.current["timestamp"]
@@ -186,7 +185,6 @@ class PlantTycoon(commands.Cog):
         requester: Literal["discord_deleted_user", "owner", "user", "user_strict"],
         user_id: int,
     ):
-
         await self.config.user_from_id(user_id).clear()
 
     async def _load_plants_products(self):
@@ -226,7 +224,6 @@ class PlantTycoon(commands.Cog):
             plant_options.append(self.plants["event"]["December"])
 
     async def _gardener(self, user: discord.User) -> Gardener:
-
         #
         # This function returns a Gardener object for the user
         #
@@ -236,7 +233,6 @@ class PlantTycoon(commands.Cog):
         return g
 
     async def _degradation(self, gardener: Gardener):
-
         #
         # Calculating the rate of degradation per check_completion_loop() cycle.
         #
@@ -278,7 +274,6 @@ class PlantTycoon(commands.Cog):
     #     await self.bot.send_message(member, embed=em)
 
     async def _add_health(self, channel, gardener: Gardener, product, product_category):
-
         #
         # The function to add health
         #

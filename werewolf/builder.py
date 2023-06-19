@@ -48,7 +48,9 @@ def role_embed(idx, role: Role, color):
         embed.set_thumbnail(url=role.icon_url)
 
     embed.add_field(
-        name="Alignment", value=["Town", "Werewolf", "Neutral"][role.alignment - 1], inline=False
+        name="Alignment",
+        value=["Town", "Werewolf", "Neutral"][role.alignment - 1],
+        inline=False,
     )
     embed.add_field(name="Multiples Allowed", value=str(not role.unique), inline=False)
     embed.add_field(

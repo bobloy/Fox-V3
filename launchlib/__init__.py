@@ -1,5 +1,8 @@
 from .launchlib import LaunchLib
 
 
-def setup(bot):
-    bot.add_cog(LaunchLib(bot))
+async def setup(bot):
+    cog = LaunchLib(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

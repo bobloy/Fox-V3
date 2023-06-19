@@ -92,7 +92,7 @@ things_for_fakemessage_to_steal = [
     "content",
     "nonce",
     "reference",
-    "_edited_timestamp"  # New 7/23/21
+    "_edited_timestamp",  # New 7/23/21
 ]
 
 things_fakemessage_sets_by_default = {
@@ -119,11 +119,15 @@ class FakeMessage(discord.Message):
         self.id = time_snowflake(datetime.utcnow(), high=False)  # Pretend to be now
         self.type = discord.MessageType.default
 
-    def _rebind_cached_references_backport(self, guild: discord.Guild, channel: discord.TextChannel) -> Callable:
+    def _rebind_cached_references_backport(
+        self, guild: discord.Guild, channel: discord.TextChannel
+    ) -> Callable:
         def check_sig(method_name, *params):
             method = getattr(self, method_name, None)
-            return method and ismethod(method) and list(signature(method).parameters) == list(params)
-        
+            return (
+                method and ismethod(method) and list(signature(method).parameters) == list(params)
+            )
+
         if check_sig("_rebind_cached_references", "new_guild", "new_channel"):
             self._rebind_cached_references(guild, channel)
         elif check_sig("_rebind_channel_reference", "new_channel"):
@@ -199,7 +203,13 @@ class Task:
     }
 
     def __init__(
-        self, name: str, guild_id, config: Config, author_id=None, channel_id=None, bot: Red = None
+        self,
+        name: str,
+        guild_id,
+        config: Config,
+        author_id=None,
+        channel_id=None,
+        bot: Red = None,
     ):
         self.name = name
         self.guild_id = guild_id
@@ -220,7 +230,10 @@ class Task:
                 td: timedelta = t["time_data"]
 
                 triggers.append(
-                    {"type": t["type"], "time_data": {"days": td.days, "seconds": td.seconds}}
+                    {
+                        "type": t["type"],
+                        "time_data": {"days": td.days, "seconds": td.seconds},
+                    }
                 )
                 continue
 

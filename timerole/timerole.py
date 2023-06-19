@@ -37,7 +37,12 @@ class Timerole(Cog):
         self.bot = bot
         self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
-        default_guild = {"announce": None, "reapply": True, "roles": {}, "skipbots": True}
+        default_guild = {
+            "announce": None,
+            "reapply": True,
+            "roles": {},
+            "skipbots": True,
+        }
         default_rolemember = {"had_role": False, "check_again_time": None}
 
         self.config.register_global(**default_global)
@@ -81,7 +86,11 @@ class Timerole(Cog):
 
     @timerole.command()
     async def addrole(
-        self, ctx: commands.Context, role: discord.Role, time: str, *requiredroles: discord.Role
+        self,
+        ctx: commands.Context,
+        role: discord.Role,
+        time: str,
+        *requiredroles: discord.Role,
     ):
         """Add a role to be added after specified time on server"""
         guild = ctx.guild
@@ -109,7 +118,11 @@ class Timerole(Cog):
 
     @timerole.command()
     async def removerole(
-        self, ctx: commands.Context, role: discord.Role, time: str, *requiredroles: discord.Role
+        self,
+        ctx: commands.Context,
+        role: discord.Role,
+        time: str,
+        *requiredroles: discord.Role,
     ):
         """
         Add a role to be removed after specified time on server
@@ -220,7 +233,6 @@ class Timerole(Cog):
             # log.debug(f"{all_mr=}")
 
             async for member in AsyncIter(guild.members, steps=10):
-
                 if member.bot and skipbots:
                     continue
 

@@ -3,7 +3,12 @@ import logging
 import re
 
 import discord
-from discord.ext.commands import RoleConverter, Greedy, CommandError, ArgumentParsingError
+from discord.ext.commands import (
+    RoleConverter,
+    Greedy,
+    CommandError,
+    ArgumentParsingError,
+)
 from discord.ext.commands.view import StringView
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
@@ -107,10 +112,7 @@ class CCRole(commands.Cog):
             return
 
         # Roles to add
-        await ctx.send(
-            "What roles should it add?\n"
-            "Say `None` to skip adding roles"
-        )
+        await ctx.send("What roles should it add?\n" "Say `None` to skip adding roles")
 
         def check(m):
             return m.author == author and m.channel == channel
@@ -129,10 +131,7 @@ class CCRole(commands.Cog):
                 return
 
         # Roles to remove
-        await ctx.send(
-            "What roles should it remove?\n"
-            "Say `None` to skip removing roles"
-        )
+        await ctx.send("What roles should it remove?\n" "Say `None` to skip removing roles")
         try:
             answer = await self.bot.wait_for("message", timeout=120, check=check)
         except asyncio.TimeoutError:
@@ -148,8 +147,7 @@ class CCRole(commands.Cog):
 
         # Roles to use
         await ctx.send(
-            "What roles are allowed to use this command?\n"
-            "Say `None` to allow all roles"
+            "What roles are allowed to use this command?\n" "Say `None` to allow all roles"
         )
 
         try:

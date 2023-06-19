@@ -14,7 +14,11 @@ from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
 from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 
-from .datetime_cron_converters import CronConverter, DatetimeConverter, TimezoneConverter
+from .datetime_cron_converters import (
+    CronConverter,
+    DatetimeConverter,
+    TimezoneConverter,
+)
 from .task import Task
 
 schedule_log = logging.getLogger("red.fox_v3.fifo.scheduler")
@@ -104,7 +108,6 @@ class FIFO(commands.Cog):
             self.scheduler.shutdown()
 
     async def initialize(self):
-
         job_defaults = {
             "coalesce": True,  # Multiple missed triggers within the grace time will only fire once
             "max_instances": 5,  # This is probably way too high, should likely only be one
@@ -117,7 +120,9 @@ class FIFO(commands.Cog):
         # Default executor is already AsyncIOExecutor
         self.scheduler = AsyncIOScheduler(job_defaults=job_defaults, logger=schedule_log)
 
-        from .redconfigjobstore import RedConfigJobStore  # Wait to import to prevent cyclic import
+        from .redconfigjobstore import (
+            RedConfigJobStore,
+        )  # Wait to import to prevent cyclic import
 
         self.jobstore = RedConfigJobStore(self.config, self.bot)
         await self.jobstore.load_from_config()
@@ -375,7 +380,9 @@ class FIFO(commands.Cog):
         embed = discord.Embed(title=f"Task: {task_name}")
 
         embed.add_field(
-            name="Task command", value=f"{ctx.prefix}{task.get_command_str()}", inline=False
+            name="Task command",
+            value=f"{ctx.prefix}{task.get_command_str()}",
+            inline=False,
         )
 
         guild: discord.Guild = self.bot.get_guild(task.guild_id)
@@ -470,7 +477,14 @@ class FIFO(commands.Cog):
             )
             return
 
-        task = Task(task_name, ctx.guild.id, self.config, ctx.author.id, ctx.channel.id, self.bot)
+        task = Task(
+            task_name,
+            ctx.guild.id,
+            self.config,
+            ctx.author.id,
+            ctx.channel.id,
+            self.bot,
+        )
         await task.set_commmand_str(command_to_execute)
         await task.save_all()
         await ctx.tick()
@@ -553,7 +567,11 @@ class FIFO(commands.Cog):
 
     @fifo_trigger.command(name="relative")
     async def fifo_trigger_relative(
-        self, ctx: commands.Context, task_name: str, *, time_from_now: TimedeltaConverter
+        self,
+        ctx: commands.Context,
+        task_name: str,
+        *,
+        time_from_now: TimedeltaConverter,
     ):
         """
         Add a "run once" trigger at a time relative from now to the specified task

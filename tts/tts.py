@@ -65,7 +65,11 @@ class TTS(Cog):
     @commands.command(aliases=["t2s", "text2"])
     @commands.guild_only()
     async def tts(
-        self, ctx: commands.Context, lang: Optional[ISO639Converter] = None, *, text: str
+        self,
+        ctx: commands.Context,
+        lang: Optional[ISO639Converter] = None,
+        *,
+        text: str,
     ):
         """
         Send Text to speech messages as an mp3

@@ -328,7 +328,8 @@ class Conquest(commands.Cog):
         )
 
         current_numbered_img.save(
-            self.data_path / self.current_map / f"current_numbered.{self.ext}", self.ext_format
+            self.data_path / self.current_map / f"current_numbered.{self.ext}",
+            self.ext_format,
         )
 
         await self._send_maybe_zoomed_map(

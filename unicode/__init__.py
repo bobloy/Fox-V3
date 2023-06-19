@@ -1,5 +1,8 @@
 from .unicode import Unicode
 
 
-def setup(bot):
-    bot.add_cog(Unicode(bot))
+async def setup(bot):
+    cog = Unicode(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

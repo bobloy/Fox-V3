@@ -9,9 +9,17 @@ from typing import Dict, List, Optional
 
 import discord
 from chatterbot import ChatBot
-from chatterbot.comparisons import JaccardSimilarity, LevenshteinDistance, SpacySimilarity
+from chatterbot.comparisons import (
+    JaccardSimilarity,
+    LevenshteinDistance,
+    SpacySimilarity,
+)
 from chatterbot.response_selection import get_random_response
-from chatterbot.trainers import ChatterBotCorpusTrainer, ListTrainer, UbuntuCorpusTrainer
+from chatterbot.trainers import (
+    ChatterBotCorpusTrainer,
+    ListTrainer,
+    UbuntuCorpusTrainer,
+)
 from redbot.core import Config, checks, commands
 from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
@@ -66,7 +74,12 @@ class Chatter(Cog):
         super().__init__()
         self.bot = bot
         self.config = Config.get_conf(self, identifier=6710497116116101114)
-        default_global = {"learning": True, "model_number": 0, "algo_number": 0, "threshold": 0.90}
+        default_global = {
+            "learning": True,
+            "model_number": 0,
+            "algo_number": 0,
+            "threshold": 0.90,
+        }
         self.default_guild = {
             "whitelist": None,
             "days": 1,
@@ -115,7 +128,6 @@ class Chatter(Cog):
         self.chatbot = self._create_chatbot()
 
     def _create_chatbot(self):
-
         return ChatBot(
             "ChatterBot",
             # storage_adapter="chatterbot.storage.SQLStorageAdapter",
@@ -155,7 +167,6 @@ class Chatter(Cog):
             send_time = after - timedelta(days=100)  # Makes the first message a new message
 
             try:
-
                 async for message in channel.history(
                     limit=None, after=after, oldest_first=True
                 ).filter(
@@ -195,7 +206,8 @@ class Chatter(Cog):
 
     def _train_ubuntu(self):
         trainer = UbuntuCorpusTrainer(
-            self.chatbot, ubuntu_corpus_data_directory=cog_data_path(self) / "ubuntu_data"
+            self.chatbot,
+            ubuntu_corpus_data_directory=cog_data_path(self) / "ubuntu_data",
         )
         trainer.train()
         return True
@@ -696,7 +708,6 @@ class Chatter(Cog):
         text = message.clean_content
 
         async with ctx.typing():
-
             if is_reply:
                 in_response_to = message.reference.resolved.content
             elif self._last_message_per_channel[ctx.channel.id] is not None:

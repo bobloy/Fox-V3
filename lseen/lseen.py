@@ -36,7 +36,6 @@ class LastSeen(Cog):
         requester: Literal["discord_deleted_user", "owner", "user", "user_strict"],
         user_id: int,
     ):
-
         all_members = await self.config.all_members()
 
         async for guild_id, guild_data in AsyncIter(all_members.items(), steps=100):

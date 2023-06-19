@@ -1,5 +1,8 @@
 from .werewolf import Werewolf
 
 
-def setup(bot):
-    bot.add_cog(Werewolf(bot))
+async def setup(bot):
+    cog = Werewolf(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

@@ -35,7 +35,6 @@ class LaunchLib(commands.Cog):
         return
 
     async def _embed_launch_data(self, launch: ll.AsyncLaunch):
-
         # status: ll.AsyncLaunchStatus = await launch.get_status()
         status = launch.status
 

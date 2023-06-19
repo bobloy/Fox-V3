@@ -82,7 +82,11 @@ class InfoChannel(Cog):
 
         self.config.register_guild(**default_guild)
 
-        self.default_role = {"enabled": False, "channel_id": None, "name": "{role}: {count}"}
+        self.default_role = {
+            "enabled": False,
+            "channel_id": None,
+            "name": "{role}: {count}",
+        }
 
         self.config.register_role(**self.default_role)
 
@@ -503,17 +507,16 @@ class InfoChannel(Cog):
         extra_roles: Optional[set] = kwargs.pop("extra_roles", False)
         guild_data = await self.config.guild(guild).all()
 
-        to_update = (
-            kwargs.keys() & [key for key, value in guild_data["enabled_channels"].items() if value]
-        )  # Value in kwargs doesn't matter
+        to_update = kwargs.keys() & [
+            key for key, value in guild_data["enabled_channels"].items() if value
+        ]  # Value in kwargs doesn't matter
 
         if to_update or extra_roles:
-            log.debug(f"{to_update=}\n"
-                      f"{extra_roles=}")
+            log.debug(f"{to_update=}\n" f"{extra_roles=}")
 
             category = guild.get_channel(guild_data["category_id"])
             if category is None:
-                log.debug('Channel category is missing, updating must be off')
+                log.debug("Channel category is missing, updating must be off")
                 return  # Nothing to update, must be off
 
             channel_data = await get_channel_counts(category, guild)

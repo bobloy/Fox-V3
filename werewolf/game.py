@@ -194,7 +194,9 @@ class Game:
         }
         if self.channel_category is None:
             self.channel_category = await self.guild.create_category(
-                "Werewolf Game", overwrites=overwrite, reason="(BOT) New game of werewolf"
+                "Werewolf Game",
+                overwrites=overwrite,
+                reason="(BOT) New game of werewolf",
             )
         else:  # No need to modify categories
             pass
@@ -233,7 +235,9 @@ class Game:
                     curr = self.village_channel.overwrites_for(target)
                     curr.update(**{perm: value for perm, value in ow})
                     await self.village_channel.set_permissions(
-                        target=target, overwrite=curr, reason="(BOT) New game of werewolf"
+                        target=target,
+                        overwrite=curr,
+                        reason="(BOT) New game of werewolf",
                     )
             except discord.Forbidden:
                 await ctx.maybe_send_embed(
@@ -445,7 +449,6 @@ class Game:
             await self.lynch(target)
             self.any_votes_remaining = False
         else:
-
             if self.used_votes >= self.day_vote_count:
                 await self.village_channel.send("**All votes have been used! Day is now over!**")
                 self.any_votes_remaining = False
@@ -565,7 +568,9 @@ class Game:
                 )
             else:
                 embed.add_field(
-                    name=f"{i} - {status}{player.member.display_name}", inline=False, value="____"
+                    name=f"{i} - {status}{player.member.display_name}",
+                    inline=False,
+                    value="____",
                 )
 
         return await channel.send(embed=embed)
@@ -755,7 +760,9 @@ class Game:
     async def eval_results(self, target, source=None, method=None):
         if method is None:
             return "**{ID}** - {target} the {role} was found dead".format(
-                ID=target.id, target=target.member.display_name, role=await target.role.get_role()
+                ID=target.id,
+                target=target.member.display_name,
+                role=await target.role.get_role(),
             )
 
         out = "**{ID}** - " + method

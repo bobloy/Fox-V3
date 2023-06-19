@@ -1,5 +1,8 @@
 from .lseen import LastSeen
 
 
-def setup(bot):
-    bot.add_cog(LastSeen(bot))
+async def setup(bot):
+    cog = LastSeen(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

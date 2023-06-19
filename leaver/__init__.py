@@ -1,5 +1,8 @@
 from .leaver import Leaver
 
 
-def setup(bot):
-    bot.add_cog(Leaver(bot))
+async def setup(bot):
+    cog = Leaver(bot)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r

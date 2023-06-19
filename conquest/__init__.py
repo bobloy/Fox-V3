@@ -9,7 +9,11 @@ async def setup(bot):
     data_manager.bundled_data_path(cog)
     await cog.load_data()
 
-    bot.add_cog(cog)
+    r = bot.add_cog(cog)
+    if r is not None:
+        await r
 
-    cog2 = MapMaker(bot)
-    bot.add_cog(cog2)
+        cog2 = MapMaker(bot)
+        r2 = bot.add_cog(cog2)
+        if r2 is not None:
+            await r2
