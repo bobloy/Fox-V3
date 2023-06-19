@@ -40,9 +40,7 @@ class TTS(Cog):
         super().__init__(*args, **kwargs)
         self.bot = bot
 
-        self.config = Config.get_conf(
-            self, identifier=9811198108111121, force_registration=True
-        )
+        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
         default_guild = {"language": "en"}
 

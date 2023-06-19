@@ -13,9 +13,7 @@ class Nudity(commands.Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(
-            self, identifier=9811198108111121, force_registration=True
-        )
+        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
 
         default_guild = {"enabled": False, "channel_id": None}
 
@@ -40,9 +38,7 @@ class Nudity(commands.Cog):
         await ctx.send("Nude checking is now set to {}".format(not is_on))
 
     @commands.command()
-    async def nsfwchannel(
-        self, ctx: commands.Context, channel: discord.TextChannel = None
-    ):
+    async def nsfwchannel(self, ctx: commands.Context, channel: discord.TextChannel = None):
         if channel is None:
             await self.config.guild(ctx.guild).channel_id.set(None)
             await ctx.send("NSFW Channel cleared")
@@ -52,9 +48,7 @@ class Nudity(commands.Cog):
                 return
             else:
                 await self.config.guild(ctx.guild).channel_id.set(channel.id)
-                await ctx.send(
-                    "NSFW channel has been set to {}".format(channel.mention)
-                )
+                await ctx.send("NSFW channel has been set to {}".format(channel.mention))
 
     async def get_nsfw_channel(self, guild: discord.Guild):
         channel_id = await self.config.guild(guild).channel_id()

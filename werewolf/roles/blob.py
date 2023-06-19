@@ -85,9 +85,7 @@ class TheBlob(Role):
                 self.blob_target = player
 
         if self.blob_target is not None:
-            await self.player.send_dm(
-                f"**You will attempt to absorb {self.blob_target} tonight**"
-            )
+            await self.player.send_dm(f"**You will attempt to absorb {self.blob_target} tonight**")
         else:
             await self.player.send_dm(f"**No player will be absorbed tonight**")
 

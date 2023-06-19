@@ -96,13 +96,9 @@ class MovieTrainer(KaggleTrainer):
         # [lineID, characterID, movieID, character name, text of utterance]
         # File parsing from https://www.kaggle.com/mushaya/conversation-chatbot
 
-        with open(
-            self.data_directory / conversation_file, "r", encoding="utf-8-sig"
-        ) as conv_tsv:
+        with open(self.data_directory / conversation_file, "r", encoding="utf-8-sig") as conv_tsv:
             conv_lines = conv_tsv.readlines()
-        with open(
-            self.data_directory / dialogue_file, "r", encoding="utf-8-sig"
-        ) as lines_tsv:
+        with open(self.data_directory / dialogue_file, "r", encoding="utf-8-sig") as lines_tsv:
             dialog_lines = lines_tsv.readlines()
 
         # trans_dict = str.maketrans({"<u>": "__", "</u>": "__", '""': '"'})

@@ -18,9 +18,7 @@ class MyDumbSQLStorageAdapter(SQLStorageAdapter):
         if not self.database_uri:
             self.database_uri = "sqlite:///db.sqlite3"
 
-        self.engine = create_engine(
-            self.database_uri, connect_args={"check_same_thread": False}
-        )
+        self.engine = create_engine(self.database_uri, connect_args={"check_same_thread": False})
 
         if self.database_uri.startswith("sqlite://"):
             from sqlalchemy.engine import Engine

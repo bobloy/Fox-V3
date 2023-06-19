@@ -109,9 +109,7 @@ class Chatter(Cog):
         self._guild_cache = defaultdict(dict)
         self._global_cache = {}
 
-        self._last_message_per_channel: Dict[Optional[discord.Message]] = defaultdict(
-            lambda: None
-        )
+        self._last_message_per_channel: Dict[Optional[discord.Message]] = defaultdict(lambda: None)
 
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
@@ -150,12 +148,8 @@ class Chatter(Cog):
         Returns a list of text
         """
         out = [[]]
-        after = datetime.today() - timedelta(
-            days=(await self.config.guild(ctx.guild).days())
-        )
-        convo_delta = timedelta(
-            minutes=(await self.config.guild(ctx.guild).convo_delta())
-        )
+        after = datetime.today() - timedelta(days=(await self.config.guild(ctx.guild).days()))
+        convo_delta = timedelta(minutes=(await self.config.guild(ctx.guild).convo_delta()))
 
         def predicate(msg: discord.Message):
             return msg.clean_content
@@ -170,9 +164,7 @@ class Chatter(Cog):
             await ctx.maybe_send_embed("Gathering {}".format(channel.mention))
             user = None
             i = 0
-            send_time = after - timedelta(
-                days=100
-            )  # Makes the first message a new message
+            send_time = after - timedelta(days=100)  # Makes the first message a new message
 
             try:
                 async for message in channel.history(
@@ -312,9 +304,7 @@ class Chatter(Cog):
 
     @commands.is_owner()
     @chatter.command(name="learning")
-    async def chatter_learning(
-        self, ctx: commands.Context, toggle: Optional[bool] = None
-    ):
+    async def chatter_learning(self, ctx: commands.Context, toggle: Optional[bool] = None):
         """
         Toggle the bot learning from its conversations.
 
@@ -417,8 +407,7 @@ class Chatter(Cog):
 
         if model_number >= 0:
             await ctx.maybe_send_embed(
-                "Additional requirements needed. See guide before continuing.\n"
-                "Continue?"
+                "Additional requirements needed. See guide before continuing.\n" "Continue?"
             )
             pred = MessagePredicate.yes_or_no(ctx)
             try:
@@ -502,9 +491,7 @@ class Chatter(Cog):
         )
 
         if future:
-            await ctx.maybe_send_embed(
-                f"Backup successful! Look in {path} for your backup"
-            )
+            await ctx.maybe_send_embed(f"Backup successful! Look in {path} for your backup")
         else:
             await ctx.maybe_send_embed("Error occurred :(")
 
@@ -547,9 +534,7 @@ class Chatter(Cog):
             await ctx.maybe_send_embed("Error occurred :(")
 
     @chatter_train_kaggle.command(name="movies")
-    async def chatter_train_kaggle_movies(
-        self, ctx: commands.Context, confirmation: bool = False
-    ):
+    async def chatter_train_kaggle_movies(self, ctx: commands.Context, confirmation: bool = False):
         """
         WARNING: Language! Trains the bot using Cornell University's "Movie Dialog Corpus".
 
@@ -575,9 +560,7 @@ class Chatter(Cog):
             await ctx.maybe_send_embed("Error occurred :(")
 
     @chatter_train.command(name="ubuntu")
-    async def chatter_train_ubuntu(
-        self, ctx: commands.Context, confirmation: bool = False
-    ):
+    async def chatter_train_ubuntu(self, ctx: commands.Context, confirmation: bool = False):
         """
         WARNING: Large Download! Trains the bot using Ubuntu Dialog Corpus data.
         """
@@ -655,9 +638,7 @@ class Chatter(Cog):
             "(**This will take a long time, be patient. See console for progress**)"
         )
         embed = discord.Embed(title="Loading")
-        embed.set_image(
-            url="http://www.loop.universaleverything.com/animations/1295.gif"
-        )
+        embed.set_image(url="http://www.loop.universaleverything.com/animations/1295.gif")
         temp_message = await ctx.send(embed=embed)
         future = await self.loop.run_in_executor(None, self._train, conversation)
 
@@ -693,9 +674,7 @@ class Chatter(Cog):
 
         ctx: commands.Context = await self.bot.get_context(message)
 
-        if (
-            ctx.prefix is not None
-        ):  # Probably unnecessary, we're in on_message_without_command
+        if ctx.prefix is not None:  # Probably unnecessary, we're in on_message_without_command
             return
 
         ###########
@@ -713,10 +692,7 @@ class Chatter(Cog):
         ):
             is_reply = True  # this is only useful with in_response_to
             pass  # this is a reply to the bot, good to go
-        elif (
-            guild is not None
-            and channel.id == self._guild_cache[guild.id]["chatchannel"]
-        ):
+        elif guild is not None and channel.id == self._guild_cache[guild.id]["chatchannel"]:
             pass  # good to go
         else:
             when_mentionables = commands.when_mentioned(self.bot, message)
@@ -768,8 +744,7 @@ class Chatter(Cog):
 
             replying = None
             if (
-                "reply" not in self._guild_cache[guild.id]
-                and self.default_guild["reply"]
+                "reply" not in self._guild_cache[guild.id] and self.default_guild["reply"]
             ) or self._guild_cache[guild.id]["reply"]:
                 if message != ctx.channel.last_message:
                     replying = message

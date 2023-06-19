@@ -32,9 +32,7 @@ class LoveCalculator(Cog):
         url = "https://www.lovecalculator.com/love.php?name1={}&name2={}".format(
             x.replace(" ", "+"), y.replace(" ", "+")
         )
-        async with aiohttp.ClientSession(
-            headers={"Connection": "keep-alive"}
-        ) as session:
+        async with aiohttp.ClientSession(headers={"Connection": "keep-alive"}) as session:
             async with session.get(url, ssl=False) as response:
                 assert response.status == 200
                 resp = await response.text()

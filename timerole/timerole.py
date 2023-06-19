@@ -35,9 +35,7 @@ class Timerole(Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(
-            self, identifier=9811198108111121, force_registration=True
-        )
+        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {}
         default_guild = {
             "announce": None,
@@ -98,9 +96,7 @@ class Timerole(Cog):
         guild = ctx.guild
 
         try:
-            parsed_time = parse_timedelta(
-                time, allowed_units=["weeks", "days", "hours"]
-            )
+            parsed_time = parse_timedelta(time, allowed_units=["weeks", "days", "hours"])
         except commands.BadArgument:
             await ctx.maybe_send_embed("Error: Invalid time string.")
             return
@@ -135,9 +131,7 @@ class Timerole(Cog):
         """
         guild = ctx.guild
         try:
-            parsed_time = parse_timedelta(
-                time, allowed_units=["weeks", "days", "hours"]
-            )
+            parsed_time = parse_timedelta(time, allowed_units=["weeks", "days", "hours"])
         except commands.BadArgument:
             await ctx.maybe_send_embed("Error: Invalid time string.")
             return
@@ -155,9 +149,7 @@ class Timerole(Cog):
         )
 
     @timerole.command()
-    async def channel(
-        self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None
-    ):
+    async def channel(self, ctx: commands.Context, channel: Optional[discord.TextChannel] = None):
         """Sets the announce channel for role adds"""
         guild = ctx.guild
         if channel is None:
@@ -173,9 +165,7 @@ class Timerole(Cog):
         guild = ctx.guild
         current_setting = await self.config.guild(guild).reapply()
         await self.config.guild(guild).reapply.set(not current_setting)
-        await ctx.maybe_send_embed(
-            f"Reapplying roles is now set to: {not current_setting}"
-        )
+        await ctx.maybe_send_embed(f"Reapplying roles is now set to: {not current_setting}")
 
     @timerole.command()
     async def skipbots(self, ctx: commands.Context):
@@ -183,9 +173,7 @@ class Timerole(Cog):
         guild = ctx.guild
         current_setting = await self.config.guild(guild).skipbots()
         await self.config.guild(guild).skipbots.set(not current_setting)
-        await ctx.maybe_send_embed(
-            f"Skipping bots is now set to: {not current_setting}"
-        )
+        await ctx.maybe_send_embed(f"Skipping bots is now set to: {not current_setting}")
 
     @timerole.command()
     async def delrole(self, ctx: commands.Context, role: discord.Role):
@@ -256,9 +244,7 @@ class Timerole(Cog):
                     if not role_data:
                         continue
 
-                    mr_dict = await self.config.custom(
-                        "RoleMember", role_id, member.id
-                    ).all()
+                    mr_dict = await self.config.custom("RoleMember", role_id, member.id).all()
 
                     # Stop if they've had the role and reapplying is disabled
                     if not reapply and mr_dict["had_role"]:
@@ -268,12 +254,9 @@ class Timerole(Cog):
                     # Stop if the check_again_time hasn't passed yet
                     if (
                         mr_dict["check_again_time"] is not None
-                        and datetime.fromisoformat(mr_dict["check_again_time"])
-                        >= utcnow
+                        and datetime.fromisoformat(mr_dict["check_again_time"]) >= utcnow
                     ):
-                        log.debug(
-                            f"{member.display_name} - Not time to check again yet"
-                        )
+                        log.debug(f"{member.display_name} - Not time to check again yet")
                         continue
                     member: discord.Member
                     has_roles = {r.id for r in member.roles}
@@ -291,8 +274,7 @@ class Timerole(Cog):
 
                     # Stop if they don't have all the required roles
                     if role_data is None or (
-                        "required" in role_data
-                        and not set(role_data["required"]) & has_roles
+                        "required" in role_data and not set(role_data["required"]) & has_roles
                     ):
                         continue
 
@@ -323,12 +305,10 @@ class Timerole(Cog):
 
                 # log.debug(f"{addlist=}\n{removelist=}")
                 add_roles = [
-                    discord.utils.get(guild.roles, id=int(role_id))
-                    for role_id in addlist
+                    discord.utils.get(guild.roles, id=int(role_id)) for role_id in addlist
                 ]
                 remove_roles = [
-                    discord.utils.get(guild.roles, id=int(role_id))
-                    for role_id in removelist
+                    discord.utils.get(guild.roles, id=int(role_id)) for role_id in removelist
                 ]
 
                 if None in add_roles or None in remove_roles:
@@ -338,19 +318,14 @@ class Timerole(Cog):
 
                 if addlist:
                     try:
-                        await member.add_roles(
-                            *add_roles, reason="Timerole", atomic=False
-                        )
+                        await member.add_roles(*add_roles, reason="Timerole", atomic=False)
                     except (discord.Forbidden, discord.NotFound) as e:
                         log.exception("Failed Adding Roles")
-                        add_results += (
-                            f"{member.display_name} : **(Failed Adding Roles)**\n"
-                        )
+                        add_results += f"{member.display_name} : **(Failed Adding Roles)**\n"
                     else:
                         add_results += (
                             " \n".join(
-                                f"{member.display_name} : {role.name}"
-                                for role in add_roles
+                                f"{member.display_name} : {role.name}" for role in add_roles
                             )
                             + "\n"
                         )
@@ -361,19 +336,14 @@ class Timerole(Cog):
 
                 if removelist:
                     try:
-                        await member.remove_roles(
-                            *remove_roles, reason="Timerole", atomic=False
-                        )
+                        await member.remove_roles(*remove_roles, reason="Timerole", atomic=False)
                     except (discord.Forbidden, discord.NotFound) as e:
                         log.exception("Failed Removing Roles")
-                        remove_results += (
-                            f"{member.display_name} : **(Failed Removing Roles)**\n"
-                        )
+                        remove_results += f"{member.display_name} : **(Failed Removing Roles)**\n"
                     else:
                         remove_results += (
                             " \n".join(
-                                f"{member.display_name} : {role.name}"
-                                for role in remove_roles
+                                f"{member.display_name} : {role.name}" for role in remove_roles
                             )
                             + "\n"
                         )

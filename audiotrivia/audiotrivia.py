@@ -65,9 +65,7 @@ class AudioTrivia(Trivia):
         """Set whether or not short audio will be repeated"""
         settings = self.audioconf.guild(ctx.guild)
         await settings.repeat.set(true_or_false)
-        await ctx.maybe_send_embed(
-            f"Done. Repeating short audio is now set to {true_or_false}."
-        )
+        await ctx.maybe_send_embed(f"Done. Repeating short audio is now set to {true_or_false}.")
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
@@ -180,9 +178,7 @@ class AudioTrivia(Trivia):
                 )
             )
         else:
-            msg = box(
-                bold("Available trivia lists") + "\n\n" + ", ".join(sorted(lists))
-            )
+            msg = box(bold("Available trivia lists") + "\n\n" + ", ".join(sorted(lists)))
             if len(msg) > 1000:
                 await ctx.author.send(msg)
             else:
@@ -205,9 +201,7 @@ class AudioTrivia(Trivia):
         try:
             path = next(p for p in self._all_audio_lists() if p.stem == category)
         except StopIteration:
-            raise FileNotFoundError(
-                "Could not find the `{}` category.".format(category)
-            )
+            raise FileNotFoundError("Could not find the `{}` category.".format(category))
 
         with path.open(encoding="utf-8") as file:
             try:

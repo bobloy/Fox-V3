@@ -38,9 +38,7 @@ class IsItDown(commands.Cog):
         try:
             resp, url = await self._check_if_down(url_to_check)
         except AssertionError:
-            await ctx.maybe_send_embed(
-                "Invalid URL provided. Make sure not to include `http://`"
-            )
+            await ctx.maybe_send_embed("Invalid URL provided. Make sure not to include `http://`")
             return
 
         # log.debug(resp)

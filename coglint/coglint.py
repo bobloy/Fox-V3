@@ -14,9 +14,7 @@ class CogLint(Cog):
     def __init__(self, bot: Red):
         super().__init__()
         self.bot = bot
-        self.config = Config.get_conf(
-            self, identifier=9811198108111121, force_registration=True
-        )
+        self.config = Config.get_conf(self, identifier=9811198108111121, force_registration=True)
         default_global = {"lint": True}
         default_guild = {}
 
@@ -58,9 +56,7 @@ class CogLint(Cog):
         with open(path, "w") as codefile:
             codefile.write(code)
 
-        future = await self.bot.loop.run_in_executor(
-            None, lint.py_run, path, "return_std=True"
-        )
+        future = await self.bot.loop.run_in_executor(None, lint.py_run, path, "return_std=True")
 
         (pylint_stdout, pylint_stderr) = future or (None, None)
         # print(pylint_stderr)
