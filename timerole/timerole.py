@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import discord
@@ -14,10 +14,10 @@ log = logging.getLogger("red.fox_v3.timerole")
 
 
 async def sleep_till_next_hour():
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     next_hour = datetime(year=now.year, month=now.month, day=now.day, hour=now.hour + 1)
-    log.debug("Sleeping for {} seconds".format((next_hour - datetime.utcnow()).seconds))
-    await asyncio.sleep((next_hour - datetime.utcnow()).seconds)
+    log.debug("Sleeping for {} seconds".format((next_hour - datetime.now(timezone.utc)).seconds))
+    await asyncio.sleep((next_hour - datetime.now(timezone.utc)).seconds)
 
 
 async def announce_to_channel(channel, results, title):
@@ -70,9 +70,9 @@ class Timerole(Cog):
         Useful for troubleshooting the initial setup
         """
         async with ctx.typing():
-            pre_run = datetime.utcnow()
+            pre_run = datetime.now(timezone.utc)
             await self.timerole_update()
-            after_run = datetime.utcnow()
+            after_run = datetime.now(timezone.utc)
             await ctx.tick()
 
         await ctx.maybe_send_embed(f"Took {after_run-pre_run} seconds")
@@ -206,7 +206,7 @@ class Timerole(Cog):
         await ctx.maybe_send_embed(out)
 
     async def timerole_update(self):
-        utcnow = datetime.utcnow()
+        utcnow = datetime.now(timezone.utc)
         all_guilds = await self.config.all_guilds()
 
         # all_mrs = await self.config.custom("RoleMember").all()
@@ -399,7 +399,7 @@ class Timerole(Cog):
     #                 days=role_dict[str(role_id)]["days"],
     #                 hours=role_dict[str(role_id)].get("hours", 0),
     #             )
-    #             <= datetime.utcnow()
+    #             <= datetime.now(timezone.utc)
     #         ):
     #             # Qualifies
     #             role_list.append((member, role_id))

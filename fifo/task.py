@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import partial
 from inspect import ismethod, signature
 from typing import Callable, Dict, List, Optional, Tuple, Union
@@ -116,7 +116,7 @@ class FakeMessage(discord.Message):
                 # log.exception("This is fine")
                 pass
 
-        self.id = time_snowflake(datetime.utcnow(), high=False)  # Pretend to be now
+        self.id = time_snowflake(datetime.now(timezone.utc), high=False)  # Pretend to be now
         self.type = discord.MessageType.default
 
     def _rebind_cached_references_backport(

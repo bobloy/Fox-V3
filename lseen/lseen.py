@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 
 import dateutil.parser
@@ -68,7 +68,7 @@ class LastSeen(Cog):
         """
 
         if member.status != self.offline_status:
-            last_seen = datetime.utcnow()
+            last_seen = datetime.now(timezone.utc)
         else:
             last_seen = await self.config.member(member).seen()
             if last_seen is None:
@@ -92,4 +92,4 @@ class LastSeen(Cog):
                 return
             if not await self.config.guild(after.guild).enabled():
                 return
-            await self.config.member(before).seen.set(datetime.utcnow().isoformat())
+            await self.config.member(before).seen.set(datetime.now(timezone.utc).isoformat())

@@ -3,7 +3,7 @@ import logging
 import os
 import pathlib
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import partial
 from typing import Dict, List, Optional
 
@@ -713,7 +713,7 @@ class Chatter(Cog):
             elif self._last_message_per_channel[ctx.channel.id] is not None:
                 last_m: discord.Message = self._last_message_per_channel[ctx.channel.id]
                 minutes = self._guild_cache[ctx.guild.id]["convo_delta"]
-                if (datetime.utcnow() - last_m.created_at).seconds > minutes * 60:
+                if (datetime.now(timezone.utc) - last_m.created_at).seconds > minutes * 60:
                     in_response_to = None
                 else:
                     in_response_to = last_m.content
