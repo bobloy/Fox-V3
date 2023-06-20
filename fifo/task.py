@@ -421,9 +421,11 @@ class Task:
                 except discord.NotFound:
                     actual_message = None
             if actual_message is None:  # last_message_id was an invalid message I guess
-                actual_message = await channel.history(limit=1).flatten()
+                actual_message = (
+                    await channel.history().__anext__()
+                )  # await anext(channel.history()) py3.10+
                 if not actual_message:  # Basically only happens if the channel has no messages
-                    actual_message = await author.history(limit=1).flatten()
+                    actual_message = await author.history().__anext__()
                     if not actual_message:  # Okay, the *author* has never sent a message?
                         log.warning("No message found in channel cache yet, skipping execution")
                         return False
