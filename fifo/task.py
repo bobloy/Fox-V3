@@ -239,11 +239,19 @@ class Task:
 
             if t["type"] == "date":  # Convert into datetime
                 dt: datetime = t["time_data"]
+                if dt.tzinfo is not None:
+                    tz = None  # Don't save timezone if the timezone object already has one
+                else:  # No timezone in object, check for passed timezone parameter, default to UTC
+                    tz = getattr(t["tzinfo"], "zone", pytz.UTC.zone)
+
                 data_to_append = {
                     "type": t["type"],
                     "time_data": dt.isoformat(),
-                    "tzinfo": getattr(t["tzinfo"], "zone", None),
+                    "tzinfo": tz,
                 }
+                # if tz is not None:  # Now localize dt to check for expired triggers
+                #     dt = tz.localize(dt)
+                log.debug(f"{t}\n{dt}  and  {datetime.now(pytz.utc)}")
                 if dt < datetime.now(pytz.utc):
                     expired_triggers.append(data_to_append)
                 else:
@@ -345,7 +353,7 @@ class Task:
     #     self.data["job_id"] = job_id
 
     async def save_all(self):
-        """To be used when creating an new task"""
+        """To be used when creating a new task"""
 
         data_to_save = self.default_task_data.copy()
         if self.data:
@@ -500,6 +508,8 @@ class Task:
         trigger_data["time_data"] = parsed_time
         if timezone is not None:
             trigger_data["tzinfo"] = timezone
+        # if parsed_time.tzinfo is not None:
+        #     trigger_data["tzinfo"] = parsed_time.tzinfo
 
         if not get_trigger(trigger_data):
             return False
