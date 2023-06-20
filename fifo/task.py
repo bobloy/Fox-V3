@@ -429,7 +429,6 @@ class Task:
                     if not actual_message:  # Okay, the *author* has never sent a message?
                         log.warning("No message found in channel cache yet, skipping execution")
                         return False
-                actual_message = actual_message[0]
 
         # message._handle_author(author)  # Option when message is subclass
         # message._state = self.bot._get_state()
