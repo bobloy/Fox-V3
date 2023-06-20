@@ -9,10 +9,12 @@ from apscheduler.job import Job
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING
+from apscheduler.util import localize
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
 from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
+from tzlocal import get_localzone
 
 from .datetime_cron_converters import (
     CronConverter,
@@ -620,8 +622,14 @@ class FIFO(commands.Cog):
             )
             return
 
-        maybe_tz = await self._get_tz(ctx.author)
+        maybe_tz = datetime_str.tzinfo
+        if maybe_tz is None:  # If a timezone wasn't specified, try to get the preset one
+            maybe_tz = await self._get_tz(ctx.author)
+            if maybe_tz is None:  # If it's still None, use local timezone
+                maybe_tz = get_localzone()
+            datetime_str = localize(datetime_str, maybe_tz)
 
+        log.debug(f"{datetime_str}  |  {maybe_tz}")
         result = await task.add_trigger("date", datetime_str, maybe_tz)
         if not result:
             await ctx.maybe_send_embed(
@@ -662,6 +670,8 @@ class FIFO(commands.Cog):
 
         if optional_tz is None:
             optional_tz = await self._get_tz(ctx.author)  # might still be None
+        if optional_tz is None:
+            optional_tz = get_localzone()
 
         result = await task.add_trigger("cron", cron_str, optional_tz)
         if not result:
