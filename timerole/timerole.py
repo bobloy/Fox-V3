@@ -252,12 +252,13 @@ class Timerole(Cog):
                         continue
 
                     # Stop if the check_again_time hasn't passed yet
-                    if (
-                        mr_dict["check_again_time"] is not None
-                        and datetime.fromisoformat(mr_dict["check_again_time"]) >= utcnow
-                    ):
-                        log.debug(f"{member.display_name} - Not time to check again yet")
-                        continue
+                    if mr_dict["check_again_time"] is not None:
+                        check_again_time = datetime.fromisoformat(mr_dict["check_again_time"])
+                        if check_again_time.tzinfo is None:  # backwards compatibility
+                            check_again_time = check_again_time.replace(tzinfo=timezone.utc)
+                        if check_again_time >= utcnow:
+                            log.debug(f"{member.display_name} - Not time to check again yet")
+                            continue
                     member: discord.Member
                     has_roles = {r.id for r in member.roles}
 
