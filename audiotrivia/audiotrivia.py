@@ -26,7 +26,7 @@ class AudioTrivia(Trivia):
     """
 
     def __init__(self, bot: Red):
-        super().__init__()
+        super().__init__(bot)
         self.bot = bot
         self.audioconf = Config.get_conf(
             self, identifier=651171001051118411410511810597, force_registration=True
