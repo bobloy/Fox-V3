@@ -42,19 +42,21 @@ class IsItDown(commands.Cog):
             return
 
         # log.debug(resp)
-        if resp["isitdown"]:
+        if resp["status_code"] == 2:
             await ctx.maybe_send_embed(f"{url} is DOWN!")
-        else:
+        elif resp["status_code"] == 1:
             await ctx.maybe_send_embed(f"{url} is UP!")
+        else:
+            await ctx.maybe_send_embed("Invalid URL provided. Make sure not to include `http://`")
 
     async def _check_if_down(self, url_to_check):
         re_compiled = re.compile(r"https?://(www\.)?")
         url = re_compiled.sub("", url_to_check).strip().strip("/")
 
-        url = f"https://isitdown.site/api/v3/{url}"
+        url = f"https://isitup.org/{url}"
         # log.debug(url)
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
+            async with session.get(f"{url}.json") as response:
                 assert response.status == 200
                 resp = await response.json()
         return resp, url
