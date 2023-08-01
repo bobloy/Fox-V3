@@ -194,7 +194,7 @@ class AnnounceDaily(Cog):
         await self.config.time.set({"hour": h, "minute": m, "second": s})
 
         await ctx.send(
-            "Announcement time has been set to {}::{}::{} every day\n"
+            "Announcement time has been set to {}:{}:{} every day\n"
             "**Changes will apply after next scheduled announcement or reload**".format(h, m, s)
         )
 
