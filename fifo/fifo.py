@@ -14,6 +14,7 @@ from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.commands import TimedeltaConverter
 from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
+from redbot.core.utils.mod import is_admin_or_superior
 from tzlocal import get_localzone
 
 from .datetime_cron_converters import (
@@ -216,7 +217,7 @@ class FIFO(commands.Cog):
         else:
             return None
 
-    @checks.is_owner()
+    @is_admin_or_superior(bot, author)
     @commands.guild_only()
     @commands.command()
     async def fifoclear(self, ctx: commands.Context):
@@ -227,7 +228,7 @@ class FIFO(commands.Cog):
         # await self.config.jobs_index.clear()
         await ctx.tick()
 
-    @checks.is_owner()  # Will be reduced when I figure out permissions later
+    @is_admin_or_superior(bot, author)
     @commands.guild_only()
     @commands.group()
     async def fifo(self, ctx: commands.Context):
