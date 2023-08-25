@@ -217,7 +217,7 @@ class FIFO(commands.Cog):
         else:
             return None
 
-    @is_admin_or_superior()
+    @is_admin_or_superior(bot, author):
     @commands.guild_only()
     @commands.command()
     async def fifoclear(self, ctx: commands.Context):
@@ -228,7 +228,7 @@ class FIFO(commands.Cog):
         # await self.config.jobs_index.clear()
         await ctx.tick()
 
-    @is_admin_or_superior()
+    @is_admin_or_superior(bot, author):
     @commands.guild_only()
     @commands.group()
     async def fifo(self, ctx: commands.Context):
