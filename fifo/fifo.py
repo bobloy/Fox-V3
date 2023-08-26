@@ -217,7 +217,7 @@ class FIFO(commands.Cog):
         else:
             return None
 
-    if any is_admin_or_superior(bot, author):
+    @commands.has_permissions(administrator=True)
     @commands.guild_only()
     @commands.command()
     async def fifoclear(self, ctx: commands.Context):
@@ -225,10 +225,9 @@ class FIFO(commands.Cog):
         self.scheduler.remove_all_jobs()
         await self.config.guild(ctx.guild).tasks.clear()
         await self.config.jobs.clear()
-        # await self.config.jobs_index.clear()
         await ctx.tick()
 
-    if any is_admin_or_superior(bot, author):
+    @commands.has_permissions(administrator=True)  # Adjust the permission as needed
     @commands.guild_only()
     @commands.group()
     async def fifo(self, ctx: commands.Context):
@@ -236,6 +235,7 @@ class FIFO(commands.Cog):
         Base command for handling scheduling of tasks
         """
         pass
+
 
     @fifo.command(name="wakeup")
     async def fifo_wakeup(self, ctx: commands.Context):
