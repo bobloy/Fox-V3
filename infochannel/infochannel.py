@@ -13,7 +13,6 @@ RATE_LIMIT_DELAY = 60 * 6  # If you're willing to risk rate limiting, you can de
 
 log = logging.getLogger("red.fox_v3.infochannel")
 
-
 async def get_channel_counts(category, guild):
     # Gets count of bots
     bot_num = len([m for m in guild.members if m.bot])
@@ -30,6 +29,13 @@ async def get_channel_counts(category, guild):
     human_num = members - bot_num
     # count amount of premium subs/nitro subs.
     boosters = guild.premium_subscription_count
+    # New additions
+    emojis_count = len(guild.emojis)
+    news_channels_count = len([c for c in guild.channels if isinstance(c, discord.TextChannel) and c.is_news()])
+    stage_channels_count = len([c for c in guild.channels if isinstance(c, discord.StageChannel)])
+    voice_channels_count = len([c for c in guild.channels if isinstance(c, discord.VoiceChannel)])
+    server_boost_tier = guild.premium_tier
+    timezones = guild.preferred_locale
     return {
         "members": members,
         "humans": human_num,
@@ -39,8 +45,13 @@ async def get_channel_counts(category, guild):
         "channels": channels_num,
         "online": online_num,
         "offline": offline_num,
+        "emojis": emojis_count,
+        "news_channels": news_channels_count,
+        "stage_channels": stage_channels_count,
+        "voice_channels": voice_channels_count,
+        "server_boost_tier": server_boost_tier,
+        "timezones": timezones,
     }
-
 
 class InfoChannel(Cog):
     """
@@ -59,19 +70,25 @@ class InfoChannel(Cog):
 
         # self. so I can get the keys from this later
         self.default_channel_names = {
-            "members": "Members: {count}",
-            "humans": "Humans: {count}",
-            "boosters": "Boosters: {count}",
-            "bots": "Bots: {count}",
-            "roles": "Roles: {count}",
-            "channels": "Channels: {count}",
+            "members": "👤 Members: {count}",
+            "humans": "👤 Humans: {count}",
+            "boosters": "💎 Boosters: {count}",
+            "bots": "🤖 Bots: {count}",
+            "roles": "👔 Roles: {count}",
+            "channels": "🔧 Channels: {count}",
             "online": "Online: {count}",
             "offline": "Offline: {count}",
+            "emojis": "🥳 Emojis: {count}",
+            "news_channels": "📰 News Channels: {count}",
+            "stage_channels": "🎤 Stage Channels: {count}",
+            "voice_channels": "🔊 Voice Channels: {count}",
+            "server_boost_tier": "🥇 Server Boost Tier: {count}",
+            "timezones": "⏰ Timezone: {count}",
         }
 
         default_channel_ids = {k: None for k in self.default_channel_names}
         # Only members is enabled by default
-        default_enabled_counts = {k: k == "members" for k in self.default_channel_names}
+        default_enabled_counts = {k: k in ["members", "emojis", "news_channels", "stage_channels", "voice_channels", "server_boost_tier", "timezones"] for k in self.default_channel_names}
 
         default_guild = {
             "category_id": None,
@@ -184,6 +201,12 @@ class InfoChannel(Cog):
         - `channels`: Total number of channels excluding infochannels,
         - `online`: Total online members,
         - `offline`: Total offline members,
+        - `emojis`: Total amount of emojis
+        - `news_channels`: Total amount of news channels
+        - `stage_channels`: Total number of stage channels
+        - `voice_channels`: Total number of voice channels,
+        - `server_boost_tier`: Server boost tier,
+        - `timezones`: Timezones,
         """
         guild = ctx.guild
         if channel_type not in self.default_channel_names.keys():
@@ -239,6 +262,12 @@ class InfoChannel(Cog):
         - `channels`: Total number of channels excluding infochannels
         - `online`: Total online members
         - `offline`: Total offline members
+        - `emojis`: Total amount of emojis
+        - `news_channels`: Total amount of news channels
+        - `stage_channels`: Total number of stage channels
+        - `voice_channels`: Total number of voice channels,
+        - `server_boost_tier`: Server boost tier,
+        - `timezones`: Timezones,
 
         Warning: This command counts against the channel update rate limit and may be queued.
         """
@@ -457,6 +486,12 @@ class InfoChannel(Cog):
                 channels=True,
                 online=True,
                 offline=True,
+                emojis=True,
+                news_channels=True,
+                stage_channels=True,
+                voice_channels=True,
+                server_boost_tier=True,
+                timezones=True,
                 extra_roles=set(guild.roles),
             )
 
