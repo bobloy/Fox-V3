@@ -415,15 +415,17 @@ class PlantTycoon(commands.Cog):
         except discord.Forbidden:
             await ctx.send("ERROR\nYou blocked me, didn't you?")
 
-        em = discord.Embed(color=discord.Color.green())
-        avatar = author.avatar_url if author.avatar_url else author.default_avatar_url
+        em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
+        avatar = author.avatar_url if author.avatar else author.default_avatar_url
         em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
         em.add_field(name="**Thneeds**", value=str(gardener.points))
         if gardener.current:
             em.set_thumbnail(url=gardener.current["image"])
             em.add_field(
                 name="**Currently growing**",
-                value="{0} ({1:.2f}%)".format(gardener.current["name"], gardener.current["health"]),
+                value="{0} ({1:.2f}%)".format(
+                    gardener.current["name"], gardener.current["health"]
+                ),
             )
         else:
             em.add_field(name="**Currently growing**", value="None")
@@ -431,6 +433,7 @@ class PlantTycoon(commands.Cog):
             em.add_field(name="**Badges**", value="None")
         else:
             badges = "".join("{}\n".format(badge.capitalize()) for badge in gardener.badges)
+
             em.add_field(name="**Badges**", value=badges)
         if gardener.products:
             products = ""
@@ -464,7 +467,6 @@ class PlantTycoon(commands.Cog):
                 )
             )
         await ctx.send(embed=em)
-
 
     @_gardening.command(name="plants")
     async def _plants(self, ctx):
@@ -500,7 +502,7 @@ class PlantTycoon(commands.Cog):
                 plant = p
                 t = True
                 break
-    
+
         if t:
             em = discord.Embed(
                 title="Plant statistics of {}".format(plant["name"]),
@@ -517,7 +519,7 @@ class PlantTycoon(commands.Cog):
             message = "I can't seem to find that plant."
             em = discord.Embed(description=message, color=discord.Color.red())
         await ctx.send(embed=em)
-    
+
     @_gardening.command(name="state")
     async def _state(self, ctx):
         """Check the state of your plant."""
@@ -526,6 +528,7 @@ class PlantTycoon(commands.Cog):
         try:
             await self._apply_degradation(gardener)
         except discord.Forbidden:
+            # Couldn't DM the degradation
             await ctx.send("ERROR\nYou blocked me, didn't you?")
 
         if not gardener.current:
@@ -554,167 +557,150 @@ class PlantTycoon(commands.Cog):
 
     @_gardening.command(name="buy")
     async def _buy(self, ctx, product=None, amount: int = 1):
-        """Buy gardening products."""
-        author = ctx.author
-        gardener = await self._gardener(author)
+        """Buy gardening supplies."""
         if self.products is None:
             await self._load_plants_products()
+
+        author = ctx.author
         if product is None:
-            await ctx.send("Choose a product to buy.")
-            return
-        if product.lower() not in self.products:
-            await ctx.send("That product doesn't exist.")
-            return
-        product_info = self.products[product.lower()]
-        price = product_info["price"] * amount
-        if gardener.points < price:
-            await ctx.send("You don't have enough Thneedbucks to buy that.")
-            return
-
-        gardener.points -= price
-        if product.lower() not in gardener.products:
-            gardener.products[product.lower()] = amount
+            em = discord.Embed(
+                title="All gardening supplies that you can buy:",
+                color=discord.Color.green(),
+            )
+            for pd in self.products:
+                em.add_field(
+                    name="**{}**".format(pd.capitalize()),
+                    value="Cost: {} τ\n+{} health\n-{}% damage\nUses: {}\nCategory: {}".format(
+                        self.products[pd]["cost"],
+                        self.products[pd]["health"],
+                        self.products[pd]["damage"],
+                        self.products[pd]["uses"],
+                        self.products[pd]["category"],
+                    ),
+                )
         else:
-            gardener.products[product.lower()] += amount
+            if amount <= 0:
+                message = "Invalid amount! Must be greater than 1"
+            else:
+                gardener = await self._gardener(author)
+                if product.lower() in self.products and amount > 0:
+                    cost = self.products[product.lower()]["cost"] * amount
+                    withdraw_points = await _withdraw_points(gardener, cost)
+                    if withdraw_points:
+                        if product.lower() not in gardener.products:
+                            gardener.products[product.lower()] = 0
+                        # gardener.products[product.lower()] += amount
+                        # Only add it once
+                        gardener.products[product.lower()] += (
+                            amount * self.products[product.lower()]["uses"]
+                        )
+                        await gardener.save_gardener()
+                        message = "You bought {}.".format(product.lower())
+                    else:
+                        message = (
+                            "You don't have enough Thneeds. You have {}, but need {}.".format(
+                                gardener.points,
+                                self.products[product.lower()]["cost"] * amount,
+                            )
+                        )
+                else:
+                    message = "I don't have this product."
+            em = discord.Embed(description=message, color=discord.Color.green())
 
-        await ctx.send(
-            "You bought {0} {1} for {2} Thneedbucks. "
-            "You now have {3} Thneedbucks.".format(amount, product.capitalize(), price, gardener.points)
-        )
+        await ctx.send(embed=em)
 
     @_gardening.command(name="convert")
-    async def _convert(self, ctx, product=None, amount: int = 1):
-        """Convert products into Thneedbucks."""
+    async def _convert(self, ctx: commands.Context, amount: int):
+        """Exchange Thneeds for credits."""
         author = ctx.author
         gardener = await self._gardener(author)
-        if self.products is None:
-            await self._load_plants_products()
-        if product is None:
-            await ctx.send("Choose a product to convert.")
-            return
-        if product.lower() not in gardener.products:
-            await ctx.send("You don't have any of that product to convert.")
-            return
-        if amount <= 0:
-            await ctx.send("You must convert at least one product.")
-            return
-        if amount > gardener.products[product.lower()]:
-            await ctx.send("You don't have that many of that product to convert.")
-            return
 
-        product_info = self.products[product.lower()]
-        price = product_info["price"] * amount
-        gardener.points += price
-        gardener.products[product.lower()] -= amount
+        withdraw_points = await _withdraw_points(gardener, amount)
+        plural = ""
+        if amount > 0:
+            plural = "s"
+        if withdraw_points:
+            await bank.deposit_credits(author, amount)
+            message = "{} Thneed{} successfully exchanged for credits.".format(amount, plural)
+            await gardener.save_gardener()
+        else:
+            message = "You don't have enough Thneed{}. " "You have {}, but need {}.".format(
+                plural, gardener.points, amount
+            )
 
-        await ctx.send(
-            "You converted {0} {1} into {2} Thneedbucks. "
-            "You now have {3} Thneedbucks.".format(amount, product.capitalize(), price, gardener.points)
-        )
+        em = discord.Embed(description=message, color=discord.Color.green())
+        await ctx.send(embed=em)
 
-    @_gardening.command(name="shovel")
-    async def _shovel(self, ctx):
-        """Shovel the plant to accelerate its growth."""
+    @commands.command(name="shovel")
+    async def _shovel(self, ctx: commands.Context):
+        """Shovel your plant out."""
         author = ctx.author
         gardener = await self._gardener(author)
         if not gardener.current:
-            await ctx.send("You're currently not growing a plant.")
-            return
+            message = "You're currently not growing a plant."
+        else:
+            gardener.current = {}
+            message = "You successfully shovelled your plant out."
+            gardener.points = max(gardener.points, 0)
+            await gardener.save_gardener()
 
-        degradation = await self._degradation(gardener)
-        die_in = await _die_in(gardener, degradation)
-        if die_in < 15:
-            await ctx.send("You can't shovel your plant anymore.")
-            return
+        em = discord.Embed(description=message, color=discord.Color.dark_grey())
+        await ctx.send(embed=em)
 
-        to_grow = await _grow_time(gardener)
-        multiplier = 2 if degradation.degradation > 2 else 1.5
-        shaved = to_grow / multiplier
-        gardener.current["time"] -= shaved
-        await ctx.send(
-            "You used a shovel and accelerated the growth of your plant. "
-            "It grew for {0:.1f} minutes. It now has to grow for {1:.1f} minutes "
-             "and will die in {2:.1f} minutes.".format(shaved, to_grow, die_in - shaved)
-        )
-
-    @_gardening.command(name="water")
+    @commands.command(name="water")
     async def _water(self, ctx):
-        """Water the plant to increase its health."""
+        """Water your plant."""
         author = ctx.author
+        channel = ctx.channel
         gardener = await self._gardener(author)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
         if not gardener.current:
-            await ctx.send("You're currently not growing a plant.")
-            return
+            message = "You're currently not growing a plant."
+            await _send_message(channel, message)
+        else:
+            product = "water"
+            product_category = "water"
+            await self._add_health(channel, gardener, product, product_category)
 
-        degradation = await self._degradation(gardener)
-        to_grow = await _grow_time(gardener)
-        die_in = await _die_in(gardener, degradation)
-        multiplier = 2 if degradation.degradation > 2 else 1.5
-        watered = (to_grow - gardener.current["time"]) / multiplier
-        if watered >= to_grow:
-            await ctx.send("You can't water your plant anymore.")
-            return
-
-        gardener.current["health"] += watered / to_grow
-        await ctx.send(
-            "You watered your plant. It gained {0:.2f}% health. "
-            "It now has {1:.2f}% health and still has to grow for {2:.1f} minutes. "
-            "It is losing {3:.2f}% per minute and will die in {4:.1f} minutes.".format(
-                watered / to_grow,
-                gardener.current["health"],
-                to_grow - gardener.current["time"],
-                degradation.degradation,
-                die_in - watered,
-            )
-        )
-
-    @_gardening.command(name="fertilize")
-    async def _fertilize(self, ctx):
-        """Fertilize the plant to reduce degradation."""
-        author = ctx.author
-        gardener = await self._gardener(author)
+    @commands.command(name="fertilize")
+    async def _fertilize(self, ctx, fertilizer):
+        """Fertilize the soil."""
+        gardener = await self._gardener(ctx.author)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
+        channel = ctx.channel
+        product = fertilizer
         if not gardener.current:
-            await ctx.send("You're currently not growing a plant.")
-            return
+            message = "You're currently not growing a plant."
+            await _send_message(channel, message)
+        else:
+            product_category = "fertilizer"
+            await self._add_health(channel, gardener, product, product_category)
 
-        degradation = await self._degradation(gardener)
-        to_grow = await _grow_time(gardener)
-        die_in = await _die_in(gardener, degradation)
-        multiplier = 2 if degradation.degradation > 2 else 1.5
-        fertilized = degradation.degradation * multiplier
-        gardener.current["degradation"] -= fertilized
-        await ctx.send(
-            "You fertilized your plant. It lost {0:.2f}% degradation. "
-            "It now has to grow for {1:.1f} minutes and will die in {2:.1f} minutes.".format(
-                fertilized,
-                to_grow - gardener.current["time"],
-                die_in,
-            )
-        )
-
-    @_gardening.command(name="prune")
+    @commands.command(name="prune")
     async def _prune(self, ctx):
-        """Prune the plant to remove degradation."""
-        author = ctx.author
-        gardener = await self._gardener(author)
+        """Prune your plant."""
+        gardener = await self._gardener(ctx.author)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            # Couldn't DM the degradation
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
+        channel = ctx.channel
         if not gardener.current:
-            await ctx.send("You're currently not growing a plant.")
-            return
-
-        degradation = await self._degradation(gardener)
-        to_grow = await _grow_time(gardener)
-        die_in = await _die_in(gardener, degradation)
-        multiplier = 2 if degradation.degradation > 2 else 1.5
-        pruned = degradation.degradation * multiplier
-        gardener.current["degradation"] -= pruned
-        await ctx.send(
-            "You pruned your plant. It lost {0:.2f}% degradation. "
-            "It now has to grow for {1:.1f} minutes and will die in {2:.1f} minutes.".format(
-                pruned,
-                to_grow - gardener.current["time"],
-                die_in,
-        )
-    )
+            message = "You're currently not growing a plant."
+            await _send_message(channel, message)
+        else:
+            product = "pruner"
+            product_category = "tool"
+            await self._add_health(channel, gardener, product, product_category)
 
     # async def check_degradation(self):
     #     while "PlantTycoon" in self.bot.cogs:
@@ -725,66 +711,66 @@ class PlantTycoon(commands.Cog):
     #             await self._apply_degradation(gardener)
     #         await asyncio.sleep(self.defaults["timers"]["degradation"] * 60)
 
-        async def _apply_degradation(self, gardener):
-            if gardener.current:
-                degradation = await self._degradation(gardener)
-                now = int(time.time())
-                timestamp = gardener.current["timestamp"]
-                degradation_count = (now - timestamp) // (self.defaults["timers"]["degradation"] * 60)
-                degradation_count -= gardener.current["degrade_count"]
-                gardener.current["health"] -= degradation.degradation * degradation_count
-                gardener.points += self.defaults["points"]["growing"] * degradation_count
-                gardener.current["degrade_count"] += degradation_count
-                await gardener.save_gardener()
-                await gardener.is_complete(now)
+    async def _apply_degradation(self, gardener):
+        if gardener.current:
+            degradation = await self._degradation(gardener)
+            now = int(time.time())
+            timestamp = gardener.current["timestamp"]
+            degradation_count = (now - timestamp) // (self.defaults["timers"]["degradation"] * 60)
+            degradation_count -= gardener.current["degrade_count"]
+            gardener.current["health"] -= degradation.degradation * degradation_count
+            gardener.points += self.defaults["points"]["growing"] * degradation_count
+            gardener.current["degrade_count"] += degradation_count
+            await gardener.save_gardener()
+            await gardener.is_complete(now)
 
-        async def check_completion_loop(self):
-            while "PlantTycoon" in self.bot.cogs:
-                now = int(time.time())
-                users = await self.config.all_users()
-                for user_id in users:
-                    user = self.bot.get_user(user_id)
-                    if not user:
-                        continue
-                    gardener = await self._gardener(user)
-                    if not gardener:
-                        continue
-                    try:
-                        await self._apply_degradation(gardener)
-                        await gardener.is_complete(now)
-                    except discord.Forbidden:
+    async def check_completion_loop(self):
+        while "PlantTycoon" in self.bot.cogs:
+            now = int(time.time())
+            users = await self.config.all_users()
+            for user_id in users:
+                user = self.bot.get_user(user_id)
+                if not user:
+                    continue
+                gardener = await self._gardener(user)
+                if not gardener:
+                    continue
+                try:
+                    await self._apply_degradation(gardener)
+                    await gardener.is_complete(now)
+                except discord.Forbidden:
                     # Couldn't DM the results
-                        pass
-                await asyncio.sleep(self.defaults["timers"]["completion"] * 60)
+                    pass
+            await asyncio.sleep(self.defaults["timers"]["completion"] * 60)
 
-        async def send_notification(self):
-            while "PlantTycoon" in self.bot.cogs:
-                users = await self.config.all_users()
-                for user_id in users:
-                    user = self.bot.get_user(user_id)
-                    if not user:
-                        continue
-                    gardener = await self._gardener(user)
-                    if not gardener:
-                        continue
-                    try:
-                        await self._apply_degradation(gardener)
-                    except discord.Forbidden:
+    async def send_notification(self):
+        while "PlantTycoon" in self.bot.cogs:
+            users = await self.config.all_users()
+            for user_id in users:
+                user = self.bot.get_user(user_id)
+                if not user:
+                    continue
+                gardener = await self._gardener(user)
+                if not gardener:
+                    continue
+                try:
+                    await self._apply_degradation(gardener)
+                except discord.Forbidden:
                     # Couldn't DM the degradation
-                        pass
+                    pass
 
-                    if gardener.current:
-                        health = gardener.current["health"]
-                        if health < self.defaults["notification"]["max_health"]:
-                            message = choice(self.notifications["messages"])
-                            try:
-                                await user.send(message)
-                            except discord.Forbidden:
+                if gardener.current:
+                    health = gardener.current["health"]
+                    if health < self.defaults["notification"]["max_health"]:
+                        message = choice(self.notifications["messages"])
+                        try:
+                            await user.send(message)
+                        except discord.Forbidden:
                             # Couldn't DM the results
-                                pass
-                await asyncio.sleep(self.defaults["timers"]["notification"] * 60)
+                            pass
+            await asyncio.sleep(self.defaults["timers"]["notification"] * 60)
 
-        def cog_unload(self):
-            self.completion_task.cancel()
+    def cog_unload(self):
+        self.completion_task.cancel()
         # self.degradation_task.cancel()
-            self.notification_task.cancel()
+        self.notification_task.cancel()
