@@ -406,64 +406,65 @@ class PlantTycoon(commands.Cog):
         await ctx.send(embed=em)
 
     @_gardening.command(name="profile")
-async def _profile(self, ctx: commands.Context, *, member: discord.Member = None):
-    """Check your gardening profile."""
-    author = member if member is not None else ctx.author
-    gardener = await self._gardener(author)
-    try:
-        await self._apply_degradation(gardener)
-    except discord.Forbidden:
-        await ctx.send("ERROR\nYou blocked me, didn't you?")
+    async def _profile(self, ctx: commands.Context, *, member: discord.Member = None):
+        """Check your gardening profile."""
+        author = member if member is not None else ctx.author
+        gardener = await self._gardener(author)
+        try:
+            await self._apply_degradation(gardener)
+        except discord.Forbidden:
+            await ctx.send("ERROR\nYou blocked me, didn't you?")
 
-    em = discord.Embed(color=discord.Color.green())
-    avatar = author.avatar_url if author.avatar_url else author.default_avatar_url
-    em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
-    em.add_field(name="**Thneeds**", value=str(gardener.points))
-    if gardener.current:
-        em.set_thumbnail(url=gardener.current["image"])
-        em.add_field(
-            name="**Currently growing**",
-            value="{0} ({1:.2f}%)".format(gardener.current["name"], gardener.current["health"]),
-        )
-    else:
-        em.add_field(name="**Currently growing**", value="None")
-    if not gardener.badges:
-        em.add_field(name="**Badges**", value="None")
-    else:
-        badges = "".join("{}\n".format(badge.capitalize()) for badge in gardener.badges)
-        em.add_field(name="**Badges**", value=badges)
-    if gardener.products:
-        products = ""
-        for product_name, product_data in gardener.products.items():
-            if self.products[product_name] is None:
-                continue
-            products += "{} ({}) {}\n".format(
-                product_name.capitalize(),
-                product_data / self.products[product_name]["uses"],
-                self.products[product_name]["modifier"],
+        em = discord.Embed(color=discord.Color.green())
+        avatar = author.avatar_url if author.avatar_url else author.default_avatar_url
+        em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
+        em.add_field(name="**Thneeds**", value=str(gardener.points))
+        if gardener.current:
+            em.set_thumbnail(url=gardener.current["image"])
+            em.add_field(
+                name="**Currently growing**",
+                value="{0} ({1:.2f}%)".format(gardener.current["name"], gardener.current["health"]),
             )
-        em.add_field(name="**Products**", value=products)
-    else:
-        em.add_field(name="**Products**", value="None")
-    if gardener.current:
-        degradation = await self._degradation(gardener)
-        die_in = await _die_in(gardener, degradation)
-        to_grow = await _grow_time(gardener)
-        em.set_footer(
-            text="Total degradation: {0:.2f}% / {1} min (100 / ({2} / 60) * (BaseDegr {3:.2f} + PlantDegr {4:.2f}))"
-            " + ModDegr {5:.2f}) Your plant will die in {6} minutes "
-            "and {7:.1f} minutes to go for flowering.".format(
-                degradation.degradation,
-                self.defaults["timers"]["degradation"],
-                degradation.time,
-                self.defaults["degradation"]["base_degradation"],
-                gardener.current["degradation"],
-                degradation.modifiers,
-                die_in,
-                to_grow,
+        else:
+            em.add_field(name="**Currently growing**", value="None")
+        if not gardener.badges:
+            em.add_field(name="**Badges**", value="None")
+        else:
+            badges = "".join("{}\n".format(badge.capitalize()) for badge in gardener.badges)
+            em.add_field(name="**Badges**", value=badges)
+        if gardener.products:
+            products = ""
+            for product_name, product_data in gardener.products.items():
+                if self.products[product_name] is None:
+                    continue
+                products += "{} ({}) {}\n".format(
+                    product_name.capitalize(),
+                    product_data / self.products[product_name]["uses"],
+                    self.products[product_name]["modifier"],
+                )
+            em.add_field(name="**Products**", value=products)
+        else:
+            em.add_field(name="**Products**", value="None")
+        if gardener.current:
+            degradation = await self._degradation(gardener)
+            die_in = await _die_in(gardener, degradation)
+            to_grow = await _grow_time(gardener)
+            em.set_footer(
+                text="Total degradation: {0:.2f}% / {1} min (100 / ({2} / 60) * (BaseDegr {3:.2f} + PlantDegr {4:.2f}))"
+                " + ModDegr {5:.2f}) Your plant will die in {6} minutes "
+                "and {7:.1f} minutes to go for flowering.".format(
+                    degradation.degradation,
+                    self.defaults["timers"]["degradation"],
+                    degradation.time,
+                    self.defaults["degradation"]["base_degradation"],
+                    gardener.current["degradation"],
+                    degradation.modifiers,
+                    die_in,
+                    to_grow,
+                )
             )
-        )
-    await ctx.send(embed=em)
+        await ctx.send(embed=em)
+
 
 @_gardening.command(name="plants")
 async def _plants(self, ctx):
