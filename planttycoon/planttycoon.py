@@ -416,8 +416,8 @@ class PlantTycoon(commands.Cog):
             await ctx.send("ERROR\nYou blocked me, didn't you?")
 
         em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
-        avatar = author.avatar_url
-        em.set_author(name="Gardening profile of {author.name}", icon_url=avatar)
+        avatar = author.user.avatar_url if author else None
+        em.set_author(name="Gardening profile of {author.display_name}", icon_url=avatar)
         em.add_field(name="**Thneeds**", value=str(gardener.points))
         if gardener.current:
             em.set_thumbnail(url=gardener.current["image"])
