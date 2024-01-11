@@ -406,7 +406,7 @@ class PlantTycoon(commands.Cog):
         await ctx.send(embed=em)
 
     @_gardening.command(name="profile")
-async def _profile(self, ctx: commands.Context, *, member: discord.Member = None):
+    async def _profile(self, ctx: commands.Context, *, member: discord.Member = None):
     """Check your gardening profile."""
     author = member if member is not None else ctx.author
     gardener = await self._gardener(author)
