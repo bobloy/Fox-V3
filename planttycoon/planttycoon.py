@@ -417,7 +417,7 @@ class PlantTycoon(commands.Cog):
 
         em = discord.Embed(color=discord.Color.green())  # , description='\a\n')
         avatar = author.avatar_url if author.avatar else author.default_avatar_url
-        em.set_author(name="Gardening profile of {}".format(author.name), icon_url=avatar)
+        em.set_author(name="Gardening profile of {author.name}", icon_url=avatar)
         em.add_field(name="**Thneeds**", value=str(gardener.points))
         if gardener.current:
             em.set_thumbnail(url=gardener.current["image"])
