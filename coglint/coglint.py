@@ -1,10 +1,9 @@
 import discord
-from pylint import epylint as lint
+from pylint import run_pylint
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.commands import Cog
 from redbot.core.data_manager import cog_data_path
-
 
 class CogLint(Cog):
     """
@@ -56,7 +55,7 @@ class CogLint(Cog):
         with open(path, "w") as codefile:
             codefile.write(code)
 
-        future = await self.bot.loop.run_in_executor(None, lint.py_run, path, "return_std=True")
+        future = await self.bot.loop.run_in_executor(None, run_pylint, path)
 
         (pylint_stdout, pylint_stderr) = future or (None, None)
         # print(pylint_stderr)
@@ -81,5 +80,6 @@ class CogLint(Cog):
                 await message.channel.send(linted)
                 # await message.channel.send(errors)
 
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         await self.lint_message(message)
