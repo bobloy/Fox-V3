@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import partial
 from inspect import ismethod, signature
 from typing import Callable, Dict, List, Optional, Tuple, Union
@@ -116,7 +116,7 @@ class FakeMessage(discord.Message):
                 # log.exception("This is fine")
                 pass
 
-        self.id = time_snowflake(datetime.utcnow(), high=False)  # Pretend to be now
+        self.id = time_snowflake(datetime.now(timezone.utc), high=False)  # Pretend to be now
         self.type = discord.MessageType.default
 
     def _rebind_cached_references_backport(
@@ -239,11 +239,19 @@ class Task:
 
             if t["type"] == "date":  # Convert into datetime
                 dt: datetime = t["time_data"]
+                if dt.tzinfo is not None:
+                    tz = None  # Don't save timezone if the timezone object already has one
+                else:  # No timezone in object, check for passed timezone parameter, default to UTC
+                    tz = getattr(t["tzinfo"], "zone", pytz.UTC.zone)
+
                 data_to_append = {
                     "type": t["type"],
                     "time_data": dt.isoformat(),
-                    "tzinfo": getattr(t["tzinfo"], "zone", None),
+                    "tzinfo": tz,
                 }
+                # if tz is not None:  # Now localize dt to check for expired triggers
+                #     dt = tz.localize(dt)
+                log.debug(f"{t}\n{dt}  and  {datetime.now(pytz.utc)}")
                 if dt < datetime.now(pytz.utc):
                     expired_triggers.append(data_to_append)
                 else:
@@ -345,7 +353,7 @@ class Task:
     #     self.data["job_id"] = job_id
 
     async def save_all(self):
-        """To be used when creating an new task"""
+        """To be used when creating a new task"""
 
         data_to_save = self.default_task_data.copy()
         if self.data:
@@ -413,13 +421,14 @@ class Task:
                 except discord.NotFound:
                     actual_message = None
             if actual_message is None:  # last_message_id was an invalid message I guess
-                actual_message = await channel.history(limit=1).flatten()
+                actual_message = (
+                    await channel.history().__anext__()
+                )  # await anext(channel.history()) py3.10+
                 if not actual_message:  # Basically only happens if the channel has no messages
-                    actual_message = await author.history(limit=1).flatten()
+                    actual_message = await author.history().__anext__()
                     if not actual_message:  # Okay, the *author* has never sent a message?
                         log.warning("No message found in channel cache yet, skipping execution")
                         return False
-                actual_message = actual_message[0]
 
         # message._handle_author(author)  # Option when message is subclass
         # message._state = self.bot._get_state()
@@ -500,6 +509,8 @@ class Task:
         trigger_data["time_data"] = parsed_time
         if timezone is not None:
             trigger_data["tzinfo"] = timezone
+        # if parsed_time.tzinfo is not None:
+        #     trigger_data["tzinfo"] = parsed_time.tzinfo
 
         if not get_trigger(trigger_data):
             return False

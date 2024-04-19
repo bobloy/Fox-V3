@@ -183,7 +183,7 @@ class Flag(Cog):
                 inline=True,
             )
 
-        embed.set_thumbnail(url=member.avatar_url)
+        embed.set_thumbnail(url=member.display_avatar.url)
 
         return embed
 
