@@ -1,10 +1,40 @@
 import pathlib
 
 import discord
-from nudenet import NudeClassifier
+from nudenet import NudeDetector
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.data_manager import cog_data_path
+
+all_labels = [
+    "FEMALE_GENITALIA_COVERED",
+    "FACE_FEMALE",
+    "BUTTOCKS_EXPOSED",
+    "FEMALE_BREAST_EXPOSED",
+    "FEMALE_GENITALIA_EXPOSED",
+    "MALE_BREAST_EXPOSED",
+    "ANUS_EXPOSED",
+    "FEET_EXPOSED",
+    "BELLY_COVERED",
+    "FEET_COVERED",
+    "ARMPITS_COVERED",
+    "ARMPITS_EXPOSED",
+    "FACE_MALE",
+    "BELLY_EXPOSED",
+    "MALE_GENITALIA_EXPOSED",
+    "ANUS_COVERED",
+    "FEMALE_BREAST_COVERED",
+    "BUTTOCKS_COVERED",
+]
+
+nsfw_labels = all_labels
+# nsfw_labels = [
+#     "BUTTOCKS_EXPOSED",
+#     "FEMALE_BREAST_EXPOSED",
+#     "FEMALE_GENITALIA_EXPOSED",
+#     "ANUS_EXPOSED",
+#     "MALE_GENITALIA_EXPOSED",
+# ]
 
 
 class Nudity(commands.Cog):
@@ -19,8 +49,8 @@ class Nudity(commands.Cog):
 
         self.config.register_guild(**default_guild)
 
-        # self.detector = NudeDetector()
-        self.classifier = NudeClassifier()
+        self.detector = NudeDetector()
+        # self.classifier = NudeClassifier()
 
         self.data_path: pathlib.Path = cog_data_path(self)
 
@@ -30,6 +60,7 @@ class Nudity(commands.Cog):
         """Nothing to delete"""
         return
 
+    @commands.guild_only()
     @commands.command(aliases=["togglenudity"], name="nudity")
     async def nudity(self, ctx: commands.Context):
         """Toggle nude-checking on or off"""
@@ -37,6 +68,7 @@ class Nudity(commands.Cog):
         await self.config.guild(ctx.guild).enabled.set(not is_on)
         await ctx.send("Nude checking is now set to {}".format(not is_on))
 
+    @commands.guild_only()
     @commands.command()
     async def nsfwchannel(self, ctx: commands.Context, channel: discord.TextChannel = None):
         if channel is None:
@@ -56,9 +88,9 @@ class Nudity(commands.Cog):
         if channel_id is None:
             return None
         else:
-            return guild.get_channel(channel_id=channel_id)
+            return guild.get_channel(channel_id)
 
-    async def nsfw(self, message: discord.Message, images: dict):
+    async def nsfw(self, message: discord.Message, results: list):
         content = message.content
         guild: discord.Guild = message.guild
         if not content:
@@ -70,8 +102,8 @@ class Nudity(commands.Cog):
             return
 
         embed = discord.Embed(title="NSFW Image Detected")
-        embed.add_field(name="Original Message", value=content)
-        embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+        embed.add_field(name="Original Message Text", value=content)
+        embed.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
         await message.channel.send(embed=embed)
 
         nsfw_channel = await self.get_nsfw_channel(guild)
@@ -79,10 +111,15 @@ class Nudity(commands.Cog):
         if nsfw_channel is None:
             return
         else:
-            for image, r in images.items():
-                if r["unsafe"] > 0.7:
+            for image, r in results:
+                detections = []
+                for detection in r:
+                    if detection["score"] > 0.7 and detection["class"] in nsfw_labels:
+                        detections.append(detection)
+
+                if detections:
                     await nsfw_channel.send(
-                        "NSFW Image from {}".format(message.channel.mention),
+                        f"NSFW Image @ {message.channel.mention}\nDetected {', '.join(d['class'] for d in detections)}",
                         file=discord.File(
                             image,
                         ),
@@ -130,11 +167,18 @@ class Nudity(commands.Cog):
             check_list.append(temp_name)
 
         print("Pre nude check")
-        # nude_results = self.detector.detect(temp_name)
-        nude_results = self.classifier.classify([str(n) for n in check_list])
+
+        nude_results = []
+        for img in check_list:
+            nude_results.append([img, self.detector.detect(str(img))])
+        # nude_results = self.classifier.classify([str(n) for n in check_list])
         # print(nude_results)
 
-        if True in [r["unsafe"] > 0.7 for r in nude_results.values()]:
+        if True in [
+            detection["score"] > 0.7 and detection["class"] in nsfw_labels
+            for img, r in nude_results
+            for detection in r
+        ]:
             # print("Is nude")
             await message.add_reaction("❌")
             await self.nsfw(message, nude_results)
