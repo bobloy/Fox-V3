@@ -263,6 +263,9 @@ class FIFO(commands.Cog):
         if job is None:
             await ctx.maybe_send_embed("No job scheduled for this task")
             return
+        if job.next_run_time is None:
+            await ctx.maybe_send_embed("No executions currently scheduled")
+            return
         now = datetime.now(job.next_run_time.tzinfo)
 
         times = [
