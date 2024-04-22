@@ -713,7 +713,7 @@ class Chatter(Cog):
             elif self._last_message_per_channel[ctx.channel.id] is not None:
                 last_m: discord.Message = self._last_message_per_channel[ctx.channel.id]
                 minutes = self._guild_cache[ctx.guild.id]["convo_delta"]
-                if (datetime.now(timezone.utc) - last_m.created_at).seconds > minutes * 60:
+                if (discord.utils.utcnow() - last_m.created_at).seconds > minutes * 60:
                     in_response_to = None
                 else:
                     in_response_to = last_m.content
@@ -731,7 +731,7 @@ class Chatter(Cog):
             if not self._global_cache:
                 self._global_cache = await self.config.all()
 
-            if in_response_to is not None and self._global_cache["learning"]:
+            if in_response_to is not None and self._global_cache["learning"] and not channel.nsfw:
                 log.debug("learning response")
                 await self.loop.run_in_executor(
                     None,
